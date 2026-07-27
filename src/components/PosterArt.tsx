@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { Item, Kind } from "../types";
 import { paletteFor } from "../lib/palette";
 import { posterUrl } from "../lib/tmdb";
@@ -49,6 +49,10 @@ export function PosterArt({
 }) {
   const [imgFailed, setImgFailed] = useState(false);
   const src = posterUrl(item.posterPath, size === "lg" ? "w500" : "w342");
+
+  // A new poster deserves a fresh attempt: without this the component keeps
+  // showing fallback art after an edit that fixed a broken image.
+  useEffect(() => setImgFailed(false), [item.posterPath]);
 
   if (src && !imgFailed) {
     return (

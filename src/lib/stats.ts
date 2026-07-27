@@ -94,7 +94,7 @@ export function computeYearInReview(items: Item[], history: HistoryEntry[], year
       watchedItemIds.add(h.itemId);
       if (item.kind === "film" || item.kind === "doc") minutes += item.runtime;
     } else if (h.action === "episode") {
-      minutes += item.runtime;
+      minutes += item.runtime * (h.count ?? 1);
     } else if (h.action === "rewatch" && (item.kind === "film" || item.kind === "doc")) {
       minutes += item.runtime;
     }

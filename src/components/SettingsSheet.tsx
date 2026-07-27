@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Sheet } from "./Sheet";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { useSettings, MODELS } from "../store/useSettings";
 import { useLibrary } from "../store/useLibrary";
+import { buildBackup, parseBackup, BackupParseError } from "../lib/backup";
 
 function SettingsForm() {
   const close = useSettingsSheet((s) => s.close);
@@ -16,23 +17,41 @@ function SettingsForm() {
   const setTmdbApiKey = useSettings((s) => s.setTmdbApiKey);
   const clearTmdbApiKey = useSettings((s) => s.clearTmdbApiKey);
   const items = useLibrary((s) => s.items);
+  const history = useLibrary((s) => s.history);
   const pushToast = useLibrary((s) => s.pushToast);
+  const importData = useLibrary((s) => s.importData);
 
   const [draftKey, setDraftKey] = useState(apiKey);
   const [reveal, setReveal] = useState(false);
   const [draftTmdbKey, setDraftTmdbKey] = useState(tmdbApiKey);
   const [revealTmdb, setRevealTmdb] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const titleId = "settings-sheet-title";
 
   function exportData() {
-    const blob = new Blob([JSON.stringify(items, null, 2)], { type: "application/json" });
+    const blob = new Blob([buildBackup(items, history)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "cinemate-libreria.json";
+    a.download = `cinemate-libreria-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
     pushToast("success", "Libreria esportata.");
+  }
+
+  async function handleImportFile(file: File) {
+    let backup;
+    try {
+      backup = parseBackup(await file.text());
+    } catch (e) {
+      pushToast("error", e instanceof BackupParseError ? e.message : "Impossibile leggere il file.");
+      return;
+    }
+    const confirmed = window.confirm(
+      `Importare ${backup.items.length} titoli? La libreria attuale (${items.length} titoli) verrà sostituita.`,
+    );
+    if (!confirmed) return;
+    importData(backup.items, backup.history);
   }
 
   return (
@@ -180,14 +199,39 @@ function SettingsForm() {
 
         <div>
           <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Dati locali</span>
-          <button
-            type="button"
-            onClick={exportData}
-            disabled={items.length === 0}
-            className="w-full rounded-sm border border-border-strong px-3.5 py-2.5 text-left text-sm text-text disabled:opacity-40"
-          >
-            Esporta libreria (JSON)
-          </button>
+          <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
+            Tutto vive solo in questo browser. Esporta ogni tanto un backup: è anche il modo per portare la libreria
+            su un altro dispositivo.
+          </p>
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={exportData}
+              disabled={items.length === 0}
+              className="w-full rounded-sm border border-border-strong px-3.5 py-2.5 text-left text-sm text-text disabled:opacity-40"
+            >
+              Esporta libreria (JSON)
+            </button>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full rounded-sm border border-border-strong px-3.5 py-2.5 text-left text-sm text-text"
+            >
+              Importa da backup…
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json,.json"
+              className="sr-only"
+              aria-label="Scegli un file di backup JSON"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (file) void handleImportFile(file);
+              }}
+            />
+          </div>
         </div>
       </div>
     </Sheet>

@@ -9,23 +9,6 @@ export function HomeIcon({ size = 18 }: IconProps) {
   );
 }
 
-export function CompassIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <circle cx="10" cy="10" r="7.25" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M12.6 7.4 11 11l-3.6 1.6L9 9l3.6-1.6Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-export function BookmarkIcon({ size = 18, filled = false }: IconProps & { filled?: boolean }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-      <path d="M5 3.5h10a.5.5 0 0 1 .5.5v12.4a.4.4 0 0 1-.63.33L10 13.2l-4.87 3.53A.4.4 0 0 1 4.5 16.4V4a.5.5 0 0 1 .5-.5Z" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 export function BookIcon({ size = 18 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -107,14 +90,6 @@ export function PlusIcon({ size = 18 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M10 3.5v13M3.5 10h13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-export function ChevronRightIcon({ size = 16 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path d="M6 3.5 11 8l-5 4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

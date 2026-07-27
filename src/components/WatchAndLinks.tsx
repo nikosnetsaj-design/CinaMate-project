@@ -53,19 +53,26 @@ function WatchProviders({ item }: { item: Item }) {
         <p className="text-xs text-text-faint">Non risulta in streaming in Italia al momento.</p>
       )}
       {tmdbApiKey && state === "done" && providers.length > 0 && (
-        <a
-          href={link ?? undefined}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex flex-wrap gap-1.5"
-          aria-label="Vedi dove guardarlo su JustWatch"
-        >
-          {providers.map((p) => (
-            <span key={p.name} className="rounded-full bg-surface-hover px-2.5 py-1 text-xs text-text">
-              {p.name}
-            </span>
-          ))}
-        </a>
+        <>
+          <div className="flex flex-wrap gap-1.5">
+            {providers.map((p) => (
+              <span key={p.name} className="rounded-full bg-surface-hover px-2.5 py-1 text-xs text-text">
+                {p.name}
+              </span>
+            ))}
+          </div>
+          {link && (
+            <a
+              href={link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1.5 inline-block text-xs underline-offset-2 hover:underline"
+              style={{ color: "var(--accent-text)" }}
+            >
+              Vedi tutte le opzioni su JustWatch →
+            </a>
+          )}
+        </>
       )}
     </div>
   );

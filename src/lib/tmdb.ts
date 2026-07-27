@@ -49,7 +49,6 @@ export interface TmdbDetails {
   posterPath: string | null;
   trailerUrl: string | null;
   watchProviders: TmdbWatchProvider[];
-  watchLink: string | null;
 }
 
 async function tmdbGet<T>(path: string, apiKey: string, params: Record<string, string> = {}): Promise<T> {
@@ -216,7 +215,6 @@ export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiK
     posterPath: details.poster_path ?? null,
     trailerUrl: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null,
     watchProviders: watch.providers,
-    watchLink: watch.link,
   };
 }
 

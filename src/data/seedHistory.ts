@@ -20,8 +20,8 @@ function hashSeed(s: string): number {
 export function buildSeedHistory(items: Item[]): HistoryEntry[] {
   const entries: HistoryEntry[] = [];
   let n = 0;
-  const push = (item: Item, date: string, action: HistoryEntry["action"]) => {
-    entries.push({ id: `seed-h-${++n}`, itemId: item.id, title: item.title, kind: item.kind, date, action });
+  const push = (item: Item, date: string, action: HistoryEntry["action"], count = 1) => {
+    entries.push({ id: `seed-h-${++n}`, itemId: item.id, title: item.title, kind: item.kind, date, action, count });
   };
 
   for (const item of items) {
@@ -39,8 +39,7 @@ export function buildSeedHistory(items: Item[]): HistoryEntry[] {
           const isLast = s === sessions - 1;
           const count = isLast ? remaining : Math.max(1, Math.round(remaining / (sessions - s)) - (variance % 2));
           const clamped = Math.min(remaining, Math.max(1, count));
-          const date = addDays(item.added, -dayOffset);
-          for (let e = 0; e < clamped; e++) push(item, date, "episode");
+          push(item, addDays(item.added, -dayOffset), "episode", clamped);
           remaining -= clamped;
           dayOffset += 2 + (variance % 4);
         }

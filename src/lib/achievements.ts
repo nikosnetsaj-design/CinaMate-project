@@ -19,15 +19,20 @@ export function computeAchievements(items: Item[], history: HistoryEntry[]): Ach
   const avgVote = voted.length ? voted.reduce((a, i) => a + (i.vote ?? 0), 0) / voted.length : 0;
 
   const episodesPerDay = new Map<string, number>();
+  const liveItemIds = new Set(items.map((i) => i.id));
   for (const e of history) {
-    if (e.action === "episode") episodesPerDay.set(e.date, (episodesPerDay.get(e.date) ?? 0) + 1);
+    if (e.action === "episode" && liveItemIds.has(e.itemId)) {
+      episodesPerDay.set(e.date, (episodesPerDay.get(e.date) ?? 0) + (e.count ?? 1));
+    }
   }
   const maxEpisodesPerDay = episodesPerDay.size ? Math.max(...episodesPerDay.values()) : 0;
 
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - 30);
   const cutoffStr = cutoff.toISOString().slice(0, 10);
-  const recentDays = new Set(history.filter((e) => e.date >= cutoffStr).map((e) => e.date));
+  const recentDays = new Set(
+    history.filter((e) => e.date >= cutoffStr && liveItemIds.has(e.itemId)).map((e) => e.date),
+  );
 
   return [
     {

@@ -64,4 +64,10 @@ export interface HistoryEntry {
   kind: Kind;
   date: string;
   action: HistoryAction;
+  /**
+   * Episodes covered by this entry. Lets a binge stay a single record instead
+   * of one per episode, which matters for long-running series. Absent in
+   * entries written before this field existed — always read it as `?? 1`.
+   */
+  count?: number;
 }

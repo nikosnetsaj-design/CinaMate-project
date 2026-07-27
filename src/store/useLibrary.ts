@@ -73,8 +73,21 @@ function saveHistory(history: HistoryEntry[]): void {
 const initialHistory = loadHistory();
 if (localStorage.getItem(HISTORY_KEY) === null) saveHistory(initialHistory);
 
-function makeHistoryEntry(item: Pick<Item, "id" | "title" | "kind">, date: string, action: HistoryEntry["action"]): HistoryEntry {
-  return { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, itemId: item.id, title: item.title, kind: item.kind, date, action };
+function makeHistoryEntry(
+  item: Pick<Item, "id" | "title" | "kind">,
+  date: string,
+  action: HistoryEntry["action"],
+  count = 1,
+): HistoryEntry {
+  return {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    itemId: item.id,
+    title: item.title,
+    kind: item.kind,
+    date,
+    action,
+    count,
+  };
 }
 
 function today(): string {
@@ -100,6 +113,7 @@ interface LibraryState {
   pushToast: (kind: ToastKind, text: string) => void;
   dismissToast: (id: string) => void;
 
+  importData: (items: Item[], history: HistoryEntry[]) => void;
   resetCorruptedData: () => void;
 }
 
@@ -146,6 +160,13 @@ export const useLibrary = create<LibraryState>((set, get) => ({
     const item = get().items.find((i) => i.id === id);
     const next = get().items.filter((i) => i.id !== id);
     persistOrToast(get, set, next, item ? `"${item.title}" rimosso dalla libreria.` : undefined);
+    // Drop the item's history too, so deleted titles stop counting towards
+    // achievements and the log doesn't grow with unreachable entries.
+    const prunedHistory = get().history.filter((h) => h.itemId !== id);
+    if (prunedHistory.length !== get().history.length) {
+      saveHistory(prunedHistory);
+      set({ history: prunedHistory });
+    }
   },
 
   setStatus: (id, status) => {
@@ -191,8 +212,15 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   },
 
   setEpisodesSeen: (id, seen) => {
+    const prev = get().items.find((i) => i.id === id);
     const next = get().items.map((i) => (i.id === id && i.episodes ? { ...i, seen: Math.max(0, Math.min(i.episodes, seen)) } : i));
     persistOrToast(get, set, next);
+    if (!prev?.episodes) return;
+    // The slider is a primary way to record progress, so a jump forward has to
+    // reach the diary as well — logged as one entry covering the whole delta.
+    const clamped = Math.max(0, Math.min(prev.episodes, seen));
+    const delta = clamped - (prev.seen || 0);
+    if (delta > 0) logHistory(get, set, [makeHistoryEntry(prev, today(), "episode", delta)]);
   },
 
   setRewatch: (id, rewatch) => {
@@ -212,9 +240,21 @@ export const useLibrary = create<LibraryState>((set, get) => ({
     set({ toasts: get().toasts.filter((t) => t.id !== id) });
   },
 
+  importData: (items, history) => {
+    const okItems = saveItems(items);
+    saveHistory(history);
+    set({ items, history, storageError: !okItems });
+    if (!okItems) {
+      get().pushToast("error", "Impossibile salvare: memoria del browser piena o non disponibile.");
+    } else {
+      get().pushToast("success", `Libreria importata: ${items.length} titoli.`);
+    }
+  },
+
   resetCorruptedData: () => {
     saveItems([]);
-    set({ items: [], storageError: false });
+    saveHistory([]);
+    set({ items: [], history: [], storageError: false });
     get().pushToast("info", "Dati locali ripristinati.");
   },
 }));

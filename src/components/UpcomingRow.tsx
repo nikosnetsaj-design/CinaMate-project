@@ -13,6 +13,21 @@ interface Upcoming {
   episode: number | null;
 }
 
+interface CachedAir {
+  airDate: string | null;
+  season: number | null;
+  episode: number | null;
+  fetchedAt: number;
+}
+
+/**
+ * Air dates change at most daily, while the library re-renders on every edit.
+ * Caching per show keeps a fav toggle or an episode bump from replaying the
+ * whole TMDB round-trip, and survives navigating away from Home and back.
+ */
+const airCache = new Map<number, CachedAir>();
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+
 function daysUntil(dateStr: string): string {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -34,6 +49,12 @@ export function UpcomingRow() {
     () => items.filter((i) => i.tmdbId && i.tmdbMediaType === "tv" && (i.status === "In visione" || i.status === "Da vedere")),
     [items],
   );
+  // Depend on the shows themselves, not on the array identity, so unrelated
+  // library edits don't retrigger the effect.
+  const trackedKey = tracked
+    .map((i) => i.tmdbId)
+    .sort((a, b) => (a ?? 0) - (b ?? 0))
+    .join(",");
 
   useEffect(() => {
     if (!tmdbApiKey || tracked.length === 0) {
@@ -41,12 +62,26 @@ export function UpcomingRow() {
       return;
     }
     let cancelled = false;
+    const now = Date.now();
+
     Promise.all(
-      tracked.slice(0, 8).map((item) =>
-        getNextEpisode(item.tmdbId!, tmdbApiKey)
-          .then((next) => (next.airDate ? { item, airDate: next.airDate, season: next.seasonNumber, episode: next.episodeNumber } : null))
-          .catch(() => null),
-      ),
+      tracked.slice(0, 8).map(async (item) => {
+        const tmdbId = item.tmdbId!;
+        const cached = airCache.get(tmdbId);
+        let air: CachedAir;
+        if (cached && now - cached.fetchedAt < CACHE_TTL_MS) {
+          air = cached;
+        } else {
+          try {
+            const next = await getNextEpisode(tmdbId, tmdbApiKey);
+            air = { airDate: next.airDate, season: next.seasonNumber, episode: next.episodeNumber, fetchedAt: now };
+            airCache.set(tmdbId, air);
+          } catch {
+            return null;
+          }
+        }
+        return air.airDate ? { item, airDate: air.airDate, season: air.season, episode: air.episode } : null;
+      }),
     ).then((results) => {
       if (cancelled) return;
       const list = results.filter((r): r is Upcoming => r !== null).sort((a, b) => a.airDate.localeCompare(b.airDate));
@@ -55,7 +90,10 @@ export function UpcomingRow() {
     return () => {
       cancelled = true;
     };
-  }, [tmdbApiKey, tracked]);
+    // `tracked` is intentionally excluded: trackedKey captures the identity
+    // that actually matters, and the array is rebuilt on every library change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tmdbApiKey, trackedKey]);
 
   if (!tmdbApiKey || upcoming.length === 0) return null;
 

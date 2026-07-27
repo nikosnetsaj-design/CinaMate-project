@@ -10,6 +10,7 @@ import { VoteBadge } from "../components/VoteBadge";
 import { EmptyState } from "../components/EmptyState";
 import { PosterGridSkeleton } from "../components/Skeletons";
 import { STATUSES } from "../lib/status";
+import { matchesQuery } from "../lib/search";
 import { useAppReady } from "../lib/useAppReady";
 import type { Kind, Status } from "../types";
 
@@ -54,15 +55,7 @@ export function Library() {
     return items
       .filter((i) => fKind === "Tutti" || i.kind === fKind)
       .filter((i) => fStatus === "Tutti" || i.status === fStatus)
-      .filter((i) => {
-        if (!q) return true;
-        const query = q.toLowerCase();
-        return (
-          i.title.toLowerCase().includes(query) ||
-          i.notes.toLowerCase().includes(query) ||
-          i.director.toLowerCase().includes(query)
-        );
-      })
+      .filter((i) => matchesQuery(i, q))
       .sort((a, b) => {
         if (sort === "voto") return (b.vote ?? 0) - (a.vote ?? 0);
         if (sort === "titolo") return a.title.localeCompare(b.title);
@@ -78,7 +71,7 @@ export function Library() {
         <p className="mt-1 text-sm text-text-muted">{items.length} titoli in totale.</p>
       </div>
 
-      <SearchBar value={q} onChange={setQ} placeholder="Cerca nella libreria…" />
+      <SearchBar value={q} onChange={setQ} placeholder="Cerca per titolo, regista, genere, attore…" />
 
       <div className="flex gap-2 overflow-x-auto pb-1">
         <Pill active={fKind === "Tutti"} onClick={() => setFKind("Tutti")}>

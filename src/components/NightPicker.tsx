@@ -8,11 +8,13 @@ import { PosterArt } from "./PosterArt";
 import { DiceIcon } from "./icons";
 import type { Item } from "../types";
 
-function pickRandom(items: Item[]): Item | null {
+function pickRandom(items: Item[], exclude?: Item | null): Item | null {
   const pool = items.filter((i) => i.status === "Da vedere");
   const source = pool.length > 0 ? pool : items;
   if (source.length === 0) return null;
-  return source[Math.floor(Math.random() * source.length)];
+  // "Un altro" should always move on — unless there is genuinely nothing else.
+  const candidates = source.length > 1 && exclude ? source.filter((i) => i.id !== exclude.id) : source;
+  return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
 function PickerModal({ onClose }: { onClose: () => void }) {
@@ -24,7 +26,7 @@ function PickerModal({ onClose }: { onClose: () => void }) {
   const titleId = "night-picker-title";
 
   function respin() {
-    setPick(pickRandom(items));
+    setPick((current) => pickRandom(items, current));
     setSpinKey((k) => k + 1);
   }
 
