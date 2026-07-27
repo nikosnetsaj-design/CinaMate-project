@@ -1,0 +1,69 @@
+import { useEffect } from "react";
+import { Route, Routes } from "react-router-dom";
+import { Nav } from "./components/Nav";
+import { ToastStack } from "./components/ToastStack";
+import { CommandPalette } from "./components/CommandPalette";
+import { AnimatedMovieModal } from "./components/MovieModal";
+import { useTheme } from "./store/useTheme";
+import { useLibrary } from "./store/useLibrary";
+import { Home } from "./pages/Home";
+import { Discover } from "./pages/Discover";
+import { Watchlist } from "./pages/Watchlist";
+import { Diary } from "./pages/Diary";
+
+function ErrorBanner() {
+  const storageError = useLibrary((s) => s.storageError);
+  const resetCorruptedData = useLibrary((s) => s.resetCorruptedData);
+  if (!storageError) return null;
+  return (
+    <div
+      role="alert"
+      className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-2.5 text-sm sm:px-6"
+      style={{ background: "var(--rust)", color: "var(--rust-contrast)", borderColor: "var(--rust)" }}
+    >
+      <span>I dati salvati sul dispositivo sembrano danneggiati e non possono essere letti.</span>
+      <button
+        type="button"
+        onClick={resetCorruptedData}
+        className="rounded-xs border border-current px-2.5 py-1 text-xs font-medium hover:opacity-80"
+      >
+        Ripristina dati locali
+      </button>
+    </div>
+  );
+}
+
+export default function App() {
+  const theme = useTheme((s) => s.theme);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
+
+  return (
+    <>
+      <a
+        href="#main-content"
+        className="skip-link rounded-sm bg-accent px-4 py-2 text-sm font-medium text-accent-contrast"
+      >
+        Vai al contenuto
+      </a>
+      <div className="grain-overlay" />
+      <Nav />
+      <div className="min-h-screen pb-16 pt-14 md:pb-0 md:pl-60 md:pt-0">
+        <ErrorBanner />
+        <main id="main-content">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/scopri" element={<Discover />} />
+            <Route path="/watchlist" element={<Watchlist />} />
+            <Route path="/diario" element={<Diary />} />
+          </Routes>
+        </main>
+      </div>
+      <ToastStack />
+      <CommandPalette />
+      <AnimatedMovieModal />
+    </>
+  );
+}

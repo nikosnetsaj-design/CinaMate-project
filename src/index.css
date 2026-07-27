@@ -1,0 +1,171 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------- */
+/* CineMate design tokens — "Golden Hour Cinema"                     */
+/* Warm paper / ink-black pair, marquee gold accent, no purple,      */
+/* no Inter. Serif display (Fraunces) + technical sans (Space        */
+/* Grotesk) for a boutique-cinema, not generic-SaaS, identity.       */
+/* ---------------------------------------------------------------- */
+
+:root {
+  --bg: #f7f2e9;
+  --surface: #fffdf8;
+  --surface-2: #efe7d6;
+  --surface-hover: #e9dfc9;
+  --text: #1b1a1d;
+  --text-muted: #5b564c;
+  --text-faint: #655f52;
+  --border: rgba(27, 26, 29, 0.13);
+  --border-strong: rgba(27, 26, 29, 0.24);
+
+  --accent: #e3a339;
+  --accent-text: #8a5a16;
+  --accent-contrast: #1b1305;
+  --rust: #b5502e;
+  --rust-contrast: #fff8f1;
+  --teal: #1f5c57;
+  --teal-contrast: #f2fbf9;
+
+  --shadow-color: 30 20% 20%;
+  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.08);
+  --shadow-md: 0 6px 20px -4px hsl(var(--shadow-color) / 0.16);
+  --shadow-lg: 0 20px 48px -12px hsl(var(--shadow-color) / 0.28);
+
+  --grain-opacity: 0.035;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #0e0d0f;
+  --surface: #17161a;
+  --surface-2: #201f24;
+  --surface-hover: #29282e;
+  --text: #f5f0e6;
+  --text-muted: #a8a29a;
+  --text-faint: #928c80;
+  --border: rgba(245, 240, 230, 0.11);
+  --border-strong: rgba(245, 240, 230, 0.22);
+
+  --accent: #e8ad4d;
+  --accent-text: #eab454;
+  --accent-contrast: #17110a;
+  --rust: #e0805c;
+  --rust-contrast: #1c0f08;
+  --teal: #5db3a8;
+  --teal-contrast: #071613;
+
+  --shadow-color: 0 0% 0%;
+  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.4);
+  --shadow-md: 0 8px 24px -4px hsl(var(--shadow-color) / 0.5);
+  --shadow-lg: 0 24px 56px -12px hsl(var(--shadow-color) / 0.6);
+
+  --grain-opacity: 0.05;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-hover: var(--surface-hover);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-accent: var(--accent);
+  --color-accent-text: var(--accent-text);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-rust: var(--rust);
+  --color-rust-contrast: var(--rust-contrast);
+  --color-teal: var(--teal);
+  --color-teal-contrast: var(--teal-contrast);
+
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-xs: 3px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+}
+
+/* Subtle 35mm-style grain overlay — texture, not decoration: gives the
+   flat color fields a lived-in, print-like depth instead of a slick
+   SaaS gradient. */
+.grain-overlay {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  opacity: var(--grain-opacity);
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Visible, on-brand focus ring for full keyboard operability. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -3rem;
+  z-index: 100;
+  transition: top 0.15s ease;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-hover) 50%, var(--surface-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
