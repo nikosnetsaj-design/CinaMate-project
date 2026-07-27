@@ -169,6 +169,19 @@ export function DocKindIcon({ size = 14 }: IconProps) {
   );
 }
 
+export function DiceIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="7" cy="7" r="1.1" fill="currentColor" />
+      <circle cx="13" cy="7" r="1.1" fill="currentColor" />
+      <circle cx="10" cy="10" r="1.1" fill="currentColor" />
+      <circle cx="7" cy="13" r="1.1" fill="currentColor" />
+      <circle cx="13" cy="13" r="1.1" fill="currentColor" />
+    </svg>
+  );
+}
+
 export function ReelMark({ size = 26 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 26 26" fill="none" aria-hidden="true">

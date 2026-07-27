@@ -1,4 +1,4 @@
-import type { Item, Kind, Status } from "../types";
+import type { HistoryEntry, Item, Kind, Status } from "../types";
 
 export function computeMinutes(item: Item): number {
   if (!item.runtime) return 0;
@@ -67,6 +67,56 @@ export function computeStats(items: Item[]): LibraryStats {
     byKind: Array.from(kindCounts.entries()),
     voteDist,
     top,
+  };
+}
+
+export interface YearInReview {
+  year: number;
+  watchedCount: number;
+  hours: number;
+  topGenre: string | null;
+  busiestMonth: string | null;
+}
+
+const MONTH_NAMES = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"];
+
+export function computeYearInReview(items: Item[], history: HistoryEntry[], year: number): YearInReview {
+  const yearHistory = history.filter((h) => h.date.startsWith(`${year}-`));
+  const itemById = new Map(items.map((i) => [i.id, i]));
+  let minutes = 0;
+  const monthCounts = new Map<number, number>();
+  const watchedItemIds = new Set<string>();
+
+  for (const h of yearHistory) {
+    const item = itemById.get(h.itemId);
+    if (!item) continue;
+    if (h.action === "watched") {
+      watchedItemIds.add(h.itemId);
+      if (item.kind === "film" || item.kind === "doc") minutes += item.runtime;
+    } else if (h.action === "episode") {
+      minutes += item.runtime;
+    } else if (h.action === "rewatch" && (item.kind === "film" || item.kind === "doc")) {
+      minutes += item.runtime;
+    }
+    const month = Number(h.date.slice(5, 7)) - 1;
+    monthCounts.set(month, (monthCounts.get(month) ?? 0) + 1);
+  }
+
+  const genreCounts = new Map<string, number>();
+  for (const id of watchedItemIds) {
+    const genre = itemById.get(id)?.genre;
+    if (genre) genreCounts.set(genre, (genreCounts.get(genre) ?? 0) + 1);
+  }
+
+  const topGenre = Array.from(genreCounts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  const busiestMonthIdx = Array.from(monthCounts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0];
+
+  return {
+    year,
+    watchedCount: watchedItemIds.size,
+    hours: Math.round(minutes / 60),
+    topGenre,
+    busiestMonth: busiestMonthIdx != null ? MONTH_NAMES[busiestMonthIdx] : null,
   };
 }
 

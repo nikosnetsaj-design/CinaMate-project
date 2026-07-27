@@ -54,3 +54,14 @@ export interface ToastMessage {
   kind: ToastKind;
   text: string;
 }
+
+export type HistoryAction = "watched" | "episode" | "rewatch";
+
+export interface HistoryEntry {
+  id: string;
+  itemId: string;
+  title: string;
+  kind: Kind;
+  date: string;
+  action: HistoryAction;
+}

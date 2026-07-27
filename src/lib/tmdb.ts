@@ -219,3 +219,21 @@ export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiK
     watchLink: watch.link,
   };
 }
+
+export interface TmdbUpcomingEpisode {
+  airDate: string | null;
+  seasonNumber: number | null;
+  episodeNumber: number | null;
+}
+
+interface RawTvMinimal {
+  next_episode_to_air?: { air_date: string; season_number: number; episode_number: number } | null;
+}
+
+export async function getNextEpisode(tmdbId: number, apiKey: string): Promise<TmdbUpcomingEpisode> {
+  const data = await tmdbGet<RawTvMinimal>(`/tv/${tmdbId}`, apiKey);
+  const next = data.next_episode_to_air;
+  return next
+    ? { airDate: next.air_date, seasonNumber: next.season_number, episodeNumber: next.episode_number }
+    : { airDate: null, seasonNumber: null, episodeNumber: null };
+}

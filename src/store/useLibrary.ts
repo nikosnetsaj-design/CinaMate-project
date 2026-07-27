@@ -1,8 +1,10 @@
 import { create } from "zustand";
 import { SEED } from "../data/seed";
-import type { Item, Status, ToastKind, ToastMessage } from "../types";
+import { buildSeedHistory } from "../data/seedHistory";
+import type { HistoryEntry, Item, Status, ToastKind, ToastMessage } from "../types";
 
 const STORAGE_KEY = "cinemate:v2";
+const HISTORY_KEY = "cinemate:history:v1";
 
 function isItemArray(value: unknown): value is Item[] {
   return (
@@ -40,8 +42,48 @@ if (localStorage.getItem(STORAGE_KEY) === null && !initial.corrupted) {
   saveItems(initial.data);
 }
 
+function isHistoryArray(value: unknown): value is HistoryEntry[] {
+  return (
+    Array.isArray(value) &&
+    value.every((v) => v && typeof v === "object" && typeof (v as HistoryEntry).id === "string")
+  );
+}
+
+function loadHistory(): HistoryEntry[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    if (raw === null) return buildSeedHistory(initial.data);
+    const parsed: unknown = JSON.parse(raw);
+    if (!isHistoryArray(parsed)) throw new Error("malformed cinemate history");
+    return parsed;
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(history: HistoryEntry[]): void {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  } catch {
+    // Non-critical derived data — skip silently on quota errors rather than
+    // surfacing another toast on top of the main library's own storageError.
+  }
+}
+
+const initialHistory = loadHistory();
+if (localStorage.getItem(HISTORY_KEY) === null) saveHistory(initialHistory);
+
+function makeHistoryEntry(item: Pick<Item, "id" | "title" | "kind">, date: string, action: HistoryEntry["action"]): HistoryEntry {
+  return { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, itemId: item.id, title: item.title, kind: item.kind, date, action };
+}
+
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 interface LibraryState {
   items: Item[];
+  history: HistoryEntry[];
   toasts: ToastMessage[];
   storageError: boolean;
 
@@ -76,14 +118,23 @@ function persistOrToast(
   }
 }
 
+function logHistory(get: () => LibraryState, set: (partial: Partial<LibraryState>) => void, entries: HistoryEntry[]) {
+  if (entries.length === 0) return;
+  const next = [...get().history, ...entries];
+  saveHistory(next);
+  set({ history: next });
+}
+
 export const useLibrary = create<LibraryState>((set, get) => ({
   items: initial.data,
+  history: initialHistory,
   toasts: [],
   storageError: initial.corrupted,
 
   addItem: (data) => {
     const item: Item = { ...data, id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, added: new Date().toISOString().slice(0, 10) };
     persistOrToast(get, set, [item, ...get().items], `"${item.title}" aggiunto alla libreria.`);
+    if (item.status === "Visto") logHistory(get, set, [makeHistoryEntry(item, item.added, "watched")]);
   },
 
   updateItem: (id, patch) => {
@@ -98,8 +149,12 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   },
 
   setStatus: (id, status) => {
+    const prev = get().items.find((i) => i.id === id);
     const next = get().items.map((i) => (i.id === id ? { ...i, status } : i));
     persistOrToast(get, set, next);
+    if (prev && prev.status !== "Visto" && status === "Visto") {
+      logHistory(get, set, [makeHistoryEntry(prev, today(), "watched")]);
+    }
   },
 
   toggleFav: (id) => {
@@ -108,13 +163,21 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   },
 
   incrementEpisode: (id) => {
+    const prev = get().items.find((i) => i.id === id);
+    let becameWatched = false;
     const next = get().items.map((i) => {
       if (i.id !== id || !i.episodes) return i;
       const seen = Math.min(i.episodes, (i.seen || 0) + 1);
       const status: Status = seen === i.episodes ? "Visto" : "In visione";
+      if (status === "Visto" && i.status !== "Visto") becameWatched = true;
       return { ...i, seen, status };
     });
     persistOrToast(get, set, next);
+    if (prev && prev.episodes) {
+      const entries = [makeHistoryEntry(prev, today(), "episode")];
+      if (becameWatched) entries.push(makeHistoryEntry(prev, today(), "watched"));
+      logHistory(get, set, entries);
+    }
   },
 
   decrementEpisode: (id) => {
@@ -133,8 +196,11 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   },
 
   setRewatch: (id, rewatch) => {
-    const next = get().items.map((i) => (i.id === id ? { ...i, rewatch: Math.max(0, rewatch) } : i));
+    const prev = get().items.find((i) => i.id === id);
+    const clamped = Math.max(0, rewatch);
+    const next = get().items.map((i) => (i.id === id ? { ...i, rewatch: clamped } : i));
     persistOrToast(get, set, next);
+    if (prev && clamped > prev.rewatch) logHistory(get, set, [makeHistoryEntry(prev, today(), "rewatch")]);
   },
 
   pushToast: (kind, text) => {

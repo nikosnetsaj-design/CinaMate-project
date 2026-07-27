@@ -8,6 +8,8 @@ import { EmptyState } from "../components/EmptyState";
 import { PosterGridSkeleton, StatCardSkeleton } from "../components/Skeletons";
 import { PosterArt } from "../components/PosterArt";
 import { VoteBadge } from "../components/VoteBadge";
+import { UpcomingRow } from "../components/UpcomingRow";
+import { NightPickerButton } from "../components/NightPicker";
 import { computeStats } from "../lib/stats";
 import { greeting } from "../lib/stats";
 import { formatRuntime } from "../lib/format";
@@ -34,7 +36,10 @@ export function Home() {
           <h1 className="font-display text-3xl font-semibold text-text sm:text-4xl">{greeting()}.</h1>
           <span className="text-xs text-text-faint">{ready ? `${items.length} titoli` : ""}</span>
         </div>
-        <p className="mt-1 text-sm capitalize text-text-faint">{today}</p>
+        <div className="mt-1 flex items-center justify-between gap-3">
+          <p className="text-sm capitalize text-text-faint">{today}</p>
+          {ready && items.length > 0 && <NightPickerButton />}
+        </div>
       </div>
 
       <section aria-label="Le tue statistiche" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -110,6 +115,8 @@ export function Home() {
               </ul>
             </section>
           )}
+
+          <UpcomingRow />
 
           {favs.length > 0 && (
             <section className="flex flex-col gap-3">
