@@ -8,6 +8,7 @@ import { voteColor } from "../lib/vote";
 import { PosterArt } from "./PosterArt";
 import { StatusChip } from "./StatusChip";
 import { WatchAndLinks } from "./WatchAndLinks";
+import { LinkToTmdb } from "./LinkToTmdb";
 import { HeartIcon } from "./icons";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useLibrary } from "../store/useLibrary";
@@ -216,6 +217,7 @@ function ItemDetail({ item }: { item: Item }) {
         )}
 
         <WatchAndLinks item={item} />
+        <LinkToTmdb item={item} />
 
         {item.similar.length > 0 && (
           <div className="mt-4">
@@ -280,6 +282,11 @@ function ItemDetail({ item }: { item: Item }) {
 }
 
 export function ItemDetailSheetPortal() {
-  const item = useSelectedItem((s) => s.item);
+  const selected = useSelectedItem((s) => s.item);
+  // Follow the live record rather than the snapshot captured on open, so edits
+  // made from inside the sheet are reflected immediately. Falls back to the
+  // snapshot for the frame between deleting an item and the sheet closing.
+  const live = useLibrary((s) => (selected ? s.items.find((i) => i.id === selected.id) : undefined));
+  const item = live ?? selected;
   return item ? <ItemDetail key={item.id} item={item} /> : null;
 }
