@@ -3,66 +3,117 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ---------------------------------------------------------------- */
-/* CineMate design tokens — "Golden Hour Cinema"                     */
-/* Warm paper / ink-black pair, marquee gold accent, no purple,      */
-/* no Inter. Serif display (Fraunces) + technical sans (Space        */
-/* Grotesk) for a boutique-cinema, not generic-SaaS, identity.       */
+/* CineMate design tokens — "Cinema Noir"                            */
+/* Near-black ink / warm paper pair, marquee gold accent, procedural */
+/* jewel-tone posters. Serif display (Bodoni Moda) + technical sans  */
+/* (Karla) — a boutique screening-room identity, not generic SaaS.   */
 /* ---------------------------------------------------------------- */
 
 :root {
-  --bg: #f7f2e9;
-  --surface: #fffdf8;
-  --surface-2: #efe7d6;
-  --surface-hover: #e9dfc9;
-  --text: #1b1a1d;
-  --text-muted: #5b564c;
-  --text-faint: #655f52;
-  --border: rgba(27, 26, 29, 0.13);
-  --border-strong: rgba(27, 26, 29, 0.24);
+  --bg: #f5f1e9;
+  --surface: #fffdf9;
+  --surface-2: #efe8da;
+  --surface-hover: #e7dec9;
+  --text: #1a1815;
+  --text-muted: #5b5347;
+  --text-faint: #6f675a;
+  --border: rgba(20, 18, 15, 0.12);
+  --border-strong: rgba(20, 18, 15, 0.22);
 
-  --accent: #e3a339;
+  --accent: #e4b363;
   --accent-text: #8a5a16;
-  --accent-contrast: #1b1305;
-  --rust: #b5502e;
-  --rust-contrast: #fff8f1;
-  --teal: #1f5c57;
-  --teal-contrast: #f2fbf9;
+  --accent-contrast: #1a1508;
+  --rust: #9c3a2a;
+  --rust-contrast: #fdf3f0;
+  --teal: #186a76;
+  --teal-contrast: #eafbfc;
 
-  --shadow-color: 30 20% 20%;
-  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.08);
-  --shadow-md: 0 6px 20px -4px hsl(var(--shadow-color) / 0.16);
-  --shadow-lg: 0 20px 48px -12px hsl(var(--shadow-color) / 0.28);
+  --status-watching: var(--teal);
+  --status-done: #4a7a34;
+  --status-planned: var(--accent-text);
+  --status-dropped: var(--rust);
+  --status-hold: #625b4f;
+
+  --vote-1: #9c3a2a;
+  --vote-2: #a8532f;
+  --vote-3: #a05e22;
+  --vote-4: #8a5f1c;
+  --vote-5: #8a5a16;
+  --vote-6: #7a6d2e;
+  --vote-7: #5c6b2e;
+  --vote-8: #3f6b32;
+  --vote-9: #2f6b5c;
+  --vote-10: #186a76;
+
+  --shadow-color: 30 20% 15%;
+  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.1);
+  --shadow-md: 0 6px 20px -4px hsl(var(--shadow-color) / 0.18);
+  --shadow-lg: 0 20px 48px -12px hsl(var(--shadow-color) / 0.3);
 
   --grain-opacity: 0.035;
   color-scheme: light;
 }
 
 .dark {
-  --bg: #0e0d0f;
-  --surface: #17161a;
-  --surface-2: #201f24;
-  --surface-hover: #29282e;
-  --text: #f5f0e6;
-  --text-muted: #a8a29a;
-  --text-faint: #928c80;
-  --border: rgba(245, 240, 230, 0.11);
-  --border-strong: rgba(245, 240, 230, 0.22);
+  --bg: #0c0b0a;
+  --surface: #14120f;
+  --surface-2: #1d1b17;
+  --surface-hover: #262319;
+  --text: #f2ede4;
+  --text-muted: #a39a8c;
+  --text-faint: #8d8476;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.18);
 
-  --accent: #e8ad4d;
-  --accent-text: #eab454;
-  --accent-contrast: #17110a;
-  --rust: #e0805c;
-  --rust-contrast: #1c0f08;
-  --teal: #5db3a8;
-  --teal-contrast: #071613;
+  --accent: #e4b363;
+  --accent-text: #e4b363;
+  --accent-contrast: #1a1508;
+  --rust: #d2553f;
+  --rust-contrast: #fdece7;
+  --teal: #6bc5d2;
+  --teal-contrast: #06181a;
+
+  --status-watching: var(--teal);
+  --status-done: #7fb069;
+  --status-planned: var(--accent);
+  --status-dropped: var(--rust);
+  --status-hold: #8a8279;
+
+  --vote-1: #ce6357;
+  --vote-2: #cc6644;
+  --vote-3: #d97f42;
+  --vote-4: #de9a45;
+  --vote-5: #e4b363;
+  --vote-6: #c9b76a;
+  --vote-7: #a8b970;
+  --vote-8: #88b878;
+  --vote-9: #6bb5a0;
+  --vote-10: #6bc5d2;
 
   --shadow-color: 0 0% 0%;
-  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.4);
-  --shadow-md: 0 8px 24px -4px hsl(var(--shadow-color) / 0.5);
-  --shadow-lg: 0 24px 56px -12px hsl(var(--shadow-color) / 0.6);
+  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.45);
+  --shadow-md: 0 8px 24px -4px hsl(var(--shadow-color) / 0.55);
+  --shadow-lg: 0 24px 56px -12px hsl(var(--shadow-color) / 0.65);
 
   --grain-opacity: 0.05;
   color-scheme: dark;
+}
+
+/* Fixed, theme-independent bright fills for the vote picker (always paired
+   with --vote-fill-ink for text) — distinct from the theme-adjusted --vote-N
+   tokens above, which are tuned for use as text color directly on the page. */
+:root {
+  --vote-fill-1: #ce6357;
+  --vote-fill-2: #cc6644;
+  --vote-fill-3: #d97f42;
+  --vote-fill-4: #de9a45;
+  --vote-fill-5: #e4b363;
+  --vote-fill-6: #c9b76a;
+  --vote-fill-7: #a8b970;
+  --vote-fill-8: #88b878;
+  --vote-fill-9: #6bb5a0;
+  --vote-fill-10: #6bc5d2;
+  --vote-fill-ink: #1a1508;
 }
 
 @theme inline {
@@ -84,8 +135,14 @@
   --color-teal: var(--teal);
   --color-teal-contrast: var(--teal-contrast);
 
-  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
-  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --color-status-watching: var(--status-watching);
+  --color-status-done: var(--status-done);
+  --color-status-planned: var(--status-planned);
+  --color-status-dropped: var(--status-dropped);
+  --color-status-hold: var(--status-hold);
+
+  --font-display: "Bodoni Moda Variable", "Iowan Old Style", Georgia, serif;
+  --font-sans: "Karla", ui-sans-serif, system-ui, sans-serif;
 
   --radius-xs: 3px;
   --radius-sm: 6px;
@@ -113,6 +170,7 @@ body {
 
 h1, h2, h3, .font-display {
   font-family: var(--font-display);
+  font-optical-sizing: auto;
 }
 
 /* Subtle 35mm-style grain overlay — texture, not decoration: gives the
@@ -159,6 +217,13 @@ h1, h2, h3, .font-display {
   background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-hover) 50%, var(--surface-2) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  animation: spin 0.8s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

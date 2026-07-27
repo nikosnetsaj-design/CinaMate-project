@@ -29,15 +29,3 @@ export function StatCardSkeleton() {
     </div>
   );
 }
-
-export function RowSkeleton() {
-  return (
-    <div className="flex items-center gap-4 rounded-md border border-border bg-surface p-3">
-      <div className="skeleton h-20 w-14 shrink-0 rounded-xs" />
-      <div className="flex flex-1 flex-col gap-2">
-        <div className="skeleton h-3.5 w-2/3 rounded-xs" />
-        <div className="skeleton h-3 w-1/3 rounded-xs" />
-      </div>
-    </div>
-  );
-}

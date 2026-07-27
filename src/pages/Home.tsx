@@ -1,42 +1,40 @@
 import { Link } from "react-router-dom";
-import { MOVIES } from "../data/movies";
 import { useLibrary } from "../store/useLibrary";
-import { useSelectedMovie } from "../store/useSelectedMovie";
+import { useSelectedItem } from "../store/useSelectedItem";
+import { useAddSheet } from "../store/useAddSheet";
 import { StatCard } from "../components/StatCard";
 import { PosterCard } from "../components/PosterCard";
 import { EmptyState } from "../components/EmptyState";
 import { PosterGridSkeleton, StatCardSkeleton } from "../components/Skeletons";
-import { computeStats, greeting } from "../lib/stats";
+import { PosterArt } from "../components/PosterArt";
+import { VoteBadge } from "../components/VoteBadge";
+import { computeStats } from "../lib/stats";
+import { greeting } from "../lib/stats";
 import { formatRuntime } from "../lib/format";
 import { useAppReady } from "../lib/useAppReady";
 
 export function Home() {
   const ready = useAppReady();
-  const watchlist = useLibrary((s) => s.watchlist);
-  const diary = useLibrary((s) => s.diary);
-  const openMovie = useSelectedMovie((s) => s.open);
+  const items = useLibrary((s) => s.items);
+  const openItem = useSelectedItem((s) => s.open);
+  const openAddSheet = useAddSheet((s) => s.open);
 
-  const stats = computeStats(diary);
-  const watchlistMovies = watchlist
-    .slice()
-    .reverse()
-    .slice(0, 4)
-    .map((w) => MOVIES.find((m) => m.id === w.movieId))
-    .filter((m): m is (typeof MOVIES)[number] => !!m);
-  const recentMovies = diary
-    .slice(0, 4)
-    .map((d) => MOVIES.find((m) => m.id === d.movieId))
-    .filter((m): m is (typeof MOVIES)[number] => !!m);
+  const stats = computeStats(items);
+  const watching = items.filter((i) => i.status === "In visione");
+  const planned = items.filter((i) => i.status === "Da vedere").slice(0, 4);
+  const favs = items.filter((i) => i.fav);
 
-  const today = new Intl.DateTimeFormat("it-IT", { weekday: "long", day: "numeric", month: "long" }).format(
-    new Date(),
-  );
+  const today = new Intl.DateTimeFormat("it-IT", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-6 sm:px-6 sm:py-10">
+    <div className="mx-auto flex max-w-6xl flex-col gap-9 px-4 py-6 sm:px-6 sm:py-10">
       <div>
-        <p className="text-sm capitalize text-text-faint">{today}</p>
-        <h1 className="font-display text-3xl font-semibold text-text sm:text-4xl">{greeting()}.</h1>
+        <p className="text-xs uppercase tracking-[0.2em] text-text-faint">La tua collezione</p>
+        <div className="mt-1 flex items-baseline justify-between">
+          <h1 className="font-display text-3xl font-semibold text-text sm:text-4xl">{greeting()}.</h1>
+          <span className="text-xs text-text-faint">{ready ? `${items.length} titoli` : ""}</span>
+        </div>
+        <p className="mt-1 text-sm capitalize text-text-faint">{today}</p>
       </div>
 
       <section aria-label="Le tue statistiche" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -44,98 +42,117 @@ export function Home() {
           Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
         ) : (
           <>
-            <StatCard label="Film visti" value={String(stats.totalWatched)} />
-            <StatCard label="Ore di visione" value={String(Math.round(stats.totalMinutes / 60))} hint="ore totali" />
-            <StatCard label="Questo mese" value={String(stats.thisMonthWatched)} />
-            <StatCard
-              label="Voto medio"
-              value={stats.totalWatched ? stats.avgRating.toFixed(1) : "—"}
-              hint={stats.favoriteGenre ? `Ami: ${stats.favoriteGenre}` : undefined}
-            />
+            <StatCard label="in libreria" value={String(stats.total)} />
+            <StatCard label="voto medio" value={stats.avgVote != null ? stats.avgVote.toFixed(1) : "—"} />
+            <StatCard label={`${stats.days} giorni`} value={`${stats.hours}h`} />
+            <StatCard label="preferiti" value={String(stats.favs)} />
           </>
         )}
       </section>
 
-      {ready && stats.totalWatched >= 3 && stats.favoriteGenre && (
-        <p className="rounded-md border border-border bg-surface-2 px-4 py-3 text-sm text-text-muted">
-          Nelle ultime settimane hai preferito il genere{" "}
-          <span className="font-medium text-accent-text">{stats.favoriteGenre}</span>, con un voto medio di{" "}
-          <span className="font-medium text-text">{stats.avgRating.toFixed(1)}★</span> e{" "}
-          {formatRuntime(stats.totalMinutes)} passate davanti allo schermo.
-        </p>
+      {!ready ? (
+        <PosterGridSkeleton count={4} />
+      ) : items.length === 0 ? (
+        <EmptyState
+          title="La tua libreria è vuota"
+          description="Tocca “Aggiungi titolo” e cerca il primo film, serie o anime — l'IA compila trama, durata ed episodi da sola."
+          action={
+            <button
+              type="button"
+              onClick={() => openAddSheet()}
+              className="rounded-sm px-4 py-2 text-sm font-medium"
+              style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+            >
+              Aggiungi il primo titolo
+            </button>
+          }
+        />
+      ) : (
+        <>
+          {watching.length > 0 && (
+            <section className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <h2 className="font-display text-xl font-semibold text-text">
+                  Riprendi <span className="text-sm font-normal text-text-faint">· {watching.length}</span>
+                </h2>
+                <Link to="/libreria" className="text-sm font-medium" style={{ color: "var(--status-watching)" }}>
+                  tutti
+                </Link>
+              </div>
+              <ul className="flex flex-col gap-2.5">
+                {watching.map((item) => {
+                  const pct = item.episodes ? Math.round(((item.seen || 0) / item.episodes) * 100) : null;
+                  return (
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        onClick={() => openItem(item)}
+                        aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
+                        className="flex w-full items-center gap-3.5 rounded-md border border-border bg-surface p-3 text-left transition-colors hover:bg-surface-hover"
+                      >
+                        <PosterArt item={item} size="sm" className="w-14 shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-display text-sm font-semibold text-text">{item.title}</p>
+                          <p className="mt-0.5 text-xs text-text-faint">
+                            {item.seen}/{item.episodes} episodi · {formatRuntime(item.runtime)}
+                          </p>
+                          {pct !== null && (
+                            <div className="mt-1.5 h-[3px] w-full max-w-64 overflow-hidden rounded-full bg-surface-hover">
+                              <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--status-watching)" }} />
+                            </div>
+                          )}
+                        </div>
+                        <VoteBadge vote={item.vote} size="sm" />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
+
+          {favs.length > 0 && (
+            <section className="flex flex-col gap-3">
+              <h2 className="font-display text-xl font-semibold text-text">
+                I tuoi preferiti <span className="text-sm font-normal text-text-faint">· {favs.length}</span>
+              </h2>
+              <div className="flex gap-3.5 overflow-x-auto pb-1">
+                {favs.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => openItem(item)}
+                    aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
+                    className="w-24 shrink-0 text-left"
+                  >
+                    <PosterArt item={item} size="sm" className="w-24" />
+                    <p className="mt-1.5 line-clamp-2 text-xs font-medium text-text">{item.title}</p>
+                    <VoteBadge vote={item.vote} size="sm" />
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {planned.length > 0 && (
+            <section className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <h2 className="font-display text-xl font-semibold text-text">
+                  Watchlist <span className="text-sm font-normal text-text-faint">· {items.filter((i) => i.status === "Da vedere").length}</span>
+                </h2>
+                <Link to="/libreria" className="text-sm font-medium text-accent-text">
+                  tutti
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                {planned.map((item) => (
+                  <PosterCard key={item.id} item={item} onOpen={openItem} />
+                ))}
+              </div>
+            </section>
+          )}
+        </>
       )}
-
-      <section aria-labelledby="watchlist-heading" className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h2 id="watchlist-heading" className="font-display text-xl font-semibold text-text">
-            Continua la watchlist
-          </h2>
-          {watchlist.length > 0 && (
-            <Link to="/watchlist" className="text-sm font-medium text-accent-text hover:underline">
-              Vedi tutto
-            </Link>
-          )}
-        </div>
-        {!ready ? (
-          <PosterGridSkeleton count={4} />
-        ) : watchlistMovies.length === 0 ? (
-          <EmptyState
-            title="La tua watchlist è vuota"
-            description="Aggiungi i film che vuoi vedere per trovarli qui, pronti quando hai voglia di guardarli."
-            action={
-              <Link
-                to="/scopri"
-                className="rounded-sm px-4 py-2 text-sm font-medium"
-                style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
-              >
-                Scopri film
-              </Link>
-            }
-          />
-        ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-            {watchlistMovies.map((movie) => (
-              <PosterCard key={movie.id} movie={movie} onOpen={openMovie} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section aria-labelledby="recent-heading" className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h2 id="recent-heading" className="font-display text-xl font-semibold text-text">
-            Visti di recente
-          </h2>
-          {diary.length > 0 && (
-            <Link to="/diario" className="text-sm font-medium text-accent-text hover:underline">
-              Vedi tutto
-            </Link>
-          )}
-        </div>
-        {!ready ? (
-          <PosterGridSkeleton count={4} />
-        ) : recentMovies.length === 0 ? (
-          <EmptyState
-            title="Il tuo diario è vuoto"
-            description="Segna un film come visto per iniziare a costruire il tuo archivio personale."
-            action={
-              <Link
-                to="/scopri"
-                className="rounded-sm px-4 py-2 text-sm font-medium"
-                style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
-              >
-                Scopri film
-              </Link>
-            }
-          />
-        ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-            {recentMovies.map((movie) => (
-              <PosterCard key={movie.id} movie={movie} onOpen={openMovie} />
-            ))}
-          </div>
-        )}
-      </section>
     </div>
   );
 }

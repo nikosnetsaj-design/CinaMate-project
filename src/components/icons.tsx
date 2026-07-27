@@ -71,6 +71,104 @@ export function SearchIcon({ size = 18 }: IconProps) {
   );
 }
 
+export function HeartIcon({ size = 18, filled = false }: IconProps & { filled?: boolean }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+      <path
+        d="M10 17s-6.2-3.9-8.2-7.7C.6 6.9 1.6 4 4.4 3.4c1.7-.4 3.4.4 4.4 1.9l1.2 1.8 1.2-1.8c1-1.5 2.7-2.3 4.4-1.9 2.8.6 3.8 3.5 2.6 5.9C16.2 13.1 10 17 10 17Z"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function ChartIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M4 16V8M10 16V4M16 16v-6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M3 17h14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function SparkleIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path
+        d="M10 2.5 11.4 7.4 16.3 8.8 11.4 10.2 10 15.1 8.6 10.2 3.7 8.8 8.6 7.4 10 2.5Z"
+        fill="currentColor"
+      />
+      <path d="M16 12.5 16.6 14.6 18.7 15.2 16.6 15.8 16 17.9 15.4 15.8 13.3 15.2 15.4 14.6 16 12.5Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function PlusIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M10 3.5v13M3.5 10h13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function ChevronRightIcon({ size = 16 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M6 3.5 11 8l-5 4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function GearIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <circle cx="10" cy="10" r="2.6" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M10 2.8v2M10 15.2v2M17.2 10h-2M4.8 10h-2M15 5l-1.4 1.4M6.4 13.6 5 15M15 15l-1.4-1.4M6.4 6.4 5 5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function FilmKindIcon({ size = 14 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <rect x="1.5" y="3" width="13" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M1.5 6h13M5 3v3M11 3v3" stroke="currentColor" strokeWidth="1.1" />
+    </svg>
+  );
+}
+
+export function SerieKindIcon({ size = 14 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M5.5 15h5M8 12.5v2.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function AnimeKindIcon({ size = 14 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M1.5 5.5h13M3 5.5V14M13 5.5V14" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <path d="M1.5 2.8c1.6.9 11.4.9 13 0" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function DocKindIcon({ size = 14 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M6.8 5.6v4.8L10.2 8 6.8 5.6Z" fill="currentColor" />
+    </svg>
+  );
+}
+
 export function ReelMark({ size = 26 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 26 26" fill="none" aria-hidden="true">

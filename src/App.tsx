@@ -3,13 +3,16 @@ import { Route, Routes } from "react-router-dom";
 import { Nav } from "./components/Nav";
 import { ToastStack } from "./components/ToastStack";
 import { CommandPalette } from "./components/CommandPalette";
-import { AnimatedMovieModal } from "./components/MovieModal";
+import { ItemDetailSheetPortal } from "./components/ItemDetailSheet";
+import { AddItemSheetPortal } from "./components/AddItemSheet";
+import { EditItemSheetPortal } from "./components/EditItemSheet";
+import { SettingsSheetPortal } from "./components/SettingsSheet";
 import { useTheme } from "./store/useTheme";
 import { useLibrary } from "./store/useLibrary";
 import { Home } from "./pages/Home";
-import { Discover } from "./pages/Discover";
-import { Watchlist } from "./pages/Watchlist";
-import { Diary } from "./pages/Diary";
+import { Library } from "./pages/Library";
+import { Stats } from "./pages/Stats";
+import { Critic } from "./pages/Critic";
 
 function ErrorBanner() {
   const storageError = useLibrary((s) => s.storageError);
@@ -55,15 +58,18 @@ export default function App() {
         <main id="main-content">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/scopri" element={<Discover />} />
-            <Route path="/watchlist" element={<Watchlist />} />
-            <Route path="/diario" element={<Diary />} />
+            <Route path="/libreria" element={<Library />} />
+            <Route path="/dati" element={<Stats />} />
+            <Route path="/critico" element={<Critic />} />
           </Routes>
         </main>
       </div>
       <ToastStack />
       <CommandPalette />
-      <AnimatedMovieModal />
+      <ItemDetailSheetPortal />
+      <AddItemSheetPortal />
+      <EditItemSheetPortal />
+      <SettingsSheetPortal />
     </>
   );
 }

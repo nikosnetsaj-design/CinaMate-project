@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { MOVIES } from "../data/movies";
+import { useLibrary } from "../store/useLibrary";
 import { useCommandPalette } from "../store/useCommandPalette";
-import { useSelectedMovie } from "../store/useSelectedMovie";
+import { useSelectedItem } from "../store/useSelectedItem";
 import { SearchIcon } from "./icons";
 
 export function CommandPalette() {
   const isOpen = useCommandPalette((s) => s.isOpen);
   const open = useCommandPalette((s) => s.open);
   const close = useCommandPalette((s) => s.close);
-  const openMovie = useSelectedMovie((s) => s.open);
+  const openItem = useSelectedItem((s) => s.open);
+  const items = useLibrary((s) => s.items);
 
   const [query, setQuery] = useState("");
   const [highlighted, setHighlighted] = useState(0);
@@ -43,16 +44,16 @@ export function CommandPalette() {
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return MOVIES.slice(0, 6);
-    return MOVIES.filter(
-      (m) => m.title.toLowerCase().includes(q) || m.director.toLowerCase().includes(q),
-    ).slice(0, 8);
-  }, [query]);
+    if (!q) return items.slice(0, 6);
+    return items
+      .filter((m) => m.title.toLowerCase().includes(q) || m.director.toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [query, items]);
 
   function select(index: number) {
-    const movie = results[index];
-    if (!movie) return;
-    openMovie(movie);
+    const item = results[index];
+    if (!item) return;
+    openItem(item);
     close();
   }
 
@@ -71,7 +72,7 @@ export function CommandPalette() {
         <motion.div
           role="dialog"
           aria-modal="true"
-          aria-label="Cerca film"
+          aria-label="Cerca nella libreria"
           initial={{ opacity: 0, y: -12, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -8, scale: 0.98 }}
@@ -101,7 +102,7 @@ export function CommandPalette() {
                 setHighlighted(0);
               }}
               placeholder="Cerca per titolo o regista…"
-              aria-label="Cerca film"
+              aria-label="Cerca nella libreria"
               className="flex-1 bg-transparent text-sm text-text placeholder:text-text-faint focus:outline-none"
             />
             <kbd className="rounded-xs border border-border-strong px-1.5 py-0.5 text-[10px] text-text-faint">
@@ -111,11 +112,11 @@ export function CommandPalette() {
           <ul role="listbox" aria-label="Risultati" className="max-h-80 overflow-y-auto py-1.5">
             {results.length === 0 && (
               <li className="px-4 py-6 text-center text-sm text-text-muted">
-                Nessun film trovato per &ldquo;{query}&rdquo;.
+                Nessun titolo trovato per &ldquo;{query}&rdquo;.
               </li>
             )}
-            {results.map((movie, i) => (
-              <li key={movie.id} role="option" aria-selected={i === highlighted}>
+            {results.map((item, i) => (
+              <li key={item.id} role="option" aria-selected={i === highlighted}>
                 <button
                   type="button"
                   onMouseEnter={() => setHighlighted(i)}
@@ -124,8 +125,8 @@ export function CommandPalette() {
                     i === highlighted ? "bg-surface-hover text-text" : "text-text-muted"
                   }`}
                 >
-                  <span className="truncate font-medium">{movie.title}</span>
-                  <span className="shrink-0 text-xs text-text-faint">{movie.year}</span>
+                  <span className="truncate font-medium">{item.title}</span>
+                  <span className="shrink-0 text-xs text-text-faint">{item.year}</span>
                 </button>
               </li>
             ))}

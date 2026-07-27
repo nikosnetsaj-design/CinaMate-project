@@ -1,43 +1,73 @@
-import { MOVIES } from "../data/movies";
-import type { DiaryEntry, Genre } from "../types";
+import type { Item, Kind, Status } from "../types";
 
-export interface LibraryStats {
-  totalWatched: number;
-  totalMinutes: number;
-  thisMonthWatched: number;
-  avgRating: number;
-  favoriteGenre: Genre | null;
+export function computeMinutes(item: Item): number {
+  if (!item.runtime) return 0;
+  const base = item.kind === "film" ? (item.status === "Visto" ? item.runtime : 0) : (item.seen || 0) * item.runtime;
+  return base * (1 + (item.rewatch || 0));
 }
 
-export function computeStats(diary: DiaryEntry[]): LibraryStats {
-  const totalWatched = diary.length;
-  const totalMinutes = diary.reduce(
-    (sum, d) => sum + (MOVIES.find((m) => m.id === d.movieId)?.runtime ?? 0),
-    0,
-  );
-  const avgRating = totalWatched ? diary.reduce((s, d) => s + d.rating, 0) / totalWatched : 0;
+export interface LibraryStats {
+  total: number;
+  avgVote: number | null;
+  minutes: number;
+  hours: number;
+  days: string;
+  byStatus: Record<Status, number>;
+  favs: number;
+  byGenre: [string, number][];
+  byPlatform: [string, number][];
+  byKind: [Kind, number][];
+  voteDist: { v: number; n: number }[];
+  top: Item[];
+}
 
-  const now = new Date();
-  const thisMonthWatched = diary.filter((d) => {
-    const dt = new Date(d.watchedAt);
-    return dt.getFullYear() === now.getFullYear() && dt.getMonth() === now.getMonth();
-  }).length;
+export function computeStats(items: Item[]): LibraryStats {
+  const voted = items.filter((i) => i.vote != null);
+  const avgVote = voted.length ? voted.reduce((a, b) => a + (b.vote ?? 0), 0) / voted.length : null;
+  const minutes = items.reduce((a, i) => a + computeMinutes(i), 0);
 
-  const genreCounts = new Map<Genre, number>();
-  for (const entry of diary) {
-    const movie = MOVIES.find((m) => m.id === entry.movieId);
-    movie?.genres.forEach((g) => genreCounts.set(g, (genreCounts.get(g) ?? 0) + 1));
+  const byStatus: Record<Status, number> = {
+    "In visione": 0,
+    Visto: 0,
+    "Da vedere": 0,
+    Abbandonato: 0,
+    "In pausa": 0,
+  };
+  for (const i of items) byStatus[i.status]++;
+
+  const genreCounts = new Map<string, number>();
+  const platCounts = new Map<string, number>();
+  const kindCounts = new Map<Kind, number>();
+  for (const i of items) {
+    if (i.genre) genreCounts.set(i.genre, (genreCounts.get(i.genre) ?? 0) + 1);
+    platCounts.set(i.platform, (platCounts.get(i.platform) ?? 0) + 1);
+    kindCounts.set(i.kind, (kindCounts.get(i.kind) ?? 0) + 1);
   }
-  let favoriteGenre: Genre | null = null;
-  let max = 0;
-  genreCounts.forEach((count, genre) => {
-    if (count > max) {
-      max = count;
-      favoriteGenre = genre;
-    }
+
+  const voteDist = Array.from({ length: 10 }, (_, idx) => {
+    const v = idx + 1;
+    return { v, n: items.filter((i) => i.vote === v).length };
   });
 
-  return { totalWatched, totalMinutes, thisMonthWatched, avgRating, favoriteGenre };
+  const top = voted
+    .slice()
+    .sort((a, b) => (b.vote ?? 0) - (a.vote ?? 0))
+    .slice(0, 5);
+
+  return {
+    total: items.length,
+    avgVote,
+    minutes,
+    hours: Math.round(minutes / 60),
+    days: (minutes / 1440).toFixed(1),
+    byStatus,
+    favs: items.filter((i) => i.fav).length,
+    byGenre: Array.from(genreCounts.entries()).sort((a, b) => b[1] - a[1]),
+    byPlatform: Array.from(platCounts.entries()).sort((a, b) => b[1] - a[1]),
+    byKind: Array.from(kindCounts.entries()),
+    voteDist,
+    top,
+  };
 }
 
 export function greeting(): string {

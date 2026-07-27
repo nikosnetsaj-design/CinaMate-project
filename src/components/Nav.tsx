@@ -1,13 +1,15 @@
 import { NavLink } from "react-router-dom";
 import { useTheme } from "../store/useTheme";
 import { useCommandPalette } from "../store/useCommandPalette";
-import { BookIcon, BookmarkIcon, CompassIcon, HomeIcon, MoonIcon, ReelMark, SearchIcon, SunIcon } from "./icons";
+import { useAddSheet } from "../store/useAddSheet";
+import { useSettingsSheet } from "../store/useSettingsSheet";
+import { ChartIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, PlusIcon, ReelMark, SearchIcon, SparkleIcon, SunIcon } from "./icons";
 
 const NAV_ITEMS = [
   { to: "/", label: "Home", icon: HomeIcon, end: true },
-  { to: "/scopri", label: "Scopri", icon: CompassIcon, end: false },
-  { to: "/watchlist", label: "Watchlist", icon: BookmarkIcon, end: false },
-  { to: "/diario", label: "Diario", icon: BookIcon, end: false },
+  { to: "/libreria", label: "Libreria", icon: LibraryIcon, end: false },
+  { to: "/dati", label: "Dati", icon: ChartIcon, end: false },
+  { to: "/critico", label: "Critico", icon: SparkleIcon, end: false },
 ] as const;
 
 function linkClasses(isActive: boolean) {
@@ -33,6 +35,8 @@ function ThemeToggle({ compact = false }: { compact?: boolean }) {
 
 export function Nav() {
   const openPalette = useCommandPalette((s) => s.open);
+  const openAddSheet = useAddSheet((s) => s.open);
+  const openSettings = useSettingsSheet((s) => s.open);
 
   return (
     <>
@@ -45,11 +49,21 @@ export function Nav() {
 
         <button
           type="button"
+          onClick={() => openAddSheet()}
+          className="mb-2.5 flex items-center justify-center gap-2 rounded-sm px-3 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
+          style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+        >
+          <PlusIcon size={16} />
+          Aggiungi titolo
+        </button>
+
+        <button
+          type="button"
           onClick={openPalette}
           className="mb-5 flex items-center gap-2 rounded-sm border border-border-strong px-3 py-2 text-sm text-text-faint transition-colors hover:text-text-muted"
         >
           <SearchIcon size={16} />
-          <span className="flex-1 text-left">Cerca…</span>
+          <span className="flex-1 text-left">Cerca nella libreria…</span>
           <kbd className="rounded-xs border border-border-strong px-1.5 py-0.5 font-sans text-[10px]">⌘K</kbd>
         </button>
 
@@ -70,7 +84,14 @@ export function Nav() {
         </nav>
 
         <div className="flex items-center justify-between px-1 pt-4">
-          <span className="text-xs text-text-faint">Il tuo diario, senza rumore.</span>
+          <button
+            type="button"
+            onClick={openSettings}
+            aria-label="Impostazioni"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border-strong text-text-muted transition-colors hover:text-text"
+          >
+            <GearIcon size={16} />
+          </button>
           <ThemeToggle />
         </div>
       </aside>
@@ -90,6 +111,14 @@ export function Nav() {
           >
             <SearchIcon size={17} />
           </button>
+          <button
+            type="button"
+            onClick={openSettings}
+            aria-label="Impostazioni"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border-strong text-text-muted"
+          >
+            <GearIcon size={16} />
+          </button>
           <ThemeToggle compact />
         </div>
       </header>
@@ -99,7 +128,7 @@ export function Nav() {
         aria-label="Navigazione principale"
         className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm md:hidden"
       >
-        {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
+        {NAV_ITEMS.map(({ to, label, icon: Icon, end }, idx) => (
           <NavLink
             key={to}
             to={to}
@@ -107,13 +136,22 @@ export function Nav() {
             className={({ isActive }) =>
               `flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium ${
                 isActive ? "text-accent-text" : "text-text-faint"
-              }`
+              } ${idx === 1 ? "mr-6" : ""} ${idx === 2 ? "ml-6" : ""}`
             }
           >
             <Icon size={20} />
             {label}
           </NavLink>
         ))}
+        <button
+          type="button"
+          onClick={() => openAddSheet()}
+          aria-label="Aggiungi titolo"
+          className="absolute -top-5 left-1/2 flex h-[52px] w-[52px] -translate-x-1/2 items-center justify-center rounded-full border-[3px] shadow-[var(--shadow-md)]"
+          style={{ background: "var(--accent)", color: "var(--accent-contrast)", borderColor: "var(--bg)" }}
+        >
+          <PlusIcon size={24} />
+        </button>
       </nav>
     </>
   );
