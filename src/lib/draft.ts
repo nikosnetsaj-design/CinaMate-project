@@ -22,6 +22,11 @@ export function blankDraft(): ItemDraft {
     cast: [],
     similar: [],
     notes: "",
+    tmdbId: null,
+    tmdbMediaType: null,
+    posterPath: null,
+    trailerUrl: null,
+    links: [],
   };
 }
 

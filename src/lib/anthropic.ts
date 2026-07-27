@@ -1,4 +1,4 @@
-import type { Item, LookupResult } from "../types";
+import type { Item } from "../types";
 
 const ENDPOINT = "https://api.anthropic.com/v1/messages";
 
@@ -79,29 +79,6 @@ async function callClaude(opts: {
     .join("");
   if (!text.trim()) throw new ClaudeApiError("Risposta vuota da Claude.");
   return text;
-}
-
-export async function lookupTitles(query: string, apiKey: string, model: string): Promise<LookupResult[]> {
-  const prompt = `Sei un database cinematografico. L'utente cerca: "${query}".
-Restituisci fino a 5 titoli corrispondenti (film, serie TV, anime o documentari), i più probabili per primi.
-Rispondi ESCLUSIVAMENTE con JSON valido, senza markdown, senza backtick, senza testo prima o dopo:
-{"results":[{"title":"titolo italiano o originale","kind":"film|serie|anime|doc","year":2008,"genre":"genere principale in italiano","runtime":49,"episodes":62,"seasons":5,"overview":"trama in italiano, max 180 caratteri","director":"regista o creatore","cast":["attore 1","attore 2"],"platform":"piattaforma streaming più probabile in Italia","similar":["titolo simile 1","titolo simile 2","titolo simile 3"]}]}
-Per i film ometti episodes e seasons (usa null). Per le serie runtime è la durata media di un episodio.
-Se non trovi nulla restituisci {"results":[]}.`;
-
-  const raw = await callClaude({ apiKey, model, prompt, maxTokens: 1200, effort: "medium" });
-  const clean = raw.replace(/```json|```/g, "").trim();
-  const start = clean.indexOf("{");
-  const end = clean.lastIndexOf("}");
-  if (start === -1 || end === -1) throw new ClaudeApiError("Risposta non interpretabile.");
-  let parsed: { results?: unknown[] };
-  try {
-    parsed = JSON.parse(clean.slice(start, end + 1));
-  } catch {
-    throw new ClaudeApiError("Risposta non interpretabile.");
-  }
-  if (!Array.isArray(parsed.results)) return [];
-  return parsed.results.filter((r): r is LookupResult => !!r && typeof (r as LookupResult).title === "string");
 }
 
 export async function askCritic(question: string, items: Item[], apiKey: string, model: string): Promise<string> {

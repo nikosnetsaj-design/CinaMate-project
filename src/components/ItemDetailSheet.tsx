@@ -7,6 +7,7 @@ import { STATUSES } from "../lib/status";
 import { voteColor } from "../lib/vote";
 import { PosterArt } from "./PosterArt";
 import { StatusChip } from "./StatusChip";
+import { WatchAndLinks } from "./WatchAndLinks";
 import { HeartIcon } from "./icons";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useLibrary } from "../store/useLibrary";
@@ -213,6 +214,8 @@ function ItemDetail({ item }: { item: Item }) {
             <p className="text-sm italic leading-relaxed text-text">{item.notes}</p>
           </div>
         )}
+
+        <WatchAndLinks item={item} />
 
         {item.similar.length > 0 && (
           <div className="mt-4">

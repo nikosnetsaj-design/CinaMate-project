@@ -12,11 +12,16 @@ function SettingsForm() {
   const setApiKey = useSettings((s) => s.setApiKey);
   const setModel = useSettings((s) => s.setModel);
   const clearApiKey = useSettings((s) => s.clearApiKey);
+  const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
+  const setTmdbApiKey = useSettings((s) => s.setTmdbApiKey);
+  const clearTmdbApiKey = useSettings((s) => s.clearTmdbApiKey);
   const items = useLibrary((s) => s.items);
   const pushToast = useLibrary((s) => s.pushToast);
 
   const [draftKey, setDraftKey] = useState(apiKey);
   const [reveal, setReveal] = useState(false);
+  const [draftTmdbKey, setDraftTmdbKey] = useState(tmdbApiKey);
+  const [revealTmdb, setRevealTmdb] = useState(false);
   const titleId = "settings-sheet-title";
 
   function exportData() {
@@ -90,6 +95,63 @@ function SettingsForm() {
               </button>
             )}
           </div>
+        </div>
+
+        <div>
+          <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">Chiave API TMDB</span>
+          <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
+            Per copertine reali, trama, cast, trailer e disponibilità streaming legale. Gratuita — la ottieni in
+            pochi minuti creando un account su themoviedb.org (Impostazioni → API). Resta anch'essa solo su questo
+            dispositivo.
+          </p>
+          <div className="flex gap-2">
+            <input
+              type={revealTmdb ? "text" : "password"}
+              value={draftTmdbKey}
+              onChange={(e) => setDraftTmdbKey(e.target.value)}
+              placeholder="Chiave API TMDB (v3)"
+              autoComplete="off"
+              className="flex-1 rounded-sm border border-border-strong bg-surface px-3 py-2.5 font-mono text-sm text-text placeholder:text-text-faint focus:border-accent"
+            />
+            <button
+              type="button"
+              onClick={() => setRevealTmdb((r) => !r)}
+              aria-label={revealTmdb ? "Nascondi chiave" : "Mostra chiave"}
+              className="rounded-sm border border-border-strong px-3 text-xs text-text-muted"
+            >
+              {revealTmdb ? "Nascondi" : "Mostra"}
+            </button>
+          </div>
+          <div className="mt-2.5 flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setTmdbApiKey(draftTmdbKey);
+                pushToast("success", "Chiave TMDB salvata.");
+              }}
+              className="rounded-sm px-3.5 py-2 text-xs font-semibold"
+              style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+            >
+              Salva chiave
+            </button>
+            {tmdbApiKey && (
+              <button
+                type="button"
+                onClick={() => {
+                  clearTmdbApiKey();
+                  setDraftTmdbKey("");
+                  pushToast("info", "Chiave TMDB rimossa.");
+                }}
+                className="rounded-sm border border-border-strong px-3.5 py-2 text-xs text-text-muted"
+              >
+                Rimuovi
+              </button>
+            )}
+          </div>
+          <p className="mt-2.5 text-[11px] text-text-faint">
+            Questo prodotto usa l'API TMDB ma non è approvato né certificato da TMDB. Dati streaming forniti da
+            JustWatch.
+          </p>
         </div>
 
         <div>

@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import type { Item, Kind } from "../types";
 import { paletteFor } from "../lib/palette";
+import { posterUrl } from "../lib/tmdb";
 import { AnimeKindIcon, DocKindIcon, FilmKindIcon, SerieKindIcon } from "./icons";
 
 const KIND_ICON: Record<Kind, (props: { size?: number }) => ReactNode> = {
@@ -23,19 +24,48 @@ function Sprockets({ side }: { side: "left" | "right" }) {
   );
 }
 
+function KindBadge({ kind, size }: { kind: Kind; size: "sm" | "md" | "lg" }) {
+  const Icon = KIND_ICON[kind];
+  return (
+    <div
+      className="absolute left-1.5 top-1.5 flex items-center justify-center rounded-xs bg-black/45 p-1 text-white/90 backdrop-blur-sm"
+      aria-hidden="true"
+    >
+      <Icon size={size === "sm" ? 10 : 13} />
+    </div>
+  );
+}
+
 export function PosterArt({
   item,
   size = "md",
   showTitle = true,
   className = "",
 }: {
-  item: Pick<Item, "title" | "kind">;
+  item: Pick<Item, "title" | "kind"> & { posterPath?: string | null };
   size?: "sm" | "md" | "lg";
   showTitle?: boolean;
   className?: string;
 }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const src = posterUrl(item.posterPath, size === "lg" ? "w500" : "w342");
+
+  if (src && !imgFailed) {
+    return (
+      <div className={`relative aspect-2/3 overflow-hidden rounded-sm bg-surface-2 ${className}`}>
+        <img
+          src={src}
+          alt={`Copertina di ${item.title}`}
+          loading="lazy"
+          onError={() => setImgFailed(true)}
+          className="h-full w-full object-cover"
+        />
+        <KindBadge kind={item.kind} size={size} />
+      </div>
+    );
+  }
+
   const [a, b] = paletteFor(item.title);
-  const Icon = KIND_ICON[item.kind];
   const titleSize =
     size === "lg" ? "text-2xl sm:text-3xl" : size === "sm" ? "text-[11px] leading-tight" : "text-sm sm:text-base";
 
@@ -57,7 +87,10 @@ export function PosterArt({
       <Sprockets side="left" />
       <Sprockets side="right" />
       <div className="absolute left-[9%] top-[6%] text-white/85">
-        <Icon size={size === "sm" ? 11 : 15} />
+        {(() => {
+          const Icon = KIND_ICON[item.kind];
+          return <Icon size={size === "sm" ? 11 : 15} />;
+        })()}
       </div>
       {showTitle && (
         <div className="absolute inset-x-[9%] bottom-[7%] top-auto flex flex-col gap-1">

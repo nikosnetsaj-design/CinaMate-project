@@ -45,12 +45,13 @@ function EditItemForm() {
 
   function save() {
     if (!draft.title.trim()) return;
+    const cleaned = { ...draft, links: draft.links.map((l) => l.trim()).filter(Boolean) };
     if (editingId) {
-      updateItem(editingId, draft);
+      updateItem(editingId, cleaned);
       const updated = items.find((i) => i.id === editingId);
-      if (updated) openDetail({ ...updated, ...draft, id: editingId });
+      if (updated) openDetail({ ...updated, ...cleaned, id: editingId });
     } else {
-      addItem(draft);
+      addItem(cleaned);
     }
     close();
   }
@@ -182,6 +183,31 @@ function EditItemForm() {
         <div>
           <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">Il tuo voto</span>
           <VotePicker value={draft.vote} onChange={(vote) => patch({ vote })} />
+        </div>
+
+        <div>
+          <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">
+            Link personalizzati
+          </span>
+          <p className="mb-2 text-xs text-text-faint">
+            Aggiungi fino a 2 link tuoi — un trailer, una pagina di uno streaming legale, qualsiasi cosa.
+          </p>
+          <div className="flex flex-col gap-2">
+            {[0, 1].map((i) => (
+              <input
+                key={i}
+                type="url"
+                value={draft.links[i] ?? ""}
+                onChange={(e) => {
+                  const next = [...draft.links];
+                  next[i] = e.target.value;
+                  patch({ links: next });
+                }}
+                placeholder={`https://…  (link ${i + 1})`}
+                className={inputCls}
+              />
+            ))}
+          </div>
         </div>
 
         <label className="flex flex-col gap-1.5">

@@ -40,6 +40,11 @@ export interface Item {
   similar: string[];
   notes: string;
   added: string;
+  tmdbId: number | null;
+  tmdbMediaType: "movie" | "tv" | null;
+  posterPath: string | null;
+  trailerUrl: string | null;
+  links: string[];
 }
 
 export type ToastKind = "success" | "error" | "info";
@@ -48,19 +53,4 @@ export interface ToastMessage {
   id: string;
   kind: ToastKind;
   text: string;
-}
-
-export interface LookupResult {
-  title: string;
-  kind: Kind;
-  year: number | null;
-  genre: string;
-  runtime: number | null;
-  episodes: number | null;
-  seasons: number | null;
-  overview: string;
-  director: string;
-  cast: string[];
-  platform: string;
-  similar: string[];
 }

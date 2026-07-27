@@ -13,19 +13,21 @@ export type ModelId = (typeof MODELS)[number]["id"];
 interface Settings {
   apiKey: string;
   model: ModelId;
+  tmdbApiKey: string;
 }
 
 function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { apiKey: "", model: "claude-opus-5" };
+    if (!raw) return { apiKey: "", model: "claude-opus-5", tmdbApiKey: "" };
     const parsed = JSON.parse(raw) as Partial<Settings>;
     return {
       apiKey: typeof parsed.apiKey === "string" ? parsed.apiKey : "",
       model: MODELS.some((m) => m.id === parsed.model) ? (parsed.model as ModelId) : "claude-opus-5",
+      tmdbApiKey: typeof parsed.tmdbApiKey === "string" ? parsed.tmdbApiKey : "",
     };
   } catch {
-    return { apiKey: "", model: "claude-opus-5" };
+    return { apiKey: "", model: "claude-opus-5", tmdbApiKey: "" };
   }
 }
 
@@ -41,24 +43,40 @@ interface SettingsState extends Settings {
   setApiKey: (apiKey: string) => void;
   setModel: (model: ModelId) => void;
   clearApiKey: () => void;
+  setTmdbApiKey: (tmdbApiKey: string) => void;
+  clearTmdbApiKey: () => void;
 }
 
 const initial = loadSettings();
 
+function currentSettings(s: SettingsState): Settings {
+  return { apiKey: s.apiKey, model: s.model, tmdbApiKey: s.tmdbApiKey };
+}
+
 export const useSettings = create<SettingsState>((set, get) => ({
   ...initial,
   setApiKey: (apiKey) => {
-    const next = { apiKey: apiKey.trim(), model: get().model };
+    const next = { ...currentSettings(get()), apiKey: apiKey.trim() };
     save(next);
     set(next);
   },
   setModel: (model) => {
-    const next = { apiKey: get().apiKey, model };
+    const next = { ...currentSettings(get()), model };
     save(next);
     set(next);
   },
   clearApiKey: () => {
-    const next = { apiKey: "", model: get().model };
+    const next = { ...currentSettings(get()), apiKey: "" };
+    save(next);
+    set(next);
+  },
+  setTmdbApiKey: (tmdbApiKey) => {
+    const next = { ...currentSettings(get()), tmdbApiKey: tmdbApiKey.trim() };
+    save(next);
+    set(next);
+  },
+  clearTmdbApiKey: () => {
+    const next = { ...currentSettings(get()), tmdbApiKey: "" };
     save(next);
     set(next);
   },
