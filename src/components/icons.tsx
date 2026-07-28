@@ -181,3 +181,67 @@ export function ReelMark({ size = 26 }: IconProps) {
     </svg>
   );
 }
+
+export function StackIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="m10 2.6 7 3.6-7 3.6-7-3.6 7-3.6Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="m3 10.2 7 3.6 7-3.6M3 13.9l7 3.6 7-3.6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function PlayIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M7.2 5.2 14.6 10l-7.4 4.8V5.2Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function PersonIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <circle cx="10" cy="6.8" r="3.1" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M3.9 16.6c.6-3 3.1-4.7 6.1-4.7s5.5 1.7 6.1 4.7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function BellIcon({ size = 18, filled = false }: IconProps & { filled?: boolean }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path
+        d="M10 3.2c-2.4 0-4.1 1.8-4.1 4.2 0 3.4-1.1 4.3-1.1 5 0 .5.4.8 1 .8h8.4c.6 0 1-.3 1-.8 0-.7-1.1-1.6-1.1-5 0-2.4-1.7-4.2-4.1-4.2Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+        fill={filled ? "currentColor" : "none"}
+        fillOpacity={filled ? 0.28 : 0}
+      />
+      <path d="M8.4 15.4a1.8 1.8 0 0 0 3.2 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function TimelineIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M6 3.4v13.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="6" cy="6.4" r="1.9" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="6" cy="13.6" r="1.9" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M10.4 6.4H17M10.4 13.6H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function ListIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M7 5.4h9M7 10h9M7 14.6h9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="4" cy="5.4" r="1" fill="currentColor" />
+      <circle cx="4" cy="10" r="1" fill="currentColor" />
+      <circle cx="4" cy="14.6" r="1" fill="currentColor" />
+    </svg>
+  );
+}

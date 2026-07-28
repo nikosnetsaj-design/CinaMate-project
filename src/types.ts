@@ -45,6 +45,14 @@ export interface Item {
   posterPath: string | null;
   trailerUrl: string | null;
   links: string[];
+  /**
+   * TMDB collection the title belongs to — what the app calls a *saga*. Absent
+   * on records written before sagas existed, and `null` once a title has been
+   * checked and turned out to be standalone: the two states are distinct so the
+   * background linker knows what it still has to look at.
+   */
+  collectionId?: number | null;
+  collectionName?: string | null;
 }
 
 export type ToastKind = "success" | "error" | "info";

@@ -6,15 +6,28 @@ import { useSettingsSheet } from "../store/useSettingsSheet";
 import { useCriticDraft } from "../store/useCriticDraft";
 import { askCritic, ClaudeApiError, MissingApiKeyError } from "../lib/anthropic";
 import { voteColor } from "../lib/vote";
+import type { Item } from "../types";
 
 const PROMPTS = [
   "Cosa guardo stasera?",
+  "Qual è il prossimo capitolo che dovrei vedere?",
   "Consigliami qualcosa di corto",
-  "Serie simili ai miei preferiti",
+  "Che saga dovrei iniziare?",
   "Anime da provare",
   "Descrivi il mio gusto cinematografico",
   "Cosa manca alla mia lista?",
 ];
+
+/**
+ * The "simile a X" question only helps when X is a film the user actually
+ * cares about, so it is built from their own shelf rather than hardcoded.
+ */
+function similarPrompt(items: Item[]): string | null {
+  const best = items
+    .filter((i) => i.vote != null && i.status === "Visto")
+    .sort((a, b) => (b.vote ?? 0) - (a.vote ?? 0))[0];
+  return best ? `Voglio un film simile a "${best.title}"` : null;
+}
 
 export function Critic() {
   const items = useLibrary((s) => s.items);
@@ -31,6 +44,8 @@ export function Critic() {
   const [missingKey, setMissingKey] = useState(false);
 
   const done = items.filter((i) => i.status === "Visto");
+  const similar = similarPrompt(items);
+  const prompts = similar ? [similar, ...PROMPTS] : PROMPTS;
 
   useEffect(() => {
     const draft = consumeDraft();
@@ -69,7 +84,7 @@ export function Critic() {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {PROMPTS.map((p) => (
+        {prompts.map((p) => (
           <button
             key={p}
             type="button"

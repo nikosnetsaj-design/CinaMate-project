@@ -4,6 +4,9 @@ import { Sheet } from "./Sheet";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { useSettings, MODELS } from "../store/useSettings";
 import { useLibrary } from "../store/useLibrary";
+import { useSagas } from "../store/useSagas";
+import { useMarathon } from "../store/useMarathon";
+import { useReminders } from "../store/useReminders";
 import { buildBackup, parseBackup, BackupParseError } from "../lib/backup";
 import { resetAutoLinkAttempts } from "../lib/useAutoLinkTmdb";
 
@@ -31,7 +34,16 @@ function SettingsForm() {
   const titleId = "settings-sheet-title";
 
   function exportData() {
-    const blob = new Blob([buildBackup(items, history)], { type: "application/json" });
+    const sagas = useSagas.getState();
+    const reminders = useReminders.getState();
+    const backup = buildBackup(items, history, {
+      orders: sagas.orders,
+      preferredOrder: sagas.prefs.order,
+      hidden: sagas.prefs.hidden,
+      marathon: useMarathon.getState().marathon,
+      reminders: { enabled: reminders.enabled, notified: reminders.notified },
+    });
+    const blob = new Blob([backup], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -54,6 +66,17 @@ function SettingsForm() {
     );
     if (!confirmed) return;
     importData(backup.items, backup.history);
+    // Older files carry no saga section; leaving what is on the device alone is
+    // safer than wiping orders the user may still want.
+    if (backup.sagas) {
+      useSagas.getState().restore({
+        orders: backup.sagas.orders,
+        preferredOrder: backup.sagas.preferredOrder,
+        hidden: backup.sagas.hidden,
+      });
+      useMarathon.getState().restore(backup.sagas.marathon);
+      useReminders.getState().restore(backup.sagas.reminders);
+    }
   }
 
   return (
@@ -241,6 +264,12 @@ function SettingsForm() {
               onClick={() => {
                 if (window.confirm(`Svuotare la libreria? ${items.length} titoli e tutto il diario verranno eliminati da questo dispositivo.`)) {
                   clearAll();
+                  // Saghe, maratona e promemoria descrivono la stessa libreria:
+                  // lasciarli indietro significherebbe mostrare progressi di
+                  // titoli che non esistono più.
+                  useSagas.getState().clearAll();
+                  useMarathon.getState().stop();
+                  useReminders.getState().clearAll();
                 }
               }}
               className="w-full rounded-sm border px-3.5 py-2.5 text-left text-sm disabled:opacity-40"

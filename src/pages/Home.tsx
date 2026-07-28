@@ -11,6 +11,8 @@ import { VoteBadge } from "../components/VoteBadge";
 import { UpcomingRow } from "../components/UpcomingRow";
 import { NightPickerButton } from "../components/NightPicker";
 import { Nastro } from "../components/Nastro";
+import { MarathonCard } from "../components/MarathonCard";
+import { ContinueSagaRow } from "../components/ContinueSagaRow";
 import { computeStats } from "../lib/stats";
 import { greeting } from "../lib/stats";
 import { formatRuntime } from "../lib/format";
@@ -44,6 +46,8 @@ export function Home() {
       </div>
 
       {ready && items.length > 0 && <Nastro days={30} height={58} />}
+
+      {ready && <MarathonCard />}
 
       <section aria-label="Le tue statistiche" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {!ready ? (
@@ -118,6 +122,8 @@ export function Home() {
               </ul>
             </section>
           )}
+
+          <ContinueSagaRow />
 
           <UpcomingRow />
 

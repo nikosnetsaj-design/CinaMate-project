@@ -2,16 +2,30 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLibrary } from "../store/useLibrary";
+import { useSagas } from "../store/useSagas";
 import { useCommandPalette } from "../store/useCommandPalette";
 import { useSelectedItem } from "../store/useSelectedItem";
+import { useSelectedSaga } from "../store/useSelectedSaga";
+import { useSelectedPerson } from "../store/useSelectedPerson";
 import { useFocusTrap } from "../lib/useFocusTrap";
-import { matchesQuery } from "../lib/search";
-import { SearchIcon } from "./icons";
+import { GROUP_LABELS, smartSearch, type SearchGroup, type SearchHit } from "../lib/search";
+import { PersonIcon, SearchIcon, StackIcon } from "./icons";
+
+const GROUP_ORDER: SearchGroup[] = ["titolo", "saga", "persona"];
+
+function GroupIcon({ group }: { group: SearchGroup }) {
+  if (group === "saga") return <StackIcon size={14} />;
+  if (group === "persona") return <PersonIcon size={14} />;
+  return null;
+}
 
 function PaletteDialog() {
   const close = useCommandPalette((s) => s.close);
   const openItem = useSelectedItem((s) => s.open);
+  const openSaga = useSelectedSaga((s) => s.open);
+  const openPerson = useSelectedPerson((s) => s.open);
   const items = useLibrary((s) => s.items);
+  const sagas = useSagas((s) => s.sagas);
 
   const [query, setQuery] = useState("");
   const [highlighted, setHighlighted] = useState(0);
@@ -22,17 +36,34 @@ function PaletteDialog() {
     requestAnimationFrame(() => inputRef.current?.focus());
   }, []);
 
-  const results = useMemo(() => {
-    const q = query.trim();
-    if (!q) return items.slice(0, 6);
-    return items.filter((m) => matchesQuery(m, q)).slice(0, 8);
-  }, [query, items]);
+  /** Empty query shows the shelf itself: the six most recent titles. */
+  const results = useMemo<SearchHit[]>(() => {
+    if (!query.trim()) {
+      return items.slice(0, 6).map((item) => ({
+        group: "titolo" as const,
+        id: `titolo:${item.id}`,
+        label: item.title,
+        sublabel: [item.year, item.genre, item.status].filter(Boolean).join(" · "),
+        item,
+      }));
+    }
+    return smartSearch(query, items, sagas);
+  }, [query, items, sagas]);
+
+  // Rendered by group, navigated as one flat list: arrow keys should never have
+  // to know that a heading sits between two rows.
+  const grouped = GROUP_ORDER.map((group) => ({
+    group,
+    hits: results.filter((r) => r.group === group),
+  })).filter((g) => g.hits.length > 0);
 
   function select(index: number) {
-    const item = results[index];
-    if (!item) return;
-    openItem(item);
+    const hit = results[index];
+    if (!hit) return;
     close();
+    if (hit.item) openItem(hit.item);
+    else if (hit.sagaKey) openSaga(hit.sagaKey);
+    else if (hit.personName) openPerson(hit.personName);
   }
 
   return createPortal(
@@ -77,31 +108,48 @@ function PaletteDialog() {
               setQuery(e.target.value);
               setHighlighted(0);
             }}
-            placeholder="Cerca per titolo, regista, genere, attore…"
+            placeholder="Titolo, saga, attore, regista, genere…"
             aria-label="Cerca nella libreria"
             className="flex-1 bg-transparent text-sm text-text placeholder:text-text-faint focus:outline-none"
           />
           <kbd className="rounded-xs border border-border-strong px-1.5 py-0.5 text-[10px] text-text-faint">esc</kbd>
         </div>
+
         <ul role="listbox" aria-label="Risultati" className="max-h-80 overflow-y-auto py-1.5">
           {results.length === 0 && (
             <li className="px-4 py-6 text-center text-sm text-text-muted">
-              Nessun titolo trovato per &ldquo;{query}&rdquo;.
+              Nessun risultato per &ldquo;{query}&rdquo;.
             </li>
           )}
-          {results.map((item, i) => (
-            <li key={item.id} role="option" aria-selected={i === highlighted}>
-              <button
-                type="button"
-                onMouseEnter={() => setHighlighted(i)}
-                onClick={() => select(i)}
-                className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm transition-colors ${
-                  i === highlighted ? "bg-surface-hover text-text" : "text-text-muted"
-                }`}
-              >
-                <span className="truncate font-medium">{item.title}</span>
-                <span className="shrink-0 text-xs text-text-faint">{item.year}</span>
-              </button>
+          {grouped.map(({ group, hits }) => (
+            <li key={group}>
+              <p className="px-4 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-text-faint">
+                {GROUP_LABELS[group]}
+              </p>
+              <ul>
+                {hits.map((hit) => {
+                  const index = results.indexOf(hit);
+                  const active = index === highlighted;
+                  return (
+                    <li key={hit.id} role="option" aria-selected={active}>
+                      <button
+                        type="button"
+                        onMouseEnter={() => setHighlighted(index)}
+                        onClick={() => select(index)}
+                        className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm transition-colors ${
+                          active ? "bg-surface-hover text-text" : "text-text-muted"
+                        }`}
+                      >
+                        <span className="flex min-w-0 items-center gap-2">
+                          <GroupIcon group={hit.group} />
+                          <span className="truncate font-medium">{hit.label}</span>
+                        </span>
+                        <span className="shrink-0 truncate text-xs text-text-faint">{hit.sublabel}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
             </li>
           ))}
         </ul>
