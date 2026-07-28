@@ -2,7 +2,10 @@ name: Deploy su GitHub Pages
 
 on:
   push:
-    branches: [claude/cinemate-app-design-690cev]
+    # Cinemate is the default branch and the one Pages deploys from once this
+    # work is merged; the feature branch stays listed so it can be previewed
+    # before merging.
+    branches: [Cinemate, claude/cinemate-app-design-690cev]
   workflow_dispatch:
 
 permissions:
