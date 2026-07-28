@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSettings } from "../store/useSettings";
+import { useWatchSession } from "../store/useWatchSession";
 import { getWatchProviders, type TmdbWatchProvider } from "../lib/tmdb";
 import type { Item } from "../types";
 
@@ -13,6 +14,7 @@ function linkLabel(url: string): string {
 
 function WatchProviders({ item }: { item: Item }) {
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
+  const startWatching = useWatchSession((s) => s.start);
   const [state, setState] = useState<"idle" | "busy" | "error" | "done">("idle");
   const [providers, setProviders] = useState<TmdbWatchProvider[]>([]);
   const [link, setLink] = useState<string | null>(null);
@@ -64,6 +66,7 @@ function WatchProviders({ item }: { item: Item }) {
           {link && (
             <a
               href={link}
+              onClick={() => startWatching(item.id)}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-1.5 inline-block text-xs underline-offset-2 hover:underline"
@@ -79,6 +82,7 @@ function WatchProviders({ item }: { item: Item }) {
 }
 
 export function WatchAndLinks({ item }: { item: Item }) {
+  const startWatching = useWatchSession((s) => s.start);
   const hasLinks = item.links.length > 0;
   if (!item.tmdbId && !item.trailerUrl && !hasLinks) return null;
 
@@ -101,6 +105,7 @@ export function WatchAndLinks({ item }: { item: Item }) {
             <a
               key={l}
               href={l}
+              onClick={() => startWatching(item.id)}
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-full border border-border-strong px-3 py-1.5 text-xs font-medium text-text hover:bg-surface-hover"

@@ -7,6 +7,7 @@ import { ItemDetailSheetPortal } from "./components/ItemDetailSheet";
 import { AddItemSheetPortal } from "./components/AddItemSheet";
 import { EditItemSheetPortal } from "./components/EditItemSheet";
 import { SettingsSheetPortal } from "./components/SettingsSheet";
+import { ResumePrompt } from "./components/ResumePrompt";
 import { useTheme } from "./store/useTheme";
 import { useLibrary } from "./store/useLibrary";
 import { useAutoLinkTmdb } from "./lib/useAutoLinkTmdb";
@@ -75,6 +76,7 @@ export default function App() {
       <AddItemSheetPortal />
       <EditItemSheetPortal />
       <SettingsSheetPortal />
+      <ResumePrompt />
     </>
   );
 }
