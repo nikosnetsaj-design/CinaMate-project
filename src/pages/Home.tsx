@@ -63,7 +63,7 @@ export function Home() {
       ) : items.length === 0 ? (
         <EmptyState
           title="La tua libreria è vuota"
-          description="Tocca “Aggiungi titolo” e cerca il primo film, serie o anime — l'IA compila trama, durata ed episodi da sola."
+          description="Cerca il primo film, serie o anime: copertina, trama, cast e durata arrivano da soli."
           action={
             <button
               type="button"
