@@ -22,7 +22,7 @@ function ErrorBanner() {
     <div
       role="alert"
       className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-2.5 text-sm sm:px-6"
-      style={{ background: "var(--rust)", color: "var(--rust-contrast)", borderColor: "var(--rust)" }}
+      style={{ background: "var(--danger)", color: "var(--danger-contrast)", borderColor: "var(--danger)" }}
     >
       <span>I dati salvati sul dispositivo sembrano danneggiati e non possono essere letti.</span>
       <button
@@ -40,7 +40,8 @@ export default function App() {
   const theme = useTheme((s) => s.theme);
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
+    // Dark is the base theme, so the light variant is the one that opts in.
+    document.documentElement.classList.toggle("light", theme === "light");
   }, [theme]);
 
   return (

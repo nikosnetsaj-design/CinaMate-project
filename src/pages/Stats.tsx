@@ -8,11 +8,12 @@ import { voteColor } from "../lib/vote";
 import { PosterArt } from "../components/PosterArt";
 import { VoteBadge } from "../components/VoteBadge";
 import { EmptyState } from "../components/EmptyState";
+import { Nastro } from "../components/Nastro";
 import { useAppReady } from "../lib/useAppReady";
 import type { Item } from "../types";
 
 const KIND_LABELS: Record<string, string> = { film: "Film", serie: "Serie TV", anime: "Anime", doc: "Documentario" };
-const KIND_COLORS = ["var(--accent)", "var(--status-watching)", "var(--rust)", "var(--status-done)"];
+const KIND_COLORS = ["var(--accent)", "var(--status-watching)", "var(--danger)", "var(--status-done)"];
 
 type Tab = "panoramica" | "diario" | "traguardi";
 const TABS: { id: Tab; label: string }[] = [
@@ -36,18 +37,23 @@ function Overview({ items, openItem }: { items: Item[]; openItem: (item: Item) =
 
   return (
     <div className="flex flex-col gap-4">
+      <Card>
+        <Label>Il nastro</Label>
+        <Nastro days={365} height={72} caption={`Un filo per ogni sessione del ${yir.year}`} />
+      </Card>
+
       {yir.watchedCount > 0 && (
         <Card>
           <Label>{`Il tuo ${yir.year} finora`}</Label>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="text-center">
-              <div className="font-display text-2xl font-black" style={{ color: "var(--accent-text)" }}>
+              <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--accent-text)" }}>
                 {yir.watchedCount}
               </div>
               <div className="text-[10px] text-text-faint">titoli completati</div>
             </div>
             <div className="text-center">
-              <div className="font-display text-2xl font-black" style={{ color: "var(--status-watching)" }}>
+              <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--status-watching)" }}>
                 {yir.hours}h
               </div>
               <div className="text-[10px] text-text-faint">ore guardate</div>
@@ -70,7 +76,7 @@ function Overview({ items, openItem }: { items: Item[]; openItem: (item: Item) =
 
       <div className="rounded-md border border-border bg-surface-2 p-6 text-center">
         <span className="text-xs uppercase tracking-[0.14em] text-text-faint">Tempo totale davanti allo schermo</span>
-        <div className="mt-1.5 font-display text-5xl font-black" style={{ color: "var(--accent-text)" }}>
+        <div className="mt-1.5 font-mono tabular text-5xl font-semibold" style={{ color: "var(--accent-text)" }}>
           {stats.hours}
           <span className="text-2xl">h</span>
         </div>
@@ -79,19 +85,19 @@ function Overview({ items, openItem }: { items: Item[]; openItem: (item: Item) =
 
       <div className="grid grid-cols-3 gap-2.5">
         <div className="rounded-md border border-border bg-surface-2 p-3.5 text-center">
-          <div className="font-display text-2xl font-black" style={{ color: "var(--status-done)" }}>
+          <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--status-done)" }}>
             {stats.byStatus.Visto}
           </div>
           <div className="mt-0.5 text-[11px] text-text-faint">visti</div>
         </div>
         <div className="rounded-md border border-border bg-surface-2 p-3.5 text-center">
-          <div className="font-display text-2xl font-black" style={{ color: "var(--status-watching)" }}>
+          <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--status-watching)" }}>
             {stats.byStatus["In visione"]}
           </div>
           <div className="mt-0.5 text-[11px] text-text-faint">in corso</div>
         </div>
         <div className="rounded-md border border-border bg-surface-2 p-3.5 text-center">
-          <div className="font-display text-2xl font-black" style={{ color: "var(--accent-text)" }}>
+          <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--accent-text)" }}>
             {stats.byStatus["Da vedere"]}
           </div>
           <div className="mt-0.5 text-[11px] text-text-faint">da vedere</div>
@@ -174,7 +180,7 @@ function Overview({ items, openItem }: { items: Item[]; openItem: (item: Item) =
               aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
               className="mb-2.5 flex w-full items-center gap-2.5 text-left last:mb-0"
             >
-              <span className="w-4 font-display text-base font-black" style={{ color: idx === 0 ? "var(--accent-text)" : "var(--text-faint)" }}>
+              <span className="w-4 font-mono tabular text-base font-semibold" style={{ color: idx === 0 ? "var(--accent-text)" : "var(--text-faint)" }}>
                 {idx + 1}
               </span>
               <PosterArt item={item} size="sm" showTitle={false} className="w-8 shrink-0" />

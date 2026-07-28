@@ -54,7 +54,7 @@ function ItemDetail({ item }: { item: Item }) {
           <PosterArt item={item} size="lg" showTitle={false} className="w-20 shrink-0 shadow-[var(--shadow-lg)] sm:w-24" />
           {item.vote != null && (
             <div className="pb-1">
-              <span className="font-display text-4xl font-black leading-none" style={{ color: voteColor(item.vote) }}>
+              <span className="font-mono tabular text-4xl font-semibold leading-none" style={{ color: voteColor(item.vote) }}>
                 {item.vote}
               </span>
               <span className="text-sm text-white/60">/10</span>
@@ -83,7 +83,7 @@ function ItemDetail({ item }: { item: Item }) {
             aria-pressed={item.fav}
             aria-label={item.fav ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}
             className="shrink-0 pt-0.5"
-            style={{ color: item.fav ? "var(--rust)" : "var(--text-faint)" }}
+            style={{ color: item.fav ? "var(--accent)" : "var(--text-faint)" }}
           >
             <HeartIcon size={22} filled={item.fav} />
           </button>
@@ -130,7 +130,7 @@ function ItemDetail({ item }: { item: Item }) {
           <div className="mt-4 rounded-md border border-border bg-surface-2 p-4">
             <div className="flex items-baseline justify-between">
               <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Avanzamento</span>
-              <span className="font-display text-sm font-bold" style={{ color: "var(--status-watching)" }}>
+              <span className="font-mono tabular text-sm font-semibold" style={{ color: "var(--status-watching)" }}>
                 {pct}%
               </span>
             </div>
@@ -176,7 +176,7 @@ function ItemDetail({ item }: { item: Item }) {
           <div className="flex-1 rounded-md border border-border bg-surface-2 p-3.5">
             <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-text-faint">Rivisto</span>
             <div className="flex items-center justify-between">
-              <span className="font-display text-xl font-bold" style={{ color: "var(--accent-text)" }}>
+              <span className="font-mono tabular text-xl font-semibold" style={{ color: "var(--accent-text)" }}>
                 {item.rewatch || 0}×
               </span>
               <div className="flex gap-1.5">
@@ -248,7 +248,7 @@ function ItemDetail({ item }: { item: Item }) {
             navigate("/critico");
           }}
           className="mt-4 w-full rounded-md border py-3 text-sm font-semibold"
-          style={{ borderColor: "color-mix(in srgb, var(--teal) 35%, transparent)", background: "color-mix(in srgb, var(--teal) 12%, transparent)", color: "var(--teal)" }}
+          style={{ borderColor: "color-mix(in srgb, var(--cyan) 35%, transparent)", background: "color-mix(in srgb, var(--cyan) 12%, transparent)", color: "var(--cyan)" }}
         >
           Chiedi al critico IA
         </button>
@@ -270,7 +270,7 @@ function ItemDetail({ item }: { item: Item }) {
               }
             }}
             className="flex-1 rounded-md border py-2.5 text-sm"
-            style={{ borderColor: "color-mix(in srgb, var(--rust) 35%, transparent)", background: "color-mix(in srgb, var(--rust) 10%, transparent)", color: "var(--rust)" }}
+            style={{ borderColor: "color-mix(in srgb, var(--danger) 35%, transparent)", background: "color-mix(in srgb, var(--danger) 10%, transparent)", color: "var(--danger)" }}
           >
             Elimina
           </button>

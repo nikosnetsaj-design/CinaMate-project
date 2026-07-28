@@ -1,119 +1,130 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
+/* ------------------------------------------------------------------ */
+/* CineMate design tokens — "Velluto e Technicolor"                     */
+/*                                                                      */
+/* Two sources, both specific to watching films rather than to apps:    */
+/*  - the room: aubergine seat velvet, a chromatic dark that is         */
+/*    deliberately NOT near-black, so the surfaces read as fabric;      */
+/*  - the stock: Technicolor three-strip dye primaries (magenta, cyan,  */
+/*    yellow), the actual pigments of golden-age cinema.                */
+/*                                                                      */
+/* The vote scale runs cold -> hot rather than bad -> good: a private   */
+/* diary is not quality control, so a 4 is "left me cold", not danger.  */
+/* ------------------------------------------------------------------ */
 
-/* ---------------------------------------------------------------- */
-/* CineMate design tokens — "Cinema Noir"                            */
-/* Near-black ink / warm paper pair, marquee gold accent, procedural */
-/* jewel-tone posters. Serif display (Bodoni Moda) + technical sans  */
-/* (Karla) — a boutique screening-room identity, not generic SaaS.   */
-/* ---------------------------------------------------------------- */
-
+/* Dark is the primary theme — this is an app used at night. */
 :root {
-  --bg: #f5f1e9;
-  --surface: #fffdf9;
-  --surface-2: #efe8da;
-  --surface-hover: #e7dec9;
-  --text: #1a1815;
-  --text-muted: #5b5347;
-  --text-faint: #6f675a;
-  --border: rgba(20, 18, 15, 0.12);
-  --border-strong: rgba(20, 18, 15, 0.22);
+  --bg: #1b1221;
+  --surface: #251829;
+  --surface-2: #2f2034;
+  --surface-hover: #3a2840;
+  --text: #f6eff6;
+  --text-muted: #c5b3cb;
+  --text-faint: #a494ac;
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.2);
 
-  --accent: #e4b363;
-  --accent-text: #8a5a16;
-  --accent-contrast: #1a1508;
-  --rust: #9c3a2a;
-  --rust-contrast: #fdf3f0;
-  --teal: #186a76;
-  --teal-contrast: #eafbfc;
+  /* Technicolor dyes */
+  --accent: #ff4d9e;        /* magenta dye — the signature */
+  --accent-text: #ff6fb0;   /* magenta legible as text on velvet */
+  --accent-contrast: #24071a;
+  --cyan: #3fd3e8;
+  --cyan-contrast: #04222a;
+  --yellow: #ffc24d;
+  --yellow-contrast: #2a1c00;
+  --danger: #ff8a7a;
+  --danger-contrast: #2c0803;
 
-  --status-watching: var(--teal);
-  --status-done: #4a7a34;
-  --status-planned: var(--accent-text);
-  --status-dropped: var(--rust);
-  --status-hold: #625b4f;
+  --status-watching: #3fd3e8;
+  --status-done: #7fd6a8;
+  --status-planned: #ff6fb0;
+  --status-dropped: #ff8a7a;
+  --status-hold: #b09bb8;
 
-  --vote-1: #9c3a2a;
-  --vote-2: #a8532f;
-  --vote-3: #a05e22;
-  --vote-4: #8a5f1c;
-  --vote-5: #8a5a16;
-  --vote-6: #7a6d2e;
-  --vote-7: #5c6b2e;
-  --vote-8: #3f6b32;
-  --vote-9: #2f6b5c;
-  --vote-10: #186a76;
+  /* Cold indifference -> hot obsession, along the dye axis. */
+  --vote-1: #7fa8c9;
+  --vote-2: #82b6d4;
+  --vote-3: #5fc6dd;
+  --vote-4: #3fd3e8;
+  --vote-5: #8fc9d8;
+  --vote-6: #c9aecb;
+  --vote-7: #e39dc0;
+  --vote-8: #f47db2;
+  --vote-9: #ff5ba5;
+  --vote-10: #ff4d9e;
 
-  --shadow-color: 30 20% 15%;
-  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.1);
-  --shadow-md: 0 6px 20px -4px hsl(var(--shadow-color) / 0.18);
-  --shadow-lg: 0 20px 48px -12px hsl(var(--shadow-color) / 0.3);
+  --shadow-color: 290 40% 4%;
+  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.5);
+  --shadow-md: 0 8px 24px -4px hsl(var(--shadow-color) / 0.6);
+  --shadow-lg: 0 24px 56px -12px hsl(var(--shadow-color) / 0.7);
 
-  --grain-opacity: 0.035;
-  color-scheme: light;
-}
-
-.dark {
-  --bg: #0c0b0a;
-  --surface: #14120f;
-  --surface-2: #1d1b17;
-  --surface-hover: #262319;
-  --text: #f2ede4;
-  --text-muted: #a39a8c;
-  --text-faint: #8d8476;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.18);
-
-  --accent: #e4b363;
-  --accent-text: #e4b363;
-  --accent-contrast: #1a1508;
-  --rust: #d2553f;
-  --rust-contrast: #fdece7;
-  --teal: #6bc5d2;
-  --teal-contrast: #06181a;
-
-  --status-watching: var(--teal);
-  --status-done: #7fb069;
-  --status-planned: var(--accent);
-  --status-dropped: var(--rust);
-  --status-hold: #8a8279;
-
-  --vote-1: #ce6357;
-  --vote-2: #cc6644;
-  --vote-3: #d97f42;
-  --vote-4: #de9a45;
-  --vote-5: #e4b363;
-  --vote-6: #c9b76a;
-  --vote-7: #a8b970;
-  --vote-8: #88b878;
-  --vote-9: #6bb5a0;
-  --vote-10: #6bc5d2;
-
-  --shadow-color: 0 0% 0%;
-  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.45);
-  --shadow-md: 0 8px 24px -4px hsl(var(--shadow-color) / 0.55);
-  --shadow-lg: 0 24px 56px -12px hsl(var(--shadow-color) / 0.65);
-
-  --grain-opacity: 0.05;
+  --grain-opacity: 0.045;
   color-scheme: dark;
 }
 
-/* Fixed, theme-independent bright fills for the vote picker (always paired
-   with --vote-fill-ink for text) — distinct from the theme-adjusted --vote-N
-   tokens above, which are tuned for use as text color directly on the page. */
+/* Light is the daylight counterpart: pale mauve-grey, never cream. */
+.light {
+  --bg: #f3eef4;
+  --surface: #ffffff;
+  --surface-2: #ebe3ee;
+  --surface-hover: #e0d5e4;
+  --text: #221629;
+  --text-muted: #5c4a63;
+  --text-faint: #5f4f66;
+  --border: rgba(34, 22, 41, 0.12);
+  --border-strong: rgba(34, 22, 41, 0.24);
+
+  --accent: #d6007a;
+  --accent-text: #a80060;
+  --accent-contrast: #ffffff;
+  --cyan: #005f6b;
+  --cyan-contrast: #ffffff;
+  --yellow: #7a5200;
+  --yellow-contrast: #ffffff;
+  --danger: #9c2a21;
+  --danger-contrast: #ffffff;
+
+  --status-watching: #005f6b;
+  --status-done: #16613d;
+  --status-planned: #a80060;
+  --status-dropped: #9c2a21;
+  --status-hold: #5f4f66;
+
+  --vote-1: #2f6d91;
+  --vote-2: #266f8c;
+  --vote-3: #1c7285;
+  --vote-4: #00707f;
+  --vote-5: #4a6a83;
+  --vote-6: #7b5680;
+  --vote-7: #9c4577;
+  --vote-8: #b02a72;
+  --vote-9: #c0006d;
+  --vote-10: #a80060;
+
+  --shadow-color: 290 30% 25%;
+  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.1);
+  --shadow-md: 0 6px 20px -4px hsl(var(--shadow-color) / 0.16);
+  --shadow-lg: 0 20px 48px -12px hsl(var(--shadow-color) / 0.26);
+
+  --grain-opacity: 0.03;
+  color-scheme: light;
+}
+
+/* Saturated dye fills for the vote picker, paired with --vote-fill-ink.
+   Theme-independent: these are swatches of pigment, not text colors. */
 :root {
-  --vote-fill-1: #ce6357;
-  --vote-fill-2: #cc6644;
-  --vote-fill-3: #d97f42;
-  --vote-fill-4: #de9a45;
-  --vote-fill-5: #e4b363;
-  --vote-fill-6: #c9b76a;
-  --vote-fill-7: #a8b970;
-  --vote-fill-8: #88b878;
-  --vote-fill-9: #6bb5a0;
-  --vote-fill-10: #6bc5d2;
-  --vote-fill-ink: #1a1508;
+  --vote-fill-1: #7fa8c9;
+  --vote-fill-2: #82b6d4;
+  --vote-fill-3: #5fc6dd;
+  --vote-fill-4: #3fd3e8;
+  --vote-fill-5: #9ecfda;
+  --vote-fill-6: #d3b4d3;
+  --vote-fill-7: #eda3c6;
+  --vote-fill-8: #f97fb6;
+  --vote-fill-9: #ff5ba5;
+  --vote-fill-10: #ff4d9e;
+  --vote-fill-ink: #24071a;
 }
 
 @theme inline {
@@ -130,10 +141,12 @@
   --color-accent: var(--accent);
   --color-accent-text: var(--accent-text);
   --color-accent-contrast: var(--accent-contrast);
-  --color-rust: var(--rust);
-  --color-rust-contrast: var(--rust-contrast);
-  --color-teal: var(--teal);
-  --color-teal-contrast: var(--teal-contrast);
+  --color-cyan: var(--cyan);
+  --color-cyan-contrast: var(--cyan-contrast);
+  --color-yellow: var(--yellow);
+  --color-yellow-contrast: var(--yellow-contrast);
+  --color-danger: var(--danger);
+  --color-danger-contrast: var(--danger-contrast);
 
   --color-status-watching: var(--status-watching);
   --color-status-done: var(--status-done);
@@ -141,21 +154,18 @@
   --color-status-dropped: var(--status-dropped);
   --color-status-hold: var(--status-hold);
 
-  --font-display: "Bodoni Moda Variable", "Iowan Old Style", Georgia, serif;
-  --font-sans: "Karla", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
 
-  --radius-xs: 3px;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
+  --radius-xs: 2px;
+  --radius-sm: 5px;
+  --radius-md: 9px;
+  --radius-lg: 14px;
 }
 
 * {
   border-color: var(--border);
-}
-
-html {
-  color-scheme: light dark;
 }
 
 body {
@@ -168,14 +178,24 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Display face runs tight and wide — marquee lettering, not book typography. */
 h1, h2, h3, .font-display {
   font-family: var(--font-display);
   font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
+  letter-spacing: -0.022em;
+  line-height: 1.04;
 }
 
-/* Subtle 35mm-style grain overlay — texture, not decoration: gives the
-   flat color fields a lived-in, print-like depth instead of a slick
-   SaaS gradient. */
+/* Every number in the app is set in mono: votes, dates, episode counts,
+   runtimes. A viewing diary is a ledger, and the figures should line up. */
+.font-mono, .tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Dye grain: the texture of film emulsion over flat color fields. */
 .grain-overlay {
   pointer-events: none;
   position: fixed;
@@ -186,9 +206,11 @@ h1, h2, h3, .font-display {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Visible, on-brand focus ring for full keyboard operability. */
 :focus-visible {
   outline: 2px solid var(--accent);
+  /* Stated separately so a shorthand elsewhere in the cascade cannot quietly
+     reset the ring to currentColor and lose the brand signal. */
+  outline-color: var(--accent);
   outline-offset: 2px;
   border-radius: var(--radius-xs);
 }
@@ -233,4 +255,6 @@ h1, h2, h3, .font-display {
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+  /* The dim still reads as a state change without the fade. */
+  .house-lights-down { transition: none; }
 }

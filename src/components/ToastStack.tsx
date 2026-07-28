@@ -3,8 +3,8 @@ import { useLibrary } from "../store/useLibrary";
 import type { ToastKind } from "../types";
 
 const KIND_STYLES: Record<ToastKind, { bg: string; text: string; icon: string }> = {
-  success: { bg: "var(--teal)", text: "var(--teal-contrast)", icon: "✓" },
-  error: { bg: "var(--rust)", text: "var(--rust-contrast)", icon: "!" },
+  success: { bg: "var(--cyan)", text: "var(--cyan-contrast)", icon: "✓" },
+  error: { bg: "var(--danger)", text: "var(--danger-contrast)", icon: "!" },
   info: { bg: "var(--surface-2)", text: "var(--text)", icon: "•" },
 };
 
