@@ -2,10 +2,10 @@ name: Deploy su GitHub Pages
 
 on:
   push:
-    # Cinemate is the default branch and the one Pages deploys from once this
-    # work is merged; the feature branch stays listed so it can be previewed
-    # before merging.
-    branches: [Cinemate, claude/cinemate-app-design-690cev]
+    # Only the default branch publishes. Pages serves one deployment at a time,
+    # so listing a feature branch here would let a work-in-progress push quietly
+    # replace the live site; use workflow_dispatch to publish a branch on purpose.
+    branches: [Cinemate]
   workflow_dispatch:
 
 permissions:
