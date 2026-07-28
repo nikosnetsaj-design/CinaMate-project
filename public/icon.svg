@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="112" fill="#1B1221"/>
+  <!-- Il Nastro: the signature ribbon, cold to hot across the dyes. -->
+  <g>
+    <rect x="88" y="196" width="46" height="120" fill="#7FA8C9"/>
+    <rect x="134" y="196" width="30" height="120" fill="#3FD3E8"/>
+    <rect x="164" y="196" width="62" height="120" fill="#C9AECB"/>
+    <rect x="226" y="196" width="38" height="120" fill="#E39DC0"/>
+    <rect x="264" y="196" width="70" height="120" fill="#F47DB2"/>
+    <rect x="334" y="196" width="34" height="120" fill="#FF5BA5"/>
+    <rect x="368" y="196" width="56" height="120" fill="#FF4D9E"/>
+  </g>
+  <rect x="88" y="196" width="336" height="120" fill="url(#sheen)"/>
+  <defs>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.18"/>
+      <stop offset="0.45" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.3"/>
+    </linearGradient>
+  </defs>
+</svg>
