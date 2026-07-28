@@ -93,11 +93,22 @@ function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/**
+ * Signal for "Continua la storia": whichever title just crossed into *Visto*,
+ * with the moment it happened. Deliberately not persisted — the prompt belongs
+ * to the session in which you finished something, not to the next launch.
+ */
+export interface JustCompleted {
+  itemId: string;
+  at: number;
+}
+
 interface LibraryState {
   items: Item[];
   history: HistoryEntry[];
   toasts: ToastMessage[];
   storageError: boolean;
+  justCompleted: JustCompleted | null;
 
   addItem: (data: Omit<Item, "id" | "added">) => void;
   updateItem: (id: string, patch: Partial<Item>) => void;
@@ -111,6 +122,7 @@ interface LibraryState {
 
   pushToast: (kind: ToastKind, text: string) => void;
   dismissToast: (id: string) => void;
+  clearJustCompleted: () => void;
 
   importData: (items: Item[], history: HistoryEntry[]) => void;
   clearAll: () => void;
@@ -144,6 +156,7 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   history: initialHistory,
   toasts: [],
   storageError: initial.corrupted,
+  justCompleted: null,
 
   addItem: (data) => {
     const item: Item = { ...data, id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, added: new Date().toISOString().slice(0, 10) };
@@ -152,14 +165,22 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   },
 
   updateItem: (id, patch) => {
+    const prev = get().items.find((i) => i.id === id);
     const next = get().items.map((i) => (i.id === id ? { ...i, ...patch } : i));
     persistOrToast(get, set, next);
+    // Editing the status to "Visto" completes a title just as surely as the
+    // chip in the detail sheet does, so it has to reach the diary too.
+    if (prev && prev.status !== "Visto" && patch.status === "Visto") {
+      logHistory(get, set, [makeHistoryEntry(prev, today(), "watched")]);
+      set({ justCompleted: { itemId: id, at: Date.now() } });
+    }
   },
 
   removeItem: (id) => {
     const item = get().items.find((i) => i.id === id);
     const next = get().items.filter((i) => i.id !== id);
     persistOrToast(get, set, next, item ? `"${item.title}" rimosso dalla libreria.` : undefined);
+    if (get().justCompleted?.itemId === id) set({ justCompleted: null });
     // Drop the item's history too, so deleted titles stop counting towards
     // achievements and the log doesn't grow with unreachable entries.
     const prunedHistory = get().history.filter((h) => h.itemId !== id);
@@ -175,6 +196,7 @@ export const useLibrary = create<LibraryState>((set, get) => ({
     persistOrToast(get, set, next);
     if (prev && prev.status !== "Visto" && status === "Visto") {
       logHistory(get, set, [makeHistoryEntry(prev, today(), "watched")]);
+      set({ justCompleted: { itemId: id, at: Date.now() } });
     }
   },
 
@@ -199,6 +221,7 @@ export const useLibrary = create<LibraryState>((set, get) => ({
       if (becameWatched) entries.push(makeHistoryEntry(prev, today(), "watched"));
       logHistory(get, set, entries);
     }
+    if (becameWatched) set({ justCompleted: { itemId: id, at: Date.now() } });
   },
 
   decrementEpisode: (id) => {
@@ -239,6 +262,7 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   dismissToast: (id) => {
     set({ toasts: get().toasts.filter((t) => t.id !== id) });
   },
+  clearJustCompleted: () => set({ justCompleted: null }),
 
   importData: (items, history) => {
     const okItems = saveItems(items);
@@ -254,14 +278,14 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   clearAll: () => {
     saveItems([]);
     saveHistory([]);
-    set({ items: [], history: [], storageError: false });
+    set({ items: [], history: [], storageError: false, justCompleted: null });
     get().pushToast("info", "Libreria svuotata.");
   },
 
   resetCorruptedData: () => {
     saveItems([]);
     saveHistory([]);
-    set({ items: [], history: [], storageError: false });
+    set({ items: [], history: [], storageError: false, justCompleted: null });
     get().pushToast("info", "Dati locali ripristinati.");
   },
 }));

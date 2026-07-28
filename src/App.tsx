@@ -7,12 +7,18 @@ import { ItemDetailSheetPortal } from "./components/ItemDetailSheet";
 import { AddItemSheetPortal } from "./components/AddItemSheet";
 import { EditItemSheetPortal } from "./components/EditItemSheet";
 import { SettingsSheetPortal } from "./components/SettingsSheet";
+import { SagaSheetPortal } from "./components/SagaSheet";
+import { PersonSheetPortal } from "./components/PersonSheet";
+import { NextChapterPrompt } from "./components/NextChapterPrompt";
 import { ResumePrompt } from "./components/ResumePrompt";
 import { useTheme } from "./store/useTheme";
 import { useLibrary } from "./store/useLibrary";
 import { useAutoLinkTmdb } from "./lib/useAutoLinkTmdb";
+import { useAutoLinkSagas } from "./lib/useAutoLinkSagas";
+import { useReleaseAlerts } from "./lib/useReleaseAlerts";
 import { Home } from "./pages/Home";
 import { Library } from "./pages/Library";
+import { Sagas } from "./pages/Sagas";
 import { Discover } from "./pages/Discover";
 import { Stats } from "./pages/Stats";
 import { Critic } from "./pages/Critic";
@@ -42,6 +48,8 @@ function ErrorBanner() {
 export default function App() {
   const theme = useTheme((s) => s.theme);
   useAutoLinkTmdb();
+  useAutoLinkSagas();
+  useReleaseAlerts();
 
   useEffect(() => {
     // Dark is the base theme, so the light variant is the one that opts in.
@@ -64,6 +72,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/libreria" element={<Library />} />
+            <Route path="/saghe" element={<Sagas />} />
             <Route path="/scopri" element={<Discover />} />
             <Route path="/dati" element={<Stats />} />
             <Route path="/critico" element={<Critic />} />
@@ -73,10 +82,13 @@ export default function App() {
       <ToastStack />
       <CommandPalette />
       <ItemDetailSheetPortal />
+      <SagaSheetPortal />
+      <PersonSheetPortal />
       <AddItemSheetPortal />
       <EditItemSheetPortal />
       <SettingsSheetPortal />
       <ResumePrompt />
+      <NextChapterPrompt />
     </>
   );
 }

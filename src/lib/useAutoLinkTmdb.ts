@@ -28,6 +28,10 @@ function fillGaps(item: Item, d: Awaited<ReturnType<typeof getDetails>>, mediaTy
     similar: item.similar.length ? item.similar : d.similar,
     episodes: item.episodes ?? d.episodes,
     seasons: item.seasons ?? d.seasons,
+    // Always taken from TMDB: the saga is not something the user curates, and
+    // `null` here is the real answer "standalone", not a gap.
+    collectionId: d.collectionId,
+    collectionName: d.collectionName,
   };
 }
 

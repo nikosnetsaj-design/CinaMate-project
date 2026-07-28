@@ -3,19 +3,20 @@ import { useTheme } from "../store/useTheme";
 import { useCommandPalette } from "../store/useCommandPalette";
 import { useAddSheet } from "../store/useAddSheet";
 import { useSettingsSheet } from "../store/useSettingsSheet";
-import { ChartIcon, CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, PlusIcon, ReelMark, SearchIcon, SparkleIcon, SunIcon } from "./icons";
+import { ChartIcon, CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, PlusIcon, ReelMark, SearchIcon, SparkleIcon, StackIcon, SunIcon } from "./icons";
 
 const NAV_ITEMS = [
   { to: "/", label: "Home", icon: HomeIcon, end: true },
   { to: "/libreria", label: "Libreria", icon: LibraryIcon, end: false },
+  { to: "/saghe", label: "Saghe", icon: StackIcon, end: false },
   { to: "/scopri", label: "Scopri", icon: CompassIcon, end: false },
   { to: "/dati", label: "Dati", icon: ChartIcon, end: false },
   { to: "/critico", label: "Critico", icon: SparkleIcon, end: false },
 ] as const;
 
-// The floating add button owns the middle of the mobile bar, which only stays
-// uncrowded with four tabs. Critico keeps its sidebar entry and is reachable
-// from every title sheet, so it is the one to drop on small screens.
+// Five tabs is the most a phone bar carries with the labels still legible.
+// Critico keeps its sidebar entry and is reachable from every title and person
+// sheet, so it is the one to drop on small screens.
 const MOBILE_ITEMS = NAV_ITEMS.filter((i) => i.to !== "/critico");
 
 function linkClasses(isActive: boolean) {
@@ -129,12 +130,22 @@ export function Nav() {
         </div>
       </header>
 
-      {/* Mobile bottom tab bar */}
+      {/* Mobile bottom tab bar. The add button floats clear of it rather than
+          splitting it: with five destinations there is no middle left to take. */}
+      <button
+        type="button"
+        onClick={() => openAddSheet()}
+        aria-label="Aggiungi titolo"
+        className="fixed bottom-[calc(env(safe-area-inset-bottom)+4.6rem)] right-4 z-40 flex h-[52px] w-[52px] items-center justify-center rounded-full shadow-[var(--shadow-md)] md:hidden"
+        style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+      >
+        <PlusIcon size={24} />
+      </button>
       <nav
         aria-label="Navigazione principale"
         className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm md:hidden"
       >
-        {MOBILE_ITEMS.map(({ to, label, icon: Icon, end }, idx) => (
+        {MOBILE_ITEMS.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
@@ -142,22 +153,13 @@ export function Nav() {
             className={({ isActive }) =>
               `flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium ${
                 isActive ? "text-accent-text" : "text-text-faint"
-              } ${idx === 1 ? "mr-6" : ""} ${idx === 2 ? "ml-6" : ""}`
+              }`
             }
           >
             <Icon size={20} />
             {label}
           </NavLink>
         ))}
-        <button
-          type="button"
-          onClick={() => openAddSheet()}
-          aria-label="Aggiungi titolo"
-          className="absolute -top-5 left-1/2 flex h-[52px] w-[52px] -translate-x-1/2 items-center justify-center rounded-full border-[3px] shadow-[var(--shadow-md)]"
-          style={{ background: "var(--accent)", color: "var(--accent-contrast)", borderColor: "var(--bg)" }}
-        >
-          <PlusIcon size={24} />
-        </button>
       </nav>
     </>
   );

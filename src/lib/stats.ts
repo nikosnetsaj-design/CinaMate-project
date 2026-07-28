@@ -17,8 +17,18 @@ export interface LibraryStats {
   byGenre: [string, number][];
   byPlatform: [string, number][];
   byKind: [Kind, number][];
+  byActor: [string, number][];
+  byDirector: [string, number][];
   voteDist: { v: number; n: number }[];
   top: Item[];
+  filmsCompleted: number;
+  seriesCompleted: number;
+  episodesWatched: number;
+}
+
+/** A title counts as watched once you have actually started it, not once it is filed. */
+function isWatched(item: Item): boolean {
+  return item.status === "Visto" || item.status === "In visione";
 }
 
 export function computeStats(items: Item[]): LibraryStats {
@@ -38,10 +48,24 @@ export function computeStats(items: Item[]): LibraryStats {
   const genreCounts = new Map<string, number>();
   const platCounts = new Map<string, number>();
   const kindCounts = new Map<Kind, number>();
+  // People are counted only over what has actually been watched: "most seen
+  // actor" must not be won by someone sitting in an untouched watchlist.
+  const actorCounts = new Map<string, number>();
+  const directorCounts = new Map<string, number>();
+
   for (const i of items) {
     if (i.genre) genreCounts.set(i.genre, (genreCounts.get(i.genre) ?? 0) + 1);
     platCounts.set(i.platform, (platCounts.get(i.platform) ?? 0) + 1);
     kindCounts.set(i.kind, (kindCounts.get(i.kind) ?? 0) + 1);
+    if (!isWatched(i)) continue;
+    for (const raw of i.cast) {
+      const name = raw.trim();
+      if (name) actorCounts.set(name, (actorCounts.get(name) ?? 0) + 1);
+    }
+    for (const raw of i.director.split(",")) {
+      const name = raw.trim();
+      if (name) directorCounts.set(name, (directorCounts.get(name) ?? 0) + 1);
+    }
   }
 
   const voteDist = Array.from({ length: 10 }, (_, idx) => {
@@ -65,8 +89,17 @@ export function computeStats(items: Item[]): LibraryStats {
     byGenre: Array.from(genreCounts.entries()).sort((a, b) => b[1] - a[1]),
     byPlatform: Array.from(platCounts.entries()).sort((a, b) => b[1] - a[1]),
     byKind: Array.from(kindCounts.entries()),
+    byActor: Array.from(actorCounts.entries())
+      .filter(([, n]) => n > 1)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])),
+    byDirector: Array.from(directorCounts.entries())
+      .filter(([, n]) => n > 1)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])),
     voteDist,
     top,
+    filmsCompleted: items.filter((i) => (i.kind === "film" || i.kind === "doc") && i.status === "Visto").length,
+    seriesCompleted: items.filter((i) => (i.kind === "serie" || i.kind === "anime") && i.status === "Visto").length,
+    episodesWatched: items.reduce((a, i) => a + (i.kind === "film" ? 0 : i.seen || 0), 0),
   };
 }
 
@@ -118,6 +151,17 @@ export function computeYearInReview(items: Item[], history: HistoryEntry[], year
     topGenre,
     busiestMonth: busiestMonthIdx != null ? MONTH_NAMES[busiestMonthIdx] : null,
   };
+}
+
+/** Years the diary actually covers, newest first — the options for the year picker. */
+export function yearsWithActivity(history: HistoryEntry[]): number[] {
+  const years = new Set<number>();
+  for (const h of history) {
+    const year = Number(h.date.slice(0, 4));
+    if (Number.isFinite(year)) years.add(year);
+  }
+  years.add(new Date().getFullYear());
+  return Array.from(years).sort((a, b) => b - a);
 }
 
 export function greeting(): string {

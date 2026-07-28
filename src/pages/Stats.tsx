@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useLibrary } from "../store/useLibrary";
+import { useSagas } from "../store/useSagas";
 import { useSelectedItem } from "../store/useSelectedItem";
-import { computeStats, computeYearInReview } from "../lib/stats";
+import { useSelectedPerson } from "../store/useSelectedPerson";
+import { computeStats, computeYearInReview, yearsWithActivity } from "../lib/stats";
 import { computeAchievements } from "../lib/achievements";
 import { groupDiary } from "../lib/diary";
 import { voteColor } from "../lib/vote";
@@ -29,22 +31,72 @@ function Label({ children }: { children: string }) {
   return <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">{children}</span>;
 }
 
+/** Ranked list of people, each a way into their filmography. */
+function PeopleCard({ title, rows }: { title: string; rows: [string, number][] }) {
+  const openPerson = useSelectedPerson((s) => s.open);
+  if (rows.length === 0) return null;
+  const max = rows[0][1];
+
+  return (
+    <Card>
+      <Label>{title}</Label>
+      {rows.slice(0, 6).map(([name, n]) => (
+        <button
+          key={name}
+          type="button"
+          onClick={() => openPerson(name)}
+          aria-label={`Apri la scheda di ${name}`}
+          className="mb-2 block w-full text-left last:mb-0"
+        >
+          <div className="mb-1 flex justify-between gap-3">
+            <span className="truncate text-xs text-text">{name}</span>
+            <span className="shrink-0 font-mono tabular text-xs text-text-faint">{n}</span>
+          </div>
+          <div className="h-1 overflow-hidden rounded-full bg-surface-hover">
+            <div className="h-full rounded-full opacity-90" style={{ width: `${(n / max) * 100}%`, background: "var(--cyan)" }} />
+          </div>
+        </button>
+      ))}
+    </Card>
+  );
+}
+
 function Overview({ items, openItem }: { items: Item[]; openItem: (item: Item) => void }) {
   const stats = computeStats(items);
   const history = useLibrary((s) => s.history);
   const maxVoteCount = Math.max(...stats.voteDist.map((d) => d.n), 1);
-  const yir = computeYearInReview(items, history, new Date().getFullYear());
+  const years = yearsWithActivity(history);
+  const [year, setYear] = useState(years[0]);
+  const yir = computeYearInReview(items, history, year);
 
   return (
     <div className="flex flex-col gap-4">
       <Card>
         <Label>Il nastro</Label>
-        <Nastro days={365} height={72} caption={`Un filo per ogni sessione del ${yir.year}`} />
+        <Nastro days={365} height={72} caption={`Un filo per ogni sessione del ${new Date().getFullYear()}`} />
       </Card>
 
-      {yir.watchedCount > 0 && (
-        <Card>
-          <Label>{`Il tuo ${yir.year} finora`}</Label>
+      <Card>
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Il tuo anno</span>
+          {years.length > 1 && (
+            <select
+              value={year}
+              onChange={(e) => setYear(Number(e.target.value))}
+              aria-label="Anno da mostrare"
+              className="rounded-sm border border-border-strong bg-surface px-2 py-1 font-mono tabular text-xs text-text-muted"
+            >
+              {years.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+        {yir.watchedCount === 0 ? (
+          <p className="text-sm text-text-muted">Nessuna attività registrata nel {year}.</p>
+        ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="text-center">
               <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--accent-text)" }}>
@@ -71,8 +123,8 @@ function Overview({ items, openItem }: { items: Item[]; openItem: (item: Item) =
               </div>
             )}
           </div>
-        </Card>
-      )}
+        )}
+      </Card>
 
       <div className="rounded-md border border-border bg-surface-2 p-6 text-center">
         <span className="text-xs uppercase tracking-[0.14em] text-text-faint">Tempo totale davanti allo schermo</span>
@@ -101,6 +153,21 @@ function Overview({ items, openItem }: { items: Item[]; openItem: (item: Item) =
             {stats.byStatus["Da vedere"]}
           </div>
           <div className="mt-0.5 text-[11px] text-text-faint">da vedere</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2.5">
+        <div className="rounded-md border border-border bg-surface-2 p-3.5 text-center">
+          <div className="font-mono tabular text-2xl font-semibold text-text">{stats.filmsCompleted}</div>
+          <div className="mt-0.5 text-[11px] text-text-faint">film completati</div>
+        </div>
+        <div className="rounded-md border border-border bg-surface-2 p-3.5 text-center">
+          <div className="font-mono tabular text-2xl font-semibold text-text">{stats.seriesCompleted}</div>
+          <div className="mt-0.5 text-[11px] text-text-faint">serie completate</div>
+        </div>
+        <div className="rounded-md border border-border bg-surface-2 p-3.5 text-center">
+          <div className="font-mono tabular text-2xl font-semibold text-text">{stats.episodesWatched}</div>
+          <div className="mt-0.5 text-[11px] text-text-faint">episodi visti</div>
         </div>
       </div>
 
@@ -156,6 +223,9 @@ function Overview({ items, openItem }: { items: Item[]; openItem: (item: Item) =
           ))}
         </Card>
       )}
+
+      <PeopleCard title="Attori più visti" rows={stats.byActor} />
+      <PeopleCard title="Registi più visti" rows={stats.byDirector} />
 
       <Card>
         <Label>Piattaforme</Label>
@@ -259,7 +329,8 @@ function DiaryTab({ items, openItem }: { items: Item[]; openItem: (item: Item) =
 
 function AchievementsTab({ items }: { items: Item[] }) {
   const history = useLibrary((s) => s.history);
-  const achievements = computeAchievements(items, history);
+  const sagas = useSagas((s) => s.sagas);
+  const achievements = computeAchievements(items, history, sagas);
   const earnedCount = achievements.filter((a) => a.earned).length;
 
   return (

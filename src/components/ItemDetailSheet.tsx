@@ -9,6 +9,8 @@ import { PosterArt } from "./PosterArt";
 import { StatusChip } from "./StatusChip";
 import { WatchAndLinks } from "./WatchAndLinks";
 import { LinkToTmdb } from "./LinkToTmdb";
+import { ItemSagaStrip } from "./ItemSagaStrip";
+import { PeopleLinks } from "./PeopleLinks";
 import { HeartIcon } from "./icons";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useLibrary } from "../store/useLibrary";
@@ -72,7 +74,7 @@ function ItemDetail({ item }: { item: Item }) {
         ←
       </button>
 
-      <div className="px-4 pb-28 pt-4 sm:px-6">
+      <div className="mx-auto max-w-3xl px-4 pb-28 pt-4 sm:px-6">
         <div className="flex items-start justify-between gap-3">
           <h1 id={titleId} className="font-display text-2xl font-semibold leading-tight text-text">
             {item.title}
@@ -106,8 +108,9 @@ function ItemDetail({ item }: { item: Item }) {
         </div>
 
         {item.overview && <p className="mt-3.5 text-sm leading-relaxed text-text-muted">{item.overview}</p>}
-        {item.director && <p className="mt-2 text-xs text-text-faint">Regia · {item.director}</p>}
-        {item.cast.length > 0 && <p className="mt-1 text-xs text-text-faint">Con · {item.cast.slice(0, 3).join(", ")}</p>}
+        <PeopleLinks item={item} />
+
+        <ItemSagaStrip item={item} />
 
         <div className="mt-5">
           <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Stato</span>

@@ -4,11 +4,11 @@ import { useSettings } from "../store/useSettings";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { useEditSheet } from "../store/useEditSheet";
 import { useSelectedItem } from "../store/useSelectedItem";
-import { getFeed, getDetails, type DiscoverFeed, type TmdbSearchResult } from "../lib/tmdb";
+import { getFeed, type DiscoverFeed, type TmdbSearchResult } from "../lib/tmdb";
+import { draftFromTmdb } from "../lib/addFromTmdb";
 import { PosterArt } from "../components/PosterArt";
 import { EmptyState } from "../components/EmptyState";
-import { PLATFORMS } from "../types";
-import type { ItemDraft } from "../lib/draft";
+import { UpcomingBoard } from "../components/UpcomingBoard";
 
 const FEEDS: { id: DiscoverFeed; title: string; why: string }[] = [
   { id: "trending", title: "Di cosa si parla", why: "I film più visti questa settimana nel mondo" },
@@ -46,28 +46,13 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
     }
     setPicking(r.tmdbId);
     try {
-      const d = await getDetails(r.tmdbId, r.mediaType, tmdbApiKey);
-      const draft: Partial<ItemDraft> = {
-        title: d.title || r.title,
-        kind: r.kind,
-        year: d.year ?? r.year ?? new Date().getFullYear(),
-        genre: d.genre,
-        runtime: d.runtime,
-        episodes: d.episodes,
-        seasons: d.seasons,
-        overview: d.overview,
-        director: d.director,
-        cast: d.cast,
-        similar: d.similar,
-        platform: (PLATFORMS as readonly string[]).includes(d.watchProviders[0]?.name ?? "")
-          ? (d.watchProviders[0].name as (typeof PLATFORMS)[number])
-          : "Altro",
-        tmdbId: d.tmdbId,
-        tmdbMediaType: r.mediaType,
-        posterPath: d.posterPath,
-        trailerUrl: d.trailerUrl,
-      };
-      openNew(draft);
+      openNew(
+        await draftFromTmdb(r.tmdbId, r.mediaType, r.kind, tmdbApiKey, {
+          title: r.title,
+          year: r.year,
+          posterPath: r.posterPath,
+        }),
+      );
     } catch {
       setFailed(true);
     }
@@ -122,15 +107,26 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
   );
 }
 
+type Tab = "sfoglia" | "prossimamente";
+const TABS: { id: Tab; label: string }[] = [
+  { id: "sfoglia", label: "Sfoglia" },
+  { id: "prossimamente", label: "Prossimamente" },
+];
+
 export function Discover() {
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
   const openSettings = useSettingsSheet((s) => s.open);
+  const [tab, setTab] = useState<Tab>("sfoglia");
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-6 sm:px-6 sm:py-10">
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
       <div>
         <h1 className="font-display text-3xl font-semibold text-text">Scopri</h1>
-        <p className="mt-1 text-sm text-text-muted">Tocca una copertina per aggiungerla alla tua libreria.</p>
+        <p className="mt-1 text-sm text-text-muted">
+          {tab === "sfoglia"
+            ? "Tocca una copertina per aggiungerla alla tua libreria."
+            : "Le date che ti riguardano: nuovi episodi delle serie che segui e film che aspetti."}
+        </p>
       </div>
 
       {!tmdbApiKey ? (
@@ -149,7 +145,35 @@ export function Discover() {
           }
         />
       ) : (
-        FEEDS.map((f) => <Row key={f.id} feed={f.id} title={f.title} why={f.why} />)
+        <>
+          <div className="flex gap-1 border-b border-border" role="tablist" aria-label="Sezioni di Scopri">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={tab === t.id}
+                onClick={() => setTab(t.id)}
+                className={`-mb-px rounded-t-sm border-b-2 px-3.5 py-2 text-sm font-medium transition-colors ${
+                  tab === t.id ? "text-text" : "border-transparent text-text-faint hover:text-text-muted"
+                }`}
+                style={tab === t.id ? { borderColor: "var(--accent)" } : undefined}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {tab === "sfoglia" ? (
+            <div className="flex flex-col gap-8">
+              {FEEDS.map((f) => (
+                <Row key={f.id} feed={f.id} title={f.title} why={f.why} />
+              ))}
+            </div>
+          ) : (
+            <UpcomingBoard />
+          )}
+        </>
       )}
     </div>
   );

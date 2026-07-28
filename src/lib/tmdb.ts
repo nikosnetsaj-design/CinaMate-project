@@ -49,6 +49,10 @@ export interface TmdbDetails {
   posterPath: string | null;
   trailerUrl: string | null;
   watchProviders: TmdbWatchProvider[];
+  /** Saga the title belongs to, `null` when it is standalone. */
+  collectionId: number | null;
+  collectionName: string | null;
+  releaseDate: string | null;
 }
 
 async function tmdbGet<T>(path: string, apiKey: string, params: Record<string, string> = {}): Promise<T> {
@@ -152,6 +156,7 @@ interface RawDetails {
   first_air_date?: string;
   overview?: string;
   poster_path?: string | null;
+  belongs_to_collection?: { id: number; name: string; poster_path?: string | null } | null;
   genres?: { name: string }[];
   runtime?: number;
   episode_run_time?: number[];
@@ -215,6 +220,11 @@ export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiK
     posterPath: details.poster_path ?? null,
     trailerUrl: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null,
     watchProviders: watch.providers,
+    // TV shows have no collection on TMDB, so `null` there is a real answer
+    // ("standalone"), not a gap waiting to be filled.
+    collectionId: details.belongs_to_collection?.id ?? null,
+    collectionName: details.belongs_to_collection?.name ?? null,
+    releaseDate: dateStr ?? null,
   };
 }
 
@@ -279,4 +289,311 @@ export async function getNextEpisode(tmdbId: number, apiKey: string): Promise<Tm
   return next
     ? { airDate: next.air_date, seasonNumber: next.season_number, episodeNumber: next.episode_number }
     : { airDate: null, seasonNumber: null, episodeNumber: null };
+}
+
+/* ------------------------------------------------------------------ */
+/* Saghe — TMDB collections                                            */
+/* ------------------------------------------------------------------ */
+
+export interface TmdbSagaPart {
+  tmdbId: number;
+  title: string;
+  releaseDate: string | null;
+  year: number | null;
+  overview: string;
+  posterPath: string | null;
+}
+
+export interface TmdbSaga {
+  id: number;
+  name: string;
+  overview: string;
+  posterPath: string | null;
+  backdropPath: string | null;
+  parts: TmdbSagaPart[];
+}
+
+interface RawCollection {
+  id: number;
+  name?: string;
+  overview?: string;
+  poster_path?: string | null;
+  backdrop_path?: string | null;
+  parts?: {
+    id: number;
+    title?: string;
+    name?: string;
+    release_date?: string;
+    overview?: string;
+    poster_path?: string | null;
+  }[];
+}
+
+/**
+ * TMDB names collections "X Collection" / "X - Collezione", which reads as
+ * noise once the word "saga" is already in the interface around it.
+ */
+export function cleanSagaName(name: string): string {
+  return name
+    .replace(/\s*[-–—]?\s*(collezione|collection|saga|serie di film)\s*$/i, "")
+    .trim() || name;
+}
+
+const collectionCache = new Map<number, TmdbSaga>();
+
+export async function getSaga(collectionId: number, apiKey: string): Promise<TmdbSaga> {
+  const hit = collectionCache.get(collectionId);
+  if (hit) return hit;
+
+  const raw = await tmdbGet<RawCollection>(`/collection/${collectionId}`, apiKey);
+  const parts = (raw.parts ?? [])
+    .map((p) => {
+      const date = p.release_date || null;
+      return {
+        tmdbId: p.id,
+        title: p.title || p.name || "",
+        releaseDate: date && date.length >= 4 ? date : null,
+        year: date && date.length >= 4 ? Number(date.slice(0, 4)) : null,
+        overview: p.overview || "",
+        posterPath: p.poster_path ?? null,
+      };
+    })
+    .filter((p) => p.title)
+    // Unreleased entries carry no date and would otherwise sort to the front.
+    .sort((a, b) => (a.releaseDate ?? "9999").localeCompare(b.releaseDate ?? "9999"));
+
+  const saga: TmdbSaga = {
+    id: raw.id,
+    name: cleanSagaName(raw.name ?? ""),
+    overview: raw.overview ?? "",
+    posterPath: raw.poster_path ?? null,
+    backdropPath: raw.backdrop_path ?? null,
+    parts,
+  };
+  collectionCache.set(collectionId, saga);
+  return saga;
+}
+
+/* ------------------------------------------------------------------ */
+/* Persone — attori e registi                                          */
+/* ------------------------------------------------------------------ */
+
+export interface TmdbPersonCredit {
+  tmdbId: number;
+  mediaType: "movie" | "tv";
+  title: string;
+  year: number | null;
+  posterPath: string | null;
+  /** Character played, or the crew job for a director credit. */
+  role: string;
+  kind: Kind;
+  popularity: number;
+}
+
+export interface TmdbPerson {
+  id: number;
+  name: string;
+  biography: string;
+  profilePath: string | null;
+  knownFor: string;
+  birthday: string | null;
+  placeOfBirth: string | null;
+  actingCredits: TmdbPersonCredit[];
+  directingCredits: TmdbPersonCredit[];
+}
+
+interface RawPersonCredit {
+  id: number;
+  media_type?: "movie" | "tv";
+  title?: string;
+  name?: string;
+  release_date?: string;
+  first_air_date?: string;
+  poster_path?: string | null;
+  character?: string;
+  job?: string;
+  genre_ids?: number[];
+  origin_country?: string[];
+  popularity?: number;
+}
+
+interface RawPerson {
+  id: number;
+  name?: string;
+  biography?: string;
+  profile_path?: string | null;
+  known_for_department?: string;
+  birthday?: string | null;
+  place_of_birth?: string | null;
+  combined_credits?: { cast?: RawPersonCredit[]; crew?: RawPersonCredit[] };
+}
+
+const DEPARTMENT_LABELS: Record<string, string> = {
+  Acting: "Interpretazione",
+  Directing: "Regia",
+  Writing: "Sceneggiatura",
+  Production: "Produzione",
+  Sound: "Musiche e suono",
+  Camera: "Fotografia",
+};
+
+function toPersonCredit(raw: RawPersonCredit, role: string): TmdbPersonCredit | null {
+  const mediaType = raw.media_type === "tv" ? "tv" : raw.media_type === "movie" ? "movie" : null;
+  if (!mediaType) return null;
+  const title = raw.title || raw.name || "";
+  if (!title) return null;
+  const dateStr = raw.release_date || raw.first_air_date;
+  const genreNames = (raw.genre_ids ?? []).map((id) => GENRE_NAMES[id]).filter((n): n is string => !!n);
+  return {
+    tmdbId: raw.id,
+    mediaType,
+    title,
+    year: dateStr && dateStr.length >= 4 ? Number(dateStr.slice(0, 4)) : null,
+    posterPath: raw.poster_path ?? null,
+    role,
+    kind: guessKind(mediaType, genreNames, raw.origin_country),
+    popularity: raw.popularity ?? 0,
+  };
+}
+
+/** Newest first, undated (announced) titles last rather than first. */
+function byRecency(a: TmdbPersonCredit, b: TmdbPersonCredit): number {
+  return (b.year ?? 0) - (a.year ?? 0);
+}
+
+const personIdCache = new Map<string, number | null>();
+const personCache = new Map<number, TmdbPerson>();
+
+/** Resolves a name to a TMDB person id — the library stores names, not ids. */
+export async function findPersonId(name: string, apiKey: string): Promise<number | null> {
+  const key = name.trim().toLowerCase();
+  if (!key) return null;
+  if (personIdCache.has(key)) return personIdCache.get(key) ?? null;
+
+  const data = await tmdbGet<{ results: { id: number; name: string; popularity?: number }[] }>(
+    "/search/person",
+    apiKey,
+    { query: name, include_adult: "false" },
+  );
+  const exact = data.results.find((r) => r.name.trim().toLowerCase() === key);
+  const id = (exact ?? data.results[0])?.id ?? null;
+  personIdCache.set(key, id);
+  return id;
+}
+
+export async function getPerson(personId: number, apiKey: string): Promise<TmdbPerson> {
+  const hit = personCache.get(personId);
+  if (hit) return hit;
+
+  const raw = await tmdbGet<RawPerson>(`/person/${personId}`, apiKey, {
+    append_to_response: "combined_credits",
+  });
+
+  const acting = (raw.combined_credits?.cast ?? [])
+    .map((c) => toPersonCredit(c, c.character || ""))
+    .filter((c): c is TmdbPersonCredit => c !== null)
+    .sort(byRecency);
+
+  const directing = (raw.combined_credits?.crew ?? [])
+    .filter((c) => c.job === "Director")
+    .map((c) => toPersonCredit(c, "Regia"))
+    .filter((c): c is TmdbPersonCredit => c !== null)
+    .sort(byRecency);
+
+  // The same film can appear twice in a crew list (director + producer, say).
+  const seen = new Set<number>();
+  const uniqueDirecting = directing.filter((c) => !seen.has(c.tmdbId) && seen.add(c.tmdbId));
+
+  const person: TmdbPerson = {
+    id: raw.id,
+    name: raw.name ?? "",
+    biography: raw.biography ?? "",
+    profilePath: raw.profile_path ?? null,
+    knownFor: DEPARTMENT_LABELS[raw.known_for_department ?? ""] ?? raw.known_for_department ?? "",
+    birthday: raw.birthday ?? null,
+    placeOfBirth: raw.place_of_birth ?? null,
+    actingCredits: acting,
+    directingCredits: uniqueDirecting,
+  };
+  personCache.set(personId, person);
+  return person;
+}
+
+export function profileUrl(path: string | null | undefined, size: "w185" | "h632" = "w185"): string | null {
+  return path ? `${IMG_BASE}/${size}${path}` : null;
+}
+
+/* ------------------------------------------------------------------ */
+/* Universi — costruiti dalle keyword TMDB                             */
+/* ------------------------------------------------------------------ */
+
+const keywordIdCache = new Map<string, number | null>();
+
+/**
+ * Universes are not a TMDB entity: what ties the MCU together is a keyword
+ * applied to every film. Resolving the keyword at runtime keeps the app from
+ * shipping a hardcoded list of ids that silently rots as films are added.
+ */
+export async function findKeywordId(query: string, apiKey: string): Promise<number | null> {
+  const key = query.trim().toLowerCase();
+  if (keywordIdCache.has(key)) return keywordIdCache.get(key) ?? null;
+
+  const data = await tmdbGet<{ results: { id: number; name: string }[] }>("/search/keyword", apiKey, { query });
+  const exact = data.results.find((r) => r.name.trim().toLowerCase() === key);
+  const id = (exact ?? data.results[0])?.id ?? null;
+  keywordIdCache.set(key, id);
+  return id;
+}
+
+export async function getKeywordMovies(keywordId: number, apiKey: string): Promise<TmdbSagaPart[]> {
+  const pages = await Promise.all(
+    [1, 2].map((page) =>
+      tmdbGet<{ results: RawMultiSearchResult[] }>("/discover/movie", apiKey, {
+        with_keywords: String(keywordId),
+        sort_by: "primary_release_date.asc",
+        include_adult: "false",
+        page: String(page),
+      }).catch(() => ({ results: [] as RawMultiSearchResult[] })),
+    ),
+  );
+
+  const seen = new Set<number>();
+  return pages
+    .flatMap((p) => p.results)
+    .filter((r) => !seen.has(r.id) && seen.add(r.id))
+    .map((r) => {
+      const date = r.release_date || null;
+      return {
+        tmdbId: r.id,
+        title: r.title || r.name || "",
+        releaseDate: date && date.length >= 4 ? date : null,
+        year: date && date.length >= 4 ? Number(date.slice(0, 4)) : null,
+        overview: r.overview || "",
+        posterPath: r.poster_path ?? null,
+      };
+    })
+    .filter((p) => p.title && p.releaseDate)
+    .sort((a, b) => (a.releaseDate ?? "9999").localeCompare(b.releaseDate ?? "9999"));
+}
+
+/* ------------------------------------------------------------------ */
+/* Date di uscita — per il calendario                                  */
+/* ------------------------------------------------------------------ */
+
+const releaseDateCache = new Map<string, { date: string | null; at: number }>();
+const RELEASE_TTL_MS = 6 * 60 * 60 * 1000;
+
+export async function getReleaseDate(
+  tmdbId: number,
+  mediaType: "movie" | "tv",
+  apiKey: string,
+): Promise<string | null> {
+  const key = `${mediaType}:${tmdbId}`;
+  const hit = releaseDateCache.get(key);
+  if (hit && Date.now() - hit.at < RELEASE_TTL_MS) return hit.date;
+
+  const raw = await tmdbGet<RawDetails>(`/${mediaType}/${tmdbId}`, apiKey);
+  const date = raw.release_date || raw.first_air_date || null;
+  releaseDateCache.set(key, { date, at: Date.now() });
+  return date;
 }
