@@ -218,6 +218,51 @@ export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiK
   };
 }
 
+export type DiscoverFeed = "trending" | "cinema" | "upcoming" | "top" | "trendingTv";
+
+const FEED_PATH: Record<DiscoverFeed, string> = {
+  trending: "/trending/movie/week",
+  cinema: "/movie/now_playing",
+  upcoming: "/movie/upcoming",
+  top: "/movie/top_rated",
+  trendingTv: "/trending/tv/week",
+};
+
+// Catalogue rows change at most daily; a session should never fetch one twice.
+const feedCache = new Map<DiscoverFeed, { at: number; rows: TmdbSearchResult[] }>();
+const FEED_TTL_MS = 3 * 60 * 60 * 1000;
+
+export async function getFeed(feed: DiscoverFeed, apiKey: string): Promise<TmdbSearchResult[]> {
+  const hit = feedCache.get(feed);
+  if (hit && Date.now() - hit.at < FEED_TTL_MS) return hit.rows;
+
+  const isTv = feed === "trendingTv";
+  const params: Record<string, string> = { page: "1" };
+  if (feed === "cinema" || feed === "upcoming") params.region = "IT";
+  const data = await tmdbGet<{ results: RawMultiSearchResult[] }>(FEED_PATH[feed], apiKey, params);
+
+  const rows = data.results
+    .slice(0, 20)
+    .map((r) => {
+      const mediaType: "movie" | "tv" = r.media_type === "tv" || isTv ? "tv" : "movie";
+      const genreNames = (r.genre_ids ?? []).map((id) => GENRE_NAMES[id]).filter((n): n is string => !!n);
+      const dateStr = r.release_date || r.first_air_date;
+      return {
+        tmdbId: r.id,
+        mediaType,
+        title: r.title || r.name || "",
+        year: dateStr ? Number(dateStr.slice(0, 4)) : null,
+        overview: r.overview || "",
+        posterPath: r.poster_path ?? null,
+        kind: guessKind(mediaType, genreNames, r.origin_country),
+      };
+    })
+    .filter((r) => r.title);
+
+  feedCache.set(feed, { at: Date.now(), rows });
+  return rows;
+}
+
 export interface TmdbUpcomingEpisode {
   airDate: string | null;
   seasonNumber: number | null;
