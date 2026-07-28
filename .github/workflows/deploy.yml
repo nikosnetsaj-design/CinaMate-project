@@ -1,0 +1,49 @@
+name: Deploy su GitHub Pages
+
+on:
+  push:
+    # Cinemate is the default branch and the one Pages deploys from once this
+    # work is merged; the feature branch stays listed so it can be previewed
+    # before merging.
+    branches: [Cinemate, claude/cinemate-app-design-690cev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a running deploy finish rather than cancelling it mid-publish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          GITHUB_PAGES: "true"
+      # Pages has no server-side routing, so every unknown path must fall back
+      # to the app shell or a refresh on /libreria would 404.
+      - run: cp dist/index.html dist/404.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

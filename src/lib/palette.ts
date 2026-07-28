@@ -1,16 +1,22 @@
+/**
+ * Fallback poster art for titles with no TMDB image. Every pair is mixed from
+ * the same three Technicolor dyes as the interface — magenta, cyan, yellow —
+ * over the aubergine base, so a shelf of unlinked titles still reads as one
+ * family instead of a bag of random jewel tones.
+ */
 const PALETTES: [string, string][] = [
-  ["#2A1B3D", "#5B3E8C"],
-  ["#16283D", "#2E5266"],
-  ["#3D1618", "#8C2F2F"],
-  ["#12301F", "#2F6B4F"],
-  ["#3A2C12", "#8C6B2F"],
-  ["#2D163D", "#6B2F8C"],
-  ["#3D1626", "#8C2F5E"],
-  ["#123334", "#2F7A7A"],
-  ["#232323", "#5C5C5C"],
-  ["#3A2412", "#8C5A2F"],
-  ["#1A1F3D", "#3E4A8C"],
-  ["#3D2418", "#A6553A"],
+  ["#2B1030", "#8E1F63"],
+  ["#241436", "#5B2F9E"],
+  ["#101F33", "#1F5F8E"],
+  ["#0E2A2E", "#1E7A80"],
+  ["#2E1226", "#B3247A"],
+  ["#1A1A34", "#443C9E"],
+  ["#301A12", "#A85A2A"],
+  ["#122A26", "#26806A"],
+  ["#33122A", "#96206B"],
+  ["#1C1030", "#6B2FA0"],
+  ["#0F2436", "#2A6E9E"],
+  ["#2A1436", "#7A2F8E"],
 ];
 
 function hashOf(s: string): number {

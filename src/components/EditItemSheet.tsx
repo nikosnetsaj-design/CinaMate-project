@@ -229,7 +229,7 @@ function EditItemForm() {
         >
           <span
             className="flex h-6 w-6 items-center justify-center rounded-md"
-            style={{ background: draft.fav ? "var(--rust)" : "var(--surface-hover)", color: draft.fav ? "var(--rust-contrast)" : "var(--text-faint)" }}
+            style={{ background: draft.fav ? "var(--accent)" : "var(--surface-hover)", color: draft.fav ? "var(--accent-contrast)" : "var(--text-faint)" }}
           >
             <HeartIcon size={13} filled={draft.fav} />
           </span>

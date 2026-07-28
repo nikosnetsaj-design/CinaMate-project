@@ -10,6 +10,7 @@ import { PosterArt } from "../components/PosterArt";
 import { VoteBadge } from "../components/VoteBadge";
 import { UpcomingRow } from "../components/UpcomingRow";
 import { NightPickerButton } from "../components/NightPicker";
+import { Nastro } from "../components/Nastro";
 import { computeStats } from "../lib/stats";
 import { greeting } from "../lib/stats";
 import { formatRuntime } from "../lib/format";
@@ -41,6 +42,8 @@ export function Home() {
           {ready && items.length > 0 && <NightPickerButton />}
         </div>
       </div>
+
+      {ready && items.length > 0 && <Nastro days={30} height={58} />}
 
       <section aria-label="Le tue statistiche" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {!ready ? (
