@@ -1,5 +1,15 @@
 # CineMate
 
+### ▶ [Apri CineMate](https://nikosnetsaj-design.github.io/CinaMate-project/)
+
+L'indirizzo per esteso è `https://nikosnetsaj-design.github.io/CinaMate-project/`,
+ma conviene toccare il link qui sopra invece di scriverlo: basta una lettera
+sbagliata nella parte prima del punto e il browser risponde "non trova il
+server". Una volta aperto, sul telefono aggiungilo alla schermata Home
+(Condividi → Aggiungi a Home) e non serve più cercarlo.
+
+---
+
 La tua libreria personale di film, serie TV, anime e documentari. Traccia stato,
 voto (su 10), episodi visti e note; raggruppa automaticamente i film in saghe e
 universi con l'ordine giusto in cui guardarli; scopri e aggiungi nuovi titoli con
