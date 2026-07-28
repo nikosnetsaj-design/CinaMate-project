@@ -9,6 +9,7 @@ import { EditItemSheetPortal } from "./components/EditItemSheet";
 import { SettingsSheetPortal } from "./components/SettingsSheet";
 import { useTheme } from "./store/useTheme";
 import { useLibrary } from "./store/useLibrary";
+import { useAutoLinkTmdb } from "./lib/useAutoLinkTmdb";
 import { Home } from "./pages/Home";
 import { Library } from "./pages/Library";
 import { Stats } from "./pages/Stats";
@@ -38,6 +39,7 @@ function ErrorBanner() {
 
 export default function App() {
   const theme = useTheme((s) => s.theme);
+  useAutoLinkTmdb();
 
   useEffect(() => {
     // Dark is the base theme, so the light variant is the one that opts in.

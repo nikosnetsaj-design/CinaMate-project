@@ -1,6 +1,4 @@
 import { create } from "zustand";
-import { SEED } from "../data/seed";
-import { buildSeedHistory } from "../data/seedHistory";
 import type { HistoryEntry, Item, Status, ToastKind, ToastMessage } from "../types";
 
 const STORAGE_KEY = "cinemate:v2";
@@ -19,7 +17,8 @@ function isItemArray(value: unknown): value is Item[] {
 function loadItems(): { data: Item[]; corrupted: boolean } {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw === null) return { data: SEED, corrupted: false };
+    // A new library starts genuinely empty — no demo titles to delete first.
+    if (raw === null) return { data: [], corrupted: false };
     const parsed: unknown = JSON.parse(raw);
     if (!isItemArray(parsed)) throw new Error("malformed cinemate library");
     return { data: parsed, corrupted: false };
@@ -52,7 +51,7 @@ function isHistoryArray(value: unknown): value is HistoryEntry[] {
 function loadHistory(): HistoryEntry[] {
   try {
     const raw = localStorage.getItem(HISTORY_KEY);
-    if (raw === null) return buildSeedHistory(initial.data);
+    if (raw === null) return [];
     const parsed: unknown = JSON.parse(raw);
     if (!isHistoryArray(parsed)) throw new Error("malformed cinemate history");
     return parsed;
@@ -114,6 +113,7 @@ interface LibraryState {
   dismissToast: (id: string) => void;
 
   importData: (items: Item[], history: HistoryEntry[]) => void;
+  clearAll: () => void;
   resetCorruptedData: () => void;
 }
 
@@ -249,6 +249,13 @@ export const useLibrary = create<LibraryState>((set, get) => ({
     } else {
       get().pushToast("success", `Libreria importata: ${items.length} titoli.`);
     }
+  },
+
+  clearAll: () => {
+    saveItems([]);
+    saveHistory([]);
+    set({ items: [], history: [], storageError: false });
+    get().pushToast("info", "Libreria svuotata.");
   },
 
   resetCorruptedData: () => {

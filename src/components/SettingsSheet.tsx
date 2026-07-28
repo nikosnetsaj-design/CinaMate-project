@@ -5,6 +5,7 @@ import { useSettingsSheet } from "../store/useSettingsSheet";
 import { useSettings, MODELS } from "../store/useSettings";
 import { useLibrary } from "../store/useLibrary";
 import { buildBackup, parseBackup, BackupParseError } from "../lib/backup";
+import { resetAutoLinkAttempts } from "../lib/useAutoLinkTmdb";
 
 function SettingsForm() {
   const close = useSettingsSheet((s) => s.close);
@@ -20,6 +21,7 @@ function SettingsForm() {
   const history = useLibrary((s) => s.history);
   const pushToast = useLibrary((s) => s.pushToast);
   const importData = useLibrary((s) => s.importData);
+  const clearAll = useLibrary((s) => s.clearAll);
 
   const [draftKey, setDraftKey] = useState(apiKey);
   const [reveal, setReveal] = useState(false);
@@ -146,6 +148,8 @@ function SettingsForm() {
               type="button"
               onClick={() => {
                 setTmdbApiKey(draftTmdbKey);
+                // A new key deserves a fresh go at titles that failed before.
+                resetAutoLinkAttempts();
                 pushToast("success", "Chiave TMDB salvata.");
               }}
               className="rounded-sm px-3.5 py-2 text-xs font-semibold"
@@ -231,6 +235,19 @@ function SettingsForm() {
                 if (file) void handleImportFile(file);
               }}
             />
+            <button
+              type="button"
+              disabled={items.length === 0}
+              onClick={() => {
+                if (window.confirm(`Svuotare la libreria? ${items.length} titoli e tutto il diario verranno eliminati da questo dispositivo.`)) {
+                  clearAll();
+                }
+              }}
+              className="w-full rounded-sm border px-3.5 py-2.5 text-left text-sm disabled:opacity-40"
+              style={{ borderColor: "color-mix(in srgb, var(--danger) 40%, transparent)", color: "var(--danger)" }}
+            >
+              Svuota la libreria
+            </button>
           </div>
         </div>
       </div>
