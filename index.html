@@ -19,6 +19,72 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <div style="padding:2rem;font-family:system-ui,sans-serif;color:#f6eff6;background:#1b1221">
+        CineMate ha bisogno di JavaScript per funzionare. Attivalo nelle impostazioni del browser e ricarica la pagina.
+      </div>
+    </noscript>
+    <!--
+      Rete di sicurezza per l'avvio. Se il bundle non si carica o esplode prima
+      del primo render, senza questo si vedrebbe una pagina bianca muta: nessun
+      messaggio, niente da riferire. Qui l'errore diventa leggibile e
+      ricaricabile. Tutto inline e senza dipendenze, perché il foglio di stile
+      potrebbe essere proprio ciò che è mancato.
+    -->
+    <script>
+      (function () {
+        var root = document.getElementById("root");
+        var shown = false;
+
+        function fail(detail) {
+          if (shown || root.childElementCount > 0) return;
+          shown = true;
+          root.innerHTML =
+            '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;' +
+            'background:#1b1221;color:#f6eff6;font-family:system-ui,-apple-system,sans-serif;text-align:center">' +
+            '<div style="max-width:26rem">' +
+            '<h1 style="font-size:1.25rem;margin:0 0 .75rem">CineMate non è riuscito ad avviarsi</h1>' +
+            '<p style="margin:0 0 1rem;color:#c5b3cb;line-height:1.5">Quasi sempre è una copia vecchia rimasta in memoria nel browser. ' +
+            'Ricarica; se non basta, svuota i dati del sito e riapri.</p>' +
+            '<button id="cm-reload" style="background:#ff4d9e;color:#24071a;border:0;border-radius:5px;' +
+            'padding:.7rem 1.4rem;font-size:.95rem;font-weight:600">Ricarica</button>' +
+            '<p style="margin:1.25rem 0 0;color:#a494ac;font-size:.75rem;word-break:break-word">' +
+            (detail || "") + "</p></div></div>";
+          var button = document.getElementById("cm-reload");
+          if (button) {
+            button.onclick = function () {
+              // Query nuova a ogni tentativo: su iOS un reload normale può
+              // ripescare dalla cache proprio la copia che ha fallito.
+              location.replace(location.pathname + "?r=" + Date.now());
+            };
+          }
+        }
+
+        // `capture: true` non è un dettaglio: un file che non si carica emette
+        // un evento error sull'elemento, che senza cattura non arriva mai qui —
+        // ed è proprio il caso da intercettare, il bundle che non arriva.
+        window.addEventListener(
+          "error",
+          function (e) {
+            var target = e && e.target;
+            if (target && target !== window && target.src) {
+              fail("Non è stato possibile caricare " + String(target.src).split("/").pop() + ".");
+              return;
+            }
+            fail(e && e.message ? String(e.message) : "");
+          },
+          true,
+        );
+        window.addEventListener("unhandledrejection", function (e) {
+          fail(e && e.reason ? String(e.reason) : "");
+        });
+        // Un modulo che non arriva mai non emette alcun errore: se dopo dieci
+        // secondi #root è ancora vuoto, il caricamento è comunque fallito.
+        setTimeout(function () {
+          fail("Il codice dell'app non è arrivato entro dieci secondi.");
+        }, 10000);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
