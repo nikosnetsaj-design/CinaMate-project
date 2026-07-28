@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { Nav } from "./components/Nav";
 import { ToastStack } from "./components/ToastStack";
 import { CommandPalette } from "./components/CommandPalette";
@@ -76,6 +76,11 @@ export default function App() {
             <Route path="/scopri" element={<Discover />} />
             <Route path="/dati" element={<Stats />} />
             <Route path="/critico" element={<Critic />} />
+            {/* Any other path lands on Home rather than on an empty shell: on
+                Pages every unknown URL is served the app, so a stale link, a
+                typo or a deliberately fresh entry point all have to arrive
+                somewhere real. */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
       </div>
