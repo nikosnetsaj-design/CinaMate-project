@@ -12,6 +12,7 @@ import { useLibrary } from "./store/useLibrary";
 import { useAutoLinkTmdb } from "./lib/useAutoLinkTmdb";
 import { Home } from "./pages/Home";
 import { Library } from "./pages/Library";
+import { Discover } from "./pages/Discover";
 import { Stats } from "./pages/Stats";
 import { Critic } from "./pages/Critic";
 
@@ -62,6 +63,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/libreria" element={<Library />} />
+            <Route path="/scopri" element={<Discover />} />
             <Route path="/dati" element={<Stats />} />
             <Route path="/critico" element={<Critic />} />
           </Routes>

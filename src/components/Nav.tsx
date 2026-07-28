@@ -3,14 +3,20 @@ import { useTheme } from "../store/useTheme";
 import { useCommandPalette } from "../store/useCommandPalette";
 import { useAddSheet } from "../store/useAddSheet";
 import { useSettingsSheet } from "../store/useSettingsSheet";
-import { ChartIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, PlusIcon, ReelMark, SearchIcon, SparkleIcon, SunIcon } from "./icons";
+import { ChartIcon, CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, PlusIcon, ReelMark, SearchIcon, SparkleIcon, SunIcon } from "./icons";
 
 const NAV_ITEMS = [
   { to: "/", label: "Home", icon: HomeIcon, end: true },
   { to: "/libreria", label: "Libreria", icon: LibraryIcon, end: false },
+  { to: "/scopri", label: "Scopri", icon: CompassIcon, end: false },
   { to: "/dati", label: "Dati", icon: ChartIcon, end: false },
   { to: "/critico", label: "Critico", icon: SparkleIcon, end: false },
 ] as const;
+
+// The floating add button owns the middle of the mobile bar, which only stays
+// uncrowded with four tabs. Critico keeps its sidebar entry and is reachable
+// from every title sheet, so it is the one to drop on small screens.
+const MOBILE_ITEMS = NAV_ITEMS.filter((i) => i.to !== "/critico");
 
 function linkClasses(isActive: boolean) {
   return `flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm font-medium transition-colors ${
@@ -128,7 +134,7 @@ export function Nav() {
         aria-label="Navigazione principale"
         className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm md:hidden"
       >
-        {NAV_ITEMS.map(({ to, label, icon: Icon, end }, idx) => (
+        {MOBILE_ITEMS.map(({ to, label, icon: Icon, end }, idx) => (
           <NavLink
             key={to}
             to={to}
