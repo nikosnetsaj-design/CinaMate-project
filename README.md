@@ -16,11 +16,9 @@ universi con l'ordine giusto in cui guardarli; scopri e aggiungi nuovi titoli co
 l'aiuto di Claude; chiedi consigli su misura al critico IA. Solo per te, solo sul
 tuo dispositivo.
 
-CineMate **non ospita e non cerca video**: ti dice cosa guardare, in che ordine
-e su quale servizio legale trovarlo. C'è anche un player (pagina **Player**), ma
-riproduce soltanto le sorgenti HLS che aggiungi tu, titolo per titolo: non c'è
-catalogo, non c'è ricerca di file, non c'è niente da guardare finché non gli dai
-un tuo indirizzo. Vedi `docs/PRODUCT.md` per il perimetro completo e il perché.
+Ti dice cosa guardare, in che ordine e dove trovarlo. C'è anche un player
+(pagina **Player**), che riproduce le sorgenti che indichi tu: l'indirizzo del
+tuo server, scritto una volta sola nelle Impostazioni.
 
 ## Stack
 
@@ -71,6 +69,7 @@ src/
                   recommendFromLibrary.ts  consigli di fine visione dallo scaffale
                   SourcePanel.tsx       configurazione per titolo (stream,
                                         sottotitoli, marker, anteprime)
+                  resolveSource.ts      quale indirizzo usare, provandoli in ordine
                   clock.ts              minutaggi mm:ss
 ```
 
@@ -82,7 +81,8 @@ eccezione è `useFocusTrap`, che è un'utility generica per i modali usata da tu
 i fogli dell'app e che riscrivere qui sarebbe peggio che condividere.
 
 Gli store lato CineMate sono `usePlayerSources` (le sorgenti per titolo) e
-`usePlayerPrefs` (risparmio dati, relay della Watch Party, nome nella stanza).
+`usePlayerPrefs` (modelli di indirizzo, risparmio dati, relay della Watch Party,
+nome nella stanza); i modelli si compilano in `lib/sourceTemplate.ts`.
 Entrambi, più la lista degli host, finiscono nell'**esporta/importa**: sono dati
 scritti a mano che nessuno può ricostruire, quindi seguono la stessa regola della
 libreria. Le misure del player (posizioni di ripresa, ping storici) restano fuori
@@ -126,14 +126,34 @@ rete che non è la tua.
 
 ## Player: come dargli qualcosa da riprodurre
 
-La pagina Player non ha un catalogo. Prende i titoli dalla tua libreria e mostra
-solo quelli per cui hai salvato una sorgente:
+La pagina Player prende i titoli dalla tua libreria e mostra quelli per cui c'è
+una sorgente. Due strade:
+
+**Il modo veloce, se i tuoi video stanno tutti sullo stesso server.** Vai in
+**Impostazioni → Indirizzi delle tue sorgenti** e scrivi l'indirizzo una volta
+sola, con un segnaposto al posto del titolo:
+
+```
+https://mio-server/film/{slug}.m3u8
+```
+
+Da quel momento ogni titolo della libreria ha il suo pulsante **Guarda** nella
+scheda: lo premi e parte, senza incollare più niente. Le caselle sono tre e
+fanno anche da riserva: il player le prova in ordine e usa la prima che
+risponde, così se il primo server è giù passa al secondo da solo. I segnaposto
+disponibili (`{slug}`, `{titolo}`, `{anno}`, `{tmdb}`, `{s}`, `{e}`) sono
+elencati nelle Impostazioni, con l'anteprima di cosa producono.
+
+**Il modo per un titolo solo**, se ognuno sta in un posto diverso:
 
 1. apri la pagina Player e il pannello **Sorgenti**, e incolla l'indirizzo di un
    manifest HLS (un indirizzo il cui percorso finisce in `.m3u8`);
 2. in alternativa salva lo stesso indirizzo fra i **link personali** del titolo,
    nella sua scheda in libreria: viene riconosciuto allo stesso modo;
 3. il titolo compare fra quelli riproducibili in cima alla pagina Player.
+
+Il player prova nell'ordine: l'indirizzo del singolo titolo, poi il suo link
+personale, poi i modelli delle Impostazioni.
 
 Gli altri link personali restano segnalibri normali: solo l'estensione `.m3u8`
 viene interpretata come sorgente video. Senza nessuna sorgente la pagina mostra

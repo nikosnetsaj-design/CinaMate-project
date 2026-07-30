@@ -18,6 +18,7 @@ import { getOfflineSourceUrl } from "../player/services/downloadService";
 import { WebSocketTransport } from "../player/services/watchPartyTransport";
 import { buildPlayerCatalog, originOf, streamUrlOf } from "../player/fromLibrary";
 import { recommendFromLibrary } from "../player/recommendFromLibrary";
+import { resolvePlayable } from "../player/resolveSource";
 import { SourcePanel } from "../player/SourcePanel";
 import { EMPTY_SOURCE } from "../store/usePlayerSources";
 import type { MediaContent } from "../player/types";
@@ -94,18 +95,56 @@ export function Player() {
 
   const catalog = useMemo(
     () =>
-      buildPlayerCatalog(items, lookup, {
-        sagas,
-        orders,
-        preferredOrder: sagaPrefs.order,
-      }),
-    [items, lookup, sagas, orders, sagaPrefs.order],
+      buildPlayerCatalog(
+        items,
+        lookup,
+        { sagas, orders, preferredOrder: sagaPrefs.order },
+        prefs.sourceTemplates,
+      ),
+    [items, lookup, sagas, orders, sagaPrefs.order, prefs.sourceTemplates],
   );
   const playable = useMemo(() => (catalog.length ? catalog : [TEST_STREAM]), [catalog]);
   const playableIds = useMemo(() => new Set(catalog.map((c) => c.id)), [catalog]);
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const networkContent = playable.find((c) => c.id === selectedId) ?? playable[0];
+  // Opened from a "Guarda" button: start on that title instead of the first.
+  const requestedId = searchParams.get("titolo");
+  const [selectedId, setSelectedId] = useState<string | null>(requestedId);
+  useEffect(() => {
+    if (requestedId) setSelectedId(requestedId);
+  }, [requestedId]);
+
+  const baseContent = playable.find((c) => c.id === selectedId) ?? playable[0];
+
+  // --- Finding a working address -------------------------------------------
+  // The catalogue entry carries the *first* candidate. When that came from a
+  // pattern it is a guess, so before playing we walk the candidates until one
+  // answers — this is what lets you write an address once and have every title
+  // resolve, and what makes the second and third slots act as fallbacks.
+  const [resolved, setResolved] = useState<Record<string, string | null>>({});
+  const [resolving, setResolving] = useState(false);
+  const targetItem = items.find((i) => i.id === baseContent.id) ?? null;
+
+  useEffect(() => {
+    if (!targetItem) return;
+    if (resolved[targetItem.id] !== undefined) return;
+    const controller = new AbortController();
+    setResolving(true);
+    resolvePlayable(targetItem, lookup, prefs.sourceTemplates, controller.signal)
+      .then((found) => {
+        if (controller.signal.aborted) return;
+        setResolved((r) => ({ ...r, [targetItem.id]: found?.url ?? null }));
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setResolving(false);
+      });
+    return () => controller.abort();
+  }, [targetItem, lookup, prefs.sourceTemplates, resolved]);
+
+  const resolvedUrl = targetItem ? resolved[targetItem.id] : undefined;
+  const networkContent = useMemo(
+    () => (resolvedUrl ? { ...baseContent, manifestUrl: resolvedUrl } : baseContent),
+    [baseContent, resolvedUrl],
+  );
 
   // --- Offline playback -----------------------------------------------------
   // A completed download is played by handing hls.js a blob playlist built from
@@ -260,16 +299,42 @@ export function Player() {
       <header className="flex flex-col gap-1.5">
         <h1 className="font-display text-3xl font-semibold text-text">Player</h1>
         <p className="text-sm text-text-muted">
-          Riproduce le sorgenti HLS che aggiungi tu, titolo per titolo. CineMate non cerca e non
-          ospita video: senza un tuo indirizzo, qui non c'è niente da guardare.
+          Riproduce le sorgenti HLS che indichi tu. Scrivi l'indirizzo del tuo server una volta
+          sola in Impostazioni, oppure incollane uno per il singolo titolo.
         </p>
       </header>
 
       {!hasOwnSources && (
         <EmptyState
           title="Nessuna sorgente sul tuo scaffale"
-          description="Apri il pannello Sorgenti qui sotto e incolla un manifest HLS (un indirizzo che finisce in .m3u8), oppure salvalo fra i link personali di un titolo. Intanto sotto c'è lo stream di test, per vedere subito come si comporta il player."
+          description="Scrivi l'indirizzo del tuo server una volta sola in Impostazioni → Indirizzi delle tue sorgenti, e ogni titolo avrà il suo pulsante Guarda. In alternativa incolla un manifest HLS su un singolo titolo, dal pannello Sorgenti qui sotto. Intanto c'è lo stream di test, per vedere come si comporta il player."
         />
+      )}
+
+      {/* What the player is doing about the address, so a title that won't
+          start says why instead of sitting on a black rectangle. */}
+      {resolving && (
+        <p className="flex items-center gap-2 text-xs text-text-faint">
+          <span
+            className="spinner h-3 w-3 rounded-full border-2"
+            style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }}
+          />
+          Cerco un indirizzo che risponda per «{baseContent.title}»…
+        </p>
+      )}
+      {!resolving && resolvedUrl === null && (
+        <p
+          role="alert"
+          className="rounded-sm border px-3 py-2 text-xs leading-relaxed"
+          style={{
+            borderColor: "color-mix(in srgb, var(--danger) 45%, transparent)",
+            color: "var(--danger)",
+          }}
+        >
+          Nessuno degli indirizzi configurati risponde per «{baseContent.title}». Controlla i modelli
+          in Impostazioni, oppure che il server sia raggiungibile e permetta le richieste da questa
+          pagina (CORS).
+        </p>
       )}
 
       {playable.length > 1 && (

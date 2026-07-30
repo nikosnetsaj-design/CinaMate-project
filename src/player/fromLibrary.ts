@@ -1,6 +1,7 @@
 import type { Item } from "../types";
 import { posterUrl } from "../lib/tmdb";
 import { orderParts, findLibraryMatch } from "../lib/sagas";
+import { candidatesFor } from "../lib/sourceTemplate";
 import type { SagaOrders, WatchOrder } from "../lib/sagas";
 import type { TmdbSaga } from "../lib/tmdb";
 import { EMPTY_SOURCE } from "../store/usePlayerSources";
@@ -166,9 +167,17 @@ export function buildPlayerCatalog(
   items: Item[],
   lookup: SourceLookup = () => EMPTY_SOURCE,
   saga: SagaContext | null = null,
+  /**
+   * Address patterns from Settings. A title with no address of its own still
+   * belongs in the catalogue when a pattern can build one for it — that is what
+   * makes the whole shelf playable after a single line of setup. The URL here
+   * is the first candidate; if it doesn't answer, `resolveSource` moves on to
+   * the next pattern before playback starts.
+   */
+  templates: string[] = [],
 ): MediaContent[] {
   const catalog = sagaAwareOrder(items, saga).flatMap((item) => {
-    const manifest = streamUrlOf(item, lookup);
+    const manifest = streamUrlOf(item, lookup) ?? candidatesFor(item, templates)[0] ?? null;
     return manifest ? [toMediaContent(item, manifest, lookup(item.id))] : [];
   });
 

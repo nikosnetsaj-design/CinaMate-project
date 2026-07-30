@@ -17,6 +17,22 @@ export type VideoPlayerOptions = {
 
 const MAX_RETRIES = 5;
 
+/**
+ * The WebKit-only members iOS Safari exposes in place of the standard
+ * Fullscreen and Picture-in-Picture APIs. Declared here rather than globally so
+ * the non-standard surface stays visible where it is actually used.
+ */
+type WebkitVideoElement = HTMLVideoElement & {
+  webkitEnterFullscreen?: () => void;
+  webkitSupportsPresentationMode?: (mode: string) => boolean;
+  webkitSetPresentationMode?: (mode: string) => void;
+  webkitPresentationMode?: string;
+};
+
+type FullscreenElement = HTMLElement & {
+  webkitRequestFullscreen?: () => void;
+};
+
 // Swaps only the origin (protocol + host + port) of `originalUrl` for the
 // one in `newOrigin`, keeping path/query/hash untouched. Falls back to the
 // original URL if either string doesn't parse — malformed host config
@@ -186,8 +202,12 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
       hlsRef.current?.destroy();
       hlsRef.current = null;
     };
+    // Keyed on the address as well as the id: the same title can change source
+    // — a pattern resolving to a different host, or switching to a download —
+    // and keying on the id alone left hls.js attached to the address it was
+    // first given, so the new one was never loaded.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [content?.id]);
+  }, [content?.id, content?.manifestUrl]);
 
   // Native <video> event bindings.
   useEffect(() => {
@@ -220,6 +240,10 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
     };
     const onRateChange = () => setPlaybackRateState(video.playbackRate);
     const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    // iOS never sets document.fullscreenElement, so its own begin/end events
+    // are the only way to know the OS player was dismissed.
+    const onWebkitBegin = () => setIsFullscreen(true);
+    const onWebkitEnd = () => setIsFullscreen(false);
 
     video.addEventListener('timeupdate', onTimeUpdate);
     video.addEventListener('durationchange', onDurationChange);
@@ -233,6 +257,8 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
     video.addEventListener('volumechange', onVolumeChange);
     video.addEventListener('ratechange', onRateChange);
     document.addEventListener('fullscreenchange', onFsChange);
+    video.addEventListener('webkitbeginfullscreen', onWebkitBegin);
+    video.addEventListener('webkitendfullscreen', onWebkitEnd);
 
     return () => {
       video.removeEventListener('timeupdate', onTimeUpdate);
@@ -247,6 +273,8 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
       video.removeEventListener('volumechange', onVolumeChange);
       video.removeEventListener('ratechange', onRateChange);
       document.removeEventListener('fullscreenchange', onFsChange);
+      video.removeEventListener('webkitbeginfullscreen', onWebkitBegin);
+      video.removeEventListener('webkitendfullscreen', onWebkitEnd);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -315,27 +343,72 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
     if (hlsRef.current) hlsRef.current.autoLevelCapping = enabled ? 1 : -1;
   }, []);
 
+  // ---------------------------------------------------------------------
+  // Fullscreen and Picture in Picture, with the WebKit paths iPhones need.
+  //
+  // iOS Safari implements neither standard API: `Element.requestFullscreen`
+  // does not exist there at all, and `document.pictureInPictureEnabled` is
+  // false. Both buttons therefore did nothing on an iPhone, leaving only the
+  // in-page mini player — which is plain CSS and works anywhere. The WebKit
+  // equivalents live on the <video> element instead of on a container, so
+  // fullscreen on iOS hands over to the OS player rather than blowing up our
+  // own shell; that is the only fullscreen iOS offers.
+  // ---------------------------------------------------------------------
   const togglePiP = useCallback(async () => {
-    const video = videoRef.current;
+    const video = videoRef.current as WebkitVideoElement | null;
     if (!video) return;
     try {
-      if (document.pictureInPictureElement) await document.exitPictureInPicture();
-      else if (document.pictureInPictureEnabled) await video.requestPictureInPicture();
+      if (document.pictureInPictureEnabled) {
+        if (document.pictureInPictureElement) await document.exitPictureInPicture();
+        else await video.requestPictureInPicture();
+        return;
+      }
+      if (video.webkitSupportsPresentationMode?.('picture-in-picture')) {
+        const next = video.webkitPresentationMode === 'picture-in-picture' ? 'inline' : 'picture-in-picture';
+        video.webkitSetPresentationMode?.(next);
+      }
     } catch {
-      // PiP unsupported/blocked — UI should hide the button when unavailable.
+      // Blocked (no user gesture, or the OS refused) — the button stays put.
     }
   }, []);
 
   const toggleFullscreen = useCallback(async (container?: HTMLElement | null) => {
-    const el = container || videoRef.current;
+    const video = videoRef.current as WebkitVideoElement | null;
+    const el = (container || videoRef.current) as FullscreenElement | null;
     if (!el) return;
     try {
-      if (document.fullscreenElement) await document.exitFullscreen();
-      else await el.requestFullscreen();
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        return;
+      }
+      if (el.requestFullscreen) {
+        await el.requestFullscreen();
+        return;
+      }
+      // Older WebKit desktop path, then iOS, which only ever fullscreens the
+      // video itself.
+      if (el.webkitRequestFullscreen) {
+        el.webkitRequestFullscreen();
+        return;
+      }
+      if (video?.webkitEnterFullscreen) {
+        video.webkitEnterFullscreen();
+        setIsFullscreen(true);
+      }
     } catch {
       // fullscreen request rejected (e.g. not a user gesture) — ignore
     }
   }, []);
+
+  /** Whether this browser can do it at all, so the UI can hide what it can't. */
+  const pipSupported =
+    typeof document !== 'undefined' &&
+    (document.pictureInPictureEnabled ||
+      !!(videoRef.current as WebkitVideoElement | null)?.webkitSupportsPresentationMode);
+  const fullscreenSupported =
+    typeof document !== 'undefined' &&
+    (document.fullscreenEnabled ||
+      !!(videoRef.current as WebkitVideoElement | null)?.webkitEnterFullscreen);
 
   const retryPlayback = useCallback(() => {
     retryCountRef.current = 0;
@@ -352,6 +425,7 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
     setVolume, toggleMute, setPlaybackRate,
     setQualityLevel, setAudioTrack, setDataSaver,
     togglePiP, toggleFullscreen, retryPlayback,
+    pipSupported, fullscreenSupported,
   };
 }
 
