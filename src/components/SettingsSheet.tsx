@@ -9,9 +9,93 @@ import { useMarathon } from "../store/useMarathon";
 import { useReminders } from "../store/useReminders";
 import { usePlayerSources } from "../store/usePlayerSources";
 import { usePlayerPrefs } from "../store/usePlayerPrefs";
+import { TEMPLATE_FIELDS, previewTemplate } from "../lib/sourceTemplate";
 import { getHosts, restoreHosts } from "../player/services/hostStore";
 import { buildBackup, parseBackup, BackupParseError } from "../lib/backup";
 import { resetAutoLinkAttempts } from "../lib/useAutoLinkTmdb";
+
+/**
+ * Where your own sources live, written once instead of pasted per title.
+ *
+ * Three slots because they double as a fallback chain: the player fills each
+ * pattern in with the title's own data and tries them in order, so the second
+ * and third are what it falls back to when the first host doesn't answer.
+ */
+function SourceTemplates() {
+  const templates = usePlayerPrefs((s) => s.sourceTemplates);
+  const setTemplate = usePlayerPrefs((s) => s.setTemplate);
+  const [showHelp, setShowHelp] = useState(false);
+
+  return (
+    <div>
+      <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">
+        Indirizzi delle tue sorgenti
+      </span>
+      <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
+        Se i tuoi video stanno tutti sullo stesso server, scrivi qui l'indirizzo una volta sola con
+        un segnaposto al posto del titolo: da quel momento ogni titolo della libreria ha il suo
+        pulsante <strong className="font-medium text-text-muted">Guarda</strong>, senza incollare
+        più niente. Il player prova gli indirizzi in ordine e usa il primo che risponde.
+      </p>
+
+      <div className="flex flex-col gap-2">
+        {templates.map((value, i) => {
+          const preview = previewTemplate(value);
+          return (
+            <div key={i}>
+              <input
+                value={value}
+                // Written through on every keystroke rather than on blur: a
+                // field that only commits when it loses focus loses whatever
+                // you typed last if you close the sheet straight after — which
+                // is exactly what you do after filling in the last address.
+                onChange={(e) => setTemplate(i, e.target.value)}
+                inputMode="url"
+                autoComplete="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                aria-label={`Indirizzo ${i + 1}`}
+                placeholder={i === 0 ? "https://mio-server/film/{slug}.m3u8" : `Indirizzo ${i + 1} (facoltativo)`}
+                className="w-full rounded-sm border border-border-strong bg-surface px-3 py-2.5 font-mono text-xs text-text placeholder:text-text-faint focus:border-accent"
+              />
+              {preview && (
+                <p className="mt-1 break-all px-1 font-mono text-[10px] leading-relaxed text-text-faint">
+                  Esempio: {preview}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setShowHelp((v) => !v)}
+        aria-expanded={showHelp}
+        className="mt-2 rounded-sm border border-border-strong px-2.5 py-1.5 text-xs text-text-muted"
+      >
+        {showHelp ? "Nascondi i segnaposto" : "Quali segnaposto posso usare?"}
+      </button>
+
+      {showHelp && (
+        <dl className="mt-2 flex flex-col gap-1.5 rounded-sm border border-border bg-surface-2 p-3">
+          {TEMPLATE_FIELDS.map((f) => (
+            <div key={f.token} className="flex flex-wrap items-baseline gap-x-2">
+              <dt className="font-mono text-xs text-accent-text">{f.token}</dt>
+              <dd className="flex-1 text-xs text-text-faint">
+                {f.label} <span className="font-mono">({f.example})</span>
+              </dd>
+            </div>
+          ))}
+          <p className="mt-1 text-xs leading-relaxed text-text-faint">
+            CineMate non cerca i video: riempie questi spazi e chiede a quell'indirizzo preciso, sul
+            server che hai indicato tu. Non consulta cataloghi e non segue pagine di ricerca.
+          </p>
+        </dl>
+      )}
+    </div>
+  );
+}
 
 function SettingsForm() {
   const close = useSettingsSheet((s) => s.close);
@@ -57,6 +141,7 @@ function SettingsForm() {
           dataSaver: playerPrefs.dataSaver,
           watchPartyRelayUrl: playerPrefs.watchPartyRelayUrl,
           displayName: playerPrefs.displayName,
+          sourceTemplates: playerPrefs.sourceTemplates,
         },
         hosts: getHosts(),
       },
@@ -252,6 +337,8 @@ function SettingsForm() {
             ))}
           </div>
         </div>
+
+        <SourceTemplates />
 
         <div>
           <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Dati locali</span>

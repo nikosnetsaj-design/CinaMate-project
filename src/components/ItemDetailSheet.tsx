@@ -8,6 +8,7 @@ import { voteColor } from "../lib/vote";
 import { PosterArt } from "./PosterArt";
 import { StatusChip } from "./StatusChip";
 import { WatchAndLinks } from "./WatchAndLinks";
+import { WatchButton } from "./WatchButton";
 import { LinkToTmdb } from "./LinkToTmdb";
 import { ItemSagaStrip } from "./ItemSagaStrip";
 import { PeopleLinks } from "./PeopleLinks";
@@ -218,6 +219,8 @@ function ItemDetail({ item }: { item: Item }) {
             <p className="text-sm italic leading-relaxed text-text">{item.notes}</p>
           </div>
         )}
+
+        <WatchButton item={item} onNavigate={close} />
 
         <WatchAndLinks item={item} />
         <LinkToTmdb item={item} />

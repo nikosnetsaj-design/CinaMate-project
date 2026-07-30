@@ -20,7 +20,9 @@ const RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
 export default function ControlsBar({ player, title, seriesTitle, cast, onOpenSettings, onToggleMini, onToggleFullscreen }: Props) {
   const [rateMenuOpen, setRateMenuOpen] = useState(false);
-  const pipSupported = typeof document !== 'undefined' && document.pictureInPictureEnabled;
+  // Support is asked of the player, not of `document`: on iOS the standard
+  // flags are false while the WebKit equivalents work, so testing only the
+  // standard ones hid both buttons on exactly the device that needed them.
 
   return (
     <div className="pv-controls-bar">
@@ -82,7 +84,7 @@ export default function ControlsBar({ player, title, seriesTitle, cast, onOpenSe
           </button>
         )}
 
-        {pipSupported && (
+        {player.pipSupported && (
           <button className="pv-icon-btn" aria-label="Picture in Picture" onClick={player.togglePiP}>
             <PipIcon />
           </button>
@@ -94,9 +96,15 @@ export default function ControlsBar({ player, title, seriesTitle, cast, onOpenSe
         <button className="pv-icon-btn" aria-label="Impostazioni" onClick={onOpenSettings}>
           <SettingsIcon />
         </button>
-        <button className="pv-icon-btn" aria-label="Schermo intero" onClick={onToggleFullscreen}>
-          {player.isFullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
-        </button>
+        {player.fullscreenSupported && (
+          <button
+            className="pv-icon-btn"
+            aria-label={player.isFullscreen ? 'Esci da schermo intero' : 'Schermo intero'}
+            onClick={onToggleFullscreen}
+          >
+            {player.isFullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
+          </button>
+        )}
       </div>
     </div>
   );
