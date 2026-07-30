@@ -1,4 +1,4 @@
-import type { StreamHost, HostCheckResult, HostStats, HostSwitchEvent } from '../types';
+import type { StreamHost, HostRole, HostCheckResult, HostStats, HostSwitchEvent } from '../types';
 
 const HOSTS_KEY = 'ppv:hosts';
 const HISTORY_KEY_PREFIX = 'ppv:host-history:';
@@ -39,6 +39,32 @@ export function getHosts(): StreamHost[] {
 
 export function saveHosts(hosts: StreamHost[]) {
   writeJson(HOSTS_KEY, hosts);
+}
+
+const ROLES: HostRole[] = ['primary', 'secondary', 'backup'];
+
+function isHost(value: unknown): value is StreamHost {
+  if (!value || typeof value !== 'object') return false;
+  const h = value as StreamHost;
+  return (
+    typeof h.id === 'string' &&
+    typeof h.name === 'string' &&
+    typeof h.url === 'string' &&
+    typeof h.priority === 'number' &&
+    ROLES.includes(h.role)
+  );
+}
+
+/**
+ * Applies a host list from a backup. The check history is deliberately not
+ * restored: it is measurements taken from *this* device's connection, and
+ * carrying another device's ping times over would make the uptime and
+ * reliability figures describe a network the user isn't on.
+ */
+export function restoreHosts(value: unknown): void {
+  const hosts = Array.isArray(value) ? value.filter(isHost) : [];
+  saveHosts(hosts);
+  setActiveHostId(hosts.find(h => h.role === 'primary')?.id ?? hosts[0]?.id ?? null);
 }
 
 export function addHost(input: { name: string; url: string; role: StreamHost['role'] }): StreamHost {

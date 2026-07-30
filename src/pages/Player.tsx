@@ -160,20 +160,37 @@ export function Player() {
   const watchParty = useWatchParty(userId, prefs.displayName || "Tu", transport);
   const hostMonitor = useHostMonitor();
 
-  const marathonPlaylist = useMemo(
-    () =>
-      playable.map((c, i) => ({
+  // A marathon in CineMate is a *saga* run with a bookmark (PRODUCT.md §3.4),
+  // not "everything you own". The bar used to queue up the whole shelf, which
+  // meant two different things called Maratona in the same app; it now covers
+  // the saga of whatever is playing, and disappears for a standalone title.
+  const currentCollectionId = items.find((i) => i.id === networkContent.id)?.collectionId ?? null;
+  const marathonPlaylist = useMemo(() => {
+    if (currentCollectionId == null) return [];
+    const byId = new Map(items.map((i) => [i.id, i]));
+    return playable
+      .filter((c) => byId.get(c.id)?.collectionId === currentCollectionId)
+      .map((c, i) => ({
         id: c.id,
         order: i,
         title: c.title,
         durationSec: c.durationSec,
         posterUrl: c.posterUrl,
-      })),
-    [playable],
-  );
-  // Keyed by the titles in it, so giving another title a source starts a new
-  // marathon instead of resuming the old one at a stale index.
-  const marathon = useMarathonMode(marathonPlaylist, playable.map((c) => c.id).join("|"));
+      }));
+  }, [playable, items, currentCollectionId]);
+
+  // Keyed by the saga, so the bookmark survives adding a source to another
+  // title — and matches the key the rest of the app uses for the same saga.
+  const marathon = useMarathonMode(marathonPlaylist, `saga:${currentCollectionId ?? "none"}`);
+
+  // Keep the bar describing what is actually on screen: picking a chapter from
+  // the chips is the same intention as advancing the queue.
+  const marathonIndex = marathonPlaylist.findIndex((e) => e.id === networkContent.id);
+  const jumpTo = marathon.jumpTo;
+  useEffect(() => {
+    if (marathonIndex >= 0 && marathonIndex !== marathon.index) jumpTo(marathonIndex);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [marathonIndex, jumpTo]);
 
   // Polled rather than read once, so the chip keeps ticking up while a video is
   // playing instead of only when this page happens to re-render.
@@ -290,7 +307,7 @@ export function Player() {
           onCompleted={markWatchedInLibrary}
         />
 
-        <MarathonBar marathon={marathon} onJumpTo={(i) => selectContent(playable[i]?.id ?? null)} />
+        <MarathonBar marathon={marathon} onJumpTo={(i) => selectContent(marathonPlaylist[i]?.id ?? null)} />
 
         <div className="pv-app-toolbar">
           {TABS.map((t) => (
@@ -314,7 +331,9 @@ export function Player() {
             <SourcePanel
               itemId={selectedItem.id}
               title={selectedItem.title}
-              linkManifest={streamUrlOf({ ...selectedItem, links: selectedItem.links }, () => EMPTY_SOURCE)}
+              // Resolved with an empty lookup on purpose: the panel wants the
+              // link the title carries, not the override it may already have.
+              linkManifest={streamUrlOf(selectedItem, () => EMPTY_SOURCE)}
               getCurrentTime={getCurrentTime}
             />
           ) : (

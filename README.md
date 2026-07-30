@@ -77,10 +77,17 @@ src/
 Il player è un modulo a sé: usa i propri tipi (`src/player/types.ts`) e le
 proprie chiavi `localStorage` (prefisso `ppv:`) per cronologia e statistiche
 interne. I file dello strato di collegamento sono i soli che conoscono gli store
-di CineMate; `player/components/` e `player/hooks/` non ne sanno nulla.
+di CineMate; `player/components/` e `player/hooks/` non ne sanno nulla — l'unica
+eccezione è `useFocusTrap`, che è un'utility generica per i modali usata da tutti
+i fogli dell'app e che riscrivere qui sarebbe peggio che condividere.
 
 Gli store lato CineMate sono `usePlayerSources` (le sorgenti per titolo) e
 `usePlayerPrefs` (risparmio dati, relay della Watch Party, nome nella stanza).
+Entrambi, più la lista degli host, finiscono nell'**esporta/importa**: sono dati
+scritti a mano che nessuno può ricostruire, quindi seguono la stessa regola della
+libreria. Le misure del player (posizioni di ripresa, ping storici) restano fuori
+perché si rifanno da sole, e i ping di un altro dispositivo descriverebbero una
+rete che non è la tua.
 
 ## Funzionalità principali
 
@@ -158,6 +165,22 @@ solo queste, ed è documentato cosa servirebbe:
 
 Le **tracce audio** non vanno configurate: sono dichiarate dal manifest e hls.js
 le trova da sé.
+
+### Comandi da tastiera
+
+Valgono quando il player ha il fuoco (basta cliccarci sopra), e mai mentre stai
+scrivendo in un campo. Sono le stesse combinazioni di YouTube e Netflix.
+
+| Tasto | Cosa fa |
+|---|---|
+| `Spazio` · `K` | Play / pausa |
+| `→` · `L` | Avanti 10 secondi |
+| `←` · `J` | Indietro 10 secondi |
+| `↑` · `↓` | Volume |
+| `M` | Muto |
+| `F` | Schermo intero |
+| `C` | Scorre le tracce di sottotitoli, poi le spegne |
+| `Esc` | Chiude le impostazioni del player |
 
 Sulla **gestione host**: serve solo se lo stesso contenuto è servito da più
 origini identiche (gli stessi percorsi su ogni mirror). Se non ne configuri

@@ -147,6 +147,7 @@ funzione senza comprare niente in cambio.
 | **Watch Party** | Guardare assieme a distanza | Stanza, play/pausa sincronizzati, chat, reazioni | Utile ✅ (fra dispositivi serve un relay tuo) |
 | **Download offline** | Guardare senza rete | Segmenti letti dalla playlist e salvati su IndexedDB, riproducibili offline. Nessun backend | Utile ✅ |
 | **Failover fra host mirror** | Una sola origine cade e la visione si interrompe | Cambio host senza interrompere la riproduzione | Utile ✅ |
+| **Maratona della saga** | — | La stessa maratona del §3.4, non una seconda coda che vuol dire un'altra cosa: copre la saga di ciò che stai guardando e sparisce per un titolo standalone | Utile ✅ |
 | **Il diario si aggiorna da sé** | Guardi qui e la libreria non se ne accorge | Finito un titolo diventa "Visto", con voce nel diario e traguardi | Essenziale ✅ |
 | **Catalogo, ricerca di file, addon, scraper** | — | — | **Fuori perimetro**, e resta tale |
 
@@ -177,7 +178,7 @@ sezione: hanno il loro, con la licenza, e meglio. Questo player non è per loro 
 | Attori e registi più visti | "Chi guardo davvero?" | Classifica dal tuo storico, ogni nome apre la sua pagina | Utile ✅ |
 | Traguardi | Nessun ritorno emotivo | Riconoscimento delle abitudini, saghe e generi inclusi | Utile ✅ |
 | **Promemoria uscite** | Un episodio esce e non lo sai | Notifica locale il giorno stesso | Utile ✅ |
-| Esporta / importa | I dati locali si perdono | Backup e cambio dispositivo | Essenziale ✅ |
+| Esporta / importa | I dati locali si perdono | Backup e cambio dispositivo, comprese le sorgenti del player e gli host | Essenziale ✅ |
 | **Riassunto senza spoiler** | Riprendi una serie dopo 8 mesi | "Dove eravamo" senza rovinare nulla | Utile |
 | Assistente / critico | Consigli generici | Conosce i tuoi voti | Essenziale ✅ |
 | Sync cloud multi‑dispositivo | Telefono e PC separati | Una libreria sola | **Futura** — richiede backend e account |
@@ -218,6 +219,14 @@ fogli modali). Mai come decorazione.
 **Accessibilità:** ogni coppia testo/sfondo ≥ WCAG AA, verificata da script —
 oggi 168 coppie, zero fallimenti. Focus ring visibile, navigazione da tastiera,
 `aria-label` su ogni controllo.
+
+Il player ha una **palette propria** (§3.6) e quindi coppie proprie, tenute allo
+stesso standard: il rosso di errore è sdoppiato in `--pv-accent-2` per bordi e
+riempimenti e `--pv-accent-2-text` per ciò che si legge, perché il primo si ferma
+a 3.41:1 — abbastanza per un bordo, non per del testo. Vale anche il resto della
+regola: comandi da tastiera completi (spazio, frecce, `m`, `f`, `c`), `Esc` e
+focus trap sul menu impostazioni come su ogni altro foglio, e la barra di
+avanzamento esposta come `slider` con la posizione leggibile.
 
 ---
 

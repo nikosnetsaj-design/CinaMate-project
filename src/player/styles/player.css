@@ -17,7 +17,14 @@
   --pv-bg-elevated: #1c1a20;
   --pv-bg-elevated-2: #242129;
   --pv-accent: #e3a64e;
+  /* Fills, borders and bars only. As text it reaches 3.41:1 on the panel
+     background — fine for a UI boundary (WCAG wants 3:1 there), below the 4.5:1
+     text minimum this app holds itself to. */
   --pv-accent-2: #c1443b;
+  /* The same red, lightened to 7.53:1, for anything that has to be read. It is
+     CineMate's own dark-theme --danger, so the two palettes agree on what a
+     problem looks like. */
+  --pv-accent-2-text: #ff8a7a;
   --pv-text: #f5f1e8;
   --pv-text-dim: #a69f93;
   --pv-border: rgba(245, 241, 232, 0.12);
@@ -325,7 +332,7 @@
   text-align: center;
   padding: 24px;
 }
-.pv-error-overlay svg { color: var(--pv-accent-2); width: 32px; height: 32px; }
+.pv-error-overlay svg { color: var(--pv-accent-2-text); width: 32px; height: 32px; }
 .pv-error-overlay button {
   background: var(--pv-accent);
   border: none;
@@ -640,7 +647,7 @@
 
 /* ===================== Host Manager ===================== */
 .pv-empty { color: var(--pv-text-dim); font-size: 0.82rem; font-style: italic; }
-.pv-badge-warn { border-color: var(--pv-accent-2); color: var(--pv-accent-2); }
+.pv-badge-warn { border-color: var(--pv-accent-2); color: var(--pv-accent-2-text); }
 
 .pv-hostmanager select {
   background: var(--pv-bg); border: 1px solid var(--pv-border); color: var(--pv-text);
@@ -668,7 +675,7 @@
 }
 .pv-host-status-chip--online { background: rgba(227, 166, 78, 0.15); color: var(--pv-accent); }
 .pv-host-status-chip--slow { background: rgba(224, 152, 92, 0.15); color: #e0985c; }
-.pv-host-status-chip--offline { background: rgba(193, 68, 59, 0.18); color: var(--pv-accent-2); }
+.pv-host-status-chip--offline { background: rgba(193, 68, 59, 0.18); color: var(--pv-accent-2-text); }
 .pv-host-status-chip--unknown { background: rgba(245, 241, 232, 0.08); color: var(--pv-text-dim); }
 
 .pv-host-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
@@ -723,7 +730,7 @@
   color: var(--pv-text-dim);
   padding: 6px;
 }
-.pv-panel .pv-icon-btn:hover { color: var(--pv-accent-2); }
+.pv-panel .pv-icon-btn:hover { color: var(--pv-accent-2-text); }
 
 /* ===================== Source panel ===================== */
 .pv-source-panel { gap: 14px; }
@@ -782,7 +789,7 @@
 .pv-download-error {
   margin: 0;
   font-size: 0.78rem;
-  color: var(--pv-accent-2);
+  color: var(--pv-accent-2-text);
   background: rgba(193, 68, 59, 0.12);
   border: 1px solid rgba(193, 68, 59, 0.4);
   border-radius: 6px;
