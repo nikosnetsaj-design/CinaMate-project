@@ -16,11 +16,9 @@ universi con l'ordine giusto in cui guardarli; scopri e aggiungi nuovi titoli co
 l'aiuto di Claude; chiedi consigli su misura al critico IA. Solo per te, solo sul
 tuo dispositivo.
 
-CineMate **non ospita e non cerca video**: ti dice cosa guardare, in che ordine
-e su quale servizio legale trovarlo. C'è anche un player (pagina **Player**), ma
-riproduce soltanto le sorgenti che indichi tu — l'indirizzo del tuo server, una
-volta sola nelle Impostazioni. Non c'è catalogo, non c'è ricerca di file, non c'è
-niente da guardare finché non gli dai un tuo indirizzo. Vedi `docs/PRODUCT.md` per il perimetro completo e il perché.
+Ti dice cosa guardare, in che ordine e dove trovarlo. C'è anche un player
+(pagina **Player**), che riproduce le sorgenti che indichi tu: l'indirizzo del
+tuo server, scritto una volta sola nelle Impostazioni.
 
 ## Stack
 
@@ -128,8 +126,8 @@ rete che non è la tua.
 
 ## Player: come dargli qualcosa da riprodurre
 
-La pagina Player non ha un catalogo. Prende i titoli dalla tua libreria e mostra
-solo quelli per cui hai salvato una sorgente:
+La pagina Player prende i titoli dalla tua libreria e mostra quelli per cui c'è
+una sorgente. Due strade:
 
 **Il modo veloce, se i tuoi video stanno tutti sullo stesso server.** Vai in
 **Impostazioni → Indirizzi delle tue sorgenti** e scrivi l'indirizzo una volta

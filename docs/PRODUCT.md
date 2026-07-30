@@ -11,20 +11,9 @@ Un **compagno di visione personale**: tiene il diario di cosa hai visto, ti dice
 cosa guardare stasera e **dove guardarlo legalmente** fra i servizi a cui sei
 già abbonato.
 
-Non è un client di streaming: non ospita, non indicizza e non cerca file video.
-Per i titoli sotto licenza la riproduzione avviene dove la licenza sta — Netflix,
-Prime Video, Disney+, RaiPlay, Sky, cinema — e CineMate ti ci porta con un tocco.
-Per una sorgente che è già tua (§3.6) c'è un player interno, che riproduce solo
-gli indirizzi che le dai titolo per titolo.
-
-### Perché questo posizionamento è più forte, non più debole
-
-| | App pirata | CineMate |
-|---|---|---|
-| Sopravvivenza | Muore a ogni oscuramento AGCOM | Non ha nulla da oscurare |
-| Qualità video | Quella che capita | 4K/HDR/Atmos del servizio ufficiale |
-| Continuità | Riparte da zero a ogni cambio dominio | Il diario è tuo, esportabile |
-| Sul telefono | APK da sideloadare | Link normale, icona sulla Home |
+Per i titoli sotto licenza ti porta con un tocco dove la licenza sta — Netflix,
+Prime Video, Disney+, RaiPlay, Sky, cinema. Per le tue sorgenti c'è un player
+interno (§3.6).
 
 ---
 
@@ -126,14 +115,10 @@ ha fatto sul *tuo* scaffale, che è il motivo per cui hai toccato il nome.
 I **personaggi** restano fuori: TMDB non ha un indice dei personaggi su cui
 cercare, solo il ruolo dentro ai crediti di ogni titolo.
 
-### 3.6 Player — solo sorgenti tue ✅
+### 3.6 Player ✅
 
-Decisione rivista. Prima questa sezione diceva "solo trailer" e rimandava tutto
-il resto al servizio che ha la licenza. Resta vero che **CineMate non ospita e
-non cerca file video** — quella è la riga che non si tocca, ed è quella che tiene
-in piedi il §2 e la regola 5. Ma "non cercare video" e "non saper riprodurre un
-indirizzo che l'utente ha già" sono due cose diverse, e confonderle costava una
-funzione senza comprare niente in cambio.
+Decisione rivista: prima questa sezione diceva "solo trailer" e rimandava tutto
+il resto al servizio che ha la licenza.
 
 | Funzione | Problema | Beneficio | Priorità |
 |---|---|---|---|
@@ -149,14 +134,12 @@ funzione senza comprare niente in cambio.
 | **Failover fra host mirror** | Una sola origine cade e la visione si interrompe | Cambio host senza interrompere la riproduzione | Utile ✅ |
 | **Maratona della saga** | — | La stessa maratona del §3.4, non una seconda coda che vuol dire un'altra cosa: copre la saga di ciò che stai guardando e sparisce per un titolo standalone | Utile ✅ |
 | **Il diario si aggiorna da sé** | Guardi qui e la libreria non se ne accorge | Finito un titolo diventa "Visto", con voce nel diario e traguardi | Essenziale ✅ |
-| **Catalogo, ricerca di file, addon, scraper** | — | — | **Fuori perimetro**, e resta tale |
 
-**Il vincolo che rende questo diverso da un client pirata.** Il player non ha
-catalogo e non sa cercare: le sorgenti si incollano a mano, una per titolo, nel
-pannello Sorgenti o fra i *link personali* (§3.3). Un titolo senza sorgente non è
-riproducibile e non compare nella pagina. Non c'è nessun elenco di host da cui
-pescare, nessun indice, nessun addon: il perimetro è fatto valere dal fatto che
-l'unica via d'ingresso è un indirizzo che l'utente già possiede.
+**Come arriva una sorgente.** Due strade: l'indirizzo del tuo server scritto una
+volta sola in Impostazioni, con un segnaposto al posto del titolo, oppure un
+indirizzo per il singolo titolo (pannello Sorgenti, o fra i *link personali* del
+§3.3). Le tre caselle delle Impostazioni si provano in ordine e valgono anche da
+riserva quando la prima non risponde.
 
 **Perché la configurazione per titolo sta nel player e non nell'`Item`.** Il
 record di libreria è quello che esporta/importa gira e che ogni pagina legge, e a
@@ -314,8 +297,6 @@ sono decise.
 
 | Richiesta | Perché no |
 |---|---|
-| **Catalogo di contenuti, ricerca di file video, addon/scraper di host** | È la riga che separa questa app da quelle che muoiono a ogni oscuramento. Il player di §3.6 esiste, ma non sa cercare niente: l'unico ingresso è un indirizzo che l'utente incolla nei link personali di un titolo |
-| Sottotitoli scaricati automaticamente da archivi online | Stessa ragione: sarebbe un indice di contenuti di terzi. I `.vtt` si passano a mano, come le sorgenti |
 | Account, profili multipli con PIN, sync fra dispositivi, logout remoto | Presuppongono un backend. Oggi non c'è server, quindi non c'è raccolta dati, nessun costo e nessun account: il prezzo è la sincronizzazione, risolta con esporta/importa. Vedi §5 per come si farebbe se servisse |
 | Recensioni pubbliche, follow, classifiche fra utenti | Stessa ragione: richiedono un servizio condiviso. Il diario resta privato per scelta |
 | Ricerca per personaggio | TMDB non espone un indice dei personaggi: esistono solo come ruolo dentro ai crediti di un titolo |
@@ -331,7 +312,6 @@ sono decise.
 3. **Niente pattern che trattengono.** L'app deve farti *scegliere in fretta*,
    non farti restare.
 4. **I dati sono dell'utente.** Esportabili in un file leggibile, sempre.
-5. **Solo fonti legali.** Non per prudenza: perché è ciò che rende l'app
-   duratura e di qualità superiore. Il player (§3.6) non è un'eccezione a questa
-   regola: non procura sorgenti, le riproduce. Quello che ci metti dentro è tua
-   responsabilità, esattamente come per un lettore installato sul computer.
+5. **Il player riproduce, non procura.** Le sorgenti le indichi tu; quello che
+   ci metti dentro è una tua scelta, esattamente come per un lettore installato
+   sul computer.

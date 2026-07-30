@@ -299,8 +299,8 @@ export function Player() {
       <header className="flex flex-col gap-1.5">
         <h1 className="font-display text-3xl font-semibold text-text">Player</h1>
         <p className="text-sm text-text-muted">
-          Riproduce le sorgenti HLS che aggiungi tu, titolo per titolo. CineMate non cerca e non
-          ospita video: senza un tuo indirizzo, qui non c'è niente da guardare.
+          Riproduce le sorgenti HLS che indichi tu. Scrivi l'indirizzo del tuo server una volta
+          sola in Impostazioni, oppure incollane uno per il singolo titolo.
         </p>
       </header>
 

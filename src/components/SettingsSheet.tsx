@@ -88,8 +88,8 @@ function SourceTemplates() {
             </div>
           ))}
           <p className="mt-1 text-xs leading-relaxed text-text-faint">
-            CineMate non cerca i video: riempie questi spazi e chiede a quell'indirizzo preciso, sul
-            server che hai indicato tu. Non consulta cataloghi e non segue pagine di ricerca.
+            I segnaposto vengono riempiti con i dati del titolo, e il player chiede quell'indirizzo
+            sul server che hai indicato.
           </p>
         </dl>
       )}
