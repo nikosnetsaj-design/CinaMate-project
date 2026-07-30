@@ -188,9 +188,11 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
       <div className="pv-host-list">
         {orderedHosts.length === 0 && (
           <p className="pv-empty">
-            Nessun host configurato. Serve solo se lo stesso contenuto è servito da più origini
-            identiche (lo stesso percorso su ogni mirror): aggiungile qui e la riproduzione passa
-            all'host successivo quando il primo non risponde. Con una sorgente sola non serve.
+            Nessun host configurato. Un host che aggiungi qui è anche un indirizzo dove cercare i
+            titoli: come le caselle in Impostazioni, viene provato quando premi Guarda, e vale anche
+            il solo indirizzo del server. In più, se lo stesso contenuto è servito da più origini
+            identiche (lo stesso percorso su ogni mirror), la riproduzione passa all'host successivo
+            quando il primo non risponde.
           </p>
         )}
         {orderedHosts.map(host => {

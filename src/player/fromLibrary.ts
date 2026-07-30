@@ -168,16 +168,17 @@ export function buildPlayerCatalog(
   lookup: SourceLookup = () => EMPTY_SOURCE,
   saga: SagaContext | null = null,
   /**
-   * Address patterns from Settings. A title with no address of its own still
-   * belongs in the catalogue when a pattern can build one for it — that is what
-   * makes the whole shelf playable after a single line of setup. The URL here
-   * is the first candidate; if it doesn't answer, `resolveSource` moves on to
-   * the next pattern before playback starts.
+   * The addresses configured once — Settings and the player's hosts. A title
+   * with no address of its own still belongs in the catalogue when one of them
+   * can build an address for it, and that is what makes the whole shelf
+   * playable after a single line of setup. The URL here is only the first
+   * candidate; if it doesn't answer, `resolveSource` walks the rest (and, if
+   * need be, reads the folder listing) before playback starts.
    */
-  templates: string[] = [],
+  addresses: string[] = [],
 ): MediaContent[] {
   const catalog = sagaAwareOrder(items, saga).flatMap((item) => {
-    const manifest = streamUrlOf(item, lookup) ?? candidatesFor(item, templates)[0] ?? null;
+    const manifest = streamUrlOf(item, lookup) ?? candidatesFor(item, addresses)[0] ?? null;
     return manifest ? [toMediaContent(item, manifest, lookup(item.id))] : [];
   });
 

@@ -131,15 +131,27 @@ il resto al servizio che ha la licenza.
 | **Chromecast / AirPlay** | Guardare dal telefono su un televisore | Passaggio di dispositivo dal secondo esatto | Utile ✅ |
 | **Watch Party** | Guardare assieme a distanza | Stanza, play/pausa sincronizzati, chat, reazioni | Utile ✅ (fra dispositivi serve un relay tuo) |
 | **Download offline** | Guardare senza rete | Segmenti letti dalla playlist e salvati su IndexedDB, riproducibili offline. Nessun backend | Utile ✅ |
-| **Failover fra host mirror** | Una sola origine cade e la visione si interrompe | Cambio host senza interrompere la riproduzione | Utile ✅ |
+| **Host** | Aggiungere un host non serviva a niente per guardare | Un host è un indirizzo dove cercare i titoli, come le caselle in Impostazioni; e resta il cambio host senza interrompere la riproduzione quando un mirror cade | Utile ✅ |
 | **Maratona della saga** | — | La stessa maratona del §3.4, non una seconda coda che vuol dire un'altra cosa: copre la saga di ciò che stai guardando e sparisce per un titolo standalone | Utile ✅ |
 | **Il diario si aggiorna da sé** | Guardi qui e la libreria non se ne accorge | Finito un titolo diventa "Visto", con voce nel diario e traguardi | Essenziale ✅ |
 
-**Come arriva una sorgente.** Due strade: l'indirizzo del tuo server scritto una
-volta sola in Impostazioni, con un segnaposto al posto del titolo, oppure un
-indirizzo per il singolo titolo (pannello Sorgenti, o fra i *link personali* del
-§3.3). Le tre caselle delle Impostazioni si provano in ordine e valgono anche da
-riserva quando la prima non risponde.
+**Come arriva una sorgente.** L'indirizzo del tuo server, scritto una volta sola
+in Impostazioni (tre caselle) o aggiunto come host nel pannello Host: sono la
+stessa cosa e vengono provati nello stesso ordine, prima le caselle e poi gli
+host per priorità. In alternativa un indirizzo per il singolo titolo (pannello
+Sorgenti, o fra i *link personali* del §3.3), che ha sempre la precedenza.
+
+**Trovare il file senza saperlo a memoria.** Un indirizzo può essere scritto con
+un segnaposto al posto del titolo (`https://mio-server/film/{slug}.m3u8`) e
+allora è esatto. Ma può anche essere l'indirizzo nudo del server, e questo è il
+caso normale: chiedere un modello significa chiedere all'utente come si chiamano
+i file sul *suo* server, che è la cosa che nessuno ricorda. Da un indirizzo nudo
+il player costruisce i percorsi soliti per quel titolo — `/il-padrino.m3u8`,
+`/film/il-padrino/index.m3u8`, `/breaking-bad/s01e04.m3u8` — e li prova a gruppi
+finché uno risponde; se non risponde nessuno legge l'indice della cartella e
+prende il file il cui nome corrisponde al titolo (`Il.Padrino.1972.1080p.m3u8`).
+Il perimetro non cambia: si guarda solo dentro un host che hai indicato tu, e
+non si interroga nessun catalogo.
 
 **Perché la configurazione per titolo sta nel player e non nell'`Item`.** Il
 record di libreria è quello che esporta/importa gira e che ogni pagina legge, e a

@@ -9,7 +9,7 @@ import { useMarathon } from "../store/useMarathon";
 import { useReminders } from "../store/useReminders";
 import { usePlayerSources } from "../store/usePlayerSources";
 import { usePlayerPrefs } from "../store/usePlayerPrefs";
-import { TEMPLATE_FIELDS, previewTemplate } from "../lib/sourceTemplate";
+import { TEMPLATE_FIELDS, previewTemplate, previewCount } from "../lib/sourceTemplate";
 import { getHosts, restoreHosts } from "../player/services/hostStore";
 import { buildBackup, parseBackup, BackupParseError } from "../lib/backup";
 import { resetAutoLinkAttempts } from "../lib/useAutoLinkTmdb";
@@ -17,9 +17,14 @@ import { resetAutoLinkAttempts } from "../lib/useAutoLinkTmdb";
 /**
  * Where your own sources live, written once instead of pasted per title.
  *
- * Three slots because they double as a fallback chain: the player fills each
- * pattern in with the title's own data and tries them in order, so the second
+ * Three slots because they double as a fallback chain: the player builds an
+ * address for the title out of each one and tries them in order, so the second
  * and third are what it falls back to when the first host doesn't answer.
+ *
+ * The bare address is the important case. Asking for a pattern asks you to know
+ * how your own server spells filenames; pasting the server on its own and
+ * letting the app work the rest out is what most people actually want, so the
+ * field takes either and the preview says what it will do with what you typed.
  */
 function SourceTemplates() {
   const templates = usePlayerPrefs((s) => s.sourceTemplates);
@@ -32,15 +37,20 @@ function SourceTemplates() {
         Indirizzi delle tue sorgenti
       </span>
       <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
-        Se i tuoi video stanno tutti sullo stesso server, scrivi qui l'indirizzo una volta sola con
-        un segnaposto al posto del titolo: da quel momento ogni titolo della libreria ha il suo
-        pulsante <strong className="font-medium text-text-muted">Guarda</strong>, senza incollare
-        più niente. Il player prova gli indirizzi in ordine e usa il primo che risponde.
+        Se i tuoi video stanno tutti sullo stesso server, scrivilo qui una volta sola: da quel
+        momento ogni titolo della libreria ha il suo pulsante{" "}
+        <strong className="font-medium text-text-muted">Guarda</strong>, senza incollare più niente.
+        Basta l'indirizzo nudo — <span className="font-mono">https://mio-server.com</span> — e il
+        file lo cerca lui: prova i nomi soliti per quel titolo e, se non li trova, legge la cartella
+        e cerca il nome che gli somiglia. Se invece sai già com'è fatto l'indirizzo, scrivilo con un
+        segnaposto al posto del titolo ed è quello esatto. Le tre caselle si provano in ordine, e
+        con loro gli host del pannello Host nel player.
       </p>
 
       <div className="flex flex-col gap-2">
         {templates.map((value, i) => {
           const preview = previewTemplate(value);
+          const others = Math.max(previewCount(value) - 1, 0);
           return (
             <div key={i}>
               <input
@@ -55,12 +65,15 @@ function SourceTemplates() {
                 autoCapitalize="off"
                 spellCheck={false}
                 aria-label={`Indirizzo ${i + 1}`}
-                placeholder={i === 0 ? "https://mio-server/film/{slug}.m3u8" : `Indirizzo ${i + 1} (facoltativo)`}
+                placeholder={i === 0 ? "https://mio-server.com" : `Indirizzo ${i + 1} (facoltativo)`}
                 className="w-full rounded-sm border border-border-strong bg-surface px-3 py-2.5 font-mono text-xs text-text placeholder:text-text-faint focus:border-accent"
               />
               {preview && (
                 <p className="mt-1 break-all px-1 font-mono text-[10px] leading-relaxed text-text-faint">
-                  Esempio: {preview}
+                  Per «Il Padrino» prova {preview}
+                  {others > 0 && (
+                    <span className="font-sans"> e altri {others} indirizzi, finché uno risponde</span>
+                  )}
                 </p>
               )}
             </div>

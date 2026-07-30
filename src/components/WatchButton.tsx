@@ -1,24 +1,49 @@
 import { useNavigate } from "react-router-dom";
-import { usePlayerPrefs } from "../store/usePlayerPrefs";
 import { usePlayerSources, EMPTY_SOURCE } from "../store/usePlayerSources";
+import { useSettingsSheet } from "../store/useSettingsSheet";
+import { useSourceAddresses } from "../player/sourceAddresses";
 import { hasAnySource } from "../player/resolveSource";
 import { PlayIcon } from "./icons";
 import type { Item } from "../types";
 
 /**
- * Starts a title in the player, from wherever you happen to be looking at it.
+ * Starts a title in the player, from wherever you happen to be looking at it —
+ * including a title you have just found by searching.
  *
- * Only appears when the title actually has somewhere to play from — its own
- * address, an `.m3u8` personal link, or one of the patterns from Settings. A
- * button that leads to "there is nothing here" is worse than no button.
+ * It is always here. It used to hide itself whenever the title had no address,
+ * which is right in principle and useless in practice: the first time you look
+ * for it is the time nothing is configured yet, so the button was missing
+ * exactly when you were looking for it and the feature read as absent. Now the
+ * unconfigured case leads to the one screen that fixes it.
  */
 export function WatchButton({ item, onNavigate }: { item: Item; onNavigate?: () => void }) {
   const navigate = useNavigate();
-  const templates = usePlayerPrefs((s) => s.sourceTemplates);
+  const addresses = useSourceAddresses();
   const sources = usePlayerSources((s) => s.sources);
+  const openSettings = useSettingsSheet((s) => s.open);
 
-  const playable = hasAnySource(item, (id) => sources[id] ?? EMPTY_SOURCE, templates);
-  if (!playable) return null;
+  const playable = hasAnySource(item, (id) => sources[id] ?? EMPTY_SOURCE, addresses);
+
+  if (!playable) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          onNavigate?.();
+          openSettings();
+        }}
+        className="mt-4 flex w-full flex-col items-center gap-0.5 rounded-md border border-dashed border-border-strong py-3 text-sm font-semibold text-text-muted"
+      >
+        <span className="flex items-center gap-2">
+          <PlayIcon size={17} />
+          Guarda
+        </span>
+        <span className="text-xs font-normal text-text-faint">
+          Dimmi una volta sola dov'è il tuo server
+        </span>
+      </button>
+    );
+  }
 
   return (
     <button

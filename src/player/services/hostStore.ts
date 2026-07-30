@@ -34,11 +34,28 @@ function writeJson(key: string, value: unknown) {
 // configured, permanently reading offline, which looks like a fault rather
 // than a demo. The panel's empty state explains what to add instead.
 export function getHosts(): StreamHost[] {
-  return readJson<StreamHost[]>(HOSTS_KEY, []);
+  return (snapshot ??= readJson<StreamHost[]>(HOSTS_KEY, []));
 }
 
 export function saveHosts(hosts: StreamHost[]) {
   writeJson(HOSTS_KEY, hosts);
+  snapshot = hosts;
+  for (const listener of listeners) listener();
+}
+
+// The host list is read outside the player too — a host you added here is one
+// of the addresses "Guarda" tries for any title (see player/sourceAddresses.ts)
+// — so it has to be observable, not just readable. The cached snapshot is what
+// makes it usable from `useSyncExternalStore`, which needs the same array
+// identity back until something actually changes.
+let snapshot: StreamHost[] | null = null;
+const listeners = new Set<() => void>();
+
+export function subscribeHosts(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
 const ROLES: HostRole[] = ['primary', 'secondary', 'backup'];

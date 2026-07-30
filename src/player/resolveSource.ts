@@ -1,5 +1,6 @@
 import type { Item } from "../types";
 import { candidatesFor } from "../lib/sourceTemplate";
+import { discoverOnHosts } from "./discoverOnHost";
 import { isHlsUrl } from "./fromLibrary";
 import type { SourceLookup } from "./fromLibrary";
 
@@ -8,10 +9,15 @@ import type { SourceLookup } from "./fromLibrary";
  *
  *   1. the address set for that one title in the player's Sorgenti panel;
  *   2. an `.m3u8` among its personal links;
- *   3. the address patterns configured once in Settings, tried in order.
+ *   3. the addresses configured once — the three fields in Settings and the
+ *      hosts in the player's Host panel (see sourceAddresses.ts) — either
+ *      written as a pattern or left bare, in which case the usual layouts under
+ *      them are tried;
+ *   4. failing all that, the folder listing of those same addresses, read to
+ *      find the file whose name matches the title.
  *
- * (3) is what removes the per-title work: write the pattern once and every
- * title on the shelf resolves through it. The patterns are also the fallback
+ * (3) and (4) are what remove the per-title work: name your server once and
+ * every title on the shelf resolves through it. They are also the fallback
  * chain — if the first host doesn't answer, the second is tried, then the
  * third.
  */
@@ -19,8 +25,8 @@ import type { SourceLookup } from "./fromLibrary";
 export type ResolvedSource = {
   url: string;
   /** How it was found — shown in the UI so the origin is never a mystery. */
-  via: "titolo" | "link" | "modello";
-  /** Index of the pattern that produced it, when via === "modello". */
+  via: "titolo" | "link" | "modello" | "indice";
+  /** Index of the address that produced it, when via === "modello". */
   templateIndex?: number;
 };
 
@@ -28,7 +34,7 @@ export type ResolvedSource = {
 export function candidateSources(
   item: Item,
   lookup: SourceLookup,
-  templates: string[],
+  addresses: string[],
 ): ResolvedSource[] {
   const out: ResolvedSource[] = [];
 
@@ -38,9 +44,9 @@ export function candidateSources(
   const link = item.links.find(isHlsUrl);
   if (link && link !== configured) out.push({ url: link, via: "link" });
 
-  const applicable = templates.map((t, i) => ({ t, i })).filter(({ t }) => t.trim());
-  for (const { t, i } of applicable) {
-    for (const url of candidatesFor(item, [t])) {
+  const applicable = addresses.map((a, i) => ({ a, i })).filter(({ a }) => a.trim());
+  for (const { a, i } of applicable) {
+    for (const url of candidatesFor(item, [a])) {
       if (out.some((c) => c.url === url)) continue;
       out.push({ url, via: "modello", templateIndex: i });
     }
@@ -53,42 +59,75 @@ export function candidateSources(
  *
  * A source that is already pinned to the title (panel or link) is trusted
  * without a probe: you put it there, and a probe would only add a round trip
- * and a CORS failure mode. Pattern-built addresses are guesses by nature, so
- * those are checked — that check is what makes "try host 1, then 2, then 3"
- * work without you doing anything.
+ * and a CORS failure mode. Built addresses are guesses by nature, so those are
+ * checked — that check is what makes "try host 1, then 2, then 3" work without
+ * you doing anything.
  */
 export async function resolvePlayable(
   item: Item,
   lookup: SourceLookup,
-  templates: string[],
+  addresses: string[],
   signal?: AbortSignal,
 ): Promise<ResolvedSource | null> {
-  const candidates = candidateSources(item, lookup, templates);
+  const candidates = candidateSources(item, lookup, addresses);
   const pinned = candidates.find((c) => c.via !== "modello");
   if (pinned) return pinned;
 
-  for (const candidate of candidates) {
+  const guessed = await firstResponding(candidates, signal);
+  if (guessed) return guessed;
+
+  // Nothing was where it would have been. Ask the folders themselves.
+  const found = await discoverOnHosts(item, addresses, signal);
+  return found ? { url: found, via: "indice" } : null;
+}
+
+const PROBE_TIMEOUT_MS = 5000;
+/**
+ * How many addresses are asked at once. A bare address expands into a couple of
+ * dozen candidates, and asking them strictly one after another meant a title
+ * that resolves on the twentieth spent two minutes on a spinner. The batch
+ * keeps the priority order — the earliest one that answers within a batch wins,
+ * regardless of which came back first — while cutting the wait to a few
+ * seconds.
+ */
+const PROBE_BATCH = 6;
+
+async function firstResponding(
+  candidates: ResolvedSource[],
+  signal?: AbortSignal,
+): Promise<ResolvedSource | null> {
+  for (let start = 0; start < candidates.length; start += PROBE_BATCH) {
     if (signal?.aborted) return null;
-    if (await responds(candidate.url, signal)) return candidate;
+    const batch = candidates.slice(start, start + PROBE_BATCH);
+    const answers = await Promise.all(batch.map((c) => responds(c.url, signal)));
+    const hit = batch.find((_, i) => answers[i]);
+    if (hit) return hit;
   }
   return null;
 }
 
-const PROBE_TIMEOUT_MS = 6000;
-
 /**
- * Whether an address serves something. Deliberately lenient: a cross-origin
- * host that doesn't send CORS headers makes `fetch` throw even when the file is
- * perfectly there, and hls.js would hit the same wall — so a failure here is
- * reported as "not usable", which is the honest answer either way.
+ * Whether an address serves something. `HEAD` first, so a probe never pulls
+ * down a video that a `GET` would have started streaming; servers that don't
+ * implement it get a second chance with a one-byte range request.
+ *
+ * Deliberately lenient about failures: a cross-origin host that doesn't send
+ * CORS headers makes `fetch` throw even when the file is perfectly there, and
+ * hls.js would hit the same wall — so a failure here is reported as "not
+ * usable", which is the honest answer either way.
  */
 async function responds(url: string, outer?: AbortSignal): Promise<boolean> {
+  if (await request(url, { method: "HEAD" }, outer)) return true;
+  return request(url, { method: "GET", headers: { Range: "bytes=0-0" } }, outer);
+}
+
+async function request(url: string, init: RequestInit, outer?: AbortSignal): Promise<boolean> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
   const onOuterAbort = () => controller.abort();
   outer?.addEventListener("abort", onOuterAbort);
   try {
-    const res = await fetch(url, { method: "GET", signal: controller.signal, cache: "no-store" });
+    const res = await fetch(url, { ...init, signal: controller.signal, cache: "no-store" });
     return res.ok;
   } catch {
     return false;
@@ -99,6 +138,6 @@ async function responds(url: string, outer?: AbortSignal): Promise<boolean> {
 }
 
 /** True when a title has at least one address worth trying. */
-export function hasAnySource(item: Item, lookup: SourceLookup, templates: string[]): boolean {
-  return candidateSources(item, lookup, templates).length > 0;
+export function hasAnySource(item: Item, lookup: SourceLookup, addresses: string[]): boolean {
+  return candidateSources(item, lookup, addresses).length > 0;
 }
