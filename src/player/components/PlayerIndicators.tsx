@@ -10,6 +10,8 @@ type Props = {
   isDownloaded?: boolean;
   hostName?: string | null;
   networkQuality?: NetworkQuality;
+  /** Where the bytes are coming from, when it isn't the title's own source. */
+  sourceLabel?: string | null;
 };
 
 const NETWORK_DOT: Record<NetworkQuality, string> = { excellent: '🟢', good: '🟢', poor: '🟠', offline: '🔴' };
@@ -17,6 +19,7 @@ const NETWORK_LABEL: Record<NetworkQuality, string> = { excellent: 'Ottima', goo
 
 export default function PlayerIndicators({
   quality, isAuto, audioLabel, subtitleLabel, castDeviceName, resumed, isDownloaded, hostName, networkQuality,
+  sourceLabel,
 }: Props) {
   // Only surface the network badge when it's actually worth flagging —
   // clutter-free during normal "good/excellent" playback, same convention
@@ -27,7 +30,8 @@ export default function PlayerIndicators({
       {quality && <span className="pv-badge">{quality.label}{isAuto ? ' · Auto' : ''}</span>}
       {audioLabel && <span className="pv-badge">{audioLabel}</span>}
       {subtitleLabel && <span className="pv-badge">CC {subtitleLabel}</span>}
-      {isDownloaded && <span className="pv-badge">Offline</span>}
+      {sourceLabel && <span className="pv-badge pv-badge-active">{sourceLabel}</span>}
+      {isDownloaded && !sourceLabel && <span className="pv-badge">Offline</span>}
       {resumed && <span className="pv-badge pv-badge-muted">Ripresa</span>}
       {castDeviceName && <span className="pv-badge pv-badge-active">In riproduzione su {castDeviceName}</span>}
       {hostName && <span className="pv-badge pv-badge-warn">Host: {hostName}</span>}

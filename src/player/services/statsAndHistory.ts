@@ -59,6 +59,11 @@ export function setWatchStatus(contentId: string, status: WatchStatus) {
   writeJson(HISTORY_KEY, history);
 }
 
+/** When the status was last written, or null if the title has no history. */
+export function getWatchUpdatedAt(contentId: string): number | null {
+  return getHistory()[contentId]?.updatedAt ?? null;
+}
+
 export function markWatched(contentId: string) {
   setWatchStatus(contentId, 'completed');
   const stats = getLifetimeStats();

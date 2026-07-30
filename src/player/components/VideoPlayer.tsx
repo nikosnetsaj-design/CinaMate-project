@@ -14,6 +14,7 @@ import ProgressBar from './ProgressBar';
 import SettingsMenu from './SettingsMenu';
 import PlayerIndicators from './PlayerIndicators';
 import { SkipButton, NextUpOverlay, ErrorOverlay, SubtitleOverlay, EndScreenRecommendations } from './Overlays';
+import type { Recommendation } from '../services/recommendationService';
 import { PlayIcon, PauseIcon, ExpandIcon } from './Icons';
 
 type Props = {
@@ -28,6 +29,22 @@ type Props = {
   activeHostOrigin?: string | null;
   activeHostName?: string | null;
   isPrimaryHostActive?: boolean;
+  /** Where end-screen suggestions come from. Defaults to the built-in service. */
+  resolveRecommendations?: (content: MediaContent) => Promise<Recommendation[]>;
+  /**
+   * Hands the host app a way to read the playhead on demand.
+   *
+   * Deliberately a pull, not a push: a per-tick callback would fire several
+   * times a second, and every consumer would then be reading a value that is
+   * only as fresh as the last `timeupdate` event — which lags a seek, and stops
+   * entirely while paused. Reading the element when the answer is actually
+   * needed is both cheaper and exact.
+   */
+  onPlayerReady?: (api: { getCurrentTime: () => number }) => void;
+  /** Shown as a badge — e.g. that playback is coming from local storage. */
+  sourceLabel?: string | null;
+  /** Fired once per title once enough of it has been watched to count. */
+  onCompleted?: (contentId: string) => void;
 };
 
 export default function VideoPlayer({
@@ -38,6 +55,10 @@ export default function VideoPlayer({
   activeHostOrigin,
   activeHostName,
   isPrimaryHostActive = true,
+  resolveRecommendations,
+  onPlayerReady,
+  sourceLabel,
+  onCompleted,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const idleTimer = useRef<number | null>(null);
@@ -62,9 +83,16 @@ export default function VideoPlayer({
     onEnded: () => { if (nextContentId) goToNext(); else setShowEndScreen(true); },
   });
 
+  // The video element is owned by useVideoPlayer, so the accessor is published
+  // once rather than re-published on every render of the page around it.
+  useEffect(() => {
+    onPlayerReady?.({ getCurrentTime: () => player.videoRef.current?.currentTime ?? 0 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onPlayerReady]);
+
   const extras = usePlaybackExtras({
     content, currentTime: player.currentTime, duration: player.duration,
-    isPlaying: player.isPlaying, onPlayNext: goToNext,
+    isPlaying: player.isPlaying, onPlayNext: goToNext, onCompleted,
   });
 
   const subtitles = useSubtitles(content.subtitleTracks, player.currentTime);
@@ -157,6 +185,7 @@ export default function VideoPlayer({
             hostName={!isPrimaryHostActive ? activeHostName : null}
             isDownloaded={isDownloaded}
             networkQuality={networkQuality}
+            sourceLabel={sourceLabel}
           />
 
           <SubtitleOverlay text={subtitles.activeCueText} style={subtitles.style} />
@@ -173,7 +202,16 @@ export default function VideoPlayer({
             />
           )}
 
-          {showEndScreen && !nextContentId && <EndScreenRecommendations content={content} />}
+          {showEndScreen && (
+            <EndScreenRecommendations
+              content={content}
+              resolve={resolveRecommendations}
+              onSelect={(id) => {
+                setShowEndScreen(false);
+                onSelectContent(id);
+              }}
+            />
+          )}
 
           {player.error && <ErrorOverlay message={player.error} onRetry={player.retryPlayback} />}
 
@@ -221,11 +259,11 @@ export default function VideoPlayer({
 
       {isMini && (
         <div className="pv-mini-controls">
-          <button className="pv-icon-btn" onClick={player.togglePlay}>
+          <button className="pv-icon-btn" aria-label={player.isPlaying ? 'Pausa' : 'Play'} onClick={player.togglePlay}>
             {player.isPlaying ? <PauseIcon /> : <PlayIcon />}
           </button>
           <span className="pv-mini-title">{content.title}</span>
-          <button className="pv-icon-btn" onClick={() => setIsMini(false)}><ExpandIcon /></button>
+          <button className="pv-icon-btn" aria-label="Esci dal mini player" onClick={() => setIsMini(false)}><ExpandIcon /></button>
         </div>
       )}
     </div>

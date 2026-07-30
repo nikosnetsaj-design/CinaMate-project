@@ -118,6 +118,15 @@ export function useWatchParty(
                 isPlaying: bridgeRef.current?.getIsPlaying() ?? false,
                 senderId: userId,
               });
+              // Re-announce the roster to the newcomer. A transport only
+              // delivers what is sent while a client is connected, so every
+              // `join` broadcast before this one arrived is lost to it: without
+              // this, a guest saw a room containing nobody but itself, and the
+              // participant count was wrong for everyone who wasn't first.
+              setParticipants(current => {
+                for (const participant of current) transport.send({ type: 'join', participant });
+                return current;
+              });
             }
             return currentRole;
           });

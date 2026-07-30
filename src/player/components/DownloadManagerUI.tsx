@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useDownloadManager } from '../hooks/useDownloadManager';
-import { getWatchStatus } from '../services/statsAndHistory';
+import { getWatchStatus, getWatchUpdatedAt } from '../services/statsAndHistory';
 import type { MediaContent, DownloadQuality } from '../types';
 
 const QUALITIES: { id: DownloadQuality; label: string }[] = [
@@ -11,19 +11,34 @@ const STATUS_LABELS: Record<string, string> = {
   queued: 'In coda', downloading: 'In corso', paused: 'In pausa', completed: 'Completato', error: 'Errore',
 };
 
-export default function DownloadManagerUI({ library }: { library: MediaContent[] }) {
-  const { downloads, storage, download, downloadSeason, pause, resume, remove } = useDownloadManager();
-  const [autoDelete, setAutoDelete] = useState(true);
+type Props = {
+  library: MediaContent[];
+  /** Play a completed download from local storage instead of over the network. */
+  onPlayOffline?: (contentId: string, downloadId: string) => void;
+  offlineContentId?: string | null;
+};
+
+export default function DownloadManagerUI({ library, onPlayOffline, offlineContentId }: Props) {
+  const { downloads, storage, error, download, downloadSeason, pause, resume, remove } = useDownloadManager();
+  const [autoDelete, setAutoDelete] = useState(false);
   const [pickerFor, setPickerFor] = useState<MediaContent | null>(null);
 
   const usedPct = storage.quota ? (storage.usage / storage.quota) * 100 : 0;
 
-  // Best-effort: once autoDelete is on, free space for anything finished
-  // that the watch-history service has since marked as completed.
+  // Frees space for a download once you've actually finished watching it.
+  //
+  // Off by default, and gated on *when* the title was finished: watching is
+  // recorded per title, not per download, so "status is completed" alone also
+  // matches a film you finished last year and have only just downloaded — which
+  // the previous version deleted the instant the download landed. Only a
+  // viewing that ended after the download was created counts.
   useEffect(() => {
     if (!autoDelete) return;
     downloads.forEach(d => {
-      if (d.status === 'completed' && getWatchStatus(d.contentId) === 'completed') remove(d.id);
+      if (d.status !== 'completed') return;
+      if (getWatchStatus(d.contentId) !== 'completed') return;
+      const finishedAt = getWatchUpdatedAt(d.contentId);
+      if (finishedAt !== null && finishedAt > d.createdAt) remove(d.id);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoDelete, downloads]);
@@ -42,6 +57,8 @@ export default function DownloadManagerUI({ library }: { library: MediaContent[]
         <div className="pv-storage-fill" style={{ width: `${usedPct}%` }} />
         <span className="pv-mono">{formatBytes(storage.usage)} / {formatBytes(storage.quota)}</span>
       </div>
+
+      {error && <p className="pv-download-error" role="alert">{error}</p>}
 
       <div className="pv-download-catalog">
         {library.map(item => (
@@ -88,6 +105,14 @@ export default function DownloadManagerUI({ library }: { library: MediaContent[]
               </div>
               <span className="pv-download-status pv-dim">{STATUS_LABELS[d.status] ?? d.status}</span>
             </div>
+            {d.status === 'completed' && onPlayOffline && (
+              <button
+                className={`pv-btn-tiny ${offlineContentId === d.contentId ? 'active' : ''}`}
+                onClick={() => onPlayOffline(d.contentId, d.id)}
+              >
+                {offlineContentId === d.contentId ? 'In riproduzione' : 'Guarda offline'}
+              </button>
+            )}
             {d.status === 'downloading' && <button className="pv-btn-tiny" onClick={() => pause(d.id)}>Pausa</button>}
             {d.status === 'paused' && (
               <button

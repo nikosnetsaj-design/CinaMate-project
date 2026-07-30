@@ -45,6 +45,16 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
   const activeOriginRef = useRef<string | null>(options.activeHostOrigin ?? null);
   const isNativeRef = useRef(false);
 
+  // The `<video>` event listeners are attached once, for the life of the hook,
+  // so they must not close over `options` directly: the caller passes a fresh
+  // object literal on every render, and the listeners would keep calling the
+  // callbacks from the very first one. That made `onProgress` save the playhead
+  // under whichever title was selected when the player first mounted, and
+  // `onEnded` navigate to *that* title's next episode. Reading through a ref
+  // that is refreshed on every render keeps them current.
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -136,7 +146,7 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
           if (!data.fatal) return;
           if (retryCountRef.current >= MAX_RETRIES) {
             setError('Impossibile riprodurre il contenuto. Controlla la connessione e riprova.');
-            options.onError?.('max_retries_exceeded');
+            optionsRef.current.onError?.('max_retries_exceeded');
             return;
           }
           const attempt = retryCountRef.current + 1;
@@ -186,7 +196,7 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
 
     const onTimeUpdate = () => {
       setCurrentTime(video.currentTime);
-      options.onProgress?.(video.currentTime, video.duration || 0);
+      optionsRef.current.onProgress?.(video.currentTime, video.duration || 0);
     };
     const onDurationChange = () => setDuration(video.duration || 0);
     const onProgress = () => {
@@ -200,7 +210,7 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
     const onPauseEvt = () => setIsPlaying(false);
     const onEnded = () => {
       setIsPlaying(false);
-      options.onEnded?.();
+      optionsRef.current.onEnded?.();
     };
     const onEnterPiP = () => setIsPiP(true);
     const onLeavePiP = () => setIsPiP(false);

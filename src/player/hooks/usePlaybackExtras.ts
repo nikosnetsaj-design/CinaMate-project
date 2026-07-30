@@ -11,9 +11,15 @@ type Props = {
   duration: number;
   isPlaying: boolean;
   onPlayNext: () => void;
+  /**
+   * Fired once per title, when enough of it has been watched to count as
+   * finished. Lets the host app record the viewing in its own records — the
+   * player's history is its own and says nothing to the rest of the app.
+   */
+  onCompleted?: (contentId: string) => void;
 };
 
-export function usePlaybackExtras({ content, currentTime, duration, isPlaying, onPlayNext }: Props) {
+export function usePlaybackExtras({ content, currentTime, duration, isPlaying, onPlayNext, onCompleted }: Props) {
   const [activeMarker, setActiveMarker] = useState<SkipMarker | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [nextCancelled, setNextCancelled] = useState(false);
@@ -45,6 +51,7 @@ export function usePlaybackExtras({ content, currentTime, duration, isPlaying, o
       markedRef.current = true;
       markWatched(content.id);
       setWatchStatus(content.id, 'completed');
+      onCompleted?.(content.id);
     }
 
     const hasNext = !!(content.nextEpisode || content.nextInSaga);

@@ -82,11 +82,24 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-export function EndScreenRecommendations({ content }: { content: MediaContent }) {
+export function EndScreenRecommendations({
+  content,
+  resolve,
+  onSelect,
+}: {
+  content: MediaContent;
+  /**
+   * Where the suggestions come from. The host app passes its own resolver —
+   * CineMate builds them from the library — and the default is the service's
+   * endpoint-plus-fallback path.
+   */
+  resolve?: (content: MediaContent) => Promise<Recommendation[]>;
+  onSelect?: (id: string) => void;
+}) {
   const [recs, setRecs] = useState<Recommendation[]>([]);
   useEffect(() => {
     let cancelled = false;
-    getEndScreenRecommendations(content).then(r => { if (!cancelled) setRecs(r); });
+    (resolve ?? getEndScreenRecommendations)(content).then(r => { if (!cancelled) setRecs(r); });
     return () => { cancelled = true; };
     // Keyed on the id alone: a fresh `content` object for the same title must
     // not re-request the recommendations.
@@ -99,10 +112,20 @@ export function EndScreenRecommendations({ content }: { content: MediaContent })
       <h4>Continua a guardare</h4>
       <div className="pv-recommendations-grid">
         {recs.map(r => (
-          <div key={r.id} className="pv-rec-card">
+          <button
+            key={r.id}
+            type="button"
+            className="pv-rec-card"
+            // Only playable suggestions are clickable: a title the library
+            // knows but has no source for can still be *shown* (it's a real
+            // recommendation) without pretending it will play.
+            disabled={!onSelect || !r.playable}
+            onClick={() => onSelect?.(r.id)}
+          >
             {r.posterUrl && <img src={r.posterUrl} alt="" />}
             <span>{r.title}</span>
-          </div>
+            {r.reason && <em className="pv-rec-reason">{r.reason}</em>}
+          </button>
         ))}
       </div>
     </div>

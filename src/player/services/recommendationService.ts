@@ -5,6 +5,10 @@ export type Recommendation = {
   title: string;
   posterUrl: string;
   type: 'similar' | 'next_episode' | 'next_saga' | 'related' | 'universe';
+  /** True when selecting it will actually start playback. */
+  playable?: boolean;
+  /** One short line saying why this is being suggested. */
+  reason?: string;
 };
 
 // Replace with a real call to your recommendation backend/ML service. The
@@ -25,6 +29,8 @@ export async function getEndScreenRecommendations(content: MediaContent): Promis
       title: content.nextEpisode.title,
       posterUrl: content.nextEpisode.posterUrl,
       type: 'next_episode',
+      playable: true,
+      reason: 'Episodio successivo',
     });
   }
   if (content.nextInSaga) {
@@ -33,6 +39,8 @@ export async function getEndScreenRecommendations(content: MediaContent): Promis
       title: content.nextInSaga.title,
       posterUrl: content.nextInSaga.posterUrl,
       type: 'next_saga',
+      playable: true,
+      reason: 'Prossimo nella saga',
     });
   }
   return fallback;

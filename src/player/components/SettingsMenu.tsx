@@ -43,7 +43,7 @@ export default function SettingsMenu(props: Props) {
             <button className={tab === 'subtitles' ? 'active' : ''} onClick={() => setTab('subtitles')}>Sottotitoli</button>
             <button className={tab === 'speed' ? 'active' : ''} onClick={() => setTab('speed')}>Velocità</button>
           </div>
-          <button className="pv-icon-btn" onClick={props.onClose}><CloseIcon /></button>
+          <button className="pv-icon-btn" aria-label="Chiudi impostazioni" onClick={props.onClose}><CloseIcon /></button>
         </div>
 
         {tab === 'quality' && (

@@ -292,9 +292,23 @@
   margin: 0;
 }
 .pv-recommendations-grid { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
-.pv-rec-card { width: 130px; text-align: center; }
+.pv-rec-card {
+  width: 130px;
+  text-align: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+}
 .pv-rec-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; border-radius: 6px; border: 1px solid var(--pv-border); }
 .pv-rec-card span { display: block; margin-top: 6px; font-size: 0.8rem; color: var(--pv-text-dim); }
+.pv-rec-reason { display: block; margin-top: 2px; font-size: 0.68rem; color: var(--pv-text-dim); opacity: 0.8; font-style: normal; }
+.pv-rec-card:not(:disabled) { cursor: pointer; }
+.pv-rec-card:not(:disabled):hover img { border-color: var(--pv-accent); }
+/* A suggestion with no source is still worth showing, but must not look
+   clickable — see the `playable` flag in recommendFromLibrary.ts. */
+.pv-rec-card:disabled { cursor: default; opacity: 0.55; }
 
 /* ===================== Error overlay ===================== */
 .pv-error-overlay {
@@ -554,9 +568,10 @@
 }
 .pv-panel .pv-btn-secondary { background: transparent; color: var(--pv-text); border: 1px solid var(--pv-border-strong); }
 .pv-panel .pv-btn-tiny { background: transparent; color: var(--pv-text-dim); border: 1px solid var(--pv-border); padding: 4px 9px; font-size: 0.75rem; }
-.pv-panel input[type='text'], .pv-panel input:not([type]) {
+.pv-panel input[type='text'], .pv-panel input[type='number'], .pv-panel input:not([type]) {
   background: var(--pv-bg); border: 1px solid var(--pv-border); color: var(--pv-text);
   border-radius: 6px; padding: 8px 10px; font-size: 0.85rem; flex: 1;
+  font-family: inherit;
 }
 
 /* ===================== Downloads ===================== */
@@ -698,6 +713,81 @@
 
 .pv-host-test-history { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; padding-top: 6px; border-top: 1px dashed var(--pv-border); }
 .pv-host-test-history-row { display: flex; gap: 10px; font-size: 0.72rem; color: var(--pv-text-dim); font-family: var(--pv-font-mono); }
+
+/* `.pv-panel button` is a filled accent button and outweighs `.pv-icon-btn` on
+   specificity, which made every remove-X in a panel look like the primary
+   action of its row. Icon buttons stay quiet. */
+.pv-panel .pv-icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--pv-text-dim);
+  padding: 6px;
+}
+.pv-panel .pv-icon-btn:hover { color: var(--pv-accent-2); }
+
+/* ===================== Source panel ===================== */
+.pv-source-panel { gap: 14px; }
+.pv-source-block { display: flex; flex-direction: column; gap: 8px; }
+.pv-source-block-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pv-source-block-head h5 {
+  margin: 0;
+  font-family: var(--pv-font-display);
+  font-weight: 400;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+.pv-source-panel code {
+  font-family: var(--pv-font-mono);
+  font-size: 0.9em;
+  background: var(--pv-bg);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+.pv-source-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  background: var(--pv-bg);
+  border: 1px solid var(--pv-border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 0.82rem;
+}
+.pv-source-row-name { font-weight: 600; min-width: 4.5rem; }
+.pv-source-row-url {
+  flex: 1 1 12rem;
+  min-width: 0;
+  color: var(--pv-text-dim);
+  font-family: var(--pv-font-mono);
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}
+.pv-source-add { display: flex; gap: 6px; flex-wrap: wrap; }
+.pv-source-add input { flex: 1 1 9rem; min-width: 0; }
+.pv-source-add .pv-source-lang { flex: 0 0 3.5rem; text-align: center; }
+.pv-source-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 8px;
+}
+.pv-source-grid label { display: flex; flex-direction: column; gap: 3px; font-size: 0.72rem; color: var(--pv-text-dim); }
+.pv-clock-field { display: inline-flex; align-items: center; gap: 4px; }
+.pv-clock-field input {
+  width: 5.5rem;
+  font-family: var(--pv-font-mono);
+  text-align: center;
+}
+
+.pv-download-error {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--pv-accent-2);
+  background: rgba(193, 68, 59, 0.12);
+  border: 1px solid rgba(193, 68, 59, 0.4);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
 
 .pv-host-history-log { display: flex; flex-direction: column; gap: 6px; }
 .pv-host-history-log h4 { margin: 0; font-family: var(--pv-font-display); font-weight: 400; font-size: 1rem; }

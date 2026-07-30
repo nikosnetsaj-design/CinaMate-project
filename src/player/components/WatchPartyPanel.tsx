@@ -31,7 +31,7 @@ export default function WatchPartyPanel({ watchParty }: Props) {
     <div className="pv-panel pv-watchparty">
       <div className="pv-panel-header">
         <h3>Watch Party · {participants.length} {participants.length === 1 ? 'partecipante' : 'partecipanti'}</h3>
-        <button className="pv-icon-btn" onClick={leaveRoom}><CloseIcon /></button>
+        <button className="pv-icon-btn" aria-label="Esci dalla stanza" onClick={leaveRoom}><CloseIcon /></button>
       </div>
 
       <div className="pv-invite-row">

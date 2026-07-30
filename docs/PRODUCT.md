@@ -139,19 +139,29 @@ funzione senza comprare niente in cambio.
 |---|---|---|---|
 | **Player HLS** | Hai una sorgente tua (un NAS, un tuo CDN) e ti serve un lettore | Qualità adattiva, selezione manuale, ripresa al secondo, velocità, PiP, mini player, schermo intero | Utile ✅ |
 | **Sottotitoli** | I sottotitoli nativi non si possono davvero impostare | Renderer proprio: dimensione, colore, sfondo, posizione, sincronizzazione | Utile ✅ |
-| **Salto intro/recap/crediti + autoplay** | Riavvolgere a mano ogni episodio | Marker e conto alla rovescia sul titolo successivo | Utile ✅ |
+| **Salto intro/recap/crediti** | Riavvolgere a mano ogni episodio | Marker segnati dal punto in cui sei, con un tocco | Utile ✅ |
+| **Anteprime sulla timeline** | Cercare una scena al buio | Il fotogramma del punto, non solo il minutaggio | Utile ✅ |
+| **Autoplay nell'ordine della saga** | Il "prossimo" contraddice l'ordine che hai scelto | Stessa coda della pagina Saghe, §3.4 | Utile ✅ |
+| **Consigli di fine visione** | Finisce un film e la scelta ricomincia da zero | Presi dal *tuo* scaffale, ognuno con il suo perché (regola 2) | Utile ✅ |
 | **Chromecast / AirPlay** | Guardare dal telefono su un televisore | Passaggio di dispositivo dal secondo esatto | Utile ✅ |
-| **Watch Party** | Guardare assieme a distanza | Stanza, play/pausa sincronizzati, chat, reazioni | Utile ✅ (fra schede; fra dispositivi serve un relay) |
-| **Download offline** | Guardare senza rete | Coda, pausa/ripresa, gestione spazio su IndexedDB | Utile ✅ (serve un endpoint di manifest) |
+| **Watch Party** | Guardare assieme a distanza | Stanza, play/pausa sincronizzati, chat, reazioni | Utile ✅ (fra dispositivi serve un relay tuo) |
+| **Download offline** | Guardare senza rete | Segmenti letti dalla playlist e salvati su IndexedDB, riproducibili offline. Nessun backend | Utile ✅ |
 | **Failover fra host mirror** | Una sola origine cade e la visione si interrompe | Cambio host senza interrompere la riproduzione | Utile ✅ |
+| **Il diario si aggiorna da sé** | Guardi qui e la libreria non se ne accorge | Finito un titolo diventa "Visto", con voce nel diario e traguardi | Essenziale ✅ |
 | **Catalogo, ricerca di file, addon, scraper** | — | — | **Fuori perimetro**, e resta tale |
 
 **Il vincolo che rende questo diverso da un client pirata.** Il player non ha
-catalogo e non sa cercare: legge le sorgenti dai *link personali* di un titolo
-(§3.3), una alla volta, incollate a mano. Un titolo senza link non è
+catalogo e non sa cercare: le sorgenti si incollano a mano, una per titolo, nel
+pannello Sorgenti o fra i *link personali* (§3.3). Un titolo senza sorgente non è
 riproducibile e non compare nella pagina. Non c'è nessun elenco di host da cui
 pescare, nessun indice, nessun addon: il perimetro è fatto valere dal fatto che
 l'unica via d'ingresso è un indirizzo che l'utente già possiede.
+
+**Perché la configurazione per titolo sta nel player e non nell'`Item`.** Il
+record di libreria è quello che esporta/importa gira e che ogni pagina legge, e a
+nessuna di quelle serve sapere dove sta un file `.vtt`. Sorgenti, marker e sprite
+vivono in uno store separato (`usePlayerSources`): la libreria resta quello che
+era anche per chi non usa mai il player.
 
 **Perché uno solo player e non "il player del servizio".** Per Netflix, Prime e
 Disney+ vale ancora esattamente quanto diceva la versione precedente di questa
@@ -178,9 +188,14 @@ sezione: hanno il loro, con la licenza, e meglio. Questo player non è per loro 
 sfogliabile in aereo. → Utile.
 
 Per i titoli con una sorgente propria c'è anche il download del video, dentro il
-player (§3.6): coda, pausa/ripresa, gestione dello spazio, eliminazione
-automatica dopo la visione. Per i contenuti sotto licenza resta valido quanto
-detto prima — lo offrono già le app dei servizi, con la licenza.
+player (§3.6): coda, pausa/ripresa, gestione dello spazio, riproduzione offline e
+— se lo accendi — eliminazione automatica dopo la visione. Per i contenuti sotto
+licenza resta valido quanto detto prima: lo offrono già le app dei servizi.
+
+L'eliminazione automatica è **spenta di default** e guarda *quando* hai finito il
+titolo, non solo *se*: la visione è registrata per titolo, non per download, così
+"visto" da solo comprende anche un film finito l'anno scorso e scaricato adesso —
+che è esattamente il caso in cui cancellare sarebbe sbagliato.
 
 ---
 
