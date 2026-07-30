@@ -113,6 +113,10 @@ function ItemDetail({ item }: { item: Item }) {
 
         <ItemSagaStrip item={item} />
 
+        {/* High up on purpose: "guardalo adesso" is why you opened the sheet
+            after searching for a title, and it used to sit below the notes. */}
+        <WatchButton item={item} onNavigate={close} />
+
         <div className="mt-5">
           <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Stato</span>
           <div className="flex flex-wrap gap-2">
@@ -219,8 +223,6 @@ function ItemDetail({ item }: { item: Item }) {
             <p className="text-sm italic leading-relaxed text-text">{item.notes}</p>
           </div>
         )}
-
-        <WatchButton item={item} onNavigate={close} />
 
         <WatchAndLinks item={item} />
         <LinkToTmdb item={item} />

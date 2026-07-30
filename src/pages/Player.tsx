@@ -19,6 +19,7 @@ import { WebSocketTransport } from "../player/services/watchPartyTransport";
 import { buildPlayerCatalog, originOf, streamUrlOf } from "../player/fromLibrary";
 import { recommendFromLibrary } from "../player/recommendFromLibrary";
 import { resolvePlayable } from "../player/resolveSource";
+import { useSourceAddresses } from "../player/sourceAddresses";
 import { SourcePanel } from "../player/SourcePanel";
 import { EMPTY_SOURCE } from "../store/usePlayerSources";
 import type { MediaContent } from "../player/types";
@@ -93,15 +94,19 @@ export function Player() {
 
   const lookup = useCallback((itemId: string) => sources[itemId] ?? EMPTY_SOURCE, [sources]);
 
+  // The three fields in Settings *and* the hosts from the panel below: both are
+  // "where my videos live", and both are tried for every title.
+  const addresses = useSourceAddresses();
+
   const catalog = useMemo(
     () =>
       buildPlayerCatalog(
         items,
         lookup,
         { sagas, orders, preferredOrder: sagaPrefs.order },
-        prefs.sourceTemplates,
+        addresses,
       ),
-    [items, lookup, sagas, orders, sagaPrefs.order, prefs.sourceTemplates],
+    [items, lookup, sagas, orders, sagaPrefs.order, addresses],
   );
   const playable = useMemo(() => (catalog.length ? catalog : [TEST_STREAM]), [catalog]);
   const playableIds = useMemo(() => new Set(catalog.map((c) => c.id)), [catalog]);
@@ -124,12 +129,17 @@ export function Player() {
   const [resolving, setResolving] = useState(false);
   const targetItem = items.find((i) => i.id === baseContent.id) ?? null;
 
+  // What was already searched for is remembered, so switching between titles
+  // doesn't re-probe the whole list every time. Adding an address invalidates
+  // all of it: the answer "nothing responds" was true of the old list only.
+  useEffect(() => setResolved({}), [addresses]);
+
   useEffect(() => {
     if (!targetItem) return;
     if (resolved[targetItem.id] !== undefined) return;
     const controller = new AbortController();
     setResolving(true);
-    resolvePlayable(targetItem, lookup, prefs.sourceTemplates, controller.signal)
+    resolvePlayable(targetItem, lookup, addresses, controller.signal)
       .then((found) => {
         if (controller.signal.aborted) return;
         setResolved((r) => ({ ...r, [targetItem.id]: found?.url ?? null }));
@@ -138,7 +148,7 @@ export function Player() {
         if (!controller.signal.aborted) setResolving(false);
       });
     return () => controller.abort();
-  }, [targetItem, lookup, prefs.sourceTemplates, resolved]);
+  }, [targetItem, lookup, addresses, resolved]);
 
   const resolvedUrl = targetItem ? resolved[targetItem.id] : undefined;
   const networkContent = useMemo(
@@ -307,7 +317,7 @@ export function Player() {
       {!hasOwnSources && (
         <EmptyState
           title="Nessuna sorgente sul tuo scaffale"
-          description="Scrivi l'indirizzo del tuo server una volta sola in Impostazioni → Indirizzi delle tue sorgenti, e ogni titolo avrà il suo pulsante Guarda. In alternativa incolla un manifest HLS su un singolo titolo, dal pannello Sorgenti qui sotto. Intanto c'è lo stream di test, per vedere come si comporta il player."
+          description="Scrivi l'indirizzo del tuo server una volta sola in Impostazioni → Indirizzi delle tue sorgenti — basta l'indirizzo nudo, tipo https://mio-server.com, il file lo cerca lui — e ogni titolo avrà il suo pulsante Guarda. Vale anche per gli host del pannello qui sotto. Intanto c'è lo stream di test, per vedere come si comporta il player."
         />
       )}
 
@@ -319,7 +329,7 @@ export function Player() {
             className="spinner h-3 w-3 rounded-full border-2"
             style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }}
           />
-          Cerco un indirizzo che risponda per «{baseContent.title}»…
+          Cerco «{baseContent.title}» sui tuoi indirizzi…
         </p>
       )}
       {!resolving && resolvedUrl === null && (
@@ -331,9 +341,10 @@ export function Player() {
             color: "var(--danger)",
           }}
         >
-          Nessuno degli indirizzi configurati risponde per «{baseContent.title}». Controlla i modelli
-          in Impostazioni, oppure che il server sia raggiungibile e permetta le richieste da questa
-          pagina (CORS).
+          «{baseContent.title}» non si trova su nessuno dei tuoi indirizzi: ho provato i nomi soliti
+          e ho letto le cartelle che li pubblicano. Controlla gli indirizzi in Impostazioni e gli
+          host qui sotto, che il server sia raggiungibile e che permetta le richieste da questa
+          pagina (CORS). Se sai già dove sta il file, incollalo nel pannello Sorgenti.
         </p>
       )}
 

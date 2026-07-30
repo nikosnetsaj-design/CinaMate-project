@@ -131,18 +131,33 @@ una sorgente. Due strade:
 
 **Il modo veloce, se i tuoi video stanno tutti sullo stesso server.** Vai in
 **Impostazioni → Indirizzi delle tue sorgenti** e scrivi l'indirizzo una volta
-sola, con un segnaposto al posto del titolo:
+sola. Può bastare il server e basta:
+
+```
+https://mio-server.com
+```
+
+Da quel momento ogni titolo della libreria ha il suo pulsante **Guarda** nella
+scheda: lo cerchi, lo premi e parte, senza incollare più niente. Il file lo trova
+lui: costruisce i percorsi soliti per quel titolo — `/il-padrino.m3u8`,
+`/film/il-padrino/index.m3u8`, `/breaking-bad/s01e04.m3u8` e una ventina d'altri
+— e li prova finché uno risponde. Se non risponde nessuno, legge l'indice della
+cartella e prende il file il cui nome corrisponde al titolo, anche quando si
+chiama `Il.Padrino.1972.1080p.ITA.m3u8`.
+
+Se invece sai già com'è fatto l'indirizzo, scrivilo con un segnaposto al posto
+del titolo ed è quello esatto, senza tentativi:
 
 ```
 https://mio-server/film/{slug}.m3u8
 ```
 
-Da quel momento ogni titolo della libreria ha il suo pulsante **Guarda** nella
-scheda: lo premi e parte, senza incollare più niente. Le caselle sono tre e
-fanno anche da riserva: il player le prova in ordine e usa la prima che
-risponde, così se il primo server è giù passa al secondo da solo. I segnaposto
-disponibili (`{slug}`, `{titolo}`, `{anno}`, `{tmdb}`, `{s}`, `{e}`) sono
-elencati nelle Impostazioni, con l'anteprima di cosa producono.
+Le caselle sono tre e fanno anche da riserva: il player le prova in ordine e usa
+la prima che risponde, così se il primo server è giù passa al secondo da solo.
+Anche gli **host** del pannello Host contano come indirizzi, e vengono provati
+dopo le tre caselle nell'ordine di priorità che hanno lì. I segnaposto
+disponibili (`{slug}`, `{titolo}`, `{anno}`, `{tmdb}`, `{s}`, `{e}`, `{ss}`,
+`{ee}`) sono elencati nelle Impostazioni, con l'anteprima di cosa producono.
 
 **Il modo per un titolo solo**, se ognuno sta in un posto diverso:
 
@@ -153,7 +168,11 @@ elencati nelle Impostazioni, con l'anteprima di cosa producono.
 3. il titolo compare fra quelli riproducibili in cima alla pagina Player.
 
 Il player prova nell'ordine: l'indirizzo del singolo titolo, poi il suo link
-personale, poi i modelli delle Impostazioni.
+personale, poi gli indirizzi delle Impostazioni e gli host, e come ultima cosa
+l'indice delle cartelle di quegli stessi indirizzi.
+
+Quello che non fa, in nessuno di questi passaggi: cercare il titolo altrove. Ogni
+indirizzo provato sta su un server che hai indicato tu.
 
 Gli altri link personali restano segnalibri normali: solo l'estensione `.m3u8`
 viene interpretata come sorgente video. Senza nessuna sorgente la pagina mostra
