@@ -61,9 +61,20 @@ export default function ProgressBar({ currentTime, duration, bufferedEnd, skipMa
         </div>
       )}
 
+      {/* Announced as a slider so a screen reader reads out the position
+          instead of "clickable div". Arrow keys are not handled here: they
+          bubble to the player shell, which already seeks — binding them twice
+          would move the playhead two steps per press. */}
       <div
         ref={trackRef}
         className="pv-progress-track"
+        role="slider"
+        tabIndex={0}
+        aria-label="Avanzamento"
+        aria-valuemin={0}
+        aria-valuemax={Math.round(duration) || 0}
+        aria-valuenow={Math.round(currentTime)}
+        aria-valuetext={`${formatTime(currentTime)} di ${formatTime(duration)}`}
         onMouseMove={handleMove}
         onMouseLeave={() => setHoverX(null)}
         onClick={handleClick}

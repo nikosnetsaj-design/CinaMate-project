@@ -17,12 +17,16 @@ function describeFailure(error: unknown): string {
   return 'Non riesco a leggere la playlist di questa sorgente. Controlla l’indirizzo e i permessi CORS dell’host.';
 }
 
+/** Shortest gap between two quota checks while a download is running. */
+const STORAGE_POLL_MS = 1000;
+
 export function useDownloadManager() {
   const [downloads, setDownloads] = useState<DownloadItem[]>([]);
   const [storage, setStorage] = useState({ usage: 0, quota: 0 });
   const [error, setError] = useState<string | null>(null);
   const subscribedIds = useRef(new Set<string>());
   const unsubscribers = useRef(new Map<string, () => void>());
+  const lastStorageCheck = useRef(0);
 
   const refresh = useCallback(async () => {
     const [items, storageEstimate] = await Promise.all([
@@ -38,19 +42,25 @@ export function useDownloadManager() {
   }, [refresh]);
 
   // Keep a live progress subscription for every download currently known.
+  // Subscriptions deliberately outlive each render — they are torn down on
+  // unmount and when a download is deleted, not on every re-render.
   useEffect(() => {
     downloads.forEach(d => {
       if (subscribedIds.current.has(d.id)) return;
       subscribedIds.current.add(d.id);
       const unsub = downloadService.onDownloadProgress(d.id, updated => {
         setDownloads(prev => prev.map(p => (p.id === updated.id ? updated : p)));
+        // Progress fires once per segment — hundreds of times for a film, and
+        // more than once concurrently with several downloads running. Asking
+        // the browser to re-tally the whole origin's quota that often costs far
+        // more than the storage bar's freshness is worth.
+        const now = Date.now();
+        if (now - lastStorageCheck.current < STORAGE_POLL_MS) return;
+        lastStorageCheck.current = now;
         downloadService.getStorageEstimate().then(setStorage);
       });
       unsubscribers.current.set(d.id, unsub);
     });
-    return () => {
-      // cleanup happens on unmount only, subscriptions persist across renders
-    };
   }, [downloads]);
 
   useEffect(

@@ -7,6 +7,7 @@ import { usePlayerStats } from '../hooks/usePlayerStats';
 import { getResumePosition, saveProgress } from '../services/statsAndHistory';
 import { listDownloads } from '../services/downloadService';
 import { useNetworkQuality } from '../hooks/useNetworkQuality';
+import { usePlayerShortcuts } from '../hooks/usePlayerShortcuts';
 import type { MediaContent } from '../types';
 import type { useWatchParty } from '../hooks/useWatchParty';
 import ControlsBar from './ControlsBar';
@@ -154,12 +155,53 @@ export default function VideoPlayer({
   const handleSkip = () => extras.activeMarker && handleUserSeek(extras.activeMarker.endSec);
   const resumedBadge = resumeSec > 2 && player.currentTime < resumeSec + 3;
 
+  // C cycles the subtitle tracks and then back off, which is more useful than a
+  // plain on/off toggle when a title carries more than one language.
+  const cycleSubtitles = useCallback(() => {
+    const tracks = content.subtitleTracks;
+    if (!tracks.length) return;
+    const current = tracks.findIndex(t => t.id === subtitles.activeSubtitleId);
+    const next = tracks[current + 1];
+    subtitles.selectSubtitle(current === -1 ? tracks[0].id : (next?.id ?? null));
+  }, [content.subtitleTracks, subtitles]);
+
+  // Both of these read the live element rather than React state. State only
+  // catches up when the browser fires `timeupdate`/`volumechange`, so two quick
+  // presses of the same key would both start from the same stale value and the
+  // second would undo the first: holding ↓ moved the volume one step, once.
+  const handleShortcut = usePlayerShortcuts({
+    togglePlay: player.togglePlay,
+    // Goes through handleUserSeek, not player.seekBy, so a keyboard seek is
+    // broadcast to the Watch Party exactly like one made with the scrub bar.
+    seekBy: (delta) => handleUserSeek((player.videoRef.current?.currentTime ?? 0) + delta),
+    nudgeVolume: (delta) => {
+      const current = player.videoRef.current?.volume ?? 1;
+      player.setVolume(Math.min(1, Math.max(0, current + delta)));
+    },
+    toggleMute: player.toggleMute,
+    toggleFullscreen: () => player.toggleFullscreen(containerRef.current),
+    toggleSubtitles: cycleSubtitles,
+  });
+
   return (
     <div
       ref={containerRef}
+      // Focusable so the shortcuts below reach it, and labelled because a bare
+      // focusable div tells a screen reader nothing about what it just landed on.
+      tabIndex={0}
+      role="region"
+      aria-label={`Player video — ${content.title}`}
       className={`pv-shell ${isMini ? 'pv-shell--mini' : ''} ${controlsVisible ? '' : 'pv-controls-hidden'}`}
       onMouseMove={handleActivity}
-      onClick={handleActivity}
+      onKeyDown={handleShortcut}
+      onClick={(e) => {
+        handleActivity();
+        // Clicking the picture should hand it the keyboard, the way it does in
+        // every other player — but not steal focus from a control being used.
+        if (e.target === e.currentTarget || e.target instanceof HTMLVideoElement) {
+          containerRef.current?.focus();
+        }
+      }}
     >
       {/* A title with no poster on TMDB has no backdrop either; `url()` with an
           empty string makes the browser re-request the page itself. */}

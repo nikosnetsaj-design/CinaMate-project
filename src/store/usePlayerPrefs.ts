@@ -30,13 +30,20 @@ function isPrefs(value: unknown): value is PlayerPrefs {
 
 interface PlayerPrefsState extends PlayerPrefs {
   set: (patch: Partial<PlayerPrefs>) => void;
+  /** Applies preferences from a backup, falling back to the defaults. */
+  restore: (value: unknown) => void;
 }
 
 export const usePlayerPrefs = create<PlayerPrefsState>((set, get) => ({
   ...readJson<PlayerPrefs>(KEY, isPrefs, DEFAULTS),
   set: (patch) => {
-    const { set: _set, ...current } = get();
+    const { set: _set, restore: _restore, ...current } = get();
     const next = { ...current, ...patch };
+    writeJson(KEY, next);
+    set(next);
+  },
+  restore: (value) => {
+    const next = isPrefs(value) ? value : DEFAULTS;
     writeJson(KEY, next);
     set(next);
   },

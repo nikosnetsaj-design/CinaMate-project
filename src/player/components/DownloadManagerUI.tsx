@@ -69,8 +69,10 @@ export default function DownloadManagerUI({ library, onPlayOffline, offlineConte
           </div>
         ))}
         {library.length > 1 && (
+          // In CineMate `library` is every title that has a source, not a
+          // season, so the label says what the button actually does.
           <button className="pv-btn-secondary" onClick={() => downloadSeason(library, 'hd')}>
-            Scarica stagione completa (HD)
+            Scarica tutti i {library.length} titoli (HD)
           </button>
         )}
       </div>

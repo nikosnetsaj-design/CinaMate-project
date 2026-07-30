@@ -16,18 +16,45 @@ export interface SagaBackup {
   reminders: { enabled: string[]; notified: Record<string, string> };
 }
 
+/**
+ * The player's hand-entered configuration. Everything here was typed in by the
+ * user and cannot be derived again from anywhere — a stream address, the `.vtt`
+ * files that go with it, where the intro ends, the CDN mirrors — so leaving it
+ * out of the export would mean losing it on every device change, which is the
+ * exact failure export/import exists to prevent.
+ *
+ * The player's own `ppv:` bookkeeping (resume positions, watch counters, host
+ * check history) stays out: it rebuilds itself as you watch, and the diary
+ * already carries the part that matters.
+ */
+export interface PlayerBackup {
+  /** Per title: stream, subtitle tracks, skip markers, timeline sprite. */
+  sources?: unknown;
+  /** Data saver, Watch Party relay and display name. */
+  prefs?: unknown;
+  /** Mirror hosts, with their roles and priority order. */
+  hosts?: unknown;
+}
+
 export interface Backup {
   items: Item[];
   history: HistoryEntry[];
   /** Absent in files written before sagas existed. */
   sagas?: SagaBackup;
+  /** Absent in files written before the player existed. */
+  player?: PlayerBackup;
 }
 
-const CURRENT_VERSION = 3;
+const CURRENT_VERSION = 4;
 
-export function buildBackup(items: Item[], history: HistoryEntry[], sagas?: SagaBackup): string {
+export function buildBackup(
+  items: Item[],
+  history: HistoryEntry[],
+  sagas?: SagaBackup,
+  player?: PlayerBackup,
+): string {
   return JSON.stringify(
-    { app: "cinemate", version: CURRENT_VERSION, exportedAt: new Date().toISOString(), items, history, sagas },
+    { app: "cinemate", version: CURRENT_VERSION, exportedAt: new Date().toISOString(), items, history, sagas, player },
     null,
     2,
   );
@@ -70,6 +97,16 @@ function parseSagaBackup(value: unknown): SagaBackup | undefined {
   };
 }
 
+/**
+ * Same principle as the saga section: never a reason to reject a file. Each
+ * part is validated by the store that receives it, so anything unrecognisable
+ * is simply ignored there.
+ */
+function parsePlayerBackup(value: unknown): PlayerBackup | undefined {
+  if (!isRecord(value)) return undefined;
+  return { sources: value.sources, prefs: value.prefs, hosts: value.hosts };
+}
+
 export class BackupParseError extends Error {
   constructor(message: string) {
     super(message);
@@ -96,7 +133,7 @@ export function parseBackup(raw: string): Backup {
   }
 
   if (parsed && typeof parsed === "object" && Array.isArray((parsed as { items?: unknown }).items)) {
-    const record = parsed as { items: unknown[]; history?: unknown; sagas?: unknown };
+    const record = parsed as { items: unknown[]; history?: unknown; sagas?: unknown; player?: unknown };
     const items = record.items.filter(looksLikeItem);
     if (items.length === 0) throw new BackupParseError("Nessun titolo valido trovato nel file.");
     const history = Array.isArray(record.history) ? record.history.filter(looksLikeHistoryEntry) : [];
@@ -106,6 +143,7 @@ export function parseBackup(raw: string): Backup {
       items,
       history: history.filter((h) => ids.has(h.itemId)),
       sagas: parseSagaBackup(record.sagas),
+      player: parsePlayerBackup(record.player),
     };
   }
 

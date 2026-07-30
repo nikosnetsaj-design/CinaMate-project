@@ -1,5 +1,10 @@
 import { useState } from 'react';
 import type { QualityLevel, AudioTrack, SubtitleTrack, SubtitleStyle } from '../types';
+// The one CineMate import in this folder, and a deliberate one: it is a generic
+// dialog utility with no knowledge of the app's data, and every other modal in
+// CineMate uses it. Re-implementing a focus trap here to keep the folder
+// technically pure would be worse than sharing the one that already works.
+import { useFocusTrap } from '../../lib/useFocusTrap';
 import { CloseIcon } from './Icons';
 
 type Tab = 'quality' | 'audio' | 'subtitles' | 'speed';
@@ -32,10 +37,18 @@ const COLORS = ['#F5F1E8', '#F2C879', '#7FD8C6', '#E36F6F'];
 
 export default function SettingsMenu(props: Props) {
   const [tab, setTab] = useState<Tab>('quality');
+  const panelRef = useFocusTrap(props.onClose);
 
   return (
     <div className="pv-settings-overlay" onClick={props.onClose}>
-      <div className="pv-settings-panel" onClick={e => e.stopPropagation()}>
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Impostazioni di riproduzione"
+        className="pv-settings-panel"
+        onClick={e => e.stopPropagation()}
+      >
         <div className="pv-settings-header">
           <div className="pv-settings-tabs">
             <button className={tab === 'quality' ? 'active' : ''} onClick={() => setTab('quality')}>Qualità</button>

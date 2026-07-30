@@ -7,6 +7,9 @@ import { useLibrary } from "../store/useLibrary";
 import { useSagas } from "../store/useSagas";
 import { useMarathon } from "../store/useMarathon";
 import { useReminders } from "../store/useReminders";
+import { usePlayerSources } from "../store/usePlayerSources";
+import { usePlayerPrefs } from "../store/usePlayerPrefs";
+import { getHosts, restoreHosts } from "../player/services/hostStore";
 import { buildBackup, parseBackup, BackupParseError } from "../lib/backup";
 import { resetAutoLinkAttempts } from "../lib/useAutoLinkTmdb";
 
@@ -36,13 +39,28 @@ function SettingsForm() {
   function exportData() {
     const sagas = useSagas.getState();
     const reminders = useReminders.getState();
-    const backup = buildBackup(items, history, {
-      orders: sagas.orders,
-      preferredOrder: sagas.prefs.order,
-      hidden: sagas.prefs.hidden,
-      marathon: useMarathon.getState().marathon,
-      reminders: { enabled: reminders.enabled, notified: reminders.notified },
-    });
+    const playerPrefs = usePlayerPrefs.getState();
+    const backup = buildBackup(
+      items,
+      history,
+      {
+        orders: sagas.orders,
+        preferredOrder: sagas.prefs.order,
+        hidden: sagas.prefs.hidden,
+        marathon: useMarathon.getState().marathon,
+        reminders: { enabled: reminders.enabled, notified: reminders.notified },
+      },
+      {
+        sources: usePlayerSources.getState().sources,
+        // Only the stored fields — the actions on the store are not data.
+        prefs: {
+          dataSaver: playerPrefs.dataSaver,
+          watchPartyRelayUrl: playerPrefs.watchPartyRelayUrl,
+          displayName: playerPrefs.displayName,
+        },
+        hosts: getHosts(),
+      },
+    );
     const blob = new Blob([backup], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -62,7 +80,8 @@ function SettingsForm() {
       return;
     }
     const confirmed = window.confirm(
-      `Importare ${backup.items.length} titoli? La libreria attuale (${items.length} titoli) verrà sostituita.`,
+      `Importare ${backup.items.length} titoli? La libreria attuale (${items.length} titoli) verrà sostituita` +
+        `${backup.player ? ", insieme alle sorgenti del player e agli host" : ""}.`,
     );
     if (!confirmed) return;
     importData(backup.items, backup.history);
@@ -76,6 +95,16 @@ function SettingsForm() {
       });
       useMarathon.getState().restore(backup.sagas.marathon);
       useReminders.getState().restore(backup.sagas.reminders);
+    }
+    // Same rule as the saga section, applied one level deeper: a section the
+    // file doesn't carry is one this device keeps. A file written before the
+    // player existed, or a hand-edited one, can't wipe settings it says
+    // nothing about.
+    if (backup.player) {
+      const { sources, prefs, hosts } = backup.player;
+      if (sources !== undefined) usePlayerSources.getState().restore(sources);
+      if (prefs !== undefined) usePlayerPrefs.getState().restore(prefs);
+      if (hosts !== undefined) restoreHosts(hosts);
     }
   }
 
