@@ -15,11 +15,13 @@ const NAV_ITEMS = [
   { to: "/player", label: "Player", icon: PlayIcon, end: false },
 ] as const;
 
-// Five tabs is the most a phone bar carries with the labels still legible.
-// Critico and Player keep their sidebar entries: Critico is reachable from
-// every title and person sheet, and Player is where you go deliberately, with
-// a title already in mind — neither is a destination you tap while browsing.
-const MOBILE_ITEMS = NAV_ITEMS.filter((i) => i.to !== "/critico" && i.to !== "/player");
+// Critico keeps only its sidebar entry: it is reachable from every title and
+// person sheet, so it is never the tap that strands you.
+//
+// Player cannot be dropped the same way. The sidebar is desktop-only, and
+// nothing else on a phone links to it — leaving it out made the whole page
+// unreachable on the device the app is meant to be installed on.
+const MOBILE_ITEMS = NAV_ITEMS.filter((i) => i.to !== "/critico");
 
 function linkClasses(isActive: boolean) {
   return `flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm font-medium transition-colors ${
