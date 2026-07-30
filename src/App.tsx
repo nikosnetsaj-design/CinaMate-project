@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Route, Routes } from "react-router-dom";
 import { Nav } from "./components/Nav";
 import { ToastStack } from "./components/ToastStack";
@@ -22,6 +22,14 @@ import { Sagas } from "./pages/Sagas";
 import { Discover } from "./pages/Discover";
 import { Stats } from "./pages/Stats";
 import { Critic } from "./pages/Critic";
+
+/**
+ * The player is the only route that needs hls.js, and hls.js alone is bigger
+ * than the rest of the app put together. Splitting it out keeps the launch of
+ * a diary app — which is what almost every visit is — as light as it was
+ * before the player existed.
+ */
+const Player = lazy(() => import("./pages/Player").then((m) => ({ default: m.Player })));
 
 function ErrorBanner() {
   const storageError = useLibrary((s) => s.storageError);
@@ -76,6 +84,20 @@ export default function App() {
             <Route path="/scopri" element={<Discover />} />
             <Route path="/dati" element={<Stats />} />
             <Route path="/critico" element={<Critic />} />
+            <Route
+              path="/player"
+              element={
+                <Suspense
+                  fallback={
+                    <div className="mx-auto max-w-4xl px-4 py-10 text-sm text-text-faint sm:px-6">
+                      Caricamento del player…
+                    </div>
+                  }
+                >
+                  <Player />
+                </Suspense>
+              }
+            />
           </Routes>
         </main>
       </div>
