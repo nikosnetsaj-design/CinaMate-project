@@ -3,7 +3,7 @@ import { useTheme } from "../store/useTheme";
 import { useCommandPalette } from "../store/useCommandPalette";
 import { useAddSheet } from "../store/useAddSheet";
 import { useSettingsSheet } from "../store/useSettingsSheet";
-import { ChartIcon, CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, PlusIcon, ReelMark, SearchIcon, SparkleIcon, StackIcon, SunIcon } from "./icons";
+import { ChartIcon, CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, PlayIcon, PlusIcon, ReelMark, SearchIcon, SparkleIcon, StackIcon, SunIcon } from "./icons";
 
 const NAV_ITEMS = [
   { to: "/", label: "Home", icon: HomeIcon, end: true },
@@ -12,12 +12,14 @@ const NAV_ITEMS = [
   { to: "/scopri", label: "Scopri", icon: CompassIcon, end: false },
   { to: "/dati", label: "Dati", icon: ChartIcon, end: false },
   { to: "/critico", label: "Critico", icon: SparkleIcon, end: false },
+  { to: "/player", label: "Player", icon: PlayIcon, end: false },
 ] as const;
 
 // Five tabs is the most a phone bar carries with the labels still legible.
-// Critico keeps its sidebar entry and is reachable from every title and person
-// sheet, so it is the one to drop on small screens.
-const MOBILE_ITEMS = NAV_ITEMS.filter((i) => i.to !== "/critico");
+// Critico and Player keep their sidebar entries: Critico is reachable from
+// every title and person sheet, and Player is where you go deliberately, with
+// a title already in mind — neither is a destination you tap while browsing.
+const MOBILE_ITEMS = NAV_ITEMS.filter((i) => i.to !== "/critico" && i.to !== "/player");
 
 function linkClasses(isActive: boolean) {
   return `flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm font-medium transition-colors ${

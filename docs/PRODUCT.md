@@ -11,9 +11,11 @@ Un **compagno di visione personale**: tiene il diario di cosa hai visto, ti dice
 cosa guardare stasera e **dove guardarlo legalmente** fra i servizi a cui sei
 già abbonato.
 
-Non è un client di streaming e non ospita né cerca file video. La riproduzione
-avviene dove il contenuto è concesso in licenza: Netflix, Prime Video, Disney+,
-RaiPlay, Sky, cinema. CineMate ti ci porta con un tocco.
+Non è un client di streaming: non ospita, non indicizza e non cerca file video.
+Per i titoli sotto licenza la riproduzione avviene dove la licenza sta — Netflix,
+Prime Video, Disney+, RaiPlay, Sky, cinema — e CineMate ti ci porta con un tocco.
+Per una sorgente che è già tua (§3.6) c'è un player interno, che riproduce solo
+gli indirizzi che le dai titolo per titolo.
 
 ### Perché questo posizionamento è più forte, non più debole
 
@@ -124,15 +126,47 @@ ha fatto sul *tuo* scaffale, che è il motivo per cui hai toccato il nome.
 I **personaggi** restano fuori: TMDB non ha un indice dei personaggi su cui
 cercare, solo il ruolo dentro ai crediti di ogni titolo.
 
-### 3.6 Player — solo trailer
+### 3.6 Player — solo sorgenti tue ✅
 
-| Funzione | Priorità |
-|---|---|
-| Trailer ufficiali in‑app, PiP, AirPlay/Chromecast sul trailer | Utile |
-| Player di contenuti da host esterni | **Fuori perimetro** |
+Decisione rivista. Prima questa sezione diceva "solo trailer" e rimandava tutto
+il resto al servizio che ha la licenza. Resta vero che **CineMate non ospita e
+non cerca file video** — quella è la riga che non si tocca, ed è quella che tiene
+in piedi il §2 e la regola 5. Ma "non cercare video" e "non saper riprodurre un
+indirizzo che l'utente ha già" sono due cose diverse, e confonderle costava una
+funzione senza comprare niente in cambio.
 
-Skip Intro, tracce audio, sottotitoli e velocità appartengono al servizio che
-detiene la licenza: li ha già, e meglio di quanto potremmo farli noi.
+| Funzione | Problema | Beneficio | Priorità |
+|---|---|---|---|
+| **Player HLS** | Hai una sorgente tua (un NAS, un tuo CDN) e ti serve un lettore | Qualità adattiva, selezione manuale, ripresa al secondo, velocità, PiP, mini player, schermo intero | Utile ✅ |
+| **Sottotitoli** | I sottotitoli nativi non si possono davvero impostare | Renderer proprio: dimensione, colore, sfondo, posizione, sincronizzazione | Utile ✅ |
+| **Salto intro/recap/crediti** | Riavvolgere a mano ogni episodio | Marker segnati dal punto in cui sei, con un tocco | Utile ✅ |
+| **Anteprime sulla timeline** | Cercare una scena al buio | Il fotogramma del punto, non solo il minutaggio | Utile ✅ |
+| **Autoplay nell'ordine della saga** | Il "prossimo" contraddice l'ordine che hai scelto | Stessa coda della pagina Saghe, §3.4 | Utile ✅ |
+| **Consigli di fine visione** | Finisce un film e la scelta ricomincia da zero | Presi dal *tuo* scaffale, ognuno con il suo perché (regola 2) | Utile ✅ |
+| **Chromecast / AirPlay** | Guardare dal telefono su un televisore | Passaggio di dispositivo dal secondo esatto | Utile ✅ |
+| **Watch Party** | Guardare assieme a distanza | Stanza, play/pausa sincronizzati, chat, reazioni | Utile ✅ (fra dispositivi serve un relay tuo) |
+| **Download offline** | Guardare senza rete | Segmenti letti dalla playlist e salvati su IndexedDB, riproducibili offline. Nessun backend | Utile ✅ |
+| **Failover fra host mirror** | Una sola origine cade e la visione si interrompe | Cambio host senza interrompere la riproduzione | Utile ✅ |
+| **Il diario si aggiorna da sé** | Guardi qui e la libreria non se ne accorge | Finito un titolo diventa "Visto", con voce nel diario e traguardi | Essenziale ✅ |
+| **Catalogo, ricerca di file, addon, scraper** | — | — | **Fuori perimetro**, e resta tale |
+
+**Il vincolo che rende questo diverso da un client pirata.** Il player non ha
+catalogo e non sa cercare: le sorgenti si incollano a mano, una per titolo, nel
+pannello Sorgenti o fra i *link personali* (§3.3). Un titolo senza sorgente non è
+riproducibile e non compare nella pagina. Non c'è nessun elenco di host da cui
+pescare, nessun indice, nessun addon: il perimetro è fatto valere dal fatto che
+l'unica via d'ingresso è un indirizzo che l'utente già possiede.
+
+**Perché la configurazione per titolo sta nel player e non nell'`Item`.** Il
+record di libreria è quello che esporta/importa gira e che ogni pagina legge, e a
+nessuna di quelle serve sapere dove sta un file `.vtt`. Sorgenti, marker e sprite
+vivono in uno store separato (`usePlayerSources`): la libreria resta quello che
+era anche per chi non usa mai il player.
+
+**Perché uno solo player e non "il player del servizio".** Per Netflix, Prime e
+Disney+ vale ancora esattamente quanto diceva la versione precedente di questa
+sezione: hanno il loro, con la licenza, e meglio. Questo player non è per loro —
+è per il caso che quelli non coprono, cioè una sorgente che è già tua.
 
 ### 3.7 Profilo, dati, IA
 
@@ -150,9 +184,18 @@ detiene la licenza: li ha già, e meglio di quanto potremmo farli noi.
 
 ### 3.8 Download
 
-Solo **metadati e copertine** per la consultazione offline: la libreria resta
-sfogliabile in aereo. Il download dei video appartiene alle app dei servizi,
-che lo offrono già con la licenza. → Utile.
+**Metadati e copertine** per la consultazione offline: la libreria resta
+sfogliabile in aereo. → Utile.
+
+Per i titoli con una sorgente propria c'è anche il download del video, dentro il
+player (§3.6): coda, pausa/ripresa, gestione dello spazio, riproduzione offline e
+— se lo accendi — eliminazione automatica dopo la visione. Per i contenuti sotto
+licenza resta valido quanto detto prima: lo offrono già le app dei servizi.
+
+L'eliminazione automatica è **spenta di default** e guarda *quando* hai finito il
+titolo, non solo *se*: la visione è registrata per titolo, non per download, così
+"visto" da solo comprende anche un film finito l'anno scorso e scaricato adesso —
+che è esattamente il caso in cui cancellare sarebbe sbagliato.
 
 ---
 
@@ -184,10 +227,11 @@ oggi 168 coppie, zero fallimenti. Focus ring visibile, navigazione da tastiera,
 src/
   components/     UI riusabile (Nastro, PosterArt, sheet, saghe, timeline,
                   maratona, prossimo capitolo, persone)
-  pages/          Home · Libreria · Saghe · Scopri · Dati · Critico
+  pages/          Home · Libreria · Saghe · Scopri · Dati · Critico · Player
   store/          Zustand: libreria, saghe, maratona, promemoria, impostazioni, UI
   lib/            tmdb · sagas · universes · upcoming · anthropic · backup ·
                   search · stats · achievements · notify
+  player/         modulo autonomo: hooks · services · components · styles
 docs/             questa specifica
 ```
 
@@ -206,6 +250,14 @@ docs/             questa specifica
   rete e senza chiave: la chiave serve a *scoprire* saghe nuove, non a leggere lo
   scaffale. Le sinossi dei singoli capitoli non entrano nella cache — non sono
   mai mostrate e occuperebbero spazio che serve alla libreria.
+- **Il player è un modulo separato** (`src/player/`) con tipi propri e chiavi
+  `localStorage` proprie (prefisso `ppv:`): non scrive nella libreria né nel
+  diario, e l'unico punto di contatto è `fromLibrary.ts`, che traduce un titolo
+  in contenuto riproducibile. Così una funzione grossa e opzionale non si
+  intreccia con il cuore dell'app, e la sua palette scura non contamina il tema.
+  Corollario pratico: `hls.js` da solo pesa più di tutto il resto dell'app, per
+  cui la rotta è a caricamento differito e l'avvio di chi non apre il player
+  resta identico a prima.
 - **Due passate di sincronizzazione**, entrambe in background e una alla volta:
   la prima collega i titoli a TMDB, la seconda chiede a quale collezione
   appartiene ogni film e scarica la collezione una volta sola. Un film che
@@ -226,7 +278,7 @@ identità visiva, pubblicazione web installabile, pagina **Scopri**, **saghe e
 collezioni** con i tre ordini di visione, **maratona**, **continua la storia**,
 **universi e timeline**, **pagine di attori e registi**, **calendario
 Prossimamente** con promemoria, **ricerca raggruppata**, statistiche su attori e
-registi, badge di saga e di genere.
+registi, badge di saga e di genere, **player per le sorgenti proprie** (§3.6).
 
 **Prossimo (Essenziale)**
 1. **Apri sul servizio**: deep link diretto a Netflix/Prime/Disney+
@@ -253,8 +305,8 @@ sono decise.
 
 | Richiesta | Perché no |
 |---|---|
-| Player video, download dei film, qualità 4K/adaptive, salto intro, tracce audio e sottotitoli | Appartengono a chi ha la licenza. Netflix, Prime e Disney+ li hanno già, e meglio di quanto potremmo farli noi; replicarli richiederebbe ospitare o cercare file video, che è esattamente ciò che questa app non fa |
-| Watch Party, chat durante la visione, Chromecast/AirPlay sul contenuto | Presuppongono un player nostro |
+| **Catalogo di contenuti, ricerca di file video, addon/scraper di host** | È la riga che separa questa app da quelle che muoiono a ogni oscuramento. Il player di §3.6 esiste, ma non sa cercare niente: l'unico ingresso è un indirizzo che l'utente incolla nei link personali di un titolo |
+| Sottotitoli scaricati automaticamente da archivi online | Stessa ragione: sarebbe un indice di contenuti di terzi. I `.vtt` si passano a mano, come le sorgenti |
 | Account, profili multipli con PIN, sync fra dispositivi, logout remoto | Presuppongono un backend. Oggi non c'è server, quindi non c'è raccolta dati, nessun costo e nessun account: il prezzo è la sincronizzazione, risolta con esporta/importa. Vedi §5 per come si farebbe se servisse |
 | Recensioni pubbliche, follow, classifiche fra utenti | Stessa ragione: richiedono un servizio condiviso. Il diario resta privato per scelta |
 | Ricerca per personaggio | TMDB non espone un indice dei personaggi: esistono solo come ruolo dentro ai crediti di un titolo |
@@ -271,4 +323,6 @@ sono decise.
    non farti restare.
 4. **I dati sono dell'utente.** Esportabili in un file leggibile, sempre.
 5. **Solo fonti legali.** Non per prudenza: perché è ciò che rende l'app
-   duratura e di qualità superiore.
+   duratura e di qualità superiore. Il player (§3.6) non è un'eccezione a questa
+   regola: non procura sorgenti, le riproduce. Quello che ci metti dentro è tua
+   responsabilità, esattamente come per un lettore installato sul computer.
