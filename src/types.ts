@@ -53,7 +53,30 @@ export interface Item {
    */
   collectionId?: number | null;
   collectionName?: string | null;
+
+  // --- Catalogue facts the advanced filters search on -----------------------
+  // All optional: they arrive with titles added or re-linked after this
+  // existed, and every filter treats "absent" as unknown rather than as a
+  // miss, so an older library keeps showing up in its own search results.
+
+  /** Lead production company, e.g. "A24". */
+  studio?: string;
+  /** Production countries as ISO 3166-1 codes, e.g. ["US", "GB"]. */
+  countries?: string[];
+  /** TMDB's own average, 0–10 — a different question from `vote`, which is yours. */
+  tmdbRating?: number | null;
+  /** Spoken languages as ISO 639-1 codes, e.g. ["it", "en"]. */
+  audioLangs?: string[];
+  /**
+   * The quality of the copy *you* have. Set by hand rather than detected: no
+   * catalogue knows what is on your server, and a manifest only reveals its
+   * renditions once something plays it.
+   */
+  quality?: Quality | null;
 }
+
+export const QUALITIES = ["SD", "720p", "1080p", "4K", "HDR"] as const;
+export type Quality = (typeof QUALITIES)[number];
 
 export type ToastKind = "success" | "error" | "info";
 

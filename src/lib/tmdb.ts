@@ -53,6 +53,14 @@ export interface TmdbDetails {
   collectionId: number | null;
   collectionName: string | null;
   releaseDate: string | null;
+  /** Lead production company. */
+  studio: string;
+  /** ISO 3166-1 country codes. */
+  countries: string[];
+  /** TMDB's own 0–10 average. */
+  tmdbRating: number | null;
+  /** ISO 639-1 codes of the languages spoken in it. */
+  audioLangs: string[];
 }
 
 async function tmdbGet<T>(path: string, apiKey: string, params: Record<string, string> = {}): Promise<T> {
@@ -167,6 +175,10 @@ interface RawDetails {
   credits?: { cast?: RawCast[]; crew?: RawCrew[] };
   videos?: { results?: RawVideo[] };
   recommendations?: { results?: { title?: string; name?: string }[] };
+  production_companies?: { name: string }[];
+  production_countries?: { iso_3166_1: string }[];
+  spoken_languages?: { iso_639_1: string }[];
+  vote_average?: number;
 }
 
 export interface TmdbWatchInfo {
@@ -225,6 +237,18 @@ export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiK
     collectionId: details.belongs_to_collection?.id ?? null,
     collectionName: details.belongs_to_collection?.name ?? null,
     releaseDate: dateStr ?? null,
+    // The first company is the one people mean by "studio". TMDB lists every
+    // co-producer and financing vehicle after it, which is accurate and
+    // useless as a filter — nobody looks for a film by its tax-credit partner.
+    studio: details.production_companies?.[0]?.name ?? "",
+    // `origin_country` is the fallback because TV records carry that but
+    // frequently leave production_countries empty.
+    countries:
+      details.production_countries?.map((c) => c.iso_3166_1).filter(Boolean) ??
+      details.origin_country ??
+      [],
+    tmdbRating: typeof details.vote_average === "number" && details.vote_average > 0 ? details.vote_average : null,
+    audioLangs: details.spoken_languages?.map((l) => l.iso_639_1).filter(Boolean) ?? [],
   };
 }
 

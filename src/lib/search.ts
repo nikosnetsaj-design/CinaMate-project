@@ -8,23 +8,132 @@ function fold(value: string): string {
 }
 
 /**
+ * Levenshtein distance, bounded: it stops as soon as the whole row exceeds
+ * `max`, so comparing a query against a few hundred titles stays cheap enough
+ * to run on every keystroke. Only two rows are kept — the full matrix is never
+ * needed when all we want is the final number.
+ */
+function editDistance(a: string, b: string, max: number): number {
+  if (a === b) return 0;
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  let curr = new Array<number>(b.length + 1);
+
+  for (let i = 1; i <= a.length; i += 1) {
+    curr[0] = i;
+    let rowMin = curr[0];
+    for (let j = 1; j <= b.length; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+      if (curr[j] < rowMin) rowMin = curr[j];
+    }
+    if (rowMin > max) return max + 1;
+    [prev, curr] = [curr, prev];
+  }
+  return prev[b.length];
+}
+
+/**
+ * How many typos to forgive at a given length. None below five characters, one
+ * up to seven, two from eight up. Scaling matters: two edits on a four-letter
+ * word turns "Alien" into "Alias" and half the shelf, while two on
+ * "Interstellar" is just a pair of slips on a long word.
+ */
+function tolerance(length: number): number {
+  if (length < 5) return 0;
+  if (length < 8) return 1;
+  return 2;
+}
+
+/**
+ * True when `needle` is a near-miss for some word inside `haystack`. Compared
+ * word by word rather than against the whole string, because the distance from
+ * "padrino" to "il padrino" is three edits — enough to reject the exact title
+ * the user was reaching for.
+ */
+function fuzzyContains(haystack: string, needle: string): boolean {
+  const max = tolerance(needle.length);
+  if (max === 0) return false;
+  for (const word of haystack.split(/[\s:,._'-]+/)) {
+    if (!word) continue;
+    // A word longer than the query can still be the one meant
+    // ("interstellare" for "interstelar"), so compare against its prefix.
+    if (editDistance(word.slice(0, needle.length + max), needle, max) <= max) return true;
+  }
+  return false;
+}
+
+/** Every string of an item worth matching a query against, folded once. */
+function haystacks(item: Item): string[] {
+  return [
+    item.title,
+    item.director,
+    item.genre,
+    item.notes,
+    item.platform,
+    item.overview,
+    item.collectionName ?? "",
+    item.studio ?? "",
+    String(item.year),
+    ...item.cast,
+  ].map(fold);
+}
+
+export type MatchKind = "exact" | "fuzzy" | "none";
+
+/**
+ * Exact substring first, near-miss second. Three states rather than a boolean
+ * so callers can tell them apart: the library only offers a correction when
+ * everything on screen matched fuzzily, and saying "forse cercavi" over exact
+ * hits would be nonsense.
+ */
+export function matchQuality(item: Item, query: string): MatchKind {
+  const q = fold(query.trim());
+  if (!q) return "exact";
+  const fields = haystacks(item);
+  if (fields.some((f) => f.includes(q))) return "exact";
+  // Multi-word queries match per word, so "nolan interstelar" still lands:
+  // every word has to appear somewhere, not all of them in the same field.
+  const words = q.split(/\s+/).filter(Boolean);
+  if (words.length > 1 && words.every((w) => fields.some((f) => f.includes(w) || fuzzyContains(f, w)))) {
+    return "fuzzy";
+  }
+  return fields.some((f) => fuzzyContains(f, q)) ? "fuzzy" : "none";
+}
+
+/**
  * Shared matcher so the command palette and the library filter stay in sync —
  * a query that finds a title in one place finds it in the other.
  */
 export function matchesQuery(item: Item, query: string): boolean {
+  return matchQuality(item, query) !== "none";
+}
+
+/**
+ * The closest real title to a query, for the "forse cercavi" line. Returns null
+ * when nothing is near enough to be worth offering: a wrong suggestion is worse
+ * than none, because it sends the user to check a title they never meant.
+ */
+export function didYouMean(query: string, items: Item[]): string | null {
   const q = fold(query.trim());
-  if (!q) return true;
-  return (
-    fold(item.title).includes(q) ||
-    fold(item.director).includes(q) ||
-    fold(item.genre).includes(q) ||
-    fold(item.notes).includes(q) ||
-    fold(item.platform).includes(q) ||
-    fold(item.overview).includes(q) ||
-    fold(item.collectionName ?? "").includes(q) ||
-    String(item.year).includes(q) ||
-    item.cast.some((c) => fold(c).includes(q))
-  );
+  if (q.length < 4) return null;
+
+  const max = tolerance(q.length) || 1;
+  let best: { title: string; distance: number } | null = null;
+
+  for (const item of items) {
+    const title = fold(item.title);
+    if (title.includes(q)) return null; // an exact hit exists; nothing to correct
+    const distance = Math.min(
+      editDistance(title, q, max),
+      editDistance(title.slice(0, q.length + max), q, max),
+    );
+    if (distance <= max && (!best || distance < best.distance)) {
+      best = { title: item.title, distance };
+    }
+  }
+  return best?.title ?? null;
 }
 
 export type SearchGroup = "titolo" | "saga" | "persona";

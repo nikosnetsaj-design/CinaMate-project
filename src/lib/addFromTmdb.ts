@@ -41,5 +41,9 @@ export async function draftFromTmdb(
     trailerUrl: d.trailerUrl,
     collectionId: d.collectionId,
     collectionName: d.collectionName,
+    studio: d.studio,
+    countries: d.countries,
+    tmdbRating: d.tmdbRating,
+    audioLangs: d.audioLangs,
   };
 }
