@@ -9,6 +9,7 @@ import { useMarathon } from "../store/useMarathon";
 import { useReminders } from "../store/useReminders";
 import { usePlayerSources } from "../store/usePlayerSources";
 import { usePlayerPrefs } from "../store/usePlayerPrefs";
+import { useGoals } from "../store/useGoals";
 import { TEMPLATE_FIELDS, previewTemplate, previewCount } from "../lib/sourceTemplate";
 import { getHosts, restoreHosts } from "../player/services/hostStore";
 import { buildBackup, parseBackup, BackupParseError } from "../lib/backup";
@@ -158,6 +159,7 @@ function SettingsForm() {
         },
         hosts: getHosts(),
       },
+      useGoals.getState().goals,
     );
     const blob = new Blob([backup], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -204,6 +206,7 @@ function SettingsForm() {
       if (prefs !== undefined) usePlayerPrefs.getState().restore(prefs);
       if (hosts !== undefined) restoreHosts(hosts);
     }
+    if (backup.goals !== undefined) useGoals.getState().restore(backup.goals);
   }
 
   return (
