@@ -2,6 +2,7 @@ import type { Item } from "../types";
 import type { SagaOrders } from "./sagas";
 import type { TmdbSagaPart, DiscoverQuery } from "./tmdb";
 import { MOVIE_GENRES, TV_GENRES } from "./tmdb";
+import { logError } from "./errorLog";
 
 const ENDPOINT = "https://api.anthropic.com/v1/messages";
 
@@ -56,6 +57,7 @@ async function callClaude(opts: {
       }),
     });
   } catch {
+    logError("claude", "Connessione ad Anthropic non riuscita");
     throw new ClaudeApiError("Connessione ad Anthropic non riuscita. Controlla la rete e riprova.");
   }
 
@@ -69,6 +71,7 @@ async function callClaude(opts: {
     } catch {
       /* keep the generic message */
     }
+    logError("claude", `HTTP ${response.status}: ${message}`);
     throw new ClaudeApiError(message, response.status);
   }
 

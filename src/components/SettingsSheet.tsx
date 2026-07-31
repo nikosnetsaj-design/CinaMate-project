@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 import { Sheet } from "./Sheet";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { useSettings, MODELS } from "../store/useSettings";
@@ -550,6 +551,13 @@ function SettingsForm() {
                 if (file) void handleImportFile(file);
               }}
             />
+            <Link
+              to="/diagnostica"
+              onClick={close}
+              className="w-full rounded-sm border border-border-strong px-3.5 py-2.5 text-left text-sm text-text"
+            >
+              Diagnostica: test, host e log errori
+            </Link>
             <button
               type="button"
               disabled={items.length === 0}

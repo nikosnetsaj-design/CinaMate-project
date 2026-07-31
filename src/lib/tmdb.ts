@@ -1,4 +1,5 @@
 import type { Kind } from "../types";
+import { logError } from "./errorLog";
 
 const BASE = "https://api.themoviedb.org/3";
 const IMG_BASE = "https://image.tmdb.org/t/p";
@@ -76,9 +77,17 @@ async function tmdbGet<T>(path: string, apiKey: string, params: Record<string, s
   try {
     response = await fetch(url.toString());
   } catch {
+    // Logged as well as thrown: much of this runs in the background linker,
+    // where the throw is swallowed on purpose so one unmatchable title doesn't
+    // stop the pass — and the failure would otherwise leave no trace anywhere.
+    logError("tmdb", "Connessione a TMDB non riuscita", path);
     throw new TmdbApiError("Connessione a TMDB non riuscita. Controlla la rete e riprova.");
   }
   if (!response.ok) {
+    // A 404 is an ordinary answer here ("this title isn't on TMDB") rather
+    // than a fault, so it stays out of the log — filling the page with those
+    // would bury the failures worth reading.
+    if (response.status !== 404) logError("tmdb", `HTTP ${response.status}`, path);
     if (response.status === 401) throw new TmdbApiError("Chiave API TMDB non valida.", 401);
     if (response.status === 404) throw new TmdbApiError("Titolo non trovato su TMDB.", 404);
     throw new TmdbApiError(`Richiesta TMDB rifiutata (HTTP ${response.status}).`, response.status);

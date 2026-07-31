@@ -24,6 +24,7 @@ import { Sagas } from "./pages/Sagas";
 import { Discover } from "./pages/Discover";
 import { Stats } from "./pages/Stats";
 import { Critic } from "./pages/Critic";
+import { Diagnostics } from "./pages/Diagnostics";
 
 /**
  * The player is the only route that needs hls.js, and hls.js alone is bigger
@@ -94,6 +95,7 @@ export default function App() {
             <Route path="/scopri" element={<Discover />} />
             <Route path="/dati" element={<Stats />} />
             <Route path="/critico" element={<Critic />} />
+            <Route path="/diagnostica" element={<Diagnostics />} />
             <Route
               path="/player"
               element={
