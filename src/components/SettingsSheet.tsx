@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 import { Sheet } from "./Sheet";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { useSettings, MODELS } from "../store/useSettings";
@@ -9,6 +10,11 @@ import { useMarathon } from "../store/useMarathon";
 import { useReminders } from "../store/useReminders";
 import { usePlayerSources } from "../store/usePlayerSources";
 import { usePlayerPrefs } from "../store/usePlayerPrefs";
+import { useGoals } from "../store/useGoals";
+import { useTheme } from "../store/useTheme";
+import { useHomeLayout, HOME_SECTIONS } from "../store/useHomeLayout";
+import { ACCENTS } from "../lib/accents";
+import { ParentalSettings } from "./ParentalSettings";
 import { TEMPLATE_FIELDS, previewTemplate, previewCount } from "../lib/sourceTemplate";
 import { getHosts, restoreHosts } from "../player/services/hostStore";
 import { buildBackup, parseBackup, BackupParseError } from "../lib/backup";
@@ -26,6 +32,156 @@ import { resetAutoLinkAttempts } from "../lib/useAutoLinkTmdb";
  * letting the app work the rest out is what most people actually want, so the
  * field takes either and the preview says what it will do with what you typed.
  */
+/**
+ * Theme and accent. The palette is a fixed set rather than a colour picker for
+ * the reason spelled out in lib/accents: a free hex silently breaks the AA
+ * contrast promise the whole design system rests on, and nobody notices until
+ * a button becomes unreadable.
+ */
+function AppearanceSettings() {
+  const theme = useTheme((s) => s.theme);
+  const toggleTheme = useTheme((s) => s.toggle);
+  const accent = useTheme((s) => s.accent);
+  const setAccent = useTheme((s) => s.setAccent);
+
+  return (
+    <div>
+      <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Aspetto</span>
+
+      <div className="mb-3 flex gap-2" role="radiogroup" aria-label="Tema">
+        {(["dark", "light"] as const).map((value) => (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={theme === value}
+            onClick={() => {
+              if (theme !== value) toggleTheme();
+            }}
+            className="flex-1 rounded-sm border px-3 py-2.5 text-sm transition-colors"
+            style={
+              theme === value
+                ? {
+                    borderColor: "color-mix(in srgb, var(--accent) 50%, transparent)",
+                    background: "color-mix(in srgb, var(--accent) 12%, transparent)",
+                    color: "var(--text)",
+                  }
+                : { borderColor: "var(--border-strong)", color: "var(--text-muted)" }
+            }
+          >
+            {value === "dark" ? "Scuro" : "Chiaro"}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap gap-2.5" role="radiogroup" aria-label="Colore d'accento">
+        {ACCENTS.map((option) => {
+          const swatch = option[theme].accent;
+          const active = accent === option.id;
+          return (
+            <button
+              key={option.id}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              aria-label={option.name}
+              title={option.name}
+              onClick={() => setAccent(option.id)}
+              className="h-9 w-9 rounded-full border-2 transition-transform hover:scale-110"
+              style={{
+                background: swatch,
+                borderColor: active ? "var(--text)" : "transparent",
+              }}
+            />
+          );
+        })}
+      </div>
+      <p className="mt-2 text-xs leading-relaxed text-text-faint">
+        Sei tinte, ognuna con la sua variante chiara e scura: sono scelte perché restino leggibili
+        su entrambi i temi, cosa che un colore qualsiasi preso da una ruota non garantisce.
+      </p>
+    </div>
+  );
+}
+
+/** Which rows the Home page shows, and in what order. */
+function HomeLayoutSettings() {
+  const order = useHomeLayout((s) => s.order);
+  const hidden = useHomeLayout((s) => s.hidden);
+  const toggle = useHomeLayout((s) => s.toggle);
+  const move = useHomeLayout((s) => s.move);
+  const reset = useHomeLayout((s) => s.reset);
+
+  const byId = new Map(HOME_SECTIONS.map((s) => [s.id, s]));
+
+  return (
+    <div>
+      <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Home</span>
+      <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
+        Cosa vedi appena apri l'app, e in che ordine. Una riga spenta non sparisce dai dati: resta
+        dove è sempre stata, semplicemente non occupa la prima schermata.
+      </p>
+
+      <ul className="flex flex-col gap-1.5">
+        {order.map((id, index) => {
+          const section = byId.get(id);
+          if (!section) return null;
+          const visible = !hidden.includes(id);
+          return (
+            <li
+              key={id}
+              className="flex items-center gap-2 rounded-sm border border-border-strong px-2.5 py-2"
+              style={{ opacity: visible ? 1 : 0.5 }}
+            >
+              <div className="flex shrink-0 flex-col">
+                <button
+                  type="button"
+                  onClick={() => move(id, -1)}
+                  disabled={index === 0}
+                  aria-label={`Sposta ${section.label} in alto`}
+                  className="px-1 text-xs leading-tight text-text-muted disabled:opacity-25"
+                >
+                  ▲
+                </button>
+                <button
+                  type="button"
+                  onClick={() => move(id, 1)}
+                  disabled={index === order.length - 1}
+                  aria-label={`Sposta ${section.label} in basso`}
+                  className="px-1 text-xs leading-tight text-text-muted disabled:opacity-25"
+                >
+                  ▼
+                </button>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm text-text">{section.label}</p>
+                <p className="truncate text-xs text-text-faint">{section.description}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => toggle(id)}
+                aria-pressed={visible}
+                aria-label={visible ? `Nascondi ${section.label}` : `Mostra ${section.label}`}
+                className="shrink-0 rounded-sm border border-border-strong px-2 py-1 text-xs text-text-muted"
+              >
+                {visible ? "Mostra" : "Nascosta"}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
+      <button
+        type="button"
+        onClick={reset}
+        className="mt-2 w-full rounded-sm border border-border-strong px-3.5 py-2 text-xs text-text-muted hover:bg-surface-hover"
+      >
+        Torna all'ordine predefinito
+      </button>
+    </div>
+  );
+}
+
 function SourceTemplates() {
   const templates = usePlayerPrefs((s) => s.sourceTemplates);
   const setTemplate = usePlayerPrefs((s) => s.setTemplate);
@@ -158,6 +314,7 @@ function SettingsForm() {
         },
         hosts: getHosts(),
       },
+      useGoals.getState().goals,
     );
     const blob = new Blob([backup], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -204,6 +361,7 @@ function SettingsForm() {
       if (prefs !== undefined) usePlayerPrefs.getState().restore(prefs);
       if (hosts !== undefined) restoreHosts(hosts);
     }
+    if (backup.goals !== undefined) useGoals.getState().restore(backup.goals);
   }
 
   return (
@@ -353,6 +511,12 @@ function SettingsForm() {
 
         <SourceTemplates />
 
+        <AppearanceSettings />
+
+        <HomeLayoutSettings />
+
+        <ParentalSettings />
+
         <div>
           <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Dati locali</span>
           <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
@@ -387,6 +551,13 @@ function SettingsForm() {
                 if (file) void handleImportFile(file);
               }}
             />
+            <Link
+              to="/diagnostica"
+              onClick={close}
+              className="w-full rounded-sm border border-border-strong px-3.5 py-2.5 text-left text-sm text-text"
+            >
+              Diagnostica: test, host e log errori
+            </Link>
             <button
               type="button"
               disabled={items.length === 0}

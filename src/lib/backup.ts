@@ -43,18 +43,34 @@ export interface Backup {
   sagas?: SagaBackup;
   /** Absent in files written before the player existed. */
   player?: PlayerBackup;
+  /**
+   * Personal goals. In the export by the same rule as the player's addresses:
+   * the user typed them and nothing can derive them again. The *progress* is
+   * not here — it is recomputed from the diary, which the file already carries.
+   */
+  goals?: unknown;
 }
 
-const CURRENT_VERSION = 4;
+const CURRENT_VERSION = 5;
 
 export function buildBackup(
   items: Item[],
   history: HistoryEntry[],
   sagas?: SagaBackup,
   player?: PlayerBackup,
+  goals?: unknown,
 ): string {
   return JSON.stringify(
-    { app: "cinemate", version: CURRENT_VERSION, exportedAt: new Date().toISOString(), items, history, sagas, player },
+    {
+      app: "cinemate",
+      version: CURRENT_VERSION,
+      exportedAt: new Date().toISOString(),
+      items,
+      history,
+      sagas,
+      player,
+      goals,
+    },
     null,
     2,
   );
@@ -133,7 +149,13 @@ export function parseBackup(raw: string): Backup {
   }
 
   if (parsed && typeof parsed === "object" && Array.isArray((parsed as { items?: unknown }).items)) {
-    const record = parsed as { items: unknown[]; history?: unknown; sagas?: unknown; player?: unknown };
+    const record = parsed as {
+      items: unknown[];
+      history?: unknown;
+      sagas?: unknown;
+      player?: unknown;
+      goals?: unknown;
+    };
     const items = record.items.filter(looksLikeItem);
     if (items.length === 0) throw new BackupParseError("Nessun titolo valido trovato nel file.");
     const history = Array.isArray(record.history) ? record.history.filter(looksLikeHistoryEntry) : [];
@@ -144,6 +166,8 @@ export function parseBackup(raw: string): Backup {
       history: history.filter((h) => ids.has(h.itemId)),
       sagas: parseSagaBackup(record.sagas),
       player: parsePlayerBackup(record.player),
+      // Validated by the store that receives it, like the player sections.
+      goals: record.goals,
     };
   }
 

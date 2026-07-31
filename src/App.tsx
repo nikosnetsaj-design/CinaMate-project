@@ -11,7 +11,9 @@ import { SagaSheetPortal } from "./components/SagaSheet";
 import { PersonSheetPortal } from "./components/PersonSheet";
 import { NextChapterPrompt } from "./components/NextChapterPrompt";
 import { ResumePrompt } from "./components/ResumePrompt";
+import { IncomingShare } from "./components/IncomingShare";
 import { useTheme } from "./store/useTheme";
+import { applyAccent } from "./lib/accents";
 import { useLibrary } from "./store/useLibrary";
 import { useAutoLinkTmdb } from "./lib/useAutoLinkTmdb";
 import { useAutoLinkSagas } from "./lib/useAutoLinkSagas";
@@ -23,6 +25,7 @@ import { Discover } from "./pages/Discover";
 import { Stats } from "./pages/Stats";
 import { Critic } from "./pages/Critic";
 
+
 /**
  * The player is the only route that needs hls.js, and hls.js alone is bigger
  * than the rest of the app put together. Splitting it out keeps the launch of
@@ -30,6 +33,15 @@ import { Critic } from "./pages/Critic";
  * before the player existed.
  */
 const Player = lazy(() => import("./pages/Player").then((m) => ({ default: m.Player })));
+
+/**
+ * Split for the same reason as the player, on a different axis: this one is
+ * small but almost never opened — it is where you go when something is wrong,
+ * and its self-tests drag in the whole host-checking layer. Keeping it out of
+ * the first load costs a page nobody visits nothing and keeps the launch about
+ * the library.
+ */
+const Diagnostics = lazy(() => import("./pages/Diagnostics").then((m) => ({ default: m.Diagnostics })));
 
 function ErrorBanner() {
   const storageError = useLibrary((s) => s.storageError);
@@ -55,6 +67,7 @@ function ErrorBanner() {
 
 export default function App() {
   const theme = useTheme((s) => s.theme);
+  const accent = useTheme((s) => s.accent);
   useAutoLinkTmdb();
   useAutoLinkSagas();
   useReleaseAlerts();
@@ -63,6 +76,13 @@ export default function App() {
     // Dark is the base theme, so the light variant is the one that opts in.
     document.documentElement.classList.toggle("light", theme === "light");
   }, [theme]);
+
+  // Keyed on the theme too: each accent carries a dark and a light variant,
+  // and reapplying on a theme change is what keeps a custom accent readable
+  // after switching rather than leaving a night-tuned colour on a pale page.
+  useEffect(() => {
+    applyAccent(accent, theme);
+  }, [accent, theme]);
 
   return (
     <>
@@ -84,6 +104,20 @@ export default function App() {
             <Route path="/scopri" element={<Discover />} />
             <Route path="/dati" element={<Stats />} />
             <Route path="/critico" element={<Critic />} />
+            <Route
+              path="/diagnostica"
+              element={
+                <Suspense
+                  fallback={
+                    <div className="mx-auto max-w-3xl px-4 py-10 text-sm text-text-faint sm:px-6">
+                      Caricamento…
+                    </div>
+                  }
+                >
+                  <Diagnostics />
+                </Suspense>
+              }
+            />
             <Route
               path="/player"
               element={
@@ -111,6 +145,7 @@ export default function App() {
       <SettingsSheetPortal />
       <ResumePrompt />
       <NextChapterPrompt />
+      <IncomingShare />
     </>
   );
 }

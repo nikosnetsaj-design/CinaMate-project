@@ -11,17 +11,19 @@ import { PosterArt } from "../components/PosterArt";
 import { VoteBadge } from "../components/VoteBadge";
 import { EmptyState } from "../components/EmptyState";
 import { Nastro } from "../components/Nastro";
+import { GoalsPanel } from "../components/GoalsPanel";
 import { useAppReady } from "../lib/useAppReady";
 import type { Item } from "../types";
 
 const KIND_LABELS: Record<string, string> = { film: "Film", serie: "Serie TV", anime: "Anime", doc: "Documentario" };
 const KIND_COLORS = ["var(--accent)", "var(--status-watching)", "var(--danger)", "var(--status-done)"];
 
-type Tab = "panoramica" | "diario" | "traguardi";
+type Tab = "panoramica" | "diario" | "traguardi" | "obiettivi";
 const TABS: { id: Tab; label: string }[] = [
   { id: "panoramica", label: "Panoramica" },
   { id: "diario", label: "Diario" },
   { id: "traguardi", label: "Traguardi" },
+  { id: "obiettivi", label: "Obiettivi" },
 ];
 
 function Card({ children }: { children: React.ReactNode }) {
@@ -405,6 +407,7 @@ export function Stats() {
       {tab === "panoramica" && <Overview items={items} openItem={openItem} />}
       {tab === "diario" && <DiaryTab items={items} openItem={openItem} />}
       {tab === "traguardi" && <AchievementsTab items={items} />}
+      {tab === "obiettivi" && <GoalsPanel items={items} />}
     </div>
   );
 }

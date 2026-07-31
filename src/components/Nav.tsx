@@ -3,7 +3,8 @@ import { useTheme } from "../store/useTheme";
 import { useCommandPalette } from "../store/useCommandPalette";
 import { useAddSheet } from "../store/useAddSheet";
 import { useSettingsSheet } from "../store/useSettingsSheet";
-import { ChartIcon, CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, PlayIcon, PlusIcon, ReelMark, SearchIcon, SparkleIcon, StackIcon, SunIcon } from "./icons";
+import { prefetchHandlers } from "../lib/prefetch";
+import { ChartIcon, CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, PlayIcon, PlusIcon, PulseIcon, ReelMark, SearchIcon, SparkleIcon, StackIcon, SunIcon } from "./icons";
 
 const NAV_ITEMS = [
   { to: "/", label: "Home", icon: HomeIcon, end: true },
@@ -13,15 +14,21 @@ const NAV_ITEMS = [
   { to: "/dati", label: "Dati", icon: ChartIcon, end: false },
   { to: "/critico", label: "Critico", icon: SparkleIcon, end: false },
   { to: "/player", label: "Player", icon: PlayIcon, end: false },
+  { to: "/diagnostica", label: "Diagnostica", icon: PulseIcon, end: false },
 ] as const;
 
 // Critico keeps only its sidebar entry: it is reachable from every title and
 // person sheet, so it is never the tap that strands you.
 //
-// Player cannot be dropped the same way. The sidebar is desktop-only, and
+// Diagnostica is dropped from the bottom bar for a different reason: it is
+// somewhere you go when something is wrong, not several times a day, and a
+// seven-tab bar on a phone makes every tab harder to hit. It stays reachable
+// from Impostazioni, which is on every screen.
+//
+// Player cannot be dropped either way. The sidebar is desktop-only, and
 // nothing else on a phone links to it — leaving it out made the whole page
 // unreachable on the device the app is meant to be installed on.
-const MOBILE_ITEMS = NAV_ITEMS.filter((i) => i.to !== "/critico");
+const MOBILE_ITEMS = NAV_ITEMS.filter((i) => i.to !== "/critico" && i.to !== "/diagnostica");
 
 function linkClasses(isActive: boolean) {
   return `flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm font-medium transition-colors ${
@@ -80,7 +87,13 @@ export function Nav() {
 
         <nav aria-label="Navigazione principale" className="flex flex-1 flex-col gap-1">
           {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
-            <NavLink key={to} to={to} end={end} className={({ isActive }) => linkClasses(isActive)}>
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              {...prefetchHandlers(to)}
+              className={({ isActive }) => linkClasses(isActive)}
+            >
               {({ isActive }) => (
                 <>
                   <Icon />
@@ -154,6 +167,7 @@ export function Nav() {
             key={to}
             to={to}
             end={end}
+            {...prefetchHandlers(to)}
             className={({ isActive }) =>
               `flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium ${
                 isActive ? "text-accent-text" : "text-text-faint"

@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import type { useHostMonitor } from '../hooks/useHostMonitor';
-import type { StreamHost, MonitorIntervalMs, HostSwitchReason, HostStatus } from '../types';
+import type {
+  StreamHost,
+  MonitorIntervalMs,
+  HostSwitchReason,
+  HostStatus,
+  HostSelectionMode,
+  HostSpeedSample,
+} from '../types';
 import { getHostHistory } from '../services/hostStore';
 
 type Props = {
@@ -33,7 +40,48 @@ const REASON_LABEL: Record<HostSwitchReason, string> = {
   http_error: 'errore HTTP',
   manual: 'cambio manuale',
   recovered_to_primary: 'ritorno al principale',
+  auto_ranked: 'priorità automatica',
+  load_balanced: 'bilanciamento del carico',
 };
+
+const MODE_OPTIONS: { value: HostSelectionMode; label: string; hint: string }[] = [
+  {
+    value: 'priority',
+    label: 'Priorità manuale',
+    hint: 'Usa il primo host disponibile nell’ordine che hai dato tu, e torna al principale appena si riprende.',
+  },
+  {
+    value: 'auto',
+    label: 'Priorità automatica',
+    hint: 'Sceglie da sé l’host col punteggio più alto: affidabilità 50%, velocità 30%, ping 20%.',
+  },
+  {
+    value: 'balanced',
+    label: 'Bilanciamento del carico',
+    hint: 'Distribuisce le sessioni fra gli host sani, con più peso a quelli che vanno meglio. Cambia solo fra un titolo e l’altro, mai a metà film.',
+  },
+];
+
+const SPEED_NOTE: Record<NonNullable<HostSpeedSample['note']>, string> = {
+  sample_too_small: 'campione troppo piccolo per misurare la banda',
+  unreachable: 'host non raggiungibile',
+  no_body: 'risposta senza corpo da misurare',
+};
+
+function formatBytes(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${bytes} B`;
+}
+
+/** What a measured throughput is actually good for, in the units people watch in. */
+function speedVerdict(mbps: number): string {
+  if (mbps >= 25) return '4K';
+  if (mbps >= 8) return '1080p';
+  if (mbps >= 5) return '720p';
+  if (mbps >= 2) return '480p';
+  return 'sotto i 480p';
+}
 
 function pingToStars(pingMs: number | null): number {
   if (pingMs === null) return 0;
@@ -74,22 +122,29 @@ function formatUptimeDuration(ms: number | null): string {
 
 export default function HostManagerPanel({ hostMonitor }: Props) {
   const {
-    hosts, results, stats, activeHostId, activeHost, switchLog,
+    hosts, rankedHosts, results, stats, speedSamples, activeHostId, activeHost, switchLog,
     timeoutMs, setTimeoutMs, pingThresholdMs, setPingThresholdMs,
-    monitorIntervalMs, setMonitorIntervalMs, isTesting,
+    monitorIntervalMs, setMonitorIntervalMs, isTesting, speedTestingId,
+    selectionMode, setSelectionMode, runSpeedTest, runAllSpeedTests,
     testHost, testAll, addHost, updateHost, removeHost, reorderHosts, switchManually,
   } = hostMonitor;
 
   const [dragId, setDragId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState<{ name: string; url: string; role: StreamHost['role'] } | null>(null);
+  const [editDraft, setEditDraft] = useState<
+    { name: string; url: string; role: StreamHost['role']; speedTestPath: string } | null
+  >(null);
   const [historyOpenId, setHistoryOpenId] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newUrl, setNewUrl] = useState('');
   const [newRole, setNewRole] = useState<StreamHost['role']>('secondary');
+  const [newSpeedPath, setNewSpeedPath] = useState('');
 
-  const orderedHosts = [...hosts].sort((a, b) => a.priority - b.priority);
+  // In automatic mode the list is shown in the order that mode actually uses,
+  // so the panel never displays a ranking the player is ignoring.
+  const orderedHosts =
+    selectionMode === 'auto' ? rankedHosts : [...hosts].sort((a, b) => a.priority - b.priority);
   const activeResult = activeHostId ? results[activeHostId] : null;
   const activeStats = activeHostId ? stats[activeHostId] : null;
   const activeStars = pingToStars(activeResult?.pingMs ?? null);
@@ -109,10 +164,13 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
 
   const startEdit = (host: StreamHost) => {
     setEditingId(host.id);
-    setEditDraft({ name: host.name, url: host.url, role: host.role });
+    setEditDraft({ name: host.name, url: host.url, role: host.role, speedTestPath: host.speedTestPath ?? '' });
   };
   const saveEdit = (id: string) => {
-    if (editDraft) updateHost(id, editDraft);
+    if (editDraft) {
+      const { speedTestPath, ...rest } = editDraft;
+      updateHost(id, { ...rest, speedTestPath: speedTestPath.trim() || undefined });
+    }
     setEditingId(null);
     setEditDraft(null);
   };
@@ -120,10 +178,16 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
   const handleAddSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!newName.trim() || !newUrl.trim()) return;
-    addHost({ name: newName.trim(), url: newUrl.trim(), role: newRole });
+    addHost({
+      name: newName.trim(),
+      url: newUrl.trim(),
+      role: newRole,
+      speedTestPath: newSpeedPath.trim() || undefined,
+    });
     setNewName('');
     setNewUrl('');
     setNewRole('secondary');
+    setNewSpeedPath('');
     setShowAddForm(false);
   };
 
@@ -147,6 +211,15 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
             <span>Tempo online: {formatUptimeDuration(activeStats?.currentUptimeMs ?? null)}</span>
             <span>Ultimo controllo: {timeAgo(activeResult?.checkedAt)}</span>
           </div>
+          <div className="pv-host-active-metrics">
+            <span>
+              Velocità:{' '}
+              {activeStats?.avgSpeedMbps != null
+                ? `${activeStats.avgSpeedMbps.toFixed(1)} Mbps`
+                : 'non misurata'}
+            </span>
+            <span>Punteggio: {activeStats ? `${activeStats.score}/100` : '—'}</span>
+          </div>
           <div className="pv-host-stars" aria-label={`Velocità: ${activeStars} su 5`}>
             {'★'.repeat(activeStars)}
             <span className="pv-host-stars-dim">{'★'.repeat(5 - activeStars)}</span>
@@ -157,11 +230,31 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
         </div>
       )}
 
+      <div className="pv-host-modes" role="group" aria-label="Come scegliere l’host">
+        {MODE_OPTIONS.map(mode => (
+          <button
+            key={mode.value}
+            type="button"
+            aria-pressed={selectionMode === mode.value}
+            className={`pv-host-mode ${selectionMode === mode.value ? 'active' : ''}`}
+            onClick={() => setSelectionMode(mode.value)}
+          >
+            {mode.label}
+          </button>
+        ))}
+      </div>
+      <p className="pv-empty pv-host-mode-hint">
+        {MODE_OPTIONS.find(m => m.value === selectionMode)?.hint}
+      </p>
+
       <div className="pv-host-toolbar">
         <button onClick={() => testAll(true)} disabled={isTesting}>
           {isTesting ? 'Test in corso…' : 'Testa tutti (parallelo)'}
         </button>
         <button onClick={() => testAll(false)} disabled={isTesting}>Testa in sequenza</button>
+        <button onClick={runAllSpeedTests} disabled={speedTestingId !== null || hosts.length === 0}>
+          {speedTestingId === '*' ? 'Misuro la velocità…' : 'Test velocità'}
+        </button>
         <label className="pv-host-setting">
           Timeout
           <select value={timeoutMs} onChange={e => setTimeoutMs(Number(e.target.value))}>
@@ -198,6 +291,7 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
         {orderedHosts.map(host => {
           const result = results[host.id];
           const hostStats = stats[host.id];
+          const speedSample = speedSamples[host.id];
           const isActive = activeHostId === host.id;
           const isEditing = editingId === host.id;
           const historyOpen = historyOpenId === host.id;
@@ -224,6 +318,12 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
                       <option value="secondary">Secondario</option>
                       <option value="backup">Backup</option>
                     </select>
+                    <input
+                      value={editDraft.speedTestPath}
+                      onChange={e => setEditDraft({ ...editDraft, speedTestPath: e.target.value })}
+                      placeholder="Percorso per il test velocità (facoltativo)"
+                      aria-label="Percorso per il test velocità"
+                    />
                     <div className="pv-host-edit-actions">
                       <button onClick={() => saveEdit(host.id)}>Salva</button>
                       <button className="pv-btn-secondary" onClick={() => setEditingId(null)}>Annulla</button>
@@ -250,8 +350,31 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
                       <span>SSL: {result?.sslOk === true ? 'valido' : result?.sslOk === false ? 'non verificabile' : '—'}</span>
                       <span>API: {result?.apiVersion ?? '—'}</span>
                       <span>Affidabilità 30gg: {hostStats ? `${hostStats.reliability30d}%` : '—'}</span>
+                      <span>Punteggio: {hostStats ? `${hostStats.score}/100` : '—'}</span>
+                      <span>
+                        Velocità:{' '}
+                        {hostStats?.avgSpeedMbps != null
+                          ? `${hostStats.avgSpeedMbps.toFixed(1)} Mbps · ${speedVerdict(hostStats.avgSpeedMbps)}`
+                          : 'non misurata'}
+                      </span>
                     </div>
                     <div className="pv-host-row-url">{host.url}</div>
+
+                    {/* A speed test that couldn't measure anything says why, and
+                        what to do about it: the fix is a path with a real file
+                        behind it, which only whoever runs the server can supply. */}
+                    {speedSample && speedSample.mbps === null && speedSample.note && (
+                      <p className="pv-host-speed-note">
+                        Test velocità: {SPEED_NOTE[speedSample.note]}
+                        {speedSample.note === 'sample_too_small' && (
+                          <>
+                            {' '}({formatBytes(speedSample.sampleBytes)} scaricati). Indica in
+                            «Modifica» un percorso con un file grande — un segmento{' '}
+                            <span className="pv-mono">.ts</span> va benissimo.
+                          </>
+                        )}
+                      </p>
+                    )}
 
                     {historyOpen && (
                       <div className="pv-host-test-history">
@@ -272,6 +395,13 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
               {!isEditing && (
                 <div className="pv-host-row-actions">
                   <button className="pv-btn-tiny" onClick={() => testHost(host.id)} disabled={isTesting}>Test</button>
+                  <button
+                    className="pv-btn-tiny"
+                    onClick={() => runSpeedTest(host.id)}
+                    disabled={speedTestingId !== null}
+                  >
+                    {speedTestingId === host.id ? 'Misuro…' : 'Velocità'}
+                  </button>
                   {!isActive && <button className="pv-btn-tiny" onClick={() => switchManually(host.id)}>Usa</button>}
                   <button className="pv-btn-tiny" onClick={() => setHistoryOpenId(historyOpen ? null : host.id)}>Cronologia</button>
                   <button className="pv-btn-tiny" onClick={() => startEdit(host)}>Modifica</button>
@@ -292,6 +422,17 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
             <option value="secondary">Secondario</option>
             <option value="backup">Backup</option>
           </select>
+          <input
+            value={newSpeedPath}
+            onChange={e => setNewSpeedPath(e.target.value)}
+            placeholder="Percorso per il test velocità (facoltativo)"
+            aria-label="Percorso per il test velocità"
+          />
+          <p className="pv-empty">
+            Il test velocità scarica da questo percorso per misurare la banda. Senza, prova la
+            radice del server: se quello che risponde è una paginetta di poche righe, il test lo
+            dice invece di spacciare la latenza per banda.
+          </p>
           <div className="pv-host-edit-actions">
             <button type="submit">Aggiungi</button>
             <button type="button" className="pv-btn-secondary" onClick={() => setShowAddForm(false)}>Annulla</button>

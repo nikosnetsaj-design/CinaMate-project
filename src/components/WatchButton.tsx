@@ -5,6 +5,7 @@ import { useSourceAddresses } from "../player/sourceAddresses";
 import { hasAnySource } from "../player/resolveSource";
 import { PlayIcon } from "./icons";
 import type { Item } from "../types";
+import { prefetchHandlers } from "../lib/prefetch";
 
 /**
  * Starts a title in the player, from wherever you happen to be looking at it —
@@ -48,6 +49,10 @@ export function WatchButton({ item, onNavigate }: { item: Item; onNavigate?: () 
   return (
     <button
       type="button"
+      // The player chunk is the biggest in the app, and this is the button most
+      // likely to ask for it: starting the download when the pointer arrives
+      // usually means it is already there when the tap lands.
+      {...prefetchHandlers("/player")}
       onClick={() => {
         onNavigate?.();
         // The player reads this and starts on the title straight away.

@@ -1,6 +1,8 @@
+import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useFocusTrap } from "../lib/useFocusTrap";
+import { similarInLibrary } from "../lib/recommend";
 import { paletteFor } from "../lib/palette";
 import { formatRuntime } from "../lib/format";
 import { STATUSES } from "../lib/status";
@@ -12,6 +14,8 @@ import { WatchButton } from "./WatchButton";
 import { LinkToTmdb } from "./LinkToTmdb";
 import { ItemSagaStrip } from "./ItemSagaStrip";
 import { PeopleLinks } from "./PeopleLinks";
+import { ShareSheet } from "./ShareSheet";
+import { SpoilerFreeRecap, TranslateOverview } from "./AiItemExtras";
 import { HeartIcon } from "./icons";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useLibrary } from "../store/useLibrary";
@@ -22,6 +26,8 @@ import type { Item, Status } from "../types";
 
 function ItemDetail({ item }: { item: Item }) {
   const close = useSelectedItem((s) => s.close);
+  const open = useSelectedItem((s) => s.open);
+  const items = useLibrary((s) => s.items);
   const setStatus = useLibrary((s) => s.setStatus);
   const toggleFav = useLibrary((s) => s.toggleFav);
   const incrementEpisode = useLibrary((s) => s.incrementEpisode);
@@ -36,6 +42,8 @@ function ItemDetail({ item }: { item: Item }) {
 
   const containerRef = useFocusTrap(close);
   const titleId = `item-detail-${item.id}`;
+  const shelfMates = useMemo(() => similarInLibrary(item, items), [item, items]);
+  const [sharing, setSharing] = useState(false);
   const [a, b] = paletteFor(item.title);
   const pct = item.kind !== "film" && item.episodes ? Math.round(((item.seen || 0) / item.episodes) * 100) : null;
   const watchedMinutes = item.kind === "film" ? (item.status === "Visto" ? item.runtime : 0) : (item.seen || 0) * item.runtime;
@@ -54,7 +62,7 @@ function ItemDetail({ item }: { item: Item }) {
         />
         <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 20%, var(--bg) 100%)" }} />
         <div className="absolute bottom-3.5 left-4 flex items-end gap-3.5 sm:left-6">
-          <PosterArt item={item} size="lg" showTitle={false} className="w-20 shrink-0 shadow-[var(--shadow-lg)] sm:w-24" />
+          <PosterArt item={item} size="lg" showTitle={false} priority className="w-20 shrink-0 shadow-[var(--shadow-lg)] sm:w-24" />
           {item.vote != null && (
             <div className="pb-1">
               <span className="font-mono tabular text-4xl font-semibold leading-none" style={{ color: voteColor(item.vote) }}>
@@ -217,6 +225,9 @@ function ItemDetail({ item }: { item: Item }) {
           )}
         </div>
 
+        <SpoilerFreeRecap item={item} />
+        <TranslateOverview item={item} />
+
         {item.notes && (
           <div className="mt-4 rounded-md border border-border bg-surface-2 p-4">
             <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">Le tue note</span>
@@ -227,9 +238,38 @@ function ItemDetail({ item }: { item: Item }) {
         <WatchAndLinks item={item} />
         <LinkToTmdb item={item} />
 
+        {/* Two different questions, so two different sections. This one is
+            "you already own these"; the one below is TMDB's list of things you
+            don't, which is why one opens a title and the other opens the add
+            sheet. */}
+        {shelfMates.length > 0 && (
+          <div className="mt-5">
+            <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">
+              {item.kind === "film" || item.kind === "doc" ? "Film simili sul tuo scaffale" : "Serie simili sul tuo scaffale"}
+            </span>
+            <div className="flex gap-3 overflow-x-auto pb-1">
+              {shelfMates.map(({ item: other, reason }) => (
+                <button
+                  key={other.id}
+                  type="button"
+                  onClick={() => open(other)}
+                  aria-label={`Apri dettagli di ${other.title}, ${other.year}`}
+                  className="w-24 shrink-0 text-left"
+                >
+                  <PosterArt item={other} size="sm" className="w-24" />
+                  <p className="mt-1.5 line-clamp-2 text-xs font-medium text-text">{other.title}</p>
+                  <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-text-faint">{reason}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {item.similar.length > 0 && (
           <div className="mt-4">
-            <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Se ti è piaciuto</span>
+            <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">
+              Se ti è piaciuto — da aggiungere
+            </span>
             <div className="flex flex-wrap gap-1.5">
               {item.similar.map((s) => (
                 <button
@@ -264,6 +304,13 @@ function ItemDetail({ item }: { item: Item }) {
         <div className="mt-2.5 flex gap-2.5">
           <button
             type="button"
+            onClick={() => setSharing(true)}
+            className="flex-1 rounded-md border border-border-strong bg-surface-hover py-2.5 text-sm text-text"
+          >
+            Condividi
+          </button>
+          <button
+            type="button"
             onClick={() => openEdit(item)}
             className="flex-1 rounded-md border border-border-strong bg-surface-hover py-2.5 text-sm text-text"
           >
@@ -284,6 +331,8 @@ function ItemDetail({ item }: { item: Item }) {
           </button>
         </div>
       </div>
+
+      {sharing && <ShareSheet target={{ kind: "item", item }} onClose={() => setSharing(false)} />}
     </div>,
     document.body,
   );

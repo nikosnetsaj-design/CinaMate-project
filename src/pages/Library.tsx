@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { useLibrary } from "../store/useLibrary";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useAddSheet } from "../store/useAddSheet";
+import { usePlayerSources } from "../store/usePlayerSources";
 import { SearchBar } from "../components/SearchBar";
 import { PosterCard } from "../components/PosterCard";
 import { PosterArt } from "../components/PosterArt";
@@ -9,60 +9,74 @@ import { StatusChip } from "../components/StatusChip";
 import { VoteBadge } from "../components/VoteBadge";
 import { EmptyState } from "../components/EmptyState";
 import { PosterGridSkeleton } from "../components/Skeletons";
-import { STATUSES } from "../lib/status";
-import { matchesQuery } from "../lib/search";
+import { FilterSheet } from "../components/FilterSheet";
+import { ShareSheet } from "../components/ShareSheet";
+import { didYouMean, matchQuality } from "../lib/search";
+import { activeFilterCount, applyFilters, type Filters } from "../lib/filters";
 import { useAppReady } from "../lib/useAppReady";
-import type { Kind, Status } from "../types";
-
-const KINDS: { value: Kind; label: string }[] = [
-  { value: "film", label: "Film" },
-  { value: "serie", label: "Serie TV" },
-  { value: "anime", label: "Anime" },
-  { value: "doc", label: "Documentario" },
-];
+import { useVisibleItems } from "../lib/useVisibleItems";
 
 type Sort = "recenti" | "voto" | "titolo" | "anno";
 
-function Pill({ children, active, onClick }: { children: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-        active ? "border-transparent" : "border-border-strong text-text-muted hover:bg-surface-hover"
-      }`}
-      style={active ? { background: "var(--accent)", color: "var(--accent-contrast)" } : undefined}
-    >
-      {children}
-    </button>
-  );
-}
-
 export function Library() {
   const ready = useAppReady();
-  const items = useLibrary((s) => s.items);
+  const items = useVisibleItems();
   const openItem = useSelectedItem((s) => s.open);
   const openAddSheet = useAddSheet((s) => s.open);
 
   const [q, setQ] = useState("");
-  const [fKind, setFKind] = useState<Kind | "Tutti">("Tutti");
-  const [fStatus, setFStatus] = useState<Status | "Tutti">("Tutti");
+  const [filters, setFilters] = useState<Filters>({});
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [sort, setSort] = useState<Sort>("recenti");
   const [grid, setGrid] = useState(true);
 
-  const list = useMemo(() => {
-    return items
-      .filter((i) => fKind === "Tutti" || i.kind === fKind)
-      .filter((i) => fStatus === "Tutti" || i.status === fStatus)
-      .filter((i) => matchesQuery(i, q))
-      .sort((a, b) => {
-        if (sort === "voto") return (b.vote ?? 0) - (a.vote ?? 0);
-        if (sort === "titolo") return a.title.localeCompare(b.title);
-        if (sort === "anno") return b.year - a.year;
-        return b.added.localeCompare(a.added);
-      });
-  }, [items, fKind, fStatus, q, sort]);
+  // Subtitle tracks live in the player's store, so the filter is handed a
+  // lookup rather than reaching for the store itself — see lib/filters.
+  const sources = usePlayerSources((s) => s.sources);
+  const lookupSource = useMemo(() => (id: string) => sources[id], [sources]);
+
+  const { list, onlyFuzzy } = useMemo(() => {
+    const scored = applyFilters(items, filters, lookupSource)
+      .map((item) => ({ item, quality: matchQuality(item, q) }))
+      .filter((entry) => entry.quality !== "none");
+
+    // Exact matches always outrank near-misses, whatever the sort — a typo
+    // correction that buried the title you actually typed under three
+    // approximations of it would be worse than no correction at all.
+    const byRank = (a: (typeof scored)[number], b: (typeof scored)[number]) =>
+      (a.quality === "exact" ? 0 : 1) - (b.quality === "exact" ? 0 : 1);
+
+    const sorted = scored.sort((a, b) => {
+      const rank = byRank(a, b);
+      if (rank !== 0) return rank;
+      if (sort === "voto") return (b.item.vote ?? 0) - (a.item.vote ?? 0);
+      if (sort === "titolo") return a.item.title.localeCompare(b.item.title);
+      if (sort === "anno") return b.item.year - a.item.year;
+      return b.item.added.localeCompare(a.item.added);
+    });
+
+    return {
+      list: sorted.map((entry) => entry.item),
+      onlyFuzzy: sorted.length > 0 && sorted.every((entry) => entry.quality === "fuzzy"),
+    };
+  }, [items, filters, lookupSource, q, sort]);
+
+  // Only offered when nothing matched exactly: over exact hits it would be
+  // noise, and the suggestion is deliberately a title that really exists on
+  // the shelf rather than a guess at what was meant.
+  const suggestion = useMemo(
+    () => (list.length === 0 || onlyFuzzy ? didYouMean(q, items) : null),
+    [list.length, onlyFuzzy, q, items],
+  );
+
+  const filterCount = activeFilterCount(filters);
+
+  // The list's name is its query. A shared link that arrived called "Libreria"
+  // when it is actually four horror films would be worse than useless to
+  // whoever opens it.
+  const listName =
+    q.trim() || (filterCount > 0 ? "Selezione dalla mia libreria" : "La mia libreria");
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 sm:px-6 sm:py-10">
@@ -73,30 +87,48 @@ export function Library() {
 
       <SearchBar value={q} onChange={setQ} placeholder="Cerca per titolo, regista, genere, attore…" />
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        <Pill active={fKind === "Tutti"} onClick={() => setFKind("Tutti")}>
-          Tutti
-        </Pill>
-        {KINDS.map((k) => (
-          <Pill key={k.value} active={fKind === k.value} onClick={() => setFKind(k.value)}>
-            {k.label}
-          </Pill>
-        ))}
-      </div>
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        <Pill active={fStatus === "Tutti"} onClick={() => setFStatus("Tutti")}>
-          Tutti
-        </Pill>
-        {STATUSES.map((s) => (
-          <Pill key={s} active={fStatus === s} onClick={() => setFStatus(s)}>
-            {s}
-          </Pill>
-        ))}
-      </div>
+      {suggestion && (
+        <p className="text-sm text-text-muted">
+          Forse cercavi{" "}
+          <button
+            type="button"
+            onClick={() => setQ(suggestion)}
+            className="font-medium underline underline-offset-2"
+            style={{ color: "var(--accent-text)" }}
+          >
+            {suggestion}
+          </button>
+          ?
+        </p>
+      )}
 
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-text-faint">{list.length} titoli</span>
+      <div className="flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={() => setFiltersOpen(true)}
+          className={`flex shrink-0 items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+            filterCount > 0 ? "border-transparent" : "border-border-strong text-text-muted hover:bg-surface-hover"
+          }`}
+          style={filterCount > 0 ? { background: "var(--accent)", color: "var(--accent-contrast)" } : undefined}
+        >
+          Filtri
+          {filterCount > 0 && <span className="font-mono">{filterCount}</span>}
+        </button>
+
         <div className="flex items-center gap-2">
+          <span className="text-xs text-text-faint">{list.length} titoli</span>
+          {/* Shares exactly what is on screen, filters and search included —
+              that is what makes it a *list* rather than an export: "gli horror
+              che ho visto" is a query, and the query's result is the list. */}
+          <button
+            type="button"
+            onClick={() => setSharing(true)}
+            disabled={list.length === 0}
+            aria-label="Condividi questa lista"
+            className="rounded-sm border border-border-strong px-2 py-1 text-xs text-text-muted disabled:opacity-40"
+          >
+            Condividi
+          </button>
           <button
             type="button"
             onClick={() => setGrid((g) => !g)}
@@ -138,8 +170,7 @@ export function Library() {
                   return;
                 }
                 setQ("");
-                setFKind("Tutti");
-                setFStatus("Tutti");
+                setFilters({});
               }}
               className="rounded-sm border border-border-strong px-4 py-2 text-sm font-medium text-text hover:bg-surface-hover"
             >
@@ -178,6 +209,23 @@ export function Library() {
             </li>
           ))}
         </ul>
+      )}
+
+      {filtersOpen && (
+        <FilterSheet
+          items={items}
+          filters={filters}
+          onChange={setFilters}
+          onClose={() => setFiltersOpen(false)}
+          resultCount={list.length}
+        />
+      )}
+
+      {sharing && (
+        <ShareSheet
+          target={{ kind: "list", name: listName, items: list }}
+          onClose={() => setSharing(false)}
+        />
       )}
     </div>
   );

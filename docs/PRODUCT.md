@@ -48,10 +48,12 @@ resta tua e non ti vende niente.
 | **In arrivo** | Perdi le uscite delle serie che segui | Conto alla rovescia per episodio | Essenziale ✅ |
 | **Continua la saga** | Ti fermi al capitolo tre e non riparti | Il prossimo capitolo, già scelto | Essenziale ✅ |
 | **Maratona in corso** | Una saga guardata in tre settimane sembra tre cose | Una sola corsa, con il segnalibro | Utile ✅ |
-| **Per te** | I consigli generici non ti somigliano | Suggerimenti dal *tuo* storico, con motivazione | Utile |
+| **Per te** | I consigli generici non ti somigliano | Suggerimenti dal *tuo* storico, con motivazione | Utile ✅ |
 | **Tendenze / Più votati / Nuove uscite** | Scoperta oltre la propria bolla | Cataloghi TMDB curati | Utile ✅ |
 | **In uscita al cinema** | Scopri i film quando sono già usciti | Anticipo sulle uscite | Utile ✅ |
 | **Collezioni** | Le saghe si perdono in ordine sparso | "Il Padrino 1‑2‑3" come un blocco | Utile ✅ |
+| **Più visti / Ultimi aggiunti** | "Dove sono finite le mie ore?" e "cos'è entrato ieri?" | Due domande diverse, due righe | Utile ✅ |
+| **Home su misura** | Sei righe fisse non sono le stesse per tutti | Riordini e spegni le righe in Impostazioni; il tetto di sei resta | Utile ✅ |
 | **Liste personali** | Watchlist unica troppo grezza | "Da vedere col partner", "Horror di ottobre" | Utile |
 
 > **Regola anti‑Netflix:** massimo 6 righe in Home. Ogni riga deve dichiarare
@@ -64,9 +66,9 @@ resta tua e non ti vende niente.
 | Ricerca istantanea | Aspettare i risultati | Filtra mentre digiti | Essenziale ✅ |
 | Per titolo/regista/genere/attore | Ricordi l'attore, non il titolo | Trovi da qualsiasi appiglio | Essenziale ✅ |
 | **Risultati raggruppati** | "nolan" è insieme un uomo e sei film | Titoli, saghe e persone come decisioni separate, non una zuppa ordinata | Essenziale ✅ |
-| Filtri (tipo, stato, voto, anno, piattaforma) | 500 titoli, ne cerchi uno | Restringi in due tocchi | Essenziale |
-| **Ricerca in linguaggio naturale** | "Fantascienza anni '90 sotto le 2 ore" non è una query | L'IA la traduce in filtri TMDB | Utile |
-| Cronologia + correzione errori | Ripetere ricerche, typo | Meno attrito | Utile |
+| Filtri avanzati (tipo, stato, genere, studio, paese, audio, qualità, durata, anno, voto tuo e TMDB, sottotitoli) | 500 titoli, ne cerchi uno | Restringi in due tocchi, con le opzioni prese dal *tuo* scaffale | Essenziale ✅ |
+| **Ricerca in linguaggio naturale** | "Fantascienza anni '90 sotto le 2 ore" non è una query | Claude la traduce in filtri, TMDB risponde | Utile ✅ |
+| **Correzione errori di battitura** | Una lettera sbagliata e non trovi niente | Trova lo stesso, e propone il titolo giusto | Utile ✅ |
 | Ricerca vocale | Mani occupate, mobile | Web Speech API, zero costi | Utile |
 | Ricerca per immagine | Locandina fotografata | Riconoscimento visivo | **Futura** — costo alto, uso raro |
 
@@ -128,10 +130,13 @@ il resto al servizio che ha la licenza.
 | **Anteprime sulla timeline** | Cercare una scena al buio | Il fotogramma del punto, non solo il minutaggio | Utile ✅ |
 | **Autoplay nell'ordine della saga** | Il "prossimo" contraddice l'ordine che hai scelto | Stessa coda della pagina Saghe, §3.4 | Utile ✅ |
 | **Consigli di fine visione** | Finisce un film e la scelta ricomincia da zero | Presi dal *tuo* scaffale, ognuno con il suo perché (regola 2) | Utile ✅ |
+| **Gesture** | Sul telefono i controlli sono più piccoli del dito | Scorri per avanzare, alza e abbassa volume e luminosità, doppio tocco per ±10s | Utile ✅ |
+| **Buffer intelligente** | Un buffer fisso è sbagliato in entrambe le direzioni | Si dimensiona sulla rete misurata: rete debole, buffer *più* grande | Utile ✅ |
 | **Chromecast / AirPlay** | Guardare dal telefono su un televisore | Passaggio di dispositivo dal secondo esatto | Utile ✅ |
 | **Watch Party** | Guardare assieme a distanza | Stanza, play/pausa sincronizzati, chat, reazioni | Utile ✅ (fra dispositivi serve un relay tuo) |
 | **Download offline** | Guardare senza rete | Segmenti letti dalla playlist e salvati su IndexedDB, riproducibili offline. Nessun backend | Utile ✅ |
 | **Host** | Aggiungere un host non serviva a niente per guardare | Un host è un indirizzo dove cercare i titoli, come le caselle in Impostazioni; e resta il cambio host senza interrompere la riproduzione quando un mirror cade | Utile ✅ |
+| **Host: velocità, priorità automatica, bilanciamento** | Con più mirror, "quale uso?" non ha una risposta a mano | Test di banda vero, punteggio 0–100, e tre modi di scegliere: ordine tuo, punteggio, o carico distribuito | Utile ✅ |
 | **Maratona della saga** | — | La stessa maratona del §3.4, non una seconda coda che vuol dire un'altra cosa: copre la saga di ciò che stai guardando e sparisce per un titolo standalone | Utile ✅ |
 | **Il diario si aggiorna da sé** | Guardi qui e la libreria non se ne accorge | Finito un titolo diventa "Visto", con voce nel diario e traguardi | Essenziale ✅ |
 
@@ -172,9 +177,10 @@ sezione: hanno il loro, con la licenza, e meglio. Questo player non è per loro 
 | Statistiche + anno in rassegna | I numeri non raccontano | Il tuo anno come storia, anno per anno | Essenziale ✅ |
 | Attori e registi più visti | "Chi guardo davvero?" | Classifica dal tuo storico, ogni nome apre la sua pagina | Utile ✅ |
 | Traguardi | Nessun ritorno emotivo | Riconoscimento delle abitudini, saghe e generi inclusi | Utile ✅ |
+| **Obiettivi personali** | I traguardi li decide l'app | Quelli che scegli tu, misurati sul diario e non sullo scaffale | Utile ✅ |
 | **Promemoria uscite** | Un episodio esce e non lo sai | Notifica locale il giorno stesso | Utile ✅ |
 | Esporta / importa | I dati locali si perdono | Backup e cambio dispositivo, comprese le sorgenti del player e gli host | Essenziale ✅ |
-| **Riassunto senza spoiler** | Riprendi una serie dopo 8 mesi | "Dove eravamo" senza rovinare nulla | Utile |
+| **Riassunto senza spoiler** | Riprendi una serie dopo 8 mesi | "Dove eravamo" senza rovinare nulla | Utile ✅ |
 | Assistente / critico | Consigli generici | Conosce i tuoi voti | Essenziale ✅ |
 | Sync cloud multi‑dispositivo | Telefono e PC separati | Una libreria sola | **Futura** — richiede backend e account |
 
@@ -192,6 +198,46 @@ L'eliminazione automatica è **spenta di default** e guarda *quando* hai finito 
 titolo, non solo *se*: la visione è registrata per titolo, non per download, così
 "visto" da solo comprende anche un film finito l'anno scorso e scaricato adesso —
 che è esattamente il caso in cui cancellare sarebbe sbagliato.
+
+### 3.9 Condivisione, controllo genitori, diagnostica — Utile ✅
+
+| Funzione | Problema | Beneficio | Priorità |
+|---|---|---|---|
+| **Condividi un titolo o una lista** | "Guarda questo" finisce in un messaggio che nessuno ritrova | Un link che apre il titolo, o la lista che hai davanti — filtri e ricerca compresi | Utile ✅ |
+| **Codice QR** | Il telefono in mano e il televisore dall'altra parte della stanza non si passano un indirizzo | Inquadri e si apre | Utile ✅ |
+| **Controllo genitori** | Uno scaffale è di chi lo tiene, non di chi lo apre | Filtro per età sulla classificazione reale, con PIN | Utile ✅ |
+| **Diagnostica** | Senza telemetria, un guasto non lascia traccia | Test, salute degli host e log errori, tutto sul dispositivo | Utile ✅ |
+
+**Perché il link *è* la lista.** Non c'è un server dove depositarla, quindi tutto
+quello che serve viaggia dentro il frammento dell'indirizzo — la sola parte che
+il browser non manda mai a nessuno. Il prezzo è un tetto: oltre un certo numero
+di titoli il link non sta più in un codice QR, e il foglio lo dice invece di
+generarne uno che non si legge. Niente si aggiunge da solo: un link che ti
+scrivesse venti titoli in libreria sarebbe uno sconosciuto che ti modifica il
+diario.
+
+**Perché i non classificati sono nascosti di default.** Un titolo che TMDB non ha
+classificato non è un titolo sicuro: è un titolo di cui non si sa nulla.
+Mostrarli è esattamente il buco che rende inutile un filtro del genere. Sui
+limiti veri del PIN, vedi §6-bis.
+
+**Perché la diagnostica esiste.** L'app non raccoglie niente e non manda niente
+da nessuna parte, il che significa che un errore normalmente sparisce con il
+messaggio che l'ha annunciato. Il log è un anello di dimensione fissa: illimitato
+finirebbe per mangiarsi la stessa quota dove vive la libreria, che è la cosa che
+vale la pena tenere.
+
+### 3.10 Prestazioni e batteria — Utile ✅
+
+- **Immagini alla misura giusta.** TMDB ricodifica ogni larghezza a parte, quindi
+  un `srcset` non è la stessa immagine rimpicciolita dal browser: una copertina
+  da 96px su uno schermo 1× scarica ~6 KB invece dei ~40 KB di prima.
+- **Precaricamento all'intenzione.** Il chunk del player parte quando il
+  puntatore arriva sul link, non quando l'app è ferma: scaricare 600 KB "per
+  ogni evenienza" è precisamente ciò che svuota la batteria in mobilità.
+- **Sonno in secondo piano.** I controlli periodici si fermano a pagina nascosta
+  e ripartono al ritorno. Su un telefono l'app è quasi sempre nascosta e quasi
+  mai chiusa, quindi "nessuno sta guardando" è lo stato normale.
 
 ---
 
@@ -230,11 +276,15 @@ avanzamento esposta come `slider` con la posizione leggibile.
 ```
 src/
   components/     UI riusabile (Nastro, PosterArt, sheet, saghe, timeline,
-                  maratona, prossimo capitolo, persone)
-  pages/          Home · Libreria · Saghe · Scopri · Dati · Critico · Player
-  store/          Zustand: libreria, saghe, maratona, promemoria, impostazioni, UI
+                  maratona, prossimo capitolo, persone, filtri, condivisione,
+                  QR, obiettivi, controllo genitori)
+  pages/          Home · Libreria · Saghe · Scopri · Dati · Critico · Player ·
+                  Diagnostica
+  store/          Zustand: libreria, saghe, maratona, promemoria, obiettivi,
+                  layout della Home, controllo genitori, impostazioni, UI
   lib/            tmdb · sagas · universes · upcoming · anthropic · backup ·
-                  search · stats · achievements · notify
+                  search · filters · recommend · goals · parental · accents ·
+                  share · stats · achievements · notify · errorLog · selfTest
   player/         modulo autonomo: hooks · services · components · styles
 docs/             questa specifica
 ```
@@ -254,6 +304,11 @@ docs/             questa specifica
   rete e senza chiave: la chiave serve a *scoprire* saghe nuove, non a leggere lo
   scaffale. Le sinossi dei singoli capitoli non entrano nella cache — non sono
   mai mostrate e occuperebbero spazio che serve alla libreria.
+- **Un solo punto per il filtro genitori.** Ogni superficie di navigazione legge
+  `useVisibleItems`, non la libreria grezza. Statistiche, diario ed
+  esporta/importa restano volutamente sulla lista intera: un export filtrato
+  toglierebbe metà libreria dal file, che è una perdita di dati travestita da
+  controllo genitori.
 - **Il player è un modulo separato** (`src/player/`) con tipi propri e chiavi
   `localStorage` proprie (prefisso `ppv:`): non scrive nella libreria né nel
   diario, e l'unico punto di contatto è `fromLibrary.ts`, che traduce un titolo
@@ -282,23 +337,28 @@ identità visiva, pubblicazione web installabile, pagina **Scopri**, **saghe e
 collezioni** con i tre ordini di visione, **maratona**, **continua la storia**,
 **universi e timeline**, **pagine di attori e registi**, **calendario
 Prossimamente** con promemoria, **ricerca raggruppata**, statistiche su attori e
-registi, badge di saga e di genere, **player per le sorgenti proprie** (§3.6).
+registi, badge di saga e di genere, **player per le sorgenti proprie** (§3.6),
+**filtri avanzati** (studio, paese, audio, qualità, durata, voti), **correzione
+degli errori di battitura**, **ricerca in linguaggio naturale**, **riassunto
+senza spoiler**, **traduzione della sinossi**, righe **Per te / Più visti /
+Ultimi aggiunti / Simili sul tuo scaffale**, **obiettivi personali**, **tinte
+d'accento e Home riordinabile**, **condivisione di liste e codice QR**,
+**controllo genitori**, **diagnostica con test e log errori**, e nel player
+**gesture**, **buffer adattivo** e **host con test velocità, priorità
+automatica e bilanciamento**.
 
 **Prossimo (Essenziale)**
 1. **Apri sul servizio**: deep link diretto a Netflix/Prime/Disney+
-2. **Filtri avanzati** in ricerca
 
 **Poi (Utile)**
-3. Ricerca in linguaggio naturale (IA → filtri TMDB)
-4. Liste personali ("Da vedere col partner", "Horror di ottobre")
-5. Riassunto senza spoiler + "dove eravamo"
-6. Trailer in‑app con PiP
-7. Consigli "Per te" con motivazione esplicita
-8. Universi costruiti a mano dall'utente, oltre a quelli da keyword
+2. Liste personali salvate ("Da vedere col partner", "Horror di ottobre") —
+   oggi una lista si condivide ma non si conserva
+3. Trailer in‑app con PiP
+4. Universi costruiti a mano dall'utente, oltre a quelli da keyword
 
 **Futuro**
-9. Sync cloud con account
-10. Ricerca per immagine
+5. Sync cloud con account
+6. Ricerca per immagine
 
 ---
 
@@ -309,7 +369,9 @@ sono decise.
 
 | Richiesta | Perché no |
 |---|---|
-| Account, profili multipli con PIN, sync fra dispositivi, logout remoto | Presuppongono un backend. Oggi non c'è server, quindi non c'è raccolta dati, nessun costo e nessun account: il prezzo è la sincronizzazione, risolta con esporta/importa. Vedi §5 per come si farebbe se servisse |
+| Account, profili multipli, sync fra dispositivi, logout remoto | Presuppongono un backend. Oggi non c'è server, quindi non c'è raccolta dati, nessun costo e nessun account: il prezzo è la sincronizzazione, risolta con esporta/importa — e, per un titolo o una lista, con un link o un codice QR (§3.9). Vedi §5 per come si farebbe se servisse |
+| **Controllo genitori a prova di ragazzino** | Il filtro per età c'è (§3.9) e fa il suo lavoro, ma vive in `localStorage` sul dispositivo che il ragazzino ha in mano: chi sa aprire gli strumenti per sviluppatori lo azzera. Il PIN è salato e hashato, quindi non è *leggibile*, ma è una serratura da armadietto. Renderla una cassaforte è la stessa richiesta della riga sopra: serve un account e un server |
+| **Scorciatoie Siri, app per Apple Watch, luminosità dello schermo** | Non sono decisioni di prodotto, sono confini della piattaforma. CineMate è una pagina web installabile: Siri e watchOS richiedono un'app nativa firmata e distribuita sull'App Store, e nessuna API del browser tocca la retroilluminazione (una pagina che potesse abbassarti lo schermo potrebbe anche nascondersi). La gesture della luminosità nel player agisce sull'immagine, e lo dice |
 | Recensioni pubbliche, follow, classifiche fra utenti | Stessa ragione: richiedono un servizio condiviso. Il diario resta privato per scelta |
 | Ricerca per personaggio | TMDB non espone un indice dei personaggi: esistono solo come ruolo dentro ai crediti di un titolo |
 

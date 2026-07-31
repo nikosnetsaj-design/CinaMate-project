@@ -8,6 +8,12 @@ import "@fontsource/ibm-plex-mono/500.css";
 import "@fontsource/ibm-plex-mono/600.css";
 import "./index.css";
 import App from "./App.tsx";
+import { installGlobalErrorCapture } from "./lib/errorLog";
+
+// Installed before React mounts, so an error thrown during the very first
+// render is caught too — which is exactly the failure that otherwise leaves
+// nothing behind but a blank page.
+installGlobalErrorCapture();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

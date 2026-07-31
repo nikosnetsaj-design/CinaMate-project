@@ -32,20 +32,48 @@ function fillGaps(item: Item, d: Awaited<ReturnType<typeof getDetails>>, mediaTy
     // `null` here is the real answer "standalone", not a gap.
     collectionId: d.collectionId,
     collectionName: d.collectionName,
+    // Catalogue facts the filters read. Taken from TMDB unconditionally for
+    // the same reason as the saga: they are not fields anyone curates by hand,
+    // and this pass is what backfills a library that predates them. `quality`
+    // is pointedly not here — that one describes the user's own copy.
+    studio: d.studio,
+    countries: d.countries,
+    tmdbRating: d.tmdbRating,
+    audioLangs: d.audioLangs,
+    // Parental control reads this, so it must never be left at whatever an
+    // older record happened to hold: an out-of-date rating on a filter that
+    // exists to keep things away from a child is worse than none.
+    certification: d.certification,
   };
 }
 
 /**
- * Fetches covers and metadata for any title that has no TMDB link yet, so a
- * hand-typed or imported library fills itself in without the user tapping
- * anything. Works through one title at a time to stay polite to the API, and
- * remembers what it already tried so an unmatchable title is not retried in a
- * loop — the manual button in the detail sheet stays as the fallback.
+ * Two kinds of title need this pass: one with no TMDB link at all, and one
+ * linked before the filter metadata existed. The second is why `audioLangs`
+ * is checked rather than trusting `tmdbId` alone — otherwise a library built
+ * before the advanced filters shipped would be permanently invisible to them,
+ * with no way to fix it short of re-adding every title by hand.
+ *
+ * `audioLangs` is the marker because it is the one field TMDB fills in for
+ * essentially everything, so its absence means "never fetched" rather than
+ * "fetched and genuinely empty" — which is exactly what `studio` would have
+ * meant for an independent film with no company credited.
+ */
+function needsSync(item: Item): boolean {
+  return !item.tmdbId || item.audioLangs === undefined;
+}
+
+/**
+ * Fetches covers and metadata for any title that needs it, so a hand-typed or
+ * imported library fills itself in without the user tapping anything. Works
+ * through one title at a time to stay polite to the API, and remembers what it
+ * already tried so an unmatchable title is not retried in a loop — the manual
+ * button in the detail sheet stays as the fallback.
  */
 export function useAutoLinkTmdb() {
   const items = useLibrary((s) => s.items);
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
-  const pendingCount = items.filter((i) => !i.tmdbId && !attempted.has(i.id)).length;
+  const pendingCount = items.filter((i) => needsSync(i) && !attempted.has(i.id)).length;
 
   useEffect(() => {
     if (!tmdbApiKey || pendingCount === 0 || running) return;
@@ -55,14 +83,20 @@ export function useAutoLinkTmdb() {
       try {
         for (;;) {
           // Re-read the store each round: the list can change while we work.
-          const next = useLibrary.getState().items.find((i) => !i.tmdbId && !attempted.has(i.id));
+          const next = useLibrary.getState().items.find((i) => needsSync(i) && !attempted.has(i.id));
           if (!next) break;
           attempted.add(next.id);
           try {
-            const best = (await searchTitles(next.title, tmdbApiKey))[0];
-            if (best) {
-              const details = await getDetails(best.tmdbId, best.mediaType, tmdbApiKey);
-              useLibrary.getState().updateItem(next.id, fillGaps(next, details, best.mediaType));
+            // An already-linked title skips the search entirely: it knows which
+            // TMDB record it is, and re-searching by title could match a
+            // different one and quietly rewrite a link the user had confirmed.
+            const target =
+              next.tmdbId && next.tmdbMediaType
+                ? { tmdbId: next.tmdbId, mediaType: next.tmdbMediaType }
+                : (await searchTitles(next.title, tmdbApiKey))[0];
+            if (target) {
+              const details = await getDetails(target.tmdbId, target.mediaType, tmdbApiKey);
+              useLibrary.getState().updateItem(next.id, fillGaps(next, details, target.mediaType));
             }
           } catch {
             // Offline, rate limited or an unmatchable title: skip it rather

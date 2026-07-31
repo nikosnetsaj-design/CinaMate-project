@@ -173,6 +173,32 @@ export type StreamHost = {
   url: string;
   role: HostRole;
   priority: number; // lower = tried first; reorderable via drag & drop
+  /**
+   * Path the speed test downloads from, relative to `url`. Optional because
+   * the honest default is the host root: a throughput figure needs a payload
+   * big enough to measure, and only the person who runs the server knows
+   * which path has one. Absent means "use the root and say so if it was too
+   * small to mean anything".
+   */
+  speedTestPath?: string;
+};
+
+/**
+ * How the active host is chosen. `priority` is the manual drag-and-drop order
+ * and stays the default: it is the only mode where the answer to "why is it
+ * using that one" is something the user typed. The other two are opt-in.
+ */
+export type HostSelectionMode = 'priority' | 'auto' | 'balanced';
+
+export type HostSpeedSample = {
+  hostId: string;
+  /** Megabits per second, or null when the sample couldn't measure it. */
+  mbps: number | null;
+  sampleBytes: number;
+  durationMs: number;
+  measuredAt: number;
+  /** Present only when `mbps` is null — says which of the three reasons it is. */
+  note?: 'sample_too_small' | 'unreachable' | 'no_body';
 };
 
 export type HostCheckResult = {
@@ -212,6 +238,16 @@ export type HostStats = {
   // when there's no history yet. Distinct from uptimePercent: this is a
   // running clock, not a ratio.
   currentUptimeMs: number | null;
+  // Mean of the stored throughput samples, in Mbit/s. Null until a speed
+  // test has produced at least one measurable sample — speed tests are
+  // expensive, so unlike ping they only run when asked.
+  avgSpeedMbps: number | null;
+  bestSpeedMbps: number | null;
+  lastSpeedAt: number | null;
+  // 0–100 composite of reliability, ping and throughput. What automatic
+  // priority sorts by and what load balancing weights by; see
+  // `computeHostScore` for how an unmeasured component is treated.
+  score: number;
 };
 
 export type HostSwitchReason =
@@ -220,7 +256,9 @@ export type HostSwitchReason =
   | 'timeout'
   | 'http_error'
   | 'manual'
-  | 'recovered_to_primary';
+  | 'recovered_to_primary'
+  | 'auto_ranked'
+  | 'load_balanced';
 
 export type HostSwitchEvent = {
   id: string;

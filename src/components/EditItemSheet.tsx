@@ -6,7 +6,7 @@ import { useEditSheet } from "../store/useEditSheet";
 import { useLibrary } from "../store/useLibrary";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { STATUSES } from "../lib/status";
-import { PLATFORMS } from "../types";
+import { PLATFORMS, QUALITIES } from "../types";
 import type { Kind } from "../types";
 
 const KIND_LABELS: Record<Kind, string> = {
@@ -144,6 +144,27 @@ function EditItemForm() {
               </Pill>
             ))}
           </div>
+        </div>
+
+        <div>
+          <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Qualità</span>
+          <div className="flex flex-wrap gap-2">
+            {QUALITIES.map((quality) => (
+              <Pill
+                key={quality}
+                active={draft.quality === quality}
+                // Tapping the active one clears it: "non lo so" is a real
+                // answer here and there has to be a way back to it.
+                onClick={() => patch({ quality: draft.quality === quality ? null : quality })}
+              >
+                {quality}
+              </Pill>
+            ))}
+          </div>
+          <p className="mt-1.5 text-xs text-text-faint">
+            La qualità della copia che hai tu. Nessun catalogo la conosce, e un manifest la rivela
+            solo quando parte: per questo si dice a mano.
+          </p>
         </div>
 
         {draft.kind !== "film" && (

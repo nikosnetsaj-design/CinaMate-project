@@ -1,10 +1,15 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import Hls from 'hls.js';
-import type { QualityLevel, AudioTrack, MediaContent } from '../types';
+import type { QualityLevel, AudioTrack, MediaContent, NetworkQuality } from '../types';
 
 export type VideoPlayerOptions = {
   dataSaverMode?: boolean;
   startAtSec?: number;
+  /**
+   * Drives the adaptive buffer below. Read live, so a connection that
+   * degrades mid-film re-tunes the buffer without reloading anything.
+   */
+  networkQuality?: NetworkQuality;
   // Origin (e.g. "https://cdn2.example.com") of the currently-active stream
   // host from useHostMonitor. When set and different from the content's own
   // manifest origin, every hls.js request gets transparently redirected
@@ -16,6 +21,47 @@ export type VideoPlayerOptions = {
 };
 
 const MAX_RETRIES = 5;
+
+// ---------------------------------------------------------------------------
+// Adaptive buffering.
+//
+// The instinct is "bad network → buffer less", and it is backwards. A forward
+// buffer is the only thing standing between a dropout and a stall, so a weak
+// connection wants the *largest* cap it can fill, not the smallest: the cap
+// costs nothing when bandwidth can't reach it and saves the playback when a
+// tunnel or a lift takes the link away for ten seconds. What a good connection
+// buys instead is the freedom to hold less — faster seeks, less memory, and no
+// megabytes fetched for a title that gets abandoned two minutes in.
+//
+// `backBufferLength` moves the other way: already-played segments are pure
+// memory cost, worth keeping only when re-fetching them would be expensive.
+//
+// Data saver overrides all of it. Its whole point is not spending bytes
+// speculatively, so it keeps the smallest buffer that still plays smoothly.
+// ---------------------------------------------------------------------------
+type BufferProfile = {
+  maxBufferLength: number;
+  maxMaxBufferLength: number;
+  backBufferLength: number;
+};
+
+const BUFFER_PROFILES: Record<NetworkQuality, BufferProfile> = {
+  offline: { maxBufferLength: 60, maxMaxBufferLength: 240, backBufferLength: 10 },
+  poor: { maxBufferLength: 60, maxMaxBufferLength: 180, backBufferLength: 15 },
+  good: { maxBufferLength: 30, maxMaxBufferLength: 90, backBufferLength: 30 },
+  excellent: { maxBufferLength: 20, maxMaxBufferLength: 60, backBufferLength: 30 },
+};
+
+const DATA_SAVER_PROFILE: BufferProfile = {
+  maxBufferLength: 15,
+  maxMaxBufferLength: 30,
+  backBufferLength: 10,
+};
+
+function bufferProfileFor(quality: NetworkQuality | undefined, dataSaver: boolean | undefined): BufferProfile {
+  if (dataSaver) return DATA_SAVER_PROFILE;
+  return BUFFER_PROFILES[quality ?? 'good'];
+}
 
 /**
  * The WebKit-only members iOS Safari exposes in place of the standard
@@ -111,9 +157,7 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
       if (Hls.isSupported()) {
         isNativeRef.current = false;
         const hls = new Hls({
-          maxBufferLength: 30,
-          maxMaxBufferLength: 90,
-          backBufferLength: 30,
+          ...bufferProfileFor(optionsRef.current.networkQuality, optionsRef.current.dataSaverMode),
           capLevelToPlayerSize: true,
           // Seamless host failover: hls.js resolves every playlist/segment
           // URL against the manifest's own origin, but xhrSetup fires
@@ -286,6 +330,23 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
     activeOriginRef.current = options.activeHostOrigin ?? null;
   }, [options.activeHostOrigin]);
 
+  // Re-tune the buffer when the connection changes. Mutating `hls.config` in
+  // place is what makes this seamless: the buffer and stream controllers read
+  // these three values on every tick, so the new caps take effect from the
+  // next segment onward with nothing torn down and no reload.
+  const [bufferProfile, setBufferProfile] = useState<BufferProfile>(() =>
+    bufferProfileFor(options.networkQuality, options.dataSaverMode)
+  );
+  useEffect(() => {
+    const profile = bufferProfileFor(options.networkQuality, options.dataSaverMode);
+    setBufferProfile(profile);
+    const hls = hlsRef.current;
+    if (!hls) return;
+    hls.config.maxBufferLength = profile.maxBufferLength;
+    hls.config.maxMaxBufferLength = profile.maxMaxBufferLength;
+    hls.config.backBufferLength = profile.backBufferLength;
+  }, [options.networkQuality, options.dataSaverMode]);
+
   // Native-Safari fallback: no request-interception hook exists for the
   // OS media engine, so the only way to redirect it is a full source
   // reload. This does cause a brief stall — unlike the hls.js path above,
@@ -416,9 +477,15 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
     attachRef.current();
   }, []);
 
+  // Seconds of playable video already downloaded ahead of the playhead, and
+  // how much the current profile is aiming for — the pair is what makes the
+  // adaptive buffer legible in the UI instead of an invisible tuning knob.
+  const bufferHealthSec = Math.max(0, bufferedEnd - currentTime);
+
   return {
     videoRef,
     isPlaying, isBuffering, currentTime, duration, bufferedEnd,
+    bufferHealthSec, bufferTargetSec: bufferProfile.maxBufferLength,
     levels, currentLevel, audioTracks, currentAudioTrack,
     volume, muted, playbackRate, error, isPiP, isFullscreen,
     play, pause, togglePlay, seek, seekBy,

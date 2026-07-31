@@ -83,6 +83,21 @@ export function ChartIcon({ size = 18 }: IconProps) {
   );
 }
 
+/** A heartbeat trace: the page you open when you want to know if it's alive. */
+export function PulseIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path
+        d="M2 10h3.2l1.9-4.6 2.7 9.2 2.1-6.1 1.4 1.5H18"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function SparkleIcon({ size = 18 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">

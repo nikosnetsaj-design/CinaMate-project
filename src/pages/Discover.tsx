@@ -9,6 +9,7 @@ import { draftFromTmdb } from "../lib/addFromTmdb";
 import { PosterArt } from "../components/PosterArt";
 import { EmptyState } from "../components/EmptyState";
 import { UpcomingBoard } from "../components/UpcomingBoard";
+import { NaturalSearch } from "../components/NaturalSearch";
 
 const FEEDS: { id: DiscoverFeed; title: string; why: string }[] = [
   { id: "trending", title: "Di cosa si parla", why: "I film più visti questa settimana nel mondo" },
@@ -107,9 +108,10 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
   );
 }
 
-type Tab = "sfoglia" | "prossimamente";
+type Tab = "sfoglia" | "chiedi" | "prossimamente";
 const TABS: { id: Tab; label: string }[] = [
   { id: "sfoglia", label: "Sfoglia" },
+  { id: "chiedi", label: "Chiedi a parole" },
   { id: "prossimamente", label: "Prossimamente" },
 ];
 
@@ -125,7 +127,9 @@ export function Discover() {
         <p className="mt-1 text-sm text-text-muted">
           {tab === "sfoglia"
             ? "Tocca una copertina per aggiungerla alla tua libreria."
-            : "Le date che ti riguardano: nuovi episodi delle serie che segui e film che aspetti."}
+            : tab === "chiedi"
+              ? "Scrivi cosa cerchi come lo diresti a voce. Claude traduce la frase in filtri, il catalogo TMDB risponde."
+              : "Le date che ti riguardano: nuovi episodi delle serie che segui e film che aspetti."}
         </p>
       </div>
 
@@ -164,15 +168,15 @@ export function Discover() {
             ))}
           </div>
 
-          {tab === "sfoglia" ? (
+          {tab === "sfoglia" && (
             <div className="flex flex-col gap-8">
               {FEEDS.map((f) => (
                 <Row key={f.id} feed={f.id} title={f.title} why={f.why} />
               ))}
             </div>
-          ) : (
-            <UpcomingBoard />
           )}
+          {tab === "chiedi" && <NaturalSearch />}
+          {tab === "prossimamente" && <UpcomingBoard />}
         </>
       )}
     </div>

@@ -1,4 +1,5 @@
 import type { Kind } from "../types";
+import { logError } from "./errorLog";
 
 const BASE = "https://api.themoviedb.org/3";
 const IMG_BASE = "https://image.tmdb.org/t/p";
@@ -53,6 +54,16 @@ export interface TmdbDetails {
   collectionId: number | null;
   collectionName: string | null;
   releaseDate: string | null;
+  /** Lead production company. */
+  studio: string;
+  /** ISO 3166-1 country codes. */
+  countries: string[];
+  /** TMDB's own 0–10 average. */
+  tmdbRating: number | null;
+  /** ISO 639-1 codes of the languages spoken in it. */
+  audioLangs: string[];
+  /** Age rating as the board wrote it — "VM14", "R", "T"… Empty when unrated. */
+  certification: string;
 }
 
 async function tmdbGet<T>(path: string, apiKey: string, params: Record<string, string> = {}): Promise<T> {
@@ -66,9 +77,17 @@ async function tmdbGet<T>(path: string, apiKey: string, params: Record<string, s
   try {
     response = await fetch(url.toString());
   } catch {
+    // Logged as well as thrown: much of this runs in the background linker,
+    // where the throw is swallowed on purpose so one unmatchable title doesn't
+    // stop the pass — and the failure would otherwise leave no trace anywhere.
+    logError("tmdb", "Connessione a TMDB non riuscita", path);
     throw new TmdbApiError("Connessione a TMDB non riuscita. Controlla la rete e riprova.");
   }
   if (!response.ok) {
+    // A 404 is an ordinary answer here ("this title isn't on TMDB") rather
+    // than a fault, so it stays out of the log — filling the page with those
+    // would bury the failures worth reading.
+    if (response.status !== 404) logError("tmdb", `HTTP ${response.status}`, path);
     if (response.status === 401) throw new TmdbApiError("Chiave API TMDB non valida.", 401);
     if (response.status === 404) throw new TmdbApiError("Titolo non trovato su TMDB.", 404);
     throw new TmdbApiError(`Richiesta TMDB rifiutata (HTTP ${response.status}).`, response.status);
@@ -76,8 +95,34 @@ async function tmdbGet<T>(path: string, apiKey: string, params: Record<string, s
   return (await response.json()) as T;
 }
 
-export function posterUrl(path: string | null | undefined, size: "w185" | "w342" | "w500" = "w342"): string | null {
+export type PosterSize = "w92" | "w154" | "w185" | "w342" | "w500" | "w780";
+
+export function posterUrl(path: string | null | undefined, size: PosterSize = "w342"): string | null {
   return path ? `${IMG_BASE}/${size}${path}` : null;
+}
+
+/**
+ * The widths TMDB actually serves, as a `srcset`.
+ *
+ * TMDB re-encodes each width separately, so this is real compression rather
+ * than the browser scaling one large file down: a poster shown 96px wide on a
+ * 1× screen fetches ~6 KB instead of the ~40 KB of the w342 everything used to
+ * get. Descriptors are widths (`w`), not `1x/2x`, so the browser can weigh
+ * pixel density *and* layout size together — the same card is 96px on a phone
+ * grid and 190px on a desktop one, and a density-only set can't express that.
+ */
+const POSTER_WIDTHS: Record<PosterSize, number> = {
+  w92: 92,
+  w154: 154,
+  w185: 185,
+  w342: 342,
+  w500: 500,
+  w780: 780,
+};
+
+export function posterSrcSet(path: string | null | undefined, sizes: PosterSize[]): string | undefined {
+  if (!path) return undefined;
+  return sizes.map((size) => `${IMG_BASE}/${size}${path} ${POSTER_WIDTHS[size]}w`).join(", ");
 }
 
 function guessKind(mediaType: "movie" | "tv", genreNames: string[], originCountry: string[] = []): Kind {
@@ -167,6 +212,41 @@ interface RawDetails {
   credits?: { cast?: RawCast[]; crew?: RawCrew[] };
   videos?: { results?: RawVideo[] };
   recommendations?: { results?: { title?: string; name?: string }[] };
+  production_companies?: { name: string }[];
+  production_countries?: { iso_3166_1: string }[];
+  spoken_languages?: { iso_639_1: string }[];
+  vote_average?: number;
+  // Films and series carry their age rating under different keys, and the
+  // film one nests a second level deep because a country can have several
+  // dated releases (theatrical, then physical) each with its own rating.
+  release_dates?: { results?: { iso_3166_1: string; release_dates?: { certification?: string }[] }[] };
+  content_ratings?: { results?: { iso_3166_1: string; rating?: string }[] };
+}
+
+/**
+ * The age rating, preferring the Italian board and falling back to the US one.
+ *
+ * Both are kept rather than normalising to a number here: "VM14" and "R" are
+ * not the same judgement by the same body, and flattening them at fetch time
+ * would throw away which system said it. lib/parental does the mapping, where
+ * the ambiguity can be stated.
+ */
+function readCertification(details: RawDetails, mediaType: "movie" | "tv"): string {
+  if (mediaType === "movie") {
+    const results = details.release_dates?.results ?? [];
+    for (const country of ["IT", "US"]) {
+      const entry = results.find((r) => r.iso_3166_1 === country);
+      const cert = entry?.release_dates?.map((d) => d.certification).find((c) => c && c.trim());
+      if (cert) return cert.trim();
+    }
+    return "";
+  }
+  const ratings = details.content_ratings?.results ?? [];
+  for (const country of ["IT", "US"]) {
+    const rating = ratings.find((r) => r.iso_3166_1 === country)?.rating;
+    if (rating && rating.trim()) return rating.trim();
+  }
+  return "";
 }
 
 export interface TmdbWatchInfo {
@@ -187,7 +267,10 @@ export async function getWatchProviders(tmdbId: number, mediaType: "movie" | "tv
 
 export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiKey: string): Promise<TmdbDetails> {
   const details = await tmdbGet<RawDetails>(`/${mediaType}/${tmdbId}`, apiKey, {
-    append_to_response: "credits,videos,recommendations",
+    append_to_response:
+      mediaType === "movie"
+        ? "credits,videos,recommendations,release_dates"
+        : "credits,videos,recommendations,content_ratings",
   });
   const watch = await getWatchProviders(tmdbId, mediaType, apiKey);
 
@@ -225,7 +308,178 @@ export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiK
     collectionId: details.belongs_to_collection?.id ?? null,
     collectionName: details.belongs_to_collection?.name ?? null,
     releaseDate: dateStr ?? null,
+    // The first company is the one people mean by "studio". TMDB lists every
+    // co-producer and financing vehicle after it, which is accurate and
+    // useless as a filter — nobody looks for a film by its tax-credit partner.
+    studio: details.production_companies?.[0]?.name ?? "",
+    // `origin_country` is the fallback because TV records carry that but
+    // frequently leave production_countries empty.
+    countries:
+      details.production_countries?.map((c) => c.iso_3166_1).filter(Boolean) ??
+      details.origin_country ??
+      [],
+    tmdbRating: typeof details.vote_average === "number" && details.vote_average > 0 ? details.vote_average : null,
+    audioLangs: details.spoken_languages?.map((l) => l.iso_639_1).filter(Boolean) ?? [],
+    certification: readCertification(details, mediaType),
   };
+}
+
+// ---------------------------------------------------------------------------
+// Discover — the structured search behind natural-language queries.
+//
+// The genre table is inlined rather than fetched. TMDB's genre ids are a fixed,
+// published list that has not changed in years, and the alternative costs a
+// round trip *before* the search can even be composed — on a page whose whole
+// promise is answering a typed sentence quickly.
+// ---------------------------------------------------------------------------
+
+export const MOVIE_GENRES: Record<number, string> = {
+  28: "Azione",
+  12: "Avventura",
+  16: "Animazione",
+  35: "Commedia",
+  80: "Crime",
+  99: "Documentario",
+  18: "Drammatico",
+  10751: "Famiglia",
+  14: "Fantasy",
+  36: "Storia",
+  27: "Horror",
+  10402: "Musica",
+  9648: "Mistero",
+  10749: "Romantico",
+  878: "Fantascienza",
+  10770: "Film TV",
+  53: "Thriller",
+  10752: "Guerra",
+  37: "Western",
+};
+
+export const TV_GENRES: Record<number, string> = {
+  10759: "Action & Adventure",
+  16: "Animazione",
+  35: "Commedia",
+  80: "Crime",
+  99: "Documentario",
+  18: "Drammatico",
+  10751: "Famiglia",
+  10762: "Kids",
+  9648: "Mistero",
+  10763: "News",
+  10764: "Reality",
+  10765: "Sci-Fi & Fantasy",
+  10766: "Soap",
+  10767: "Talk",
+  10768: "War & Politics",
+  37: "Western",
+};
+
+export interface DiscoverQuery {
+  mediaType: "movie" | "tv";
+  genreIds: number[];
+  yearFrom?: number;
+  yearTo?: number;
+  runtimeMin?: number;
+  runtimeMax?: number;
+  voteMin?: number;
+  /** A person's name to narrow by — resolved to a TMDB id before searching. */
+  person?: string;
+  /** Free text handed to TMDB's keyword index. */
+  keywords?: string;
+  sortBy?: "popularity.desc" | "vote_average.desc" | "primary_release_date.desc";
+}
+
+async function resolvePersonId(name: string, apiKey: string): Promise<number | null> {
+  try {
+    const data = await tmdbGet<{ results?: { id: number }[] }>("/search/person", apiKey, { query: name });
+    return data.results?.[0]?.id ?? null;
+  } catch {
+    // A name TMDB doesn't know shouldn't sink the whole search — the rest of
+    // the filters still describe something worth showing.
+    return null;
+  }
+}
+
+async function resolveKeywordId(text: string, apiKey: string): Promise<number | null> {
+  try {
+    const data = await tmdbGet<{ results?: { id: number }[] }>("/search/keyword", apiKey, { query: text });
+    return data.results?.[0]?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function discoverTitles(query: DiscoverQuery, apiKey: string): Promise<TmdbSearchResult[]> {
+  const isTv = query.mediaType === "tv";
+  const params: Record<string, string> = {
+    include_adult: "false",
+    sort_by: query.sortBy ?? "popularity.desc",
+    // Without a vote floor, sorting by rating returns films with a single
+    // 10/10 vote — technically the highest rated, and useless as an answer.
+    "vote_count.gte": query.sortBy === "vote_average.desc" ? "200" : "50",
+    page: "1",
+  };
+
+  if (query.genreIds.length) params.with_genres = query.genreIds.join(",");
+  if (query.voteMin !== undefined) params["vote_average.gte"] = String(query.voteMin);
+  if (query.runtimeMin !== undefined) params["with_runtime.gte"] = String(query.runtimeMin);
+  if (query.runtimeMax !== undefined) params["with_runtime.lte"] = String(query.runtimeMax);
+
+  // Films and series use different date parameters; TMDB rejects the wrong one.
+  const fromKey = isTv ? "first_air_date.gte" : "primary_release_date.gte";
+  const toKey = isTv ? "first_air_date.lte" : "primary_release_date.lte";
+  if (query.yearFrom !== undefined) params[fromKey] = `${query.yearFrom}-01-01`;
+  if (query.yearTo !== undefined) params[toKey] = `${query.yearTo}-12-31`;
+
+  if (query.person) {
+    const personId = await resolvePersonId(query.person, apiKey);
+    // `with_people` covers cast and crew together, so "un film di Villeneuve"
+    // and "un film con Gosling" both land without having to know which is which.
+    if (personId) params[isTv ? "with_people" : "with_people"] = String(personId);
+  }
+
+  if (query.keywords) {
+    const keywordId = await resolveKeywordId(query.keywords, apiKey);
+    if (keywordId) params.with_keywords = String(keywordId);
+  }
+
+  const data = await tmdbGet<{ results: RawMultiSearchResult[] }>(
+    isTv ? "/discover/tv" : "/discover/movie",
+    apiKey,
+    params,
+  );
+
+  return data.results.slice(0, 20).map((r) => {
+    const genreNames = (r.genre_ids ?? []).map((id) => GENRE_NAMES[id]).filter((n): n is string => !!n);
+    const dateStr = r.release_date || r.first_air_date;
+    return {
+      tmdbId: r.id,
+      mediaType: query.mediaType,
+      title: r.title || r.name || "",
+      year: dateStr ? Number(dateStr.slice(0, 4)) : null,
+      overview: r.overview || "",
+      posterPath: r.poster_path ?? null,
+      kind: guessKind(query.mediaType, genreNames, r.origin_country),
+    };
+  });
+}
+
+/**
+ * The English synopsis, for when the Italian one doesn't exist.
+ *
+ * `language=it-IT` returns an *empty* overview rather than falling back, so a
+ * title nobody has translated shows a blank card. Fetching the original is the
+ * only way to have anything to translate at all.
+ */
+export async function getOverviewInEnglish(
+  tmdbId: number,
+  mediaType: "movie" | "tv",
+  apiKey: string,
+): Promise<string> {
+  const details = await tmdbGet<{ overview?: string }>(`/${mediaType}/${tmdbId}`, apiKey, {
+    language: "en-US",
+  });
+  return details.overview?.trim() ?? "";
 }
 
 export type DiscoverFeed = "trending" | "cinema" | "upcoming" | "top" | "trendingTv";

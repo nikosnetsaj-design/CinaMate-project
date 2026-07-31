@@ -24,6 +24,8 @@ import { SourcePanel } from "../player/SourcePanel";
 import { EMPTY_SOURCE } from "../store/usePlayerSources";
 import type { MediaContent } from "../player/types";
 import "../player/styles/player.css";
+import { useVisibleItems } from "../lib/useVisibleItems";
+import { useVisibleInterval } from "../lib/useVisibleInterval";
 
 const IDENTITY_KEY = "cinemate:player-identity";
 
@@ -83,7 +85,7 @@ function useStableId(): string {
 }
 
 export function Player() {
-  const items = useLibrary((s) => s.items);
+  const items = useVisibleItems();
   const sources = usePlayerSources((s) => s.sources);
   const sagas = useSagas((s) => s.sagas);
   const orders = useSagas((s) => s.orders);
@@ -244,10 +246,7 @@ export function Player() {
   // Polled rather than read once, so the chip keeps ticking up while a video is
   // playing instead of only when this page happens to re-render.
   const [lifetime, setLifetime] = useState(getLifetimeStats);
-  useEffect(() => {
-    const id = window.setInterval(() => setLifetime(getLifetimeStats()), 5000);
-    return () => window.clearInterval(id);
-  }, []);
+  useVisibleInterval(() => setLifetime(getLifetimeStats()), 5000);
 
   // Opened from an invite link (?party=<id>): join that room straight away
   // rather than making the guest find the code and paste it back in. The param
@@ -272,6 +271,17 @@ export function Player() {
   );
   const servedByPool = !isOffline && pooledOrigins.has(originOf(content.manifestUrl) ?? "");
   const activeHost = servedByPool ? hostMonitor.activeHost : null;
+
+  // Load balancing re-rolls here and only here: starting a new title is the one
+  // moment a different mirror costs nothing. It is a no-op in the other two
+  // modes, and it deliberately keys on the title rather than on the manifest —
+  // a failover that rewrote the address must not count as a new session and
+  // send the pool looking for yet another host.
+  const rebalance = hostMonitor.rebalance;
+  useEffect(() => {
+    if (servedByPool) rebalance();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [content.id, servedByPool]);
 
   // Reads the playhead for "use the current position" in the source panel.
   // Pulled from the player on demand rather than tracked here, so pausing at
