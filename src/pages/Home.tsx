@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useLibrary } from "../store/useLibrary";
 import { useSelectedItem } from "../store/useSelectedItem";
@@ -13,6 +14,8 @@ import { NightPickerButton } from "../components/NightPicker";
 import { Nastro } from "../components/Nastro";
 import { MarathonCard } from "../components/MarathonCard";
 import { ContinueSagaRow } from "../components/ContinueSagaRow";
+import { PosterRow } from "../components/PosterRow";
+import { forYou, mostWatched, recentlyAdded } from "../lib/recommend";
 import { computeStats } from "../lib/stats";
 import { greeting } from "../lib/stats";
 import { formatRuntime } from "../lib/format";
@@ -28,6 +31,13 @@ export function Home() {
   const watching = items.filter((i) => i.status === "In visione");
   const planned = items.filter((i) => i.status === "Da vedere").slice(0, 4);
   const favs = items.filter((i) => i.fav);
+
+  // Each of these walks the whole library, and the Home page re-renders on
+  // every store touch — a tick on an episode counter shouldn't recompute a
+  // taste profile.
+  const suggestions = useMemo(() => forYou(items), [items]);
+  const watchedMost = useMemo(() => mostWatched(items), [items]);
+  const latest = useMemo(() => recentlyAdded(items), [items]);
 
   const today = new Intl.DateTimeFormat("it-IT", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
 
@@ -127,28 +137,27 @@ export function Home() {
 
           <UpcomingRow />
 
+          <PosterRow
+            title="Per te"
+            entries={suggestions}
+            note="Dai voti che hai già dato: ogni titolo dice perché è qui."
+          />
+
           {favs.length > 0 && (
-            <section className="flex flex-col gap-3">
-              <h2 className="font-display text-xl font-semibold text-text">
-                I tuoi preferiti <span className="text-sm font-normal text-text-faint">· {favs.length}</span>
-              </h2>
-              <div className="flex gap-3.5 overflow-x-auto pb-1">
-                {favs.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => openItem(item)}
-                    aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
-                    className="w-24 shrink-0 text-left"
-                  >
-                    <PosterArt item={item} size="sm" className="w-24" />
-                    <p className="mt-1.5 line-clamp-2 text-xs font-medium text-text">{item.title}</p>
-                    <VoteBadge vote={item.vote} size="sm" />
-                  </button>
-                ))}
-              </div>
-            </section>
+            <PosterRow
+              title="I tuoi preferiti"
+              entries={favs.map((item) => ({ item }))}
+              count={favs.length}
+            />
           )}
+
+          <PosterRow title="Più visti" entries={watchedMost} />
+
+          <PosterRow
+            title="Ultimi aggiunti"
+            entries={latest.map((item) => ({ item }))}
+            moreHref="/libreria"
+          />
 
           {planned.length > 0 && (
             <section className="flex flex-col gap-3">
