@@ -290,6 +290,164 @@ export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiK
   };
 }
 
+// ---------------------------------------------------------------------------
+// Discover — the structured search behind natural-language queries.
+//
+// The genre table is inlined rather than fetched. TMDB's genre ids are a fixed,
+// published list that has not changed in years, and the alternative costs a
+// round trip *before* the search can even be composed — on a page whose whole
+// promise is answering a typed sentence quickly.
+// ---------------------------------------------------------------------------
+
+export const MOVIE_GENRES: Record<number, string> = {
+  28: "Azione",
+  12: "Avventura",
+  16: "Animazione",
+  35: "Commedia",
+  80: "Crime",
+  99: "Documentario",
+  18: "Drammatico",
+  10751: "Famiglia",
+  14: "Fantasy",
+  36: "Storia",
+  27: "Horror",
+  10402: "Musica",
+  9648: "Mistero",
+  10749: "Romantico",
+  878: "Fantascienza",
+  10770: "Film TV",
+  53: "Thriller",
+  10752: "Guerra",
+  37: "Western",
+};
+
+export const TV_GENRES: Record<number, string> = {
+  10759: "Action & Adventure",
+  16: "Animazione",
+  35: "Commedia",
+  80: "Crime",
+  99: "Documentario",
+  18: "Drammatico",
+  10751: "Famiglia",
+  10762: "Kids",
+  9648: "Mistero",
+  10763: "News",
+  10764: "Reality",
+  10765: "Sci-Fi & Fantasy",
+  10766: "Soap",
+  10767: "Talk",
+  10768: "War & Politics",
+  37: "Western",
+};
+
+export interface DiscoverQuery {
+  mediaType: "movie" | "tv";
+  genreIds: number[];
+  yearFrom?: number;
+  yearTo?: number;
+  runtimeMin?: number;
+  runtimeMax?: number;
+  voteMin?: number;
+  /** A person's name to narrow by — resolved to a TMDB id before searching. */
+  person?: string;
+  /** Free text handed to TMDB's keyword index. */
+  keywords?: string;
+  sortBy?: "popularity.desc" | "vote_average.desc" | "primary_release_date.desc";
+}
+
+async function resolvePersonId(name: string, apiKey: string): Promise<number | null> {
+  try {
+    const data = await tmdbGet<{ results?: { id: number }[] }>("/search/person", apiKey, { query: name });
+    return data.results?.[0]?.id ?? null;
+  } catch {
+    // A name TMDB doesn't know shouldn't sink the whole search — the rest of
+    // the filters still describe something worth showing.
+    return null;
+  }
+}
+
+async function resolveKeywordId(text: string, apiKey: string): Promise<number | null> {
+  try {
+    const data = await tmdbGet<{ results?: { id: number }[] }>("/search/keyword", apiKey, { query: text });
+    return data.results?.[0]?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function discoverTitles(query: DiscoverQuery, apiKey: string): Promise<TmdbSearchResult[]> {
+  const isTv = query.mediaType === "tv";
+  const params: Record<string, string> = {
+    include_adult: "false",
+    sort_by: query.sortBy ?? "popularity.desc",
+    // Without a vote floor, sorting by rating returns films with a single
+    // 10/10 vote — technically the highest rated, and useless as an answer.
+    "vote_count.gte": query.sortBy === "vote_average.desc" ? "200" : "50",
+    page: "1",
+  };
+
+  if (query.genreIds.length) params.with_genres = query.genreIds.join(",");
+  if (query.voteMin !== undefined) params["vote_average.gte"] = String(query.voteMin);
+  if (query.runtimeMin !== undefined) params["with_runtime.gte"] = String(query.runtimeMin);
+  if (query.runtimeMax !== undefined) params["with_runtime.lte"] = String(query.runtimeMax);
+
+  // Films and series use different date parameters; TMDB rejects the wrong one.
+  const fromKey = isTv ? "first_air_date.gte" : "primary_release_date.gte";
+  const toKey = isTv ? "first_air_date.lte" : "primary_release_date.lte";
+  if (query.yearFrom !== undefined) params[fromKey] = `${query.yearFrom}-01-01`;
+  if (query.yearTo !== undefined) params[toKey] = `${query.yearTo}-12-31`;
+
+  if (query.person) {
+    const personId = await resolvePersonId(query.person, apiKey);
+    // `with_people` covers cast and crew together, so "un film di Villeneuve"
+    // and "un film con Gosling" both land without having to know which is which.
+    if (personId) params[isTv ? "with_people" : "with_people"] = String(personId);
+  }
+
+  if (query.keywords) {
+    const keywordId = await resolveKeywordId(query.keywords, apiKey);
+    if (keywordId) params.with_keywords = String(keywordId);
+  }
+
+  const data = await tmdbGet<{ results: RawMultiSearchResult[] }>(
+    isTv ? "/discover/tv" : "/discover/movie",
+    apiKey,
+    params,
+  );
+
+  return data.results.slice(0, 20).map((r) => {
+    const genreNames = (r.genre_ids ?? []).map((id) => GENRE_NAMES[id]).filter((n): n is string => !!n);
+    const dateStr = r.release_date || r.first_air_date;
+    return {
+      tmdbId: r.id,
+      mediaType: query.mediaType,
+      title: r.title || r.name || "",
+      year: dateStr ? Number(dateStr.slice(0, 4)) : null,
+      overview: r.overview || "",
+      posterPath: r.poster_path ?? null,
+      kind: guessKind(query.mediaType, genreNames, r.origin_country),
+    };
+  });
+}
+
+/**
+ * The English synopsis, for when the Italian one doesn't exist.
+ *
+ * `language=it-IT` returns an *empty* overview rather than falling back, so a
+ * title nobody has translated shows a blank card. Fetching the original is the
+ * only way to have anything to translate at all.
+ */
+export async function getOverviewInEnglish(
+  tmdbId: number,
+  mediaType: "movie" | "tv",
+  apiKey: string,
+): Promise<string> {
+  const details = await tmdbGet<{ overview?: string }>(`/${mediaType}/${tmdbId}`, apiKey, {
+    language: "en-US",
+  });
+  return details.overview?.trim() ?? "";
+}
+
 export type DiscoverFeed = "trending" | "cinema" | "upcoming" | "top" | "trendingTv";
 
 const FEED_PATH: Record<DiscoverFeed, string> = {

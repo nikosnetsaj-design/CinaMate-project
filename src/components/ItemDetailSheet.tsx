@@ -15,6 +15,7 @@ import { LinkToTmdb } from "./LinkToTmdb";
 import { ItemSagaStrip } from "./ItemSagaStrip";
 import { PeopleLinks } from "./PeopleLinks";
 import { ShareSheet } from "./ShareSheet";
+import { SpoilerFreeRecap, TranslateOverview } from "./AiItemExtras";
 import { HeartIcon } from "./icons";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useLibrary } from "../store/useLibrary";
@@ -223,6 +224,9 @@ function ItemDetail({ item }: { item: Item }) {
             </button>
           )}
         </div>
+
+        <SpoilerFreeRecap item={item} />
+        <TranslateOverview item={item} />
 
         {item.notes && (
           <div className="mt-4 rounded-md border border-border bg-surface-2 p-4">
