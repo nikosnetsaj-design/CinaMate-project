@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { useLibrary } from "../store/useLibrary";
 import { useSagas } from "../store/useSagas";
 import { useCommandPalette } from "../store/useCommandPalette";
 import { useSelectedItem } from "../store/useSelectedItem";
@@ -10,6 +9,7 @@ import { useSelectedPerson } from "../store/useSelectedPerson";
 import { useFocusTrap } from "../lib/useFocusTrap";
 import { GROUP_LABELS, smartSearch, type SearchGroup, type SearchHit } from "../lib/search";
 import { PersonIcon, SearchIcon, StackIcon } from "./icons";
+import { useVisibleItems } from "../lib/useVisibleItems";
 
 const GROUP_ORDER: SearchGroup[] = ["titolo", "saga", "persona"];
 
@@ -24,7 +24,7 @@ function PaletteDialog() {
   const openItem = useSelectedItem((s) => s.open);
   const openSaga = useSelectedSaga((s) => s.open);
   const openPerson = useSelectedPerson((s) => s.open);
-  const items = useLibrary((s) => s.items);
+  const items = useVisibleItems();
   const sagas = useSagas((s) => s.sagas);
 
   const [query, setQuery] = useState("");

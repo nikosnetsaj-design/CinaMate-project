@@ -40,6 +40,10 @@ function fillGaps(item: Item, d: Awaited<ReturnType<typeof getDetails>>, mediaTy
     countries: d.countries,
     tmdbRating: d.tmdbRating,
     audioLangs: d.audioLangs,
+    // Parental control reads this, so it must never be left at whatever an
+    // older record happened to hold: an out-of-date rating on a filter that
+    // exists to keep things away from a child is worse than none.
+    certification: d.certification,
   };
 }
 

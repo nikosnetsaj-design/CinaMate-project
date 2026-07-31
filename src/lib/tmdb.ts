@@ -61,6 +61,8 @@ export interface TmdbDetails {
   tmdbRating: number | null;
   /** ISO 639-1 codes of the languages spoken in it. */
   audioLangs: string[];
+  /** Age rating as the board wrote it — "VM14", "R", "T"… Empty when unrated. */
+  certification: string;
 }
 
 async function tmdbGet<T>(path: string, apiKey: string, params: Record<string, string> = {}): Promise<T> {
@@ -179,6 +181,38 @@ interface RawDetails {
   production_countries?: { iso_3166_1: string }[];
   spoken_languages?: { iso_639_1: string }[];
   vote_average?: number;
+  // Films and series carry their age rating under different keys and in
+  // different shapes — TMDB never unified them.
+  release_dates?: { results?: { iso_3166_1: string; release_dates?: { certification?: string }[] }[] };
+  content_ratings?: { results?: { iso_3166_1: string; rating?: string }[] }[] | { results?: { iso_3166_1: string; rating?: string }[] };
+}
+
+/**
+ * The age rating, preferring the Italian board and falling back to the US one.
+ *
+ * Both are kept rather than normalising to a number here: "VM14" and "R" are
+ * not the same judgement by the same body, and flattening them at fetch time
+ * would throw away which system said it. lib/parental does the mapping, where
+ * the ambiguity can be stated.
+ */
+function readCertification(details: RawDetails, mediaType: "movie" | "tv"): string {
+  if (mediaType === "movie") {
+    const results = details.release_dates?.results ?? [];
+    for (const country of ["IT", "US"]) {
+      const entry = results.find((r) => r.iso_3166_1 === country);
+      const cert = entry?.release_dates?.map((d) => d.certification).find((c) => c && c.trim());
+      if (cert) return cert.trim();
+    }
+    return "";
+  }
+  const ratings = Array.isArray(details.content_ratings)
+    ? details.content_ratings[0]?.results ?? []
+    : details.content_ratings?.results ?? [];
+  for (const country of ["IT", "US"]) {
+    const rating = ratings.find((r) => r.iso_3166_1 === country)?.rating;
+    if (rating && rating.trim()) return rating.trim();
+  }
+  return "";
 }
 
 export interface TmdbWatchInfo {
@@ -199,7 +233,10 @@ export async function getWatchProviders(tmdbId: number, mediaType: "movie" | "tv
 
 export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiKey: string): Promise<TmdbDetails> {
   const details = await tmdbGet<RawDetails>(`/${mediaType}/${tmdbId}`, apiKey, {
-    append_to_response: "credits,videos,recommendations",
+    append_to_response:
+      mediaType === "movie"
+        ? "credits,videos,recommendations,release_dates"
+        : "credits,videos,recommendations,content_ratings",
   });
   const watch = await getWatchProviders(tmdbId, mediaType, apiKey);
 
@@ -249,6 +286,7 @@ export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiK
       [],
     tmdbRating: typeof details.vote_average === "number" && details.vote_average > 0 ? details.vote_average : null,
     audioLangs: details.spoken_languages?.map((l) => l.iso_639_1).filter(Boolean) ?? [],
+    certification: readCertification(details, mediaType),
   };
 }
 

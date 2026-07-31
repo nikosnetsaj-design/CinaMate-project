@@ -45,5 +45,6 @@ export async function draftFromTmdb(
     countries: d.countries,
     tmdbRating: d.tmdbRating,
     audioLangs: d.audioLangs,
+    certification: d.certification,
   };
 }

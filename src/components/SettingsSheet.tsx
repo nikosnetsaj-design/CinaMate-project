@@ -13,6 +13,7 @@ import { useGoals } from "../store/useGoals";
 import { useTheme } from "../store/useTheme";
 import { useHomeLayout, HOME_SECTIONS } from "../store/useHomeLayout";
 import { ACCENTS } from "../lib/accents";
+import { ParentalSettings } from "./ParentalSettings";
 import { TEMPLATE_FIELDS, previewTemplate, previewCount } from "../lib/sourceTemplate";
 import { getHosts, restoreHosts } from "../player/services/hostStore";
 import { buildBackup, parseBackup, BackupParseError } from "../lib/backup";
@@ -512,6 +513,8 @@ function SettingsForm() {
         <AppearanceSettings />
 
         <HomeLayoutSettings />
+
+        <ParentalSettings />
 
         <div>
           <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Dati locali</span>

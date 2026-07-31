@@ -68,6 +68,12 @@ export interface Item {
   /** Spoken languages as ISO 639-1 codes, e.g. ["it", "en"]. */
   audioLangs?: string[];
   /**
+   * Age rating as the board wrote it — "VM14", "R", "TV-MA". Kept verbatim
+   * rather than as a number so it can be shown as issued; lib/parental does
+   * the translation to an age, where the imprecision can be admitted.
+   */
+  certification?: string;
+  /**
    * The quality of the copy *you* have. Set by hand rather than detected: no
    * catalogue knows what is on your server, and a manifest only reveals its
    * renditions once something plays it.

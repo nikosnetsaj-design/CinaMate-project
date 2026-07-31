@@ -24,6 +24,7 @@ import { SourcePanel } from "../player/SourcePanel";
 import { EMPTY_SOURCE } from "../store/usePlayerSources";
 import type { MediaContent } from "../player/types";
 import "../player/styles/player.css";
+import { useVisibleItems } from "../lib/useVisibleItems";
 
 const IDENTITY_KEY = "cinemate:player-identity";
 
@@ -83,7 +84,7 @@ function useStableId(): string {
 }
 
 export function Player() {
-  const items = useLibrary((s) => s.items);
+  const items = useVisibleItems();
   const sources = usePlayerSources((s) => s.sources);
   const sagas = useSagas((s) => s.sagas);
   const orders = useSagas((s) => s.orders);

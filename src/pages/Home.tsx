@@ -1,7 +1,6 @@
 import { Fragment, useMemo } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { useLibrary } from "../store/useLibrary";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useAddSheet } from "../store/useAddSheet";
 import { useHomeLayout, type HomeSectionId } from "../store/useHomeLayout";
@@ -22,10 +21,11 @@ import { computeStats } from "../lib/stats";
 import { greeting } from "../lib/stats";
 import { formatRuntime } from "../lib/format";
 import { useAppReady } from "../lib/useAppReady";
+import { useVisibleItems } from "../lib/useVisibleItems";
 
 export function Home() {
   const ready = useAppReady();
-  const items = useLibrary((s) => s.items);
+  const items = useVisibleItems();
   const openItem = useSelectedItem((s) => s.open);
   const openAddSheet = useAddSheet((s) => s.open);
   const order = useHomeLayout((s) => s.order);

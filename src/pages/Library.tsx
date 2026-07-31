@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { useLibrary } from "../store/useLibrary";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useAddSheet } from "../store/useAddSheet";
 import { usePlayerSources } from "../store/usePlayerSources";
@@ -11,21 +10,24 @@ import { VoteBadge } from "../components/VoteBadge";
 import { EmptyState } from "../components/EmptyState";
 import { PosterGridSkeleton } from "../components/Skeletons";
 import { FilterSheet } from "../components/FilterSheet";
+import { ShareSheet } from "../components/ShareSheet";
 import { didYouMean, matchQuality } from "../lib/search";
 import { activeFilterCount, applyFilters, type Filters } from "../lib/filters";
 import { useAppReady } from "../lib/useAppReady";
+import { useVisibleItems } from "../lib/useVisibleItems";
 
 type Sort = "recenti" | "voto" | "titolo" | "anno";
 
 export function Library() {
   const ready = useAppReady();
-  const items = useLibrary((s) => s.items);
+  const items = useVisibleItems();
   const openItem = useSelectedItem((s) => s.open);
   const openAddSheet = useAddSheet((s) => s.open);
 
   const [q, setQ] = useState("");
   const [filters, setFilters] = useState<Filters>({});
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [sort, setSort] = useState<Sort>("recenti");
   const [grid, setGrid] = useState(true);
 
@@ -70,6 +72,12 @@ export function Library() {
 
   const filterCount = activeFilterCount(filters);
 
+  // The list's name is its query. A shared link that arrived called "Libreria"
+  // when it is actually four horror films would be worse than useless to
+  // whoever opens it.
+  const listName =
+    q.trim() || (filterCount > 0 ? "Selezione dalla mia libreria" : "La mia libreria");
+
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 sm:px-6 sm:py-10">
       <div>
@@ -109,6 +117,18 @@ export function Library() {
 
         <div className="flex items-center gap-2">
           <span className="text-xs text-text-faint">{list.length} titoli</span>
+          {/* Shares exactly what is on screen, filters and search included —
+              that is what makes it a *list* rather than an export: "gli horror
+              che ho visto" is a query, and the query's result is the list. */}
+          <button
+            type="button"
+            onClick={() => setSharing(true)}
+            disabled={list.length === 0}
+            aria-label="Condividi questa lista"
+            className="rounded-sm border border-border-strong px-2 py-1 text-xs text-text-muted disabled:opacity-40"
+          >
+            Condividi
+          </button>
           <button
             type="button"
             onClick={() => setGrid((g) => !g)}
@@ -198,6 +218,13 @@ export function Library() {
           onChange={setFilters}
           onClose={() => setFiltersOpen(false)}
           resultCount={list.length}
+        />
+      )}
+
+      {sharing && (
+        <ShareSheet
+          target={{ kind: "list", name: listName, items: list }}
+          onClose={() => setSharing(false)}
         />
       )}
     </div>

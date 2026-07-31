@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useFocusTrap } from "../lib/useFocusTrap";
@@ -14,6 +14,7 @@ import { WatchButton } from "./WatchButton";
 import { LinkToTmdb } from "./LinkToTmdb";
 import { ItemSagaStrip } from "./ItemSagaStrip";
 import { PeopleLinks } from "./PeopleLinks";
+import { ShareSheet } from "./ShareSheet";
 import { HeartIcon } from "./icons";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useLibrary } from "../store/useLibrary";
@@ -41,6 +42,7 @@ function ItemDetail({ item }: { item: Item }) {
   const containerRef = useFocusTrap(close);
   const titleId = `item-detail-${item.id}`;
   const shelfMates = useMemo(() => similarInLibrary(item, items), [item, items]);
+  const [sharing, setSharing] = useState(false);
   const [a, b] = paletteFor(item.title);
   const pct = item.kind !== "film" && item.episodes ? Math.round(((item.seen || 0) / item.episodes) * 100) : null;
   const watchedMinutes = item.kind === "film" ? (item.status === "Visto" ? item.runtime : 0) : (item.seen || 0) * item.runtime;
@@ -298,6 +300,13 @@ function ItemDetail({ item }: { item: Item }) {
         <div className="mt-2.5 flex gap-2.5">
           <button
             type="button"
+            onClick={() => setSharing(true)}
+            className="flex-1 rounded-md border border-border-strong bg-surface-hover py-2.5 text-sm text-text"
+          >
+            Condividi
+          </button>
+          <button
+            type="button"
             onClick={() => openEdit(item)}
             className="flex-1 rounded-md border border-border-strong bg-surface-hover py-2.5 text-sm text-text"
           >
@@ -318,6 +327,8 @@ function ItemDetail({ item }: { item: Item }) {
           </button>
         </div>
       </div>
+
+      {sharing && <ShareSheet target={{ kind: "item", item }} onClose={() => setSharing(false)} />}
     </div>,
     document.body,
   );

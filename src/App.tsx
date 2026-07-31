@@ -11,6 +11,7 @@ import { SagaSheetPortal } from "./components/SagaSheet";
 import { PersonSheetPortal } from "./components/PersonSheet";
 import { NextChapterPrompt } from "./components/NextChapterPrompt";
 import { ResumePrompt } from "./components/ResumePrompt";
+import { IncomingShare } from "./components/IncomingShare";
 import { useTheme } from "./store/useTheme";
 import { applyAccent } from "./lib/accents";
 import { useLibrary } from "./store/useLibrary";
@@ -120,6 +121,7 @@ export default function App() {
       <SettingsSheetPortal />
       <ResumePrompt />
       <NextChapterPrompt />
+      <IncomingShare />
     </>
   );
 }
