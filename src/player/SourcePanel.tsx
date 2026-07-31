@@ -2,9 +2,10 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { usePlayerSources, EMPTY_SOURCE } from "../store/usePlayerSources";
 import type { MarkerType, PlayerSprite } from "../store/usePlayerSources";
-import { isHlsUrl } from "./fromLibrary";
+import { candidatesFor, looksLikeFile } from "../lib/sourceTemplate";
 import { formatClock, parseClock } from "./clock";
 import { CloseIcon } from "./components/Icons";
+import type { Item } from "../types";
 
 /**
  * Per-title configuration for everything the library cannot know: the stream
@@ -122,11 +123,14 @@ function SpriteFields({
 
 export function SourcePanel({
   itemId,
+  item,
   title,
   linkManifest,
   getCurrentTime,
 }: {
   itemId: string;
+  /** The library record, to show what a folder address resolves to. */
+  item: Item;
   title: string;
   /** The `.m3u8` personal link, when the title has one. */
   linkManifest: string | null;
@@ -144,8 +148,15 @@ export function SourcePanel({
   const [subLang, setSubLang] = useState("it");
   const [subUrl, setSubUrl] = useState("");
 
+  // Anything goes in this field. An address that points at a file is the
+  // stream; anything else — a server, a folder, a pattern — is a place to look
+  // for this title, exactly like the addresses in Settings. The only real
+  // mistake left is something that isn't an address at all.
   const manifestValue = manifestDraft ?? source.manifestUrl ?? "";
-  const manifestInvalid = manifestValue.trim() !== "" && !isHlsUrl(manifestValue.trim());
+  const typed = manifestValue.trim();
+  const isDirect = typed !== "" && looksLikeFile(typed);
+  const searchCandidates = typed === "" || isDirect ? [] : candidatesFor(item, [typed]);
+  const manifestUnusable = typed !== "" && !isDirect && searchCandidates.length === 0;
 
   const commitManifest = () => {
     if (manifestDraft === null) return;
@@ -177,14 +188,24 @@ export function SourcePanel({
           <h5>Stream</h5>
         </div>
         <input
-          placeholder="https://…/master.m3u8"
+          placeholder="https://mio-server.com  oppure  https://…/master.m3u8"
           value={manifestValue}
           onChange={(e) => setManifestDraft(e.target.value)}
           onBlur={commitManifest}
         />
-        {manifestInvalid && (
+        {isDirect && <p className="pv-empty">Indirizzo diretto: parte da qui, senza cercare.</p>}
+        {searchCandidates.length > 0 && (
+          <p className="pv-empty">
+            Server o cartella: cerco io «{title}» qui dentro. Primo tentativo{" "}
+            <span className="pv-mono">{searchCandidates[0]}</span>
+            {searchCandidates.length > 1 && `, e altri ${searchCandidates.length - 1}`}. Se non
+            risponde nessuno, leggo l'elenco della cartella.
+          </p>
+        )}
+        {manifestUnusable && (
           <p className="pv-download-error">
-            Non sembra un manifest HLS: l'indirizzo deve finire in <code>.m3u8</code>.
+            Questo non è un indirizzo. Scrivi un server (<code>mio-server.com</code>), una cartella
+            o il file preciso.
           </p>
         )}
         {!source.manifestUrl && linkManifest && (

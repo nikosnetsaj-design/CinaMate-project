@@ -406,6 +406,7 @@ export function Player() {
           selectedItem ? (
             <SourcePanel
               itemId={selectedItem.id}
+              item={selectedItem}
               title={selectedItem.title}
               // Resolved with an empty lookup on purpose: the panel wants the
               // link the title carries, not the override it may already have.

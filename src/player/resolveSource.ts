@@ -1,25 +1,29 @@
 import type { Item } from "../types";
-import { candidatesFor } from "../lib/sourceTemplate";
+import { candidatesFor, looksLikeFile } from "../lib/sourceTemplate";
 import { discoverOnHosts } from "./discoverOnHost";
 import { isHlsUrl } from "./fromLibrary";
 import type { SourceLookup } from "./fromLibrary";
 
 /**
- * Where a title's stream comes from, in priority order:
+ * Where a title's stream comes from.
  *
- *   1. the address set for that one title in the player's Sorgenti panel;
+ * One rule everywhere: **any address is allowed, and what it is gets worked out
+ * here.** An address that already points at a file plays as it is; anything else
+ * — a server, a folder, a pattern with a placeholder — is something to search
+ * under, for this title. That holds for the field on the single title
+ * (player → Sorgenti) exactly as it does for the three fields in Settings,
+ * because being told "wrong, it has to end in .m3u8" is not an answer anyone
+ * wants from a box that could go and look instead.
+ *
+ * The order in which things are tried:
+ *
+ *   1. the address set for that one title, if it is a file — you put it there;
  *   2. an `.m3u8` among its personal links;
- *   3. the addresses configured once — the three fields in Settings and the
- *      hosts in the player's Host panel (see sourceAddresses.ts) — either
- *      written as a pattern or left bare, in which case the usual layouts under
- *      them are tried;
- *   4. failing all that, the folder listing of those same addresses, read to
+ *   3. everything the addresses can build for this title: the title's own
+ *      address first, then the three in Settings, then the hosts
+ *      (see sourceAddresses.ts), each tried until one answers;
+ *   4. failing all that, the folder listings of those same addresses, read to
  *      find the file whose name matches the title.
- *
- * (3) and (4) are what remove the per-title work: name your server once and
- * every title on the shelf resolves through it. They are also the fallback
- * chain — if the first host doesn't answer, the second is tried, then the
- * third.
  */
 
 export type ResolvedSource = {
@@ -28,6 +32,11 @@ export type ResolvedSource = {
   via: "titolo" | "link" | "modello" | "indice";
   /** Index of the address that produced it, when via === "modello". */
   templateIndex?: number;
+  /**
+   * Set when you gave this exact address for this exact title, so it is used
+   * without asking the network first.
+   */
+  trusted?: boolean;
 };
 
 /** Everything that could serve this title, cheapest-to-know first. */
@@ -37,14 +46,18 @@ export function candidateSources(
   addresses: string[],
 ): ResolvedSource[] {
   const out: ResolvedSource[] = [];
+  const own = lookup(item.id).manifestUrl?.trim();
 
-  const configured = lookup(item.id).manifestUrl?.trim();
-  if (configured) out.push({ url: configured, via: "titolo" });
+  // The title's own address, when it is already a file: nothing to search for.
+  if (own && looksLikeFile(own)) out.push({ url: own, via: "titolo", trusted: true });
 
   const link = item.links.find(isHlsUrl);
-  if (link && link !== configured) out.push({ url: link, via: "link" });
+  if (link && link !== own) out.push({ url: link, via: "link", trusted: true });
 
-  const applicable = addresses.map((a, i) => ({ a, i })).filter(({ a }) => a.trim());
+  // The title's own address goes in front of the shared ones: it was written
+  // for this title, so it is the better guess.
+  const all = own && !looksLikeFile(own) ? [own, ...addresses] : addresses;
+  const applicable = all.map((a, i) => ({ a, i })).filter(({ a }) => a.trim());
   for (const { a, i } of applicable) {
     for (const url of candidatesFor(item, [a])) {
       if (out.some((c) => c.url === url)) continue;
@@ -57,11 +70,11 @@ export function candidateSources(
 /**
  * The first candidate that actually answers.
  *
- * A source that is already pinned to the title (panel or link) is trusted
- * without a probe: you put it there, and a probe would only add a round trip
- * and a CORS failure mode. Built addresses are guesses by nature, so those are
- * checked — that check is what makes "try host 1, then 2, then 3" work without
- * you doing anything.
+ * A source pinned to the title (its own file address, or an `.m3u8` link) is
+ * trusted without a probe: you put it there, and a probe would only add a round
+ * trip and a CORS failure mode. Built addresses are guesses by nature, so those
+ * are checked — that check is what makes "try host 1, then 2, then 3" work
+ * without you doing anything.
  */
 export async function resolvePlayable(
   item: Item,
@@ -70,14 +83,17 @@ export async function resolvePlayable(
   signal?: AbortSignal,
 ): Promise<ResolvedSource | null> {
   const candidates = candidateSources(item, lookup, addresses);
-  const pinned = candidates.find((c) => c.via !== "modello");
+  const pinned = candidates.find((c) => c.trusted);
   if (pinned) return pinned;
 
   const guessed = await firstResponding(candidates, signal);
   if (guessed) return guessed;
 
-  // Nothing was where it would have been. Ask the folders themselves.
-  const found = await discoverOnHosts(item, addresses, signal);
+  // Nothing was where it would have been. Ask the folders themselves, the
+  // title's own address first.
+  const own = lookup(item.id).manifestUrl?.trim();
+  const bases = own && !looksLikeFile(own) ? [own, ...addresses] : addresses;
+  const found = await discoverOnHosts(item, bases, signal);
   return found ? { url: found, via: "indice" } : null;
 }
 

@@ -141,6 +141,13 @@ stessa cosa e vengono provati nello stesso ordine, prima le caselle e poi gli
 host per priorità. In alternativa un indirizzo per il singolo titolo (pannello
 Sorgenti, o fra i *link personali* del §3.3), che ha sempre la precedenza.
 
+La regola è una sola e vale ovunque si scriva un indirizzo: **si accetta
+qualsiasi cosa, ed è l'app a capire cos'è.** Un indirizzo che punta a un file è
+lo stream; qualunque altro — un server, una cartella, un modello con segnaposto
+— è un posto dove cercare. Il pannello del singolo titolo rifiutava tutto ciò
+che non finiva in `.m3u8`: un "sbagliato, riscrivilo" da parte di una casella
+che poteva benissimo andare a guardare.
+
 **Trovare il file senza saperlo a memoria.** Un indirizzo può essere scritto con
 un segnaposto al posto del titolo (`https://mio-server/film/{slug}.m3u8`) e
 allora è esatto. Ma può anche essere l'indirizzo nudo del server, e questo è il

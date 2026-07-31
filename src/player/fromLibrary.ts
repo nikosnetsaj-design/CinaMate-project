@@ -1,7 +1,7 @@
 import type { Item } from "../types";
 import { posterUrl } from "../lib/tmdb";
 import { orderParts, findLibraryMatch } from "../lib/sagas";
-import { candidatesFor } from "../lib/sourceTemplate";
+import { candidatesFor, looksLikeFile } from "../lib/sourceTemplate";
 import type { SagaOrders, WatchOrder } from "../lib/sagas";
 import type { TmdbSaga } from "../lib/tmdb";
 import { EMPTY_SOURCE } from "../store/usePlayerSources";
@@ -42,13 +42,17 @@ export function originOf(raw: string): string | null {
 export type SourceLookup = (itemId: string) => PlayerSource;
 
 /**
- * The manifest for a title, from the player's source panel first and the
- * personal links second. The panel wins so a title can carry a source without
- * spending one of its two link slots on it.
+ * The address a title can be played from *as it is*: the one from the player's
+ * source panel first, its personal links second. The panel wins so a title can
+ * carry a source without spending one of its two link slots on it.
+ *
+ * Only an address that points at a file counts here. The panel also accepts a
+ * server or a folder, and that is not something to hand to hls.js — it is
+ * something to search under, which is `resolveSource`'s job.
  */
 export function streamUrlOf(item: Item, lookup: SourceLookup): string | null {
   const configured = lookup(item.id).manifestUrl?.trim();
-  if (configured) return configured;
+  if (configured && looksLikeFile(configured)) return configured;
   return item.links.find(isHlsUrl) ?? null;
 }
 
@@ -178,7 +182,11 @@ export function buildPlayerCatalog(
   addresses: string[] = [],
 ): MediaContent[] {
   const catalog = sagaAwareOrder(items, saga).flatMap((item) => {
-    const manifest = streamUrlOf(item, lookup) ?? candidatesFor(item, addresses)[0] ?? null;
+    // The title's own address goes first when it is one to search under: it
+    // was written for this title, so it beats the shared ones.
+    const own = lookup(item.id).manifestUrl?.trim();
+    const forItem = own && !looksLikeFile(own) ? [own, ...addresses] : addresses;
+    const manifest = streamUrlOf(item, lookup) ?? candidatesFor(item, forItem)[0] ?? null;
     return manifest ? [toMediaContent(item, manifest, lookup(item.id))] : [];
   });
 

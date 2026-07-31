@@ -161,8 +161,11 @@ disponibili (`{slug}`, `{titolo}`, `{anno}`, `{tmdb}`, `{s}`, `{e}`, `{ss}`,
 
 **Il modo per un titolo solo**, se ognuno sta in un posto diverso:
 
-1. apri la pagina Player e il pannello **Sorgenti**, e incolla l'indirizzo di un
-   manifest HLS (un indirizzo il cui percorso finisce in `.m3u8`);
+1. apri la pagina Player e il pannello **Sorgenti**, e incolla un indirizzo
+   qualsiasi. Se punta a un file (`.m3u8`, `.mp4`) parte da lì senza cercare; se
+   è un server o una cartella, lì dentro cerca *quel* titolo, con gli stessi
+   tentativi e la stessa lettura dell'elenco descritti sopra. Sotto la casella
+   c'è scritto quale dei due casi ha capito;
 2. in alternativa salva lo stesso indirizzo fra i **link personali** del titolo,
    nella sua scheda in libreria: viene riconosciuto allo stesso modo;
 3. il titolo compare fra quelli riproducibili in cima alla pagina Player.
