@@ -12,6 +12,7 @@ import { PersonSheetPortal } from "./components/PersonSheet";
 import { NextChapterPrompt } from "./components/NextChapterPrompt";
 import { ResumePrompt } from "./components/ResumePrompt";
 import { useTheme } from "./store/useTheme";
+import { applyAccent } from "./lib/accents";
 import { useLibrary } from "./store/useLibrary";
 import { useAutoLinkTmdb } from "./lib/useAutoLinkTmdb";
 import { useAutoLinkSagas } from "./lib/useAutoLinkSagas";
@@ -55,6 +56,7 @@ function ErrorBanner() {
 
 export default function App() {
   const theme = useTheme((s) => s.theme);
+  const accent = useTheme((s) => s.accent);
   useAutoLinkTmdb();
   useAutoLinkSagas();
   useReleaseAlerts();
@@ -63,6 +65,13 @@ export default function App() {
     // Dark is the base theme, so the light variant is the one that opts in.
     document.documentElement.classList.toggle("light", theme === "light");
   }, [theme]);
+
+  // Keyed on the theme too: each accent carries a dark and a light variant,
+  // and reapplying on a theme change is what keeps a custom accent readable
+  // after switching rather than leaving a night-tuned colour on a pale page.
+  useEffect(() => {
+    applyAccent(accent, theme);
+  }, [accent, theme]);
 
   return (
     <>
