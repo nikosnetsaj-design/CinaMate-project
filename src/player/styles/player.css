@@ -730,6 +730,23 @@
 .pv-host-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
 .pv-host-setting { display: flex; flex-direction: column; gap: 3px; font-size: 0.72rem; color: var(--pv-text-dim); }
 
+.pv-host-modes { display: flex; flex-wrap: wrap; gap: 6px; }
+.pv-host-mode {
+  background: transparent;
+  border: 1px solid var(--pv-border);
+  color: var(--pv-text-dim);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+}
+.pv-host-mode.active { border-color: var(--pv-accent); color: var(--pv-text); }
+.pv-host-mode-hint { margin-top: -2px; }
+.pv-host-speed-note {
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--pv-accent-2-text);
+}
+
 .pv-host-list { display: flex; flex-direction: column; gap: 8px; }
 .pv-host-row {
   display: flex; gap: 8px; align-items: flex-start;

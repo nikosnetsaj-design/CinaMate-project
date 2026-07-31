@@ -273,6 +273,17 @@ export function Player() {
   const servedByPool = !isOffline && pooledOrigins.has(originOf(content.manifestUrl) ?? "");
   const activeHost = servedByPool ? hostMonitor.activeHost : null;
 
+  // Load balancing re-rolls here and only here: starting a new title is the one
+  // moment a different mirror costs nothing. It is a no-op in the other two
+  // modes, and it deliberately keys on the title rather than on the manifest —
+  // a failover that rewrote the address must not count as a new session and
+  // send the pool looking for yet another host.
+  const rebalance = hostMonitor.rebalance;
+  useEffect(() => {
+    if (servedByPool) rebalance();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [content.id, servedByPool]);
+
   // Reads the playhead for "use the current position" in the source panel.
   // Pulled from the player on demand rather than tracked here, so pausing at
   // the exact frame you want to mark gives that exact second.
