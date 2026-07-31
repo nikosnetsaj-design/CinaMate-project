@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import type { CSSProperties } from 'react';
 import { useVideoPlayer } from '../hooks/useVideoPlayer';
 import { usePlaybackExtras } from '../hooks/usePlaybackExtras';
 import { useSubtitles } from '../hooks/useSubtitles';
@@ -8,13 +9,14 @@ import { getResumePosition, saveProgress } from '../services/statsAndHistory';
 import { listDownloads } from '../services/downloadService';
 import { useNetworkQuality } from '../hooks/useNetworkQuality';
 import { usePlayerShortcuts } from '../hooks/usePlayerShortcuts';
+import { usePlayerGestures } from '../hooks/usePlayerGestures';
 import type { MediaContent } from '../types';
 import type { useWatchParty } from '../hooks/useWatchParty';
 import ControlsBar from './ControlsBar';
 import ProgressBar from './ProgressBar';
 import SettingsMenu from './SettingsMenu';
 import PlayerIndicators from './PlayerIndicators';
-import { SkipButton, NextUpOverlay, ErrorOverlay, SubtitleOverlay, EndScreenRecommendations } from './Overlays';
+import { SkipButton, NextUpOverlay, ErrorOverlay, SubtitleOverlay, EndScreenRecommendations, GestureOverlay } from './Overlays';
 import type { Recommendation } from '../services/recommendationService';
 import { PlayIcon, PauseIcon, ExpandIcon } from './Icons';
 
@@ -63,6 +65,7 @@ export default function VideoPlayer({
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const idleTimer = useRef<number | null>(null);
+  const lastTouchRef = useRef(0);
   const [controlsVisible, setControlsVisible] = useState(true);
   const [isMini, setIsMini] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -76,13 +79,24 @@ export default function VideoPlayer({
     if (nextContentId) onSelectContent(nextContentId);
   }, [nextContentId, onSelectContent]);
 
+  // Read before the player is created, so the very first hls.js instance is
+  // already tuned for the connection rather than starting on a default and
+  // correcting a moment later. Stalls are fed back in below.
+  const network = useNetworkQuality();
+
   const player = useVideoPlayer(content, {
     dataSaverMode,
     startAtSec: resumeSec,
     activeHostOrigin,
+    networkQuality: network.quality,
     onProgress: (t) => { if (Math.floor(t) % 5 === 0) saveProgress(content.id, t); },
     onEnded: () => { if (nextContentId) goToNext(); else setShowEndScreen(true); },
   });
+
+  useEffect(() => {
+    if (player.isBuffering) network.reportStall();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player.isBuffering]);
 
   // The video element is owned by useVideoPlayer, so the accessor is published
   // once rather than re-published on every render of the page around it.
@@ -99,7 +113,6 @@ export default function VideoPlayer({
   const subtitles = useSubtitles(content.subtitleTracks, player.currentTime);
   const cast = useCast(player.videoRef, content.manifestUrl, content.title);
   usePlayerStats(player.isPlaying);
-  const networkQuality = useNetworkQuality(player.isBuffering);
 
   const [isDownloaded, setIsDownloaded] = useState(false);
   useEffect(() => {
@@ -115,6 +128,19 @@ export default function VideoPlayer({
     player.seek(t);
     watchParty?.notifyLocalSeek(t);
   }, [player, watchParty]);
+
+  // Touch gestures on the picture. Routed through the same handleUserSeek as
+  // every other seek, so a swipe in a Watch Party moves everyone exactly like
+  // dragging the scrub bar does. Disabled in the mini player, where the whole
+  // surface is barely larger than the two buttons it holds.
+  const gestures = usePlayerGestures(player.videoRef, {
+    getCurrentTime: () => player.videoRef.current?.currentTime ?? 0,
+    getDuration: () => player.videoRef.current?.duration || player.duration,
+    seek: handleUserSeek,
+    setVolume: player.setVolume,
+    togglePlay: player.togglePlay,
+    enabled: !isMini,
+  });
 
   useEffect(() => {
     if (!watchParty) return;
@@ -192,8 +218,22 @@ export default function VideoPlayer({
       role="region"
       aria-label={`Player video — ${content.title}`}
       className={`pv-shell ${isMini ? 'pv-shell--mini' : ''} ${controlsVisible ? '' : 'pv-controls-hidden'}`}
+      style={{ '--pv-picture-brightness': gestures.brightness } as CSSProperties}
       onMouseMove={handleActivity}
       onKeyDown={handleShortcut}
+      onTouchStart={(e) => {
+        handleActivity();
+        gestures.handlers.onTouchStart(e);
+      }}
+      onTouchMove={gestures.handlers.onTouchMove}
+      onTouchEnd={(e) => {
+        // Browsers still fire a synthetic click ~300ms after a tap. Without
+        // this stamp the tap would toggle playback twice — once through the
+        // gesture handler, once through the picture's own onClick — which
+        // reads as the tap having done nothing at all.
+        lastTouchRef.current = Date.now();
+        gestures.handlers.onTouchEnd(e);
+      }}
       onClick={(e) => {
         handleActivity();
         // Clicking the picture should hand it the keyboard, the way it does in
@@ -210,7 +250,16 @@ export default function VideoPlayer({
       )}
       {player.isBuffering && <div className="pv-skeleton" aria-hidden />}
 
-      <video ref={player.videoRef} className="pv-video" onClick={player.togglePlay} playsInline autoPlay />
+      <video
+        ref={player.videoRef}
+        className="pv-video"
+        onClick={() => {
+          if (Date.now() - lastTouchRef.current < 500) return; // the tap already decided
+          player.togglePlay();
+        }}
+        playsInline
+        autoPlay
+      />
 
       {!isMini && (
         <>
@@ -226,9 +275,11 @@ export default function VideoPlayer({
             resumed={resumedBadge}
             hostName={!isPrimaryHostActive ? activeHostName : null}
             isDownloaded={isDownloaded}
-            networkQuality={networkQuality}
+            networkQuality={network.quality}
             sourceLabel={sourceLabel}
           />
+
+          <GestureOverlay feedback={gestures.feedback} />
 
           <SubtitleOverlay text={subtitles.activeCueText} style={subtitles.style} />
 
@@ -293,6 +344,10 @@ export default function VideoPlayer({
               onSelectRate={player.setPlaybackRate}
               dataSaver={!!dataSaverMode}
               onToggleDataSaver={player.setDataSaver}
+              brightness={gestures.brightness}
+              onSelectBrightness={gestures.adjustBrightness}
+              bufferHealthSec={player.bufferHealthSec}
+              bufferTargetSec={player.bufferTargetSec}
               onClose={() => setSettingsOpen(false)}
             />
           )}

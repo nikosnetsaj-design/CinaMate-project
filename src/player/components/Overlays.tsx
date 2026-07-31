@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import type { SkipMarker, SubtitleStyle, MediaContent } from '../types';
 import { getEndScreenRecommendations } from '../services/recommendationService';
 import type { Recommendation } from '../services/recommendationService';
+import type { GestureFeedback } from '../hooks/usePlayerGestures';
 import { AUTOPLAY_COUNTDOWN_SEC } from '../hooks/usePlaybackExtras';
 import { ErrorIcon } from './Icons';
 
@@ -40,6 +41,35 @@ export function NextUpOverlay({
           <button className="pv-btn-secondary" onClick={onCancel}>Annulla</button>
         </div>
       </div>
+    </div>
+  );
+}
+
+const GESTURE_LABELS: Record<GestureFeedback['kind'], string> = {
+  seek: 'Avanzamento',
+  volume: 'Volume',
+  brightness: 'Luminosità',
+};
+
+/**
+ * The readout for a gesture in progress. A swipe that changes something
+ * invisible — a volume the phone is already showing nowhere, a brightness that
+ * only affects the picture — needs to say what it did, otherwise the gesture
+ * reads as the player glitching.
+ */
+export function GestureOverlay({ feedback }: { feedback: GestureFeedback | null }) {
+  if (!feedback) return null;
+  // A seek has no meaningful 0–1 fill; the two level gestures do.
+  const pct = feedback.kind === 'seek' ? null : Math.round(feedback.value * 100);
+  return (
+    <div className="pv-gesture" role="status" aria-live="polite">
+      <span className="pv-gesture-kind">{GESTURE_LABELS[feedback.kind]}</span>
+      <strong className="pv-gesture-value pv-mono">{feedback.label}</strong>
+      {pct !== null && (
+        <div className="pv-gesture-track">
+          <div className="pv-gesture-fill" style={{ width: `${Math.min(100, pct)}%` }} />
+        </div>
+      )}
     </div>
   );
 }

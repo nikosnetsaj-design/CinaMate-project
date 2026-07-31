@@ -116,6 +116,55 @@
   height: 100%;
   object-fit: contain;
   background: transparent;
+  /* Set by the brightness gesture. This dims the picture, not the screen —
+     no web API can reach the device backlight (see usePlayerGestures). */
+  filter: brightness(var(--pv-picture-brightness, 1));
+  /* A vertical swipe on the picture must adjust volume or brightness, not
+     scroll the page behind it; a horizontal one must scrub, not trigger the
+     browser's back-navigation swipe. */
+  touch-action: none;
+}
+
+/* ===================== Gesture readout ===================== */
+.pv-gesture {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 148px;
+  padding: 14px 20px;
+  border-radius: var(--pv-radius);
+  background: rgba(19, 17, 22, 0.82);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--pv-border);
+  pointer-events: none;
+}
+.pv-gesture-kind {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pv-text-dim);
+}
+.pv-gesture-value {
+  font-size: 1.25rem;
+  color: var(--pv-text);
+}
+.pv-gesture-track {
+  width: 100%;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(245, 241, 232, 0.18);
+  overflow: hidden;
+}
+.pv-gesture-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--pv-accent);
 }
 
 /* Skeleton loading shimmer while buffering */

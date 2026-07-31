@@ -5,6 +5,7 @@ import type { QualityLevel, AudioTrack, SubtitleTrack, SubtitleStyle } from '../
 // CineMate uses it. Re-implementing a focus trap here to keep the folder
 // technically pure would be worse than sharing the one that already works.
 import { useFocusTrap } from '../../lib/useFocusTrap';
+import { BRIGHTNESS_MIN, BRIGHTNESS_MAX } from '../hooks/usePlayerGestures';
 import { CloseIcon } from './Icons';
 
 type Tab = 'quality' | 'audio' | 'subtitles' | 'speed';
@@ -25,6 +26,11 @@ type Props = {
   onSelectRate: (r: number) => void;
   dataSaver: boolean;
   onToggleDataSaver: (enabled: boolean) => void;
+  brightness: number;
+  onSelectBrightness: (v: number) => void;
+  /** Seconds already downloaded ahead of the playhead, and the current target. */
+  bufferHealthSec: number;
+  bufferTargetSec: number;
   onClose: () => void;
 };
 
@@ -82,6 +88,30 @@ export default function SettingsMenu(props: Props) {
               />
               Modalità risparmio dati
             </label>
+
+            <div className="pv-field">
+              <span>Luminosità ({Math.round(props.brightness * 100)}%)</span>
+              <input
+                type="range"
+                min={BRIGHTNESS_MIN}
+                max={BRIGHTNESS_MAX}
+                step={0.05}
+                value={props.brightness}
+                aria-label="Luminosità dell'immagine"
+                onChange={e => props.onSelectBrightness(Number(e.target.value))}
+              />
+            </div>
+
+            {/* Says what the adaptive buffer is doing rather than leaving it an
+                invisible tuning knob: how many seconds are already downloaded,
+                and how many it is currently aiming to hold. */}
+            <p className="pv-dim pv-buffer-readout">
+              Buffer <span className="pv-mono">{Math.round(props.bufferHealthSec)}s</span> di{' '}
+              <span className="pv-mono">{props.bufferTargetSec}s</span>
+              {props.dataSaver
+                ? ' · ridotto dal risparmio dati'
+                : ' · si adatta da solo alla qualità della rete'}
+            </p>
           </div>
         )}
 
