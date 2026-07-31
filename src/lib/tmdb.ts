@@ -216,10 +216,11 @@ interface RawDetails {
   production_countries?: { iso_3166_1: string }[];
   spoken_languages?: { iso_639_1: string }[];
   vote_average?: number;
-  // Films and series carry their age rating under different keys and in
-  // different shapes — TMDB never unified them.
+  // Films and series carry their age rating under different keys, and the
+  // film one nests a second level deep because a country can have several
+  // dated releases (theatrical, then physical) each with its own rating.
   release_dates?: { results?: { iso_3166_1: string; release_dates?: { certification?: string }[] }[] };
-  content_ratings?: { results?: { iso_3166_1: string; rating?: string }[] }[] | { results?: { iso_3166_1: string; rating?: string }[] };
+  content_ratings?: { results?: { iso_3166_1: string; rating?: string }[] };
 }
 
 /**
@@ -240,9 +241,7 @@ function readCertification(details: RawDetails, mediaType: "movie" | "tv"): stri
     }
     return "";
   }
-  const ratings = Array.isArray(details.content_ratings)
-    ? details.content_ratings[0]?.results ?? []
-    : details.content_ratings?.results ?? [];
+  const ratings = details.content_ratings?.results ?? [];
   for (const country of ["IT", "US"]) {
     const rating = ratings.find((r) => r.iso_3166_1 === country)?.rating;
     if (rating && rating.trim()) return rating.trim();

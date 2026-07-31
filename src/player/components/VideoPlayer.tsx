@@ -226,13 +226,13 @@ export default function VideoPlayer({
         gestures.handlers.onTouchStart(e);
       }}
       onTouchMove={gestures.handlers.onTouchMove}
-      onTouchEnd={(e) => {
+      onTouchEnd={() => {
         // Browsers still fire a synthetic click ~300ms after a tap. Without
         // this stamp the tap would toggle playback twice — once through the
         // gesture handler, once through the picture's own onClick — which
         // reads as the tap having done nothing at all.
         lastTouchRef.current = Date.now();
-        gestures.handlers.onTouchEnd(e);
+        gestures.handlers.onTouchEnd();
       }}
       onClick={(e) => {
         handleActivity();

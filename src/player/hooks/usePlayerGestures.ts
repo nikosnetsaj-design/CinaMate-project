@@ -100,6 +100,13 @@ export function usePlayerGestures(videoRef: React.RefObject<HTMLVideoElement | n
     pendingSeek: null as number | null,
     /** True once the finger has travelled far enough to be a drag, not a tap. */
     moved: false,
+    /**
+     * Measured once at touchstart. `getBoundingClientRect` forces a synchronous
+     * layout, and touchmove fires at screen refresh rate — reading it per move
+     * made a scrub janky on exactly the phones the gesture exists for. The
+     * player's own box cannot change mid-swipe anyway.
+     */
+    rect: null as DOMRect | null,
   });
 
   const tapRef = useRef({ at: 0, side: '' as '' | 'left' | 'right', timer: 0 });
@@ -128,6 +135,7 @@ export function usePlayerGestures(videoRef: React.RefObject<HTMLVideoElement | n
         startBrightness: brightness,
         pendingSeek: null,
         moved: false,
+        rect: e.currentTarget.getBoundingClientRect(),
       };
     },
     [enabled, brightness, videoRef]
@@ -141,7 +149,8 @@ export function usePlayerGestures(videoRef: React.RefObject<HTMLVideoElement | n
       const touch = e.touches[0];
       const dx = touch.clientX - drag.startX;
       const dy = touch.clientY - drag.startY;
-      const rect = e.currentTarget.getBoundingClientRect();
+      const rect = drag.rect;
+      if (!rect) return;
 
       if (!drag.axis) {
         if (Math.abs(dx) < AXIS_LOCK_PX && Math.abs(dy) < AXIS_LOCK_PX) return;
@@ -193,7 +202,7 @@ export function usePlayerGestures(videoRef: React.RefObject<HTMLVideoElement | n
   );
 
   const onTouchEnd = useCallback(
-    (e: React.TouchEvent) => {
+    () => {
       const drag = dragRef.current;
       if (!enabled || !drag.active) return;
       drag.active = false;
@@ -209,7 +218,8 @@ export function usePlayerGestures(videoRef: React.RefObject<HTMLVideoElement | n
       if (drag.moved) return; // a vertical drag has already done its work
 
       // --- Taps ---
-      const rect = e.currentTarget.getBoundingClientRect();
+      const rect = drag.rect;
+      if (!rect) return;
       const x = drag.startX - rect.left;
       const zone = rect.width * TAP_ZONE_RATIO;
       const side: '' | 'left' | 'right' = x < zone ? 'left' : x > rect.width - zone ? 'right' : '';

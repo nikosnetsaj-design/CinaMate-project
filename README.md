@@ -24,11 +24,15 @@ tuo server, scritto una volta sola nelle Impostazioni.
 
 - **Vite + React 18 + TypeScript**
 - **Tailwind CSS v4** — design tokens "Cinema Noir" custom in `src/index.css`
-- **Zustand** per lo stato (libreria, tema, impostazioni, sheet), persistito su `localStorage`
+- **Zustand** per lo stato (libreria, tema, obiettivi, layout della Home,
+  controllo genitori, impostazioni, sheet), persistito su `localStorage`
 - **React Router** per la navigazione
 - **Framer Motion** per le micro-interazioni
 - **hls.js** per il player (streaming adattivo), caricato solo quando apri la
-  pagina Player e non all'avvio dell'app
+  pagina Player e non all'avvio dell'app — e precaricato appena il puntatore
+  arriva sul link, così di solito è già lì quando premi
+- **qrcode-generator** per i codici QR, anch'esso caricato solo con il foglio
+  che lo usa
 - **API Anthropic (Claude)** chiamata direttamente dal browser con la tua chiave
   personale, per la ricerca assistita dei titoli e il critico IA
 
@@ -50,16 +54,20 @@ npm run lint      # oxlint
 ```
 src/
   components/   componenti UI (poster, sheet, saghe, maratona, timeline, nav…)
-  pages/        Home, Libreria, Saghe, Scopri, Dati, Critico, Player
-  store/        stato Zustand (libreria, saghe, maratona, promemoria, tema, UI)
+  pages/        Home, Libreria, Saghe, Scopri, Dati, Critico, Player,
+                Diagnostica
+  store/        stato Zustand (libreria, saghe, maratona, promemoria,
+                obiettivi, layout della Home, controllo genitori, tema, UI)
   lib/          dominio e utility (tmdb, sagas, universes, upcoming, stats,
-                achievements, search, anthropic, backup)
+                achievements, search, filters, recommend, goals, parental,
+                accents, share, anthropic, backup, errorLog, selfTest)
   player/       il player, autonomo dal resto dell'app:
-                  hooks/      motore video (hls.js), sottotitoli, maratona,
-                              download, watch party, cast, host monitor
+                  hooks/      motore video (hls.js), gesture, sottotitoli,
+                              maratona, download, watch party, cast,
+                              host monitor
                   services/   download su IndexedDB, lettura delle playlist HLS,
                               cronologia e statistiche, trasporto realtime,
-                              salute e storico degli host
+                              salute, velocità e storico degli host
                   components/ shell del player, controlli, timeline, overlay,
                               impostazioni, pannelli download/party/host
                   styles/     player.css — palette propria, tutta sotto .pv-app
@@ -111,18 +119,40 @@ rete che non è la tua.
 - **Prossimamente**: calendario dei nuovi episodi delle serie che segui e delle
   uscite dei film in watchlist, con promemoria e notifiche locali.
 - **Ricerca intelligente**: una sola barra che trova titoli, saghe, universi,
-  attori e registi, con i risultati raggruppati per tipo.
+  attori e registi, con i risultati raggruppati per tipo — e che perdona gli
+  errori di battitura, proponendo il titolo che intendevi.
+- **Filtri avanzati**: tipo, stato, genere, studio, paese, lingua audio,
+  qualità della tua copia, durata, anno, il tuo voto e quello di TMDB, e
+  "solo con sottotitoli". Le opzioni sono prese dal tuo scaffale, quindi ogni
+  voce del menu corrisponde a qualcosa che hai davvero.
+- **Ricerca a parole**: scrivi «film di fantascienza anni '90» e Claude la
+  traduce in filtri per TMDB, che risponde. Il modello sceglie i filtri, non i
+  titoli: così la lista è vera per costruzione.
+- **Consigli con il perché**: le righe *Per te*, *Più visti*, *Ultimi aggiunti*
+  e *Simili sul tuo scaffale*, ognuna con la ragione scritta sotto al titolo.
+- **Obiettivi personali**: due film a settimana, cinquanta all'anno, dieci
+  horror a ottobre. Si misurano sul diario, non sullo scaffale.
+- **Condivisione**: un link o un codice QR per aprire un titolo — o la lista
+  che hai davanti, filtri compresi — su un altro dispositivo. Senza server: la
+  lista viaggia dentro il link.
+- **Controllo genitori**: filtro per età sulla classificazione reale del film,
+  protetto da PIN.
+- **Diagnostica**: test automatici, salute degli host e log degli errori, tutto
+  sul dispositivo.
 - **Critico IA**: fai domande sui tuoi gusti, basate sulla tua libreria reale,
   incluse le saghe lasciate a metà.
 - **Statistiche e traguardi**: ore totali, film e serie completati, distribuzione
   voti, generi, attori e registi più visti, anno per anno, e badge da sbloccare.
 - **Player**: per i titoli a cui hai dato una sorgente HLS, un lettore completo —
+  gesture sul telefono (scorri per avanzare, su e giù per volume e luminosità,
+  doppio tocco per ±10s), buffer che si dimensiona sulla rete misurata,
   qualità adattiva con selezione manuale, ripresa dal secondo esatto, velocità,
   Picture in Picture, schermo intero, mini player, sottotitoli `.vtt`
   personalizzabili e sincronizzabili, salto intro/recap/crediti, anteprime sulla
   timeline, autoplay nell'ordine della saga, consigli di fine visione presi dalla
   tua libreria, Chromecast/AirPlay, Watch Party con chat e reazioni, download
-  offline riproducibile senza rete, e failover fra host mirror.
+  offline riproducibile senza rete, e failover fra host mirror — con test di
+  velocità, priorità automatica a punteggio e bilanciamento del carico.
 
 ## Player: come dargli qualcosa da riprodurre
 
