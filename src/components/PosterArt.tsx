@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { Item, Kind } from "../types";
 import { paletteFor } from "../lib/palette";
-import { posterUrl } from "../lib/tmdb";
+import { posterUrl, posterSrcSet, type PosterSize } from "../lib/tmdb";
 import { AnimeKindIcon, DocKindIcon, FilmKindIcon, SerieKindIcon } from "./icons";
 
 const KIND_ICON: Record<Kind, (props: { size?: number }) => ReactNode> = {
@@ -36,16 +36,40 @@ function KindBadge({ kind, size }: { kind: Kind; size: "sm" | "md" | "lg" }) {
   );
 }
 
+// What each size is actually rendered at, so the browser can pick the right
+// file instead of guessing from the (unknown until layout) CSS width. The
+// values track the real containers: `sm` is a grid card that grows from a
+// two-up phone grid to a five-up desktop one, `lg` is the detail-sheet poster.
+const SIZES_ATTR: Record<"sm" | "md" | "lg", string> = {
+  sm: "(min-width: 1024px) 190px, (min-width: 640px) 160px, 45vw",
+  md: "(min-width: 640px) 240px, 45vw",
+  lg: "(min-width: 640px) 96px, 80px",
+};
+
+const SRCSET_WIDTHS: Record<"sm" | "md" | "lg", PosterSize[]> = {
+  sm: ["w92", "w154", "w185", "w342", "w500"],
+  md: ["w154", "w185", "w342", "w500"],
+  lg: ["w185", "w342", "w500"],
+};
+
 export function PosterArt({
   item,
   size = "md",
   showTitle = true,
   className = "",
+  priority = false,
 }: {
   item: Pick<Item, "title" | "kind"> & { posterPath?: string | null };
   size?: "sm" | "md" | "lg";
   showTitle?: boolean;
   className?: string;
+  /**
+   * Set on the few posters that are on screen before any scrolling. Lazy
+   * loading them is a net loss: the browser waits for layout before it will
+   * even start the request, which delays exactly the images the page is
+   * judged on.
+   */
+  priority?: boolean;
 }) {
   const [imgFailed, setImgFailed] = useState(false);
   const src = posterUrl(item.posterPath, size === "lg" ? "w500" : "w342");
@@ -59,8 +83,14 @@ export function PosterArt({
       <div className={`relative aspect-2/3 overflow-hidden rounded-sm bg-surface-2 ${className}`}>
         <img
           src={src}
+          srcSet={posterSrcSet(item.posterPath, SRCSET_WIDTHS[size])}
+          sizes={SIZES_ATTR[size]}
           alt={`Copertina di ${item.title}`}
-          loading="lazy"
+          loading={priority ? "eager" : "lazy"}
+          // Off the main thread, so decoding a grid of posters doesn't compete
+          // with the scroll that revealed them.
+          decoding="async"
+          fetchPriority={priority ? "high" : "auto"}
           onError={() => setImgFailed(true)}
           className="h-full w-full object-cover"
         />

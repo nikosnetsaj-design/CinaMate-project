@@ -25,6 +25,7 @@ import { EMPTY_SOURCE } from "../store/usePlayerSources";
 import type { MediaContent } from "../player/types";
 import "../player/styles/player.css";
 import { useVisibleItems } from "../lib/useVisibleItems";
+import { useVisibleInterval } from "../lib/useVisibleInterval";
 
 const IDENTITY_KEY = "cinemate:player-identity";
 
@@ -245,10 +246,7 @@ export function Player() {
   // Polled rather than read once, so the chip keeps ticking up while a video is
   // playing instead of only when this page happens to re-render.
   const [lifetime, setLifetime] = useState(getLifetimeStats);
-  useEffect(() => {
-    const id = window.setInterval(() => setLifetime(getLifetimeStats()), 5000);
-    return () => window.clearInterval(id);
-  }, []);
+  useVisibleInterval(() => setLifetime(getLifetimeStats()), 5000);
 
   // Opened from an invite link (?party=<id>): join that room straight away
   // rather than making the guest find the code and paste it back in. The param

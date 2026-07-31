@@ -1,9 +1,15 @@
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { Sheet } from "./Sheet";
-import { QrCode } from "./QrCode";
 import { useLibrary } from "../store/useLibrary";
 import { itemShareUrl, listShareUrl, shareOrCopy } from "../lib/share";
 import type { Item } from "../types";
+
+/**
+ * The QR encoder is only ever needed by this sheet, so it loads with it rather
+ * than with the app. It is small, but "small" repeated across every feature is
+ * how a launch gets slow — and nothing about opening the library needs it.
+ */
+const QrCode = lazy(() => import("./QrCode").then((m) => ({ default: m.QrCode })));
 
 type Target =
   | { kind: "item"; item: Item }
@@ -73,7 +79,9 @@ export function ShareSheet({ target, onClose }: { target: Target; onClose: () =>
             link. Per il QR, condividi una lista più corta.
           </p>
         ) : (
-          <QrCode value={url} size={216} label={`Codice QR per ${title}`} />
+          <Suspense fallback={<div className="skeleton h-[216px] w-[216px] rounded-sm" aria-hidden />}>
+            <QrCode value={url} size={216} label={`Codice QR per ${title}`} />
+          </Suspense>
         )}
 
         <p className="w-full break-all rounded-sm border border-border bg-surface-2 px-3 py-2 font-mono text-[11px] leading-relaxed text-text-muted">

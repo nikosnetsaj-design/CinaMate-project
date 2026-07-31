@@ -62,7 +62,7 @@ function ItemDetail({ item }: { item: Item }) {
         />
         <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 20%, var(--bg) 100%)" }} />
         <div className="absolute bottom-3.5 left-4 flex items-end gap-3.5 sm:left-6">
-          <PosterArt item={item} size="lg" showTitle={false} className="w-20 shrink-0 shadow-[var(--shadow-lg)] sm:w-24" />
+          <PosterArt item={item} size="lg" showTitle={false} priority className="w-20 shrink-0 shadow-[var(--shadow-lg)] sm:w-24" />
           {item.vote != null && (
             <div className="pb-1">
               <span className="font-mono tabular text-4xl font-semibold leading-none" style={{ color: voteColor(item.vote) }}>

@@ -95,8 +95,34 @@ async function tmdbGet<T>(path: string, apiKey: string, params: Record<string, s
   return (await response.json()) as T;
 }
 
-export function posterUrl(path: string | null | undefined, size: "w185" | "w342" | "w500" = "w342"): string | null {
+export type PosterSize = "w92" | "w154" | "w185" | "w342" | "w500" | "w780";
+
+export function posterUrl(path: string | null | undefined, size: PosterSize = "w342"): string | null {
   return path ? `${IMG_BASE}/${size}${path}` : null;
+}
+
+/**
+ * The widths TMDB actually serves, as a `srcset`.
+ *
+ * TMDB re-encodes each width separately, so this is real compression rather
+ * than the browser scaling one large file down: a poster shown 96px wide on a
+ * 1× screen fetches ~6 KB instead of the ~40 KB of the w342 everything used to
+ * get. Descriptors are widths (`w`), not `1x/2x`, so the browser can weigh
+ * pixel density *and* layout size together — the same card is 96px on a phone
+ * grid and 190px on a desktop one, and a density-only set can't express that.
+ */
+const POSTER_WIDTHS: Record<PosterSize, number> = {
+  w92: 92,
+  w154: 154,
+  w185: 185,
+  w342: 342,
+  w500: 500,
+  w780: 780,
+};
+
+export function posterSrcSet(path: string | null | undefined, sizes: PosterSize[]): string | undefined {
+  if (!path) return undefined;
+  return sizes.map((size) => `${IMG_BASE}/${size}${path} ${POSTER_WIDTHS[size]}w`).join(", ");
 }
 
 function guessKind(mediaType: "movie" | "tv", genreNames: string[], originCountry: string[] = []): Kind {

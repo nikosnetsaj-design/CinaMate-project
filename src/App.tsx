@@ -24,7 +24,7 @@ import { Sagas } from "./pages/Sagas";
 import { Discover } from "./pages/Discover";
 import { Stats } from "./pages/Stats";
 import { Critic } from "./pages/Critic";
-import { Diagnostics } from "./pages/Diagnostics";
+
 
 /**
  * The player is the only route that needs hls.js, and hls.js alone is bigger
@@ -33,6 +33,15 @@ import { Diagnostics } from "./pages/Diagnostics";
  * before the player existed.
  */
 const Player = lazy(() => import("./pages/Player").then((m) => ({ default: m.Player })));
+
+/**
+ * Split for the same reason as the player, on a different axis: this one is
+ * small but almost never opened — it is where you go when something is wrong,
+ * and its self-tests drag in the whole host-checking layer. Keeping it out of
+ * the first load costs a page nobody visits nothing and keeps the launch about
+ * the library.
+ */
+const Diagnostics = lazy(() => import("./pages/Diagnostics").then((m) => ({ default: m.Diagnostics })));
 
 function ErrorBanner() {
   const storageError = useLibrary((s) => s.storageError);
@@ -95,7 +104,20 @@ export default function App() {
             <Route path="/scopri" element={<Discover />} />
             <Route path="/dati" element={<Stats />} />
             <Route path="/critico" element={<Critic />} />
-            <Route path="/diagnostica" element={<Diagnostics />} />
+            <Route
+              path="/diagnostica"
+              element={
+                <Suspense
+                  fallback={
+                    <div className="mx-auto max-w-3xl px-4 py-10 text-sm text-text-faint sm:px-6">
+                      Caricamento…
+                    </div>
+                  }
+                >
+                  <Diagnostics />
+                </Suspense>
+              }
+            />
             <Route
               path="/player"
               element={

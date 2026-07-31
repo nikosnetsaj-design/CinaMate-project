@@ -30,6 +30,7 @@ import {
 import type { HostInput } from '../services/hostStore';
 import { checkHost, checkAllHosts, DEFAULT_TIMEOUT_MS, DEFAULT_SLOW_THRESHOLD_MS } from '../services/hostHealthService';
 import { measureThroughput, measureAllThroughput } from '../services/hostSpeedService';
+import { useVisibleInterval } from '../../lib/useVisibleInterval';
 
 type ResultMap = Record<string, HostCheckResult | null>;
 type StatsMap = Record<string, HostStats>;
@@ -344,20 +345,12 @@ export function useHostMonitor() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // "Controllo ogni" — periodic monitoring on the configured interval.
-  useEffect(() => {
-    const id = window.setInterval(() => testAllRef.current(true), monitorIntervalMs);
-    return () => window.clearInterval(id);
-  }, [monitorIntervalMs]);
-
-  // "Controllo quando l'app torna in primo piano".
-  useEffect(() => {
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') testAllRef.current(true);
-    };
-    document.addEventListener('visibilitychange', onVisibility);
-    return () => document.removeEventListener('visibilitychange', onVisibility);
-  }, []);
+  // "Controllo ogni" — periodic monitoring on the configured interval, paused
+  // while the page is hidden and re-run the moment it comes back. That
+  // subsumes the separate visibility listener this used to keep: the hook does
+  // both, and running them side by side fired two checks on every return to
+  // the foreground.
+  useVisibleInterval(() => testAllRef.current(true), monitorIntervalMs);
 
   const addHost = useCallback((input: HostInput) => {
     addHostToStore(input);

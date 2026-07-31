@@ -3,6 +3,7 @@ import { useTheme } from "../store/useTheme";
 import { useCommandPalette } from "../store/useCommandPalette";
 import { useAddSheet } from "../store/useAddSheet";
 import { useSettingsSheet } from "../store/useSettingsSheet";
+import { prefetchHandlers } from "../lib/prefetch";
 import { ChartIcon, CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, PlayIcon, PlusIcon, PulseIcon, ReelMark, SearchIcon, SparkleIcon, StackIcon, SunIcon } from "./icons";
 
 const NAV_ITEMS = [
@@ -86,7 +87,13 @@ export function Nav() {
 
         <nav aria-label="Navigazione principale" className="flex flex-1 flex-col gap-1">
           {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
-            <NavLink key={to} to={to} end={end} className={({ isActive }) => linkClasses(isActive)}>
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              {...prefetchHandlers(to)}
+              className={({ isActive }) => linkClasses(isActive)}
+            >
               {({ isActive }) => (
                 <>
                   <Icon />
@@ -160,6 +167,7 @@ export function Nav() {
             key={to}
             to={to}
             end={end}
+            {...prefetchHandlers(to)}
             className={({ isActive }) =>
               `flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium ${
                 isActive ? "text-accent-text" : "text-text-faint"
