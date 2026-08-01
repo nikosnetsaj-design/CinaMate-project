@@ -54,13 +54,15 @@ npm run lint      # oxlint
 ```
 src/
   components/   componenti UI (poster, sheet, saghe, maratona, timeline, nav…)
-  pages/        Home, Libreria, Saghe, Scopri, Dati, Critico, Player,
+  pages/        Home, Libreria, Saghe, Scopri, Dati, Profilo, Critico, Player,
                 Diagnostica
   store/        stato Zustand (libreria, saghe, maratona, promemoria,
-                obiettivi, layout della Home, controllo genitori, tema, UI)
+                obiettivi, layout della Home, punto di ripresa, controllo
+                genitori, tema, UI)
   lib/          dominio e utility (tmdb, sagas, universes, upcoming, stats,
-                achievements, search, filters, recommend, goals, parental,
-                accents, share, anthropic, backup, errorLog, selfTest)
+                activity, continueWatching, achievements, search, filters,
+                recommend, goals, parental, accents, share, anthropic, backup,
+                errorLog, selfTest)
   player/       il player, autonomo dal resto dell'app:
                   hooks/      motore video (hls.js), gesture, sottotitoli,
                               maratona, download, watch party, cast,
@@ -114,6 +116,17 @@ rete che non è la tua.
   salvato fra sessioni e riavvii, e ogni capitolo completato fa avanzare la coda.
 - **Continua la storia**: appena finisci un capitolo, l'app propone il
   successivo della stessa saga.
+- **Continua a guardare**: la riga in cima alla Home tiene da parte tutto quello
+  che hai lasciato a metà, dal più recente. Ogni scheda dice a che percentuale
+  sei, quale stagione ed episodio ti aspetta e quanti minuti mancano alla fine;
+  un tocco e riparte dal secondo esatto in cui avevi smesso. Il punto lo salva il
+  player da solo mentre guardi, ma la riga tiene conto anche di quello che segni
+  a mano — così ci finiscono anche i titoli visti altrove.
+- **Profilo**: la tua pagina personale, con le ore totali che salgono mentre
+  guardi, film visti, serie completate ed episodi, un grafico dei minuti per
+  giorno con vista settimana / mese / anno, il livello che cresce con le ore, il
+  giorno record, i giorni di fila, la classifica delle tue serie per episodi e le
+  copertine di ciò che hai finito.
 - **Pagine persone**: attori e registi cliccabili ovunque, con filmografia da
   TMDB e in evidenza ciò che hai già in libreria.
 - **Prossimamente**: calendario dei nuovi episodi delle serie che segui e delle

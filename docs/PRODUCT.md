@@ -42,7 +42,7 @@ resta tua e non ti vende niente.
 
 | Sezione | Problema che risolve | Beneficio | Priorità |
 |---|---|---|---|
-| **Riprendi** | "A che episodio ero?" | Un tocco per ripartire, con progresso | Essenziale |
+| **Continua a guardare** | "A che punto ero?" | Un tocco e riparte dal secondo esatto: percentuale, S·E e minuti che restano | Essenziale ✅ |
 | **Il Nastro** | I dati personali sono tabelle morte | La tua visione come oggetto visivo | Essenziale ✅ |
 | **Cosa guardo stasera** | Paralisi da scelta davanti a 200 titoli | Una proposta sola, rilanciabile | Essenziale ✅ |
 | **In arrivo** | Perdi le uscite delle serie che segui | Conto alla rovescia per episodio | Essenziale ✅ |
@@ -174,6 +174,9 @@ sezione: hanno il loro, con la licenza, e meglio. Questo player non è per loro 
 | Funzione | Problema | Beneficio | Priorità |
 |---|---|---|---|
 | Diario cronologico | "Quando l'ho visto?" | Storia consultabile | Essenziale ✅ |
+| **Profilo** | Le statistiche stanno in una pagina di analisi, non dove sei tu | Ore totali, livello, record e classifica serie in un posto solo | Essenziale ✅ |
+| **Grafico attività** | "Guardo davvero tutte le sere?" | Minuti per giorno, con vista settimana / mese / anno | Essenziale ✅ |
+| **Livello e record personale** | Contare le ore non è un traguardo | Un livello che cresce con le ore e il giorno record, con la striscia di giorni di fila | Utile ✅ |
 | Statistiche + anno in rassegna | I numeri non raccontano | Il tuo anno come storia, anno per anno | Essenziale ✅ |
 | Attori e registi più visti | "Chi guardo davvero?" | Classifica dal tuo storico, ogni nome apre la sua pagina | Utile ✅ |
 | Traguardi | Nessun ritorno emotivo | Riconoscimento delle abitudini, saghe e generi inclusi | Utile ✅ |

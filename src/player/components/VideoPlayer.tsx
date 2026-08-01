@@ -84,12 +84,20 @@ export default function VideoPlayer({
   // correcting a moment later. Stalls are fed back in below.
   const network = useNetworkQuality();
 
+  // The measured length, mirrored into a ref because `onProgress` is handed to
+  // the player once, before `player.duration` exists — a closure over the state
+  // would keep reporting the 0 it had at mount.
+  const playerDurationRef = useRef(0);
+
   const player = useVideoPlayer(content, {
     dataSaverMode,
     startAtSec: resumeSec,
     activeHostOrigin,
     networkQuality: network.quality,
-    onProgress: (t) => { if (Math.floor(t) % 5 === 0) saveProgress(content.id, t); },
+    // The length goes in with the position: without it "Continua a guardare"
+    // could show a bar but never the minutes left, and a title whose runtime
+    // was never filled in by hand would have no percentage at all.
+    onProgress: (t) => { if (Math.floor(t) % 5 === 0) saveProgress(content.id, t, playerDurationRef.current); },
     onEnded: () => { if (nextContentId) goToNext(); else setShowEndScreen(true); },
   });
 
@@ -97,6 +105,10 @@ export default function VideoPlayer({
     if (player.isBuffering) network.reportStall();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [player.isBuffering]);
+
+  useEffect(() => {
+    playerDurationRef.current = player.duration;
+  }, [player.duration]);
 
   // The video element is owned by useVideoPlayer, so the accessor is published
   // once rather than re-published on every render of the page around it.

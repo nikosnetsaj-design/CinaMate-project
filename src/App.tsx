@@ -23,7 +23,9 @@ import { Library } from "./pages/Library";
 import { Sagas } from "./pages/Sagas";
 import { Discover } from "./pages/Discover";
 import { Stats } from "./pages/Stats";
+import { Profile } from "./pages/Profile";
 import { Critic } from "./pages/Critic";
+import { useWatchProgressSync } from "./store/useWatchProgress";
 
 
 /**
@@ -71,6 +73,9 @@ export default function App() {
   useAutoLinkTmdb();
   useAutoLinkSagas();
   useReleaseAlerts();
+  // Mounted once here rather than per row: the playhead is written every few
+  // seconds while something plays, and each listener costs a re-read.
+  useWatchProgressSync();
 
   useEffect(() => {
     // Dark is the base theme, so the light variant is the one that opts in.
@@ -103,6 +108,7 @@ export default function App() {
             <Route path="/saghe" element={<Sagas />} />
             <Route path="/scopri" element={<Discover />} />
             <Route path="/dati" element={<Stats />} />
+            <Route path="/profilo" element={<Profile />} />
             <Route path="/critico" element={<Critic />} />
             <Route
               path="/diagnostica"

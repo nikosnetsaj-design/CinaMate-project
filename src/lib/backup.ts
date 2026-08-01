@@ -23,9 +23,15 @@ export interface SagaBackup {
  * out of the export would mean losing it on every device change, which is the
  * exact failure export/import exists to prevent.
  *
- * The player's own `ppv:` bookkeeping (resume positions, watch counters, host
- * check history) stays out: it rebuilds itself as you watch, and the diary
+ * Most of the player's own `ppv:` bookkeeping (resume positions, watch counters,
+ * host check history) stays out: it rebuilds itself as you watch, and the diary
  * already carries the part that matters.
+ *
+ * The daily activity counters are the exception, and the reason is the one that
+ * governs this whole file: they cannot be rebuilt. A day's minutes are a
+ * measurement of a moment that has passed — nothing on the next device can
+ * derive them, and without them the profile's chart, streak and personal record
+ * start again from zero on every device change.
  */
 export interface PlayerBackup {
   /** Per title: stream, subtitle tracks, skip markers, timeline sprite. */
@@ -34,6 +40,8 @@ export interface PlayerBackup {
   prefs?: unknown;
   /** Mirror hosts, with their roles and priority order. */
   hosts?: unknown;
+  /** `{ "yyyy-mm-dd": seconds }` — minutes watched per day, for the profile. */
+  daily?: unknown;
 }
 
 export interface Backup {
@@ -120,7 +128,7 @@ function parseSagaBackup(value: unknown): SagaBackup | undefined {
  */
 function parsePlayerBackup(value: unknown): PlayerBackup | undefined {
   if (!isRecord(value)) return undefined;
-  return { sources: value.sources, prefs: value.prefs, hosts: value.hosts };
+  return { sources: value.sources, prefs: value.prefs, hosts: value.hosts, daily: value.daily };
 }
 
 export class BackupParseError extends Error {

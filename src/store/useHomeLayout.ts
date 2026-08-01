@@ -28,7 +28,10 @@ export const HOME_SECTIONS: { id: HomeSectionId; label: string; description: str
   { id: "nastro", label: "Il Nastro", description: "La tua visione come oggetto visivo" },
   { id: "maratona", label: "Maratona in corso", description: "La saga che stai attraversando" },
   { id: "statistiche", label: "Statistiche", description: "Titoli, voto medio, ore, preferiti" },
-  { id: "riprendi", label: "Riprendi", description: "Quello che hai lasciato a metà" },
+  // Keeps the id `riprendi` although the row is now called "Continua a
+  // guardare": the id is what stored layouts hold, and renaming it would have
+  // reset the row order of every install to win nothing.
+  { id: "riprendi", label: "Continua a guardare", description: "Riparte dal punto esatto in cui hai smesso" },
   { id: "saga", label: "Continua la saga", description: "Il prossimo capitolo, già scelto" },
   { id: "arrivo", label: "In arrivo", description: "Nuovi episodi e uscite che segui" },
   { id: "perTe", label: "Per te", description: "Consigli dal tuo scaffale, con il perché" },
