@@ -39,15 +39,14 @@ riproposte. Se ricompaiono in una discussione futura, la risposta è già qui.
 
 **Parti eliminate:** PARTE 5 (priorità di costruzione) e PARTE 6 (rischi).
 
-**Conseguenze applicate al resto del documento.** Dove una voce esclusa
-ricompariva sotto un altro numero, è stata tolta anche lì: E7 e E8 (ricerca nei
-dialoghi e semantica), F6 e F10 (liste collaborative, consigli dagli amici), G5
-(recensioni utenti lunghe), G12 e G13 (guida ai genitori, avvisi di contenuto),
-H14 e H16 (skip scene sensibili, solo audio), I8 e I11 (sottotitoli doppi,
-riduzione flash), D7 e F13 (feed di clip), D10 (home per profilo bambino), N5
-(avviso calo prezzo), Q4 (cancella titolo dalla cronologia). Le lettere delle
-sezioni restano quelle originali, senza rinumerare, così i riferimenti
-all'analisi di partenza continuano a funzionare.
+**Fuori ambito è solo ciò che è elencato qui sopra.** Tutto il resto
+dell'analisi resta dentro. Le uniche righe tolte oltre le aree A/B/L/P/R/S sono
+quelle che descrivevano direttamente una delle tre funzioni escluse: D7 e F13
+(feed verticale di clip) e N5 (avviso di calo prezzo su noleggio e acquisto).
+
+Le lettere e i numeri delle sezioni restano quelli originali, senza rinumerare,
+così i riferimenti all'analisi di partenza continuano a funzionare: i numeri che
+mancano sono esattamente le voci escluse.
 
 ---
 
@@ -100,6 +99,7 @@ Confrontarle tutte insieme senza dividerle è l'errore numero uno. Sono **cinque
 | D6 | Tab "Novità" / "Prossimamente" | Netflix (rimossa nel redesign 2026), Disney+ 🟡, HBO Max ✅, Hulu ✅ | |
 | D8 | Sezione "La mia roba" unificata | Netflix ✅ (My Netflix), Disney+ 🟡, Prime 🟡 | |
 | D9 | Navigazione con ricerca in basso (una mano) | Netflix ✅ (dal 2026) | gli altri hanno la lente in alto a destra |
+| D10 | Home diversa per profilo bambino | Netflix, Disney+, HBO Max, Hulu | |
 | D11 | Ordinamento manuale della libreria | 🟡 quasi eliminato ovunque | grande passo indietro recente |
 | D12 | Vista a griglia con tutto il catalogo A-Z | **TMDb ✅, JustWatch ✅, IMDb ✅** | gli streamer lo nascondono di proposito |
 | D13 | Widget home screen | Apple TV ✅, Netflix 🟡, JustWatch ✅ | |
@@ -119,6 +119,8 @@ Confrontarle tutte insieme senza dividerle è l'errore numero uno. Sono **cinque
 | E4 | Ricerca vocale | Apple TV ✅ (Siri), Prime ✅ (Alexa), Android TV ✅ |
 | E5 | Filtri avanzati (anno, genere, durata, voto, paese, lingua) | **TMDb ✅✅, Letterboxd ✅✅, JustWatch ✅✅, IMDb ✅** | streamer ❌ quasi tutti |
 | E6 | Filtro per "dove è disponibile" | **JustWatch ✅✅**, TMDb ✅, Letterboxd Pro ✅, Trakt ✅ | streamer ❌ (ovvio) |
+| E7 | Ricerca dentro i sottotitoli / per battuta | ❌ **nessuno** (enorme occasione persa) |
+| E8 | Ricerca semantica ("film tipo Interstellar ma più corto") | ❌ nessuno davvero |
 | E9 | Ricerca per colonna sonora / compositore | IMDb 🟡, TMDb 🟡 |
 | E10 | Ricerca per certificazione/età | TMDb ✅, JustWatch ✅ |
 | E11 | Cronologia ricerche | 🟡 quasi tutti |
@@ -137,9 +139,11 @@ Confrontarle tutte insieme senza dividerle è l'errore numero uno. Sono **cinque
 | F3 | Percentuale di compatibilità personale | Netflix 🟡 (tolta), **Trakt 🟡** | grande assente |
 | F4 | Curatela umana / editoriale | **Letterboxd ✅✅ (Featured Lists)**, Criterion-style, HBO Max 🟡 | Netflix ❌ (tutto algoritmo) |
 | F5 | Liste create dagli utenti | **Letterboxd ✅✅, Trakt ✅✅, IMDb ✅, TMDb ✅, JustWatch 🟡** | streamer ❌ TOTALE |
+| F6 | Liste collaborative | Trakt ✅, IMDb 🟡 | Letterboxd 🟡 |
 | F7 | "Riproduci qualcosa" / shuffle | Netflix ✅, Disney+ 🟡, Peacock 🟡 | il resto ❌ |
 | F8 | Top 10 giornaliera del paese | **Netflix ✅✅** (il singolo trucco di discovery più efficace mai inventato) | Prime 🟡, altri ❌ |
 | F9 | Trending / popolarità in tempo reale | TMDb ✅, Trakt ✅✅ (trending, anticipated, played), IMDb ✅ (MOVIEmeter) |
+| F10 | Raccomandazioni da amici | **Letterboxd ✅✅, Trakt ✅** | streamer ❌ |
 | F11 | Titoli simili nella scheda | tutti 🟡, TMDb ✅, Letterboxd ✅ |
 | F12 | Scoperta per "vibe"/mood | 🟡 accennata da Netflix e Peacock, mai fatta bene |
 | F14 | "In scadenza / ultima chiamata" | JustWatch ✅, Trakt 🟡, HBO Max 🟡 | Netflix ❌ (lo nasconde) |
@@ -155,12 +159,15 @@ Confrontarle tutte insieme senza dividerle è l'errore numero uno. Sono **cinque
 | G2 | Cast completo + crew completa (reparti, comparse, doppiatori) | **IMDb ✅✅✅, TMDb ✅✅** | streamer 🟡 (4 nomi e via) |
 | G3 | Voto medio + distribuzione dei voti | **Letterboxd ✅✅ (istogramma)**, IMDb ✅ (con breakdown per età/sesso/paese), TMDb ✅ |
 | G4 | Voti critica (Metacritic/RT) | IMDb ✅ (Metascore), JustWatch 🟡 | streamer ❌ |
+| G5 | Recensioni utenti lunghe | **IMDb ✅, Letterboxd ✅✅** | streamer ❌ |
 | G6 | Trailer e clip | tutti ✅, **TMDb ✅✅ (tutti i video, tutte le lingue)** |
 | G7 | Gallerie immagini, poster alternativi, backdrop | **TMDb ✅✅✅** (imbattibile) |
 | G8 | Trivia, goof, quote, curiosità | **IMDb ✅✅** (unico) |
 | G9 | Colonna sonora / brani nelle scene | IMDb ✅ | streamer ❌ (grave) |
 | G10 | Box office e budget | IMDb ✅ (Pro), TMDb ✅ |
 | G11 | Premi e nomination | IMDb ✅✅ | resto ❌ |
+| G12 | Guida ai genitori dettagliata (violenza/sesso/linguaggio) | **IMDb ✅✅ (Parents Guide)** | streamer 🟡 (solo un rating) |
+| G13 | Avvisi di contenuto specifici e granulari | 🟡 quasi nessuno | grande buco |
 | G14 | Dove guardarlo (tutte le piattaforme) | **JustWatch ✅✅, TMDb ✅, Letterboxd ✅, Trakt ✅** | streamer ❌ per ovvi motivi |
 | G15 | Info tecniche (aspect ratio, HDR, Atmos, lingue disponibili) | 🟡 frammentario ovunque, **mai completo** |
 | G16 | Ordine di visione consigliato per franchise | 🟡 Disney+ ci prova, per il resto ❌ |
@@ -190,7 +197,9 @@ Confrontarle tutte insieme senza dividerle è l'errore numero uno. Sono **cinque
 | H11 | Continua tra dispositivi (riprendi esatto) | tutti ✅ ma con lag di sync |
 | H12 | Timer di spegnimento / "stai ancora guardando?" | tutti 🟡 (invasivo), Netflix ✅ configurabile |
 | H13 | Boost dialoghi / normalizzazione volume | **Apple TV ✅ (Enhance Dialogue)**, Prime 🟡 (Dialogue Boost) | Netflix ❌ |
+| H14 | Salta scene violente/sessuali | ❌ nessuno (VidAngel esiste fuori) |
 | H15 | Capitoli navigabili | Apple ✅, Prime 🟡 |
+| H16 | Modalità solo audio / seconda schermata | ❌ nessuno |
 | H17 | Skip credits alla fine + "resta per la scena post-credit" | 🟡 nessuno avvisa mai delle scene post-credit — assurdo |
 | H18 | Player TV semplificato | **Netflix (test 2026: controlli play/pause snelliti, overlay sottotitoli nuovi)** |
 | H19 | Zoom/riempi schermo per il 21:9 | 🟡 pochissimi |
@@ -211,8 +220,10 @@ Confrontarle tutte insieme senza dividerle è l'errore numero uno. Sono **cinque
 | I5 | Dolby Atmos / spatial audio | Netflix (premium), Apple ✅✅, Disney+ ✅, HBO Max (Ultimate) |
 | I6 | Doppiaggio in molte lingue | Netflix ✅✅✅ (leader mondiale), Disney+ ✅, Crunchyroll ✅ (anime) |
 | I7 | Ricorda lingua preferita per sempre | Netflix ✅, Crunchyroll ✅ | **Prime ❌ (la dimentica ogni volta, difetto storico)** |
+| I8 | Sottotitoli doppi (due lingue insieme, per studiare) | ❌ nessuno (esiste solo via estensioni) |
 | I9 | Trascrizione completa/testo scorrevole | ❌ nessuno |
 | I10 | Navigazione screen reader completa | Apple ✅✅, Netflix ✅ | molti 🟡 |
+| I11 | Riduzione flash/luci per epilessia | ❌ quasi nessuno avvisa |
 | I12 | Modalità daltonismo / alto contrasto UI | 🟡 rarissima |
 
 ---
@@ -317,6 +328,7 @@ Confrontarle tutte insieme senza dividerle è l'errore numero uno. Sono **cinque
 | Q1 | Esporta la tua cronologia | **Netflix ✅ (CSV, il migliore tra gli streamer)**, Letterboxd ✅✅, Trakt ✅✅, IMDb ✅ |
 | Q2 | Esporta liste | Letterboxd ✅, Trakt ✅, IMDb ✅, TMDb ✅ |
 | Q3 | Importa da altre piattaforme | **Letterboxd ✅ (da IMDb, Netflix, ecc.), Trakt ✅** |
+| Q4 | Cancella singolo titolo dalla cronologia | Netflix ✅, Disney+ 🟡 | Prime 🟡 |
 | Q5 | Modalità "non tracciarmi" | ❌ nessuno |
 | Q7 | Dati aperti / community-editable | **TMDb ✅✅ (chiunque può correggere)**, IMDb ✅ (con moderazione) |
 
