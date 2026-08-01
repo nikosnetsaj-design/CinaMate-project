@@ -29,9 +29,12 @@ export function Home() {
   const order = useHomeLayout((s) => s.order);
   const hidden = useHomeLayout((s) => s.hidden);
 
-  const stats = computeStats(items);
-  const planned = items.filter((i) => i.status === "Da vedere").slice(0, 4);
-  const favs = items.filter((i) => i.fav);
+  // Walks the whole library and derives a dozen aggregates, and this page
+  // re-renders on every store touch — ticking one episode counter should not
+  // recount every genre, actor and director you own.
+  const stats = useMemo(() => computeStats(items), [items]);
+  const planned = useMemo(() => items.filter((i) => i.status === "Da vedere").slice(0, 4), [items]);
+  const favs = useMemo(() => items.filter((i) => i.fav), [items]);
 
   // Each of these walks the whole library, and the Home page re-renders on
   // every store touch — a tick on an episode counter shouldn't recompute a

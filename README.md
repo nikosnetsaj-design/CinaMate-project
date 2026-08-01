@@ -150,6 +150,14 @@ rete che non è la tua.
   lista viaggia dentro il link.
 - **Controllo genitori**: filtro per età sulla classificazione reale del film,
   protetto da PIN.
+- **Funziona offline**: dopo la prima apertura con la rete, l'app si avvia
+  anche senza. Libreria, diario, statistiche, saghe e profilo sono già tutti sul
+  dispositivo; le copertine già viste restano in cache. Un avviso dice cosa
+  resta in attesa della connessione — la ricerca su TMDB, le copertine nuove e
+  il critico — invece di lasciarti davanti a una ricerca che non risponde.
+- **Aggiornamenti che chiedono il permesso**: quando esce una versione nuova
+  compare un avviso con «Ricarica». Non si aggiorna da sola: potresti essere a
+  metà di una recensione o di un film.
 - **Diagnostica**: test automatici, salute degli host e log degli errori, tutto
   sul dispositivo.
 - **Critico IA**: fai domande sui tuoi gusti, basate sulla tua libreria reale,

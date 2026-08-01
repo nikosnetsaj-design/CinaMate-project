@@ -198,7 +198,18 @@ sezione: hanno il loro, con la licenza, e meglio. Questo player non è per loro 
 ### 3.8 Download
 
 **Metadati e copertine** per la consultazione offline: la libreria resta
-sfogliabile in aereo. → Utile.
+sfogliabile in aereo. → Utile ✅
+
+Fatto con un service worker scritto a mano, con una regola per tipo di
+richiesta: la pagina dalla rete con la copia in cache come rete di sicurezza,
+i file del build dalla cache (l'hash *è* la versione, quindi non può essere
+quella sbagliata), le copertine TMDB dalla cache con un tetto di 400. Fuori
+restano il JSON di TMDB e le chiamate all'IA — una risposta vecchia lì sarebbe
+peggio di un errore onesto — e i segmenti video, che hanno già il loro gestore
+di download su IndexedDB e riempirebbero il telefono di nascosto.
+
+Gli aggiornamenti si offrono, non si applicano: un ricaricamento deciso
+dall'app può cadere in mezzo a una recensione o a un film.
 
 Per i titoli con una sorgente propria c'è anche il download del video, dentro il
 player (§3.6): coda, pausa/ripresa, gestione dello spazio, riproduzione offline e
