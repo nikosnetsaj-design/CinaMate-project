@@ -1,6 +1,8 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import Hls from 'hls.js';
 import type { QualityLevel, AudioTrack, MediaContent, NetworkQuality } from '../types';
+import { getPlaybackPrefs, normaliseLang, setPlaybackPrefs } from '../services/playbackPrefs';
+import { describeFailure, type PlayerFailure } from '../services/playerErrors';
 
 export type VideoPlayerOptions = {
   dataSaverMode?: boolean;
@@ -129,7 +131,7 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
   const [volume, setVolumeState] = useState(1);
   const [muted, setMuted] = useState(false);
   const [playbackRate, setPlaybackRateState] = useState(1);
-  const [error, setError] = useState<string | null>(null);
+  const [failure, setFailure] = useState<PlayerFailure | null>(null);
   const [isPiP, setIsPiP] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -139,7 +141,7 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
     const media = content;
     if (!video || !media) return;
 
-    setError(null);
+    setFailure(null);
     retryCountRef.current = 0;
 
     // `video`/`media` are re-bound to locals inside attach() because
@@ -172,7 +174,10 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
           },
         });
         hlsRef.current = hls;
-        hls.autoLevelCapping = options.dataSaverMode ? 1 : -1;
+        // The real cap is applied on MANIFEST_PARSED, once the renditions are
+        // known; this only makes sure data saver is in force for the very first
+        // segment, before there is a ladder to choose from.
+        if (optionsRef.current.dataSaverMode) hls.autoLevelCapping = 1;
         hls.loadSource(c.manifestUrl);
         hls.attachMedia(v);
 
@@ -193,7 +198,22 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
                 label: t.name || t.lang || `Traccia ${i + 1}`,
               }))
             );
+
+            // The dub you always pick, picked for you. Without this, a series
+            // whose tracks happen to start on the original language makes you
+            // reopen the menu at the top of every single episode.
+            const wanted = normaliseLang(getPlaybackPrefs().audioLang);
+            if (wanted) {
+              const match = hls.audioTracks.findIndex((t) => normaliseLang(t.lang) === wanted);
+              if (match >= 0 && match !== hls.audioTrack) hls.audioTrack = match;
+            }
           }
+
+          // A ceiling on the adaptive ladder, kept across titles: on a metered
+          // connection "never above 720p" is a decision made once, not one to
+          // re-make every time something starts.
+          applyLevelCap(hls, getPlaybackPrefs().maxHeight, optionsRef.current.dataSaverMode);
+
           if (options.startAtSec) v.currentTime = options.startAtSec;
         });
 
@@ -204,9 +224,14 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
         // hls.js's recommended recovery pattern.
         hls.on(Hls.Events.ERROR, (_evt, data) => {
           if (!data.fatal) return;
-          if (retryCountRef.current >= MAX_RETRIES) {
-            setError('Impossibile riprodurre il contenuto. Controlla la connessione e riprova.');
-            optionsRef.current.onError?.('max_retries_exceeded');
+          const described = describeFailure(data);
+          // A failure that waiting cannot fix is reported at once instead of
+          // after five rounds of backoff: retrying a 404 five times only means
+          // twenty seconds of staring at a black rectangle before being told
+          // the same thing.
+          if (!described.transient || retryCountRef.current >= MAX_RETRIES) {
+            setFailure(described);
+            optionsRef.current.onError?.(described.transient ? 'max_retries_exceeded' : (data.details ?? 'fatal'));
             return;
           }
           const attempt = retryCountRef.current + 1;
@@ -235,7 +260,11 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
         v.src = origin ? rewriteOrigin(c.manifestUrl, origin) : c.manifestUrl;
         if (options.startAtSec) v.currentTime = options.startAtSec;
       } else {
-        setError('Il tuo browser non supporta la riproduzione adattiva.');
+        setFailure({
+          message: 'Questo browser non sa riprodurre flussi adattivi.',
+          hint: 'Serve il supporto a Media Source Extensions. Aggiorna il browser, oppure aprilo in Chrome, Firefox o Safari recenti.',
+          transient: false,
+        });
       }
     }
 
@@ -323,6 +352,44 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Preferences that belong to *you*, not to a title: volume, mute and speed
+  // are applied to every new element, so the fifth episode of an evening starts
+  // exactly like the fourth ended. Written back below, so a change made here
+  // teaches the next title too.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const prefs = getPlaybackPrefs();
+    video.volume = prefs.volume;
+    video.muted = prefs.muted;
+    video.playbackRate = prefs.playbackRate;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [content?.id]);
+
+  /**
+   * Comes back by itself when the connection does.
+   *
+   * Without this, a tunnel or a lift ends the evening: the backoff chain runs
+   * out while there is genuinely no network, and what is left is a dead player
+   * that needed a manual retry at the exact moment the network returned on its
+   * own. The listener costs nothing and turns the most common failure of mobile
+   * viewing into a two-second pause.
+   */
+  useEffect(() => {
+    const onOnline = () => {
+      const hls = hlsRef.current;
+      retryCountRef.current = 0;
+      if (hls) {
+        setFailure(null);
+        hls.startLoad();
+      } else if (isNativeRef.current) {
+        attachRef.current();
+      }
+    };
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+  }, []);
+
   // Keep the ref xhrSetup reads in sync. A ref (not a dependency of the
   // attach effect) so switching hosts mid-stream never destroys/recreates
   // the Hls instance — see the xhrSetup comment above.
@@ -383,14 +450,25 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
     if (videoRef.current) seek(videoRef.current.currentTime + deltaSec);
   }, [seek]);
 
+  // Each of these writes the preference as well as the element: the value is
+  // saved where it was decided, so nothing has to remember to mirror it later.
   const setVolume = useCallback((v: number) => {
-    if (videoRef.current) videoRef.current.volume = v;
+    if (!videoRef.current) return;
+    videoRef.current.volume = v;
+    // Nudging the slider up from silence is how people unmute; leaving `muted`
+    // set would make that move do nothing at all.
+    if (v > 0 && videoRef.current.muted) videoRef.current.muted = false;
+    setPlaybackPrefs({ volume: v, muted: videoRef.current.muted });
   }, []);
   const toggleMute = useCallback(() => {
-    if (videoRef.current) videoRef.current.muted = !videoRef.current.muted;
+    if (!videoRef.current) return;
+    videoRef.current.muted = !videoRef.current.muted;
+    setPlaybackPrefs({ muted: videoRef.current.muted });
   }, []);
   const setPlaybackRate = useCallback((rate: number) => {
-    if (videoRef.current) videoRef.current.playbackRate = rate;
+    if (!videoRef.current) return;
+    videoRef.current.playbackRate = rate;
+    setPlaybackPrefs({ playbackRate: rate });
   }, []);
 
   // Quality change is seamless: hls.js swaps the level without reloading the video.
@@ -398,10 +476,22 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
     if (hlsRef.current) hlsRef.current.currentLevel = levelId;
   }, []);
   const setAudioTrack = useCallback((id: number) => {
-    if (hlsRef.current) hlsRef.current.audioTrack = id;
+    const hls = hlsRef.current;
+    if (!hls) return;
+    hls.audioTrack = id;
+    // Remembered by language rather than by index: track 2 is a different dub
+    // on every title, but "italiano" is the same answer everywhere.
+    const lang = hls.audioTracks?.[id]?.lang;
+    if (lang) setPlaybackPrefs({ audioLang: normaliseLang(lang) });
   }, []);
   const setDataSaver = useCallback((enabled: boolean) => {
-    if (hlsRef.current) hlsRef.current.autoLevelCapping = enabled ? 1 : -1;
+    if (hlsRef.current) applyLevelCap(hlsRef.current, getPlaybackPrefs().maxHeight, enabled);
+  }, []);
+
+  /** Ceiling on automatic quality, kept for every title until changed. */
+  const setMaxHeight = useCallback((height: number | null) => {
+    setPlaybackPrefs({ maxHeight: height });
+    if (hlsRef.current) applyLevelCap(hlsRef.current, height, optionsRef.current.dataSaverMode);
   }, []);
 
   // ---------------------------------------------------------------------
@@ -473,7 +563,7 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
 
   const retryPlayback = useCallback(() => {
     retryCountRef.current = 0;
-    setError(null);
+    setFailure(null);
     attachRef.current();
   }, []);
 
@@ -487,13 +577,49 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
     isPlaying, isBuffering, currentTime, duration, bufferedEnd,
     bufferHealthSec, bufferTargetSec: bufferProfile.maxBufferLength,
     levels, currentLevel, audioTracks, currentAudioTrack,
-    volume, muted, playbackRate, error, isPiP, isFullscreen,
+    volume, muted, playbackRate, isPiP, isFullscreen,
+    // `error` stays a plain string for every caller that only wants to know
+    // *whether* something broke; `failure` carries the diagnosis.
+    error: failure?.message ?? null,
+    failure,
     play, pause, togglePlay, seek, seekBy,
     setVolume, toggleMute, setPlaybackRate,
-    setQualityLevel, setAudioTrack, setDataSaver,
+    setQualityLevel, setAudioTrack, setDataSaver, setMaxHeight,
     togglePiP, toggleFullscreen, retryPlayback,
     pipSupported, fullscreenSupported,
   };
+}
+
+/**
+ * Applies the quality ceiling to hls.js's automatic ladder.
+ *
+ * Data saver is not a separate mechanism but the strictest possible ceiling, so
+ * the two are resolved here together — otherwise turning data saver off would
+ * silently discard a 720p ceiling the user had also set.
+ */
+function applyLevelCap(hls: Hls, maxHeight: number | null, dataSaver: boolean | undefined) {
+  if (dataSaver) {
+    hls.autoLevelCapping = 1;
+    return;
+  }
+  if (!maxHeight) {
+    hls.autoLevelCapping = -1;
+    return;
+  }
+  // The highest rung that still fits under the ceiling; if every rendition is
+  // above it, the smallest one is the honest answer.
+  let best = -1;
+  let bestHeight = -1;
+  hls.levels.forEach((level, index) => {
+    if (level.height <= maxHeight && level.height > bestHeight) {
+      best = index;
+      bestHeight = level.height;
+    }
+  });
+  if (best === -1 && hls.levels.length > 0) {
+    best = hls.levels.reduce((lowest, level, index, all) => (level.height < all[lowest].height ? index : lowest), 0);
+  }
+  hls.autoLevelCapping = best;
 }
 
 // A media playlist without EXT-X-STREAM-INF (a single-rendition source, which

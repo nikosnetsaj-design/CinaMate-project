@@ -126,7 +126,15 @@ il resto al servizio che ha la licenza.
 |---|---|---|---|
 | **Player HLS** | Hai una sorgente tua (un NAS, un tuo CDN) e ti serve un lettore | Qualità adattiva, selezione manuale, ripresa al secondo, velocità, PiP, mini player, schermo intero | Utile ✅ |
 | **Sottotitoli** | I sottotitoli nativi non si possono davvero impostare | Renderer proprio: dimensione, colore, sfondo, posizione, sincronizzazione | Utile ✅ |
-| **Salto intro/recap/crediti** | Riavvolgere a mano ogni episodio | Marker segnati dal punto in cui sei, con un tocco | Utile ✅ |
+| **Salto intro/recap/crediti** | Riavvolgere a mano ogni episodio | Marker segnati dal punto in cui sei, con un tocco — o saltati da soli, se lo chiedi | Utile ✅ |
+| **Preferenze che restano** | Rimettere lingua, volume e velocità a ogni episodio | Volume, muto, velocità, lingua di audio e sottotitoli, stile dei sottotitoli e tetto di qualità valgono per ogni titolo che apri | Essenziale ✅ |
+| **Controlli di sistema** | Il telefono in tasca non si mette in pausa | Titolo, copertina e comandi sulla schermata di blocco, nelle notifiche e sui tasti multimediali (Media Session) | Essenziale ✅ |
+| **Schermo che non si spegne** | Il telefono si oscura dopo trenta secondi di film | Wake Lock tenuto solo mentre scorre il video, mai in pausa | Essenziale ✅ |
+| **Errori che dicono il rimedio** | «Impossibile riprodurre il contenuto» non è una diagnosi | 404, CORS, accesso negato, codec, playlist non valida: ognuno con la sua causa e cosa fare — e «Riprova» solo dove aspettare può servire | Essenziale ✅ |
+| **Ritorno dalla rete** | Un tunnel chiude la serata | Riparte da solo quando la connessione torna, senza toccare niente | Essenziale ✅ |
+| **Ripresa dichiarata** | Un salto silenzioso a 1:12:40 sembra un guasto | Dice da dove ha ripreso e offre «ricomincia da capo» | Utile ✅ |
+| **Spegnimento automatico** | Ci si addormenta e partono altri quattro episodi | 15/30/60 minuti o «fine episodio», con l'indicatore sempre visibile | Utile ✅ |
+| **Scorciatoie complete** | Dodici tasti che nessuno può scoprire | Set alla YouTube (spazio, frecce, J/L, 0–9, M, F, C, P, `<`/`>`, N) e l'elenco su `?` | Utile ✅ |
 | **Anteprime sulla timeline** | Cercare una scena al buio | Il fotogramma del punto, non solo il minutaggio | Utile ✅ |
 | **Autoplay nell'ordine della saga** | Il "prossimo" contraddice l'ordine che hai scelto | Stessa coda della pagina Saghe, §3.4 | Utile ✅ |
 | **Consigli di fine visione** | Finisce un film e la scelta ricomincia da zero | Presi dal *tuo* scaffale, ognuno con il suo perché (regola 2) | Utile ✅ |

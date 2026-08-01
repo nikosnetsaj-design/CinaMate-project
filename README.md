@@ -156,6 +156,20 @@ rete che non è la tua.
   incluse le saghe lasciate a metà.
 - **Statistiche e traguardi**: ore totali, film e serie completati, distribuzione
   voti, generi, attori e registi più visti, anno per anno, e badge da sbloccare.
+- **Il player ti conosce**: volume, muto, velocità, lingua dell'audio e dei
+  sottotitoli, stile dei sottotitoli e tetto di qualità non si rimettono a ogni
+  episodio — si scelgono una volta e valgono per ogni titolo che apri. La lingua
+  è ricordata come lingua, non come numero di traccia, così vale anche su una
+  serie dove l'ordine delle tracce cambia da un episodio all'altro.
+- **Comandi di sistema**: titolo, copertina e play/pausa arrivano sulla
+  schermata di blocco, nelle notifiche e sui tasti multimediali; lo schermo del
+  telefono resta acceso mentre scorre il video e solo mentre scorre.
+- **Errori che dicono cosa fare**: 404, CORS, accesso negato, codec non
+  supportato, playlist non valida — ognuno con la sua causa e il suo rimedio, e
+  il pulsante «Riprova» solo dove aspettare può davvero servire. Se cade la
+  rete, riparte da solo quando torna.
+- **Spegnimento automatico**: 15, 30, 60 minuti o «fine episodio», per
+  addormentarsi senza svegliarsi quattro episodi più avanti.
 - **Player**: per i titoli a cui hai dato una sorgente HLS, un lettore completo —
   gesture sul telefono (scorri per avanzare, su e giù per volume e luminosità,
   doppio tocco per ±10s), buffer che si dimensiona sulla rete misurata,
