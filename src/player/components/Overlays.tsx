@@ -74,12 +74,36 @@ export function GestureOverlay({ feedback }: { feedback: GestureFeedback | null 
   );
 }
 
-export function ErrorOverlay({ message, onRetry }: { message: string; onRetry: () => void }) {
+/**
+ * A failure worth reading: what happened, and what to do about it.
+ *
+ * "Riprova" is only offered for failures that waiting could actually fix. On a
+ * 404 or a missing codec the button would be a lie — it would fail identically,
+ * and hide the fact that the answer is in the configuration, not in the network.
+ */
+export function ErrorOverlay({
+  failure,
+  onRetry,
+}: {
+  failure: { message: string; hint: string; transient: boolean };
+  onRetry: () => void;
+}) {
   return (
     <div className="pv-error-overlay">
       <ErrorIcon />
-      <p>{message}</p>
-      <button onClick={onRetry}>Riprova</button>
+      <p>{failure.message}</p>
+      {failure.hint && <p className="pv-error-hint">{failure.hint}</p>}
+      {failure.transient && <button onClick={onRetry}>Riprova</button>}
+    </div>
+  );
+}
+
+/** Receipt for a marker the player jumped on its own. */
+export function AutoSkipNote({ type }: { type: SkipMarker['type'] }) {
+  const what = type === 'intro' ? 'Intro saltata' : type === 'recap' ? 'Recap saltato' : 'Crediti saltati';
+  return (
+    <div className="pv-autoskip-note" role="status">
+      {what}
     </div>
   );
 }

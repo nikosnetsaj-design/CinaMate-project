@@ -6,9 +6,11 @@ import type { QualityLevel, AudioTrack, SubtitleTrack, SubtitleStyle } from '../
 // technically pure would be worse than sharing the one that already works.
 import { useFocusTrap } from '../../lib/useFocusTrap';
 import { BRIGHTNESS_MIN, BRIGHTNESS_MAX } from '../hooks/usePlayerGestures';
+import { SLEEP_PRESETS, type SleepChoice } from '../hooks/useSleepTimer';
+import type { PlaybackPrefs } from '../services/playbackPrefs';
 import { CloseIcon } from './Icons';
 
-type Tab = 'quality' | 'audio' | 'subtitles' | 'speed';
+type Tab = 'quality' | 'audio' | 'subtitles' | 'speed' | 'general';
 
 type Props = {
   levels: QualityLevel[];
@@ -31,6 +33,12 @@ type Props = {
   /** Seconds already downloaded ahead of the playhead, and the current target. */
   bufferHealthSec: number;
   bufferTargetSec: number;
+  /** Cross-title preferences — see services/playbackPrefs. */
+  prefs: PlaybackPrefs;
+  onUpdatePrefs: (patch: Partial<PlaybackPrefs>) => void;
+  onSelectMaxHeight: (height: number | null) => void;
+  sleep: { choice: SleepChoice | null; remainingSec: number | null; arm: (c: SleepChoice) => void; cancel: () => void };
+  wakeLockSupported: boolean;
   onClose: () => void;
 };
 
@@ -61,6 +69,7 @@ export default function SettingsMenu(props: Props) {
             <button className={tab === 'audio' ? 'active' : ''} onClick={() => setTab('audio')}>Audio</button>
             <button className={tab === 'subtitles' ? 'active' : ''} onClick={() => setTab('subtitles')}>Sottotitoli</button>
             <button className={tab === 'speed' ? 'active' : ''} onClick={() => setTab('speed')}>Velocità</button>
+            <button className={tab === 'general' ? 'active' : ''} onClick={() => setTab('general')}>Generale</button>
           </div>
           <button className="pv-icon-btn" aria-label="Chiudi impostazioni" onClick={props.onClose}><CloseIcon /></button>
         </div>
@@ -210,6 +219,106 @@ export default function SettingsMenu(props: Props) {
                 {r}x
               </button>
             ))}
+          </div>
+        )}
+
+        {tab === 'general' && (
+          <div className="pv-settings-list">
+            <div className="pv-field">
+              <span>Salta intro e sigle</span>
+              <div className="pv-field-options">
+                <button
+                  className={props.prefs.autoSkip === 'manual' ? 'active' : ''}
+                  onClick={() => props.onUpdatePrefs({ autoSkip: 'manual' })}
+                >
+                  Chiedi
+                </button>
+                <button
+                  className={props.prefs.autoSkip === 'intro' ? 'active' : ''}
+                  onClick={() => props.onUpdatePrefs({ autoSkip: 'intro' })}
+                >
+                  Intro e recap
+                </button>
+                <button
+                  className={props.prefs.autoSkip === 'all' ? 'active' : ''}
+                  onClick={() => props.onUpdatePrefs({ autoSkip: 'all' })}
+                >
+                  Tutto
+                </button>
+              </div>
+            </div>
+
+            <label className="pv-toggle">
+              <input
+                type="checkbox"
+                checked={props.prefs.autoplayNext}
+                onChange={e => props.onUpdatePrefs({ autoplayNext: e.target.checked })}
+              />
+              Avvia da solo il prossimo episodio
+            </label>
+
+            {props.wakeLockSupported && (
+              <label className="pv-toggle">
+                <input
+                  type="checkbox"
+                  checked={props.prefs.keepScreenAwake}
+                  onChange={e => props.onUpdatePrefs({ keepScreenAwake: e.target.checked })}
+                />
+                Tieni acceso lo schermo mentre guardi
+              </label>
+            )}
+
+            <div className="pv-field">
+              <span>
+                Spegnimento automatico
+                {props.sleep.remainingSec !== null && (
+                  <span className="pv-dim pv-mono"> · {Math.ceil(props.sleep.remainingSec / 60)} min</span>
+                )}
+              </span>
+              <div className="pv-field-options">
+                <button className={props.sleep.choice === null ? 'active' : ''} onClick={props.sleep.cancel}>
+                  Mai
+                </button>
+                {SLEEP_PRESETS.map(p => (
+                  <button
+                    key={String(p.value)}
+                    className={props.sleep.choice === p.value ? 'active' : ''}
+                    onClick={() => props.sleep.arm(p.value)}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="pv-field">
+              <span>Qualità massima</span>
+              <div className="pv-field-options">
+                <button
+                  className={props.prefs.maxHeight === null ? 'active' : ''}
+                  onClick={() => props.onSelectMaxHeight(null)}
+                >
+                  Nessun limite
+                </button>
+                {[480, 720, 1080].map(h => (
+                  <button
+                    key={h}
+                    className={props.prefs.maxHeight === h ? 'active' : ''}
+                    onClick={() => props.onSelectMaxHeight(h)}
+                  >
+                    {h}p
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Says the quiet part: these are remembered. Otherwise the only
+                way to find out is to notice, three episodes later, that the
+                player kept the language you picked. */}
+            <p className="pv-dim">
+              Volume, velocità, lingua di audio e sottotitoli restano quelli che scegli qui, per ogni
+              titolo che aprirai.
+            </p>
           </div>
         )}
       </div>

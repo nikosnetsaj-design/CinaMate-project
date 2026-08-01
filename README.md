@@ -54,13 +54,15 @@ npm run lint      # oxlint
 ```
 src/
   components/   componenti UI (poster, sheet, saghe, maratona, timeline, nav…)
-  pages/        Home, Libreria, Saghe, Scopri, Dati, Critico, Player,
+  pages/        Home, Libreria, Saghe, Scopri, Dati, Profilo, Critico, Player,
                 Diagnostica
   store/        stato Zustand (libreria, saghe, maratona, promemoria,
-                obiettivi, layout della Home, controllo genitori, tema, UI)
+                obiettivi, layout della Home, punto di ripresa, controllo
+                genitori, tema, UI)
   lib/          dominio e utility (tmdb, sagas, universes, upcoming, stats,
-                achievements, search, filters, recommend, goals, parental,
-                accents, share, anthropic, backup, errorLog, selfTest)
+                activity, continueWatching, achievements, search, filters,
+                recommend, goals, parental, accents, share, anthropic, backup,
+                errorLog, selfTest)
   player/       il player, autonomo dal resto dell'app:
                   hooks/      motore video (hls.js), gesture, sottotitoli,
                               maratona, download, watch party, cast,
@@ -114,6 +116,17 @@ rete che non è la tua.
   salvato fra sessioni e riavvii, e ogni capitolo completato fa avanzare la coda.
 - **Continua la storia**: appena finisci un capitolo, l'app propone il
   successivo della stessa saga.
+- **Continua a guardare**: la riga in cima alla Home tiene da parte tutto quello
+  che hai lasciato a metà, dal più recente. Ogni scheda dice a che percentuale
+  sei, quale stagione ed episodio ti aspetta e quanti minuti mancano alla fine;
+  un tocco e riparte dal secondo esatto in cui avevi smesso. Il punto lo salva il
+  player da solo mentre guardi, ma la riga tiene conto anche di quello che segni
+  a mano — così ci finiscono anche i titoli visti altrove.
+- **Profilo**: la tua pagina personale, con le ore totali che salgono mentre
+  guardi, film visti, serie completate ed episodi, un grafico dei minuti per
+  giorno con vista settimana / mese / anno, il livello che cresce con le ore, il
+  giorno record, i giorni di fila, la classifica delle tue serie per episodi e le
+  copertine di ciò che hai finito.
 - **Pagine persone**: attori e registi cliccabili ovunque, con filmografia da
   TMDB e in evidenza ciò che hai già in libreria.
 - **Prossimamente**: calendario dei nuovi episodi delle serie che segui e delle
@@ -137,12 +150,34 @@ rete che non è la tua.
   lista viaggia dentro il link.
 - **Controllo genitori**: filtro per età sulla classificazione reale del film,
   protetto da PIN.
+- **Funziona offline**: dopo la prima apertura con la rete, l'app si avvia
+  anche senza. Libreria, diario, statistiche, saghe e profilo sono già tutti sul
+  dispositivo; le copertine già viste restano in cache. Un avviso dice cosa
+  resta in attesa della connessione — la ricerca su TMDB, le copertine nuove e
+  il critico — invece di lasciarti davanti a una ricerca che non risponde.
+- **Aggiornamenti che chiedono il permesso**: quando esce una versione nuova
+  compare un avviso con «Ricarica». Non si aggiorna da sola: potresti essere a
+  metà di una recensione o di un film.
 - **Diagnostica**: test automatici, salute degli host e log degli errori, tutto
   sul dispositivo.
 - **Critico IA**: fai domande sui tuoi gusti, basate sulla tua libreria reale,
   incluse le saghe lasciate a metà.
 - **Statistiche e traguardi**: ore totali, film e serie completati, distribuzione
   voti, generi, attori e registi più visti, anno per anno, e badge da sbloccare.
+- **Il player ti conosce**: volume, muto, velocità, lingua dell'audio e dei
+  sottotitoli, stile dei sottotitoli e tetto di qualità non si rimettono a ogni
+  episodio — si scelgono una volta e valgono per ogni titolo che apri. La lingua
+  è ricordata come lingua, non come numero di traccia, così vale anche su una
+  serie dove l'ordine delle tracce cambia da un episodio all'altro.
+- **Comandi di sistema**: titolo, copertina e play/pausa arrivano sulla
+  schermata di blocco, nelle notifiche e sui tasti multimediali; lo schermo del
+  telefono resta acceso mentre scorre il video e solo mentre scorre.
+- **Errori che dicono cosa fare**: 404, CORS, accesso negato, codec non
+  supportato, playlist non valida — ognuno con la sua causa e il suo rimedio, e
+  il pulsante «Riprova» solo dove aspettare può davvero servire. Se cade la
+  rete, riparte da solo quando torna.
+- **Spegnimento automatico**: 15, 30, 60 minuti o «fine episodio», per
+  addormentarsi senza svegliarsi quattro episodi più avanti.
 - **Player**: per i titoli a cui hai dato una sorgente HLS, un lettore completo —
   gesture sul telefono (scorri per avanzare, su e giù per volume e luminosità,
   doppio tocco per ±10s), buffer che si dimensiona sulla rete misurata,

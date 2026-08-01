@@ -4,7 +4,7 @@ import { useCommandPalette } from "../store/useCommandPalette";
 import { useAddSheet } from "../store/useAddSheet";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { prefetchHandlers } from "../lib/prefetch";
-import { ChartIcon, CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, PlayIcon, PlusIcon, PulseIcon, ReelMark, SearchIcon, SparkleIcon, StackIcon, SunIcon } from "./icons";
+import { ChartIcon, CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, PersonIcon, PlayIcon, PlusIcon, PulseIcon, ReelMark, SearchIcon, SparkleIcon, StackIcon, SunIcon } from "./icons";
 
 const NAV_ITEMS = [
   { to: "/", label: "Home", icon: HomeIcon, end: true },
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { to: "/saghe", label: "Saghe", icon: StackIcon, end: false },
   { to: "/scopri", label: "Scopri", icon: CompassIcon, end: false },
   { to: "/dati", label: "Dati", icon: ChartIcon, end: false },
+  { to: "/profilo", label: "Profilo", icon: PersonIcon, end: false },
   { to: "/critico", label: "Critico", icon: SparkleIcon, end: false },
   { to: "/player", label: "Player", icon: PlayIcon, end: false },
   { to: "/diagnostica", label: "Diagnostica", icon: PulseIcon, end: false },
@@ -28,7 +29,14 @@ const NAV_ITEMS = [
 // Player cannot be dropped either way. The sidebar is desktop-only, and
 // nothing else on a phone links to it — leaving it out made the whole page
 // unreachable on the device the app is meant to be installed on.
-const MOBILE_ITEMS = NAV_ITEMS.filter((i) => i.to !== "/critico" && i.to !== "/diagnostica");
+//
+// Profilo is out of the bar but not off the phone: it gets the avatar button in
+// the top bar instead, which is where a profile is looked for anyway. A seventh
+// tab would have shrunk every other one to win a destination that already has a
+// better place to live.
+const MOBILE_ITEMS = NAV_ITEMS.filter(
+  (i) => i.to !== "/critico" && i.to !== "/diagnostica" && i.to !== "/profilo",
+);
 
 function linkClasses(isActive: boolean) {
   return `flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm font-medium transition-colors ${
@@ -135,6 +143,18 @@ export function Nav() {
           >
             <SearchIcon size={17} />
           </button>
+          <NavLink
+            to="/profilo"
+            {...prefetchHandlers("/profilo")}
+            aria-label="Profilo"
+            className={({ isActive }) =>
+              `flex h-9 w-9 items-center justify-center rounded-full border ${
+                isActive ? "border-accent text-accent-text" : "border-border-strong text-text-muted"
+              }`
+            }
+          >
+            <PersonIcon size={17} />
+          </NavLink>
           <button
             type="button"
             onClick={openSettings}

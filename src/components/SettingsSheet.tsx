@@ -17,6 +17,8 @@ import { ACCENTS } from "../lib/accents";
 import { ParentalSettings } from "./ParentalSettings";
 import { TEMPLATE_FIELDS, previewTemplate, previewCount } from "../lib/sourceTemplate";
 import { getHosts, restoreHosts } from "../player/services/hostStore";
+import { getDailySeconds, restoreDailySeconds } from "../player/services/statsAndHistory";
+import { useWatchProgress } from "../store/useWatchProgress";
 import { buildBackup, parseBackup, BackupParseError } from "../lib/backup";
 import { resetAutoLinkAttempts } from "../lib/useAutoLinkTmdb";
 
@@ -313,6 +315,8 @@ function SettingsForm() {
           sourceTemplates: playerPrefs.sourceTemplates,
         },
         hosts: getHosts(),
+        // Not derivable on the next device — see PlayerBackup.
+        daily: getDailySeconds(),
       },
       useGoals.getState().goals,
     );
@@ -356,10 +360,16 @@ function SettingsForm() {
     // player existed, or a hand-edited one, can't wipe settings it says
     // nothing about.
     if (backup.player) {
-      const { sources, prefs, hosts } = backup.player;
+      const { sources, prefs, hosts, daily } = backup.player;
       if (sources !== undefined) usePlayerSources.getState().restore(sources);
       if (prefs !== undefined) usePlayerPrefs.getState().restore(prefs);
       if (hosts !== undefined) restoreHosts(hosts);
+      // Merged rather than replaced, then re-read so the profile redraws with
+      // the days the file brought.
+      if (daily !== undefined) {
+        restoreDailySeconds(daily);
+        useWatchProgress.getState().refresh();
+      }
     }
     if (backup.goals !== undefined) useGoals.getState().restore(backup.goals);
   }

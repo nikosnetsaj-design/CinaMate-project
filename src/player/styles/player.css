@@ -390,6 +390,97 @@
   font-weight: 700;
   color: #1a1408;
 }
+/* The remedy, set below the diagnosis: long enough to be a sentence, quiet
+   enough not to compete with the line that says what broke. */
+.pv-error-hint {
+  color: var(--pv-text-dim);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  max-width: 46ch;
+}
+
+/* ===================== Resume bar, auto-skip note, shortcuts ===================== */
+.pv-resume-bar {
+  position: absolute;
+  left: 20px;
+  bottom: 22%;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px 10px 16px;
+  background: rgba(19, 17, 22, 0.88);
+  border: 1px solid var(--pv-border-strong);
+  border-radius: var(--pv-radius);
+  backdrop-filter: blur(10px);
+  animation: pv-fade-in 0.25s ease;
+  max-width: min(90%, 420px);
+}
+.pv-resume-text { font-size: 0.9rem; }
+.pv-resume-action {
+  background: none;
+  border: 1px solid var(--pv-border-strong);
+  border-radius: 6px;
+  color: var(--pv-text);
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pv-resume-action:hover { border-color: var(--pv-accent); color: var(--pv-accent); }
+.pv-resume-close { font-size: 0.9rem; }
+
+.pv-autoskip-note {
+  position: absolute;
+  right: 20px;
+  bottom: 22%;
+  z-index: 6;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  color: var(--pv-text-dim);
+  background: rgba(19, 17, 22, 0.85);
+  border: 1px solid var(--pv-border);
+  border-radius: 6px;
+  backdrop-filter: blur(8px);
+  animation: pv-fade-in 0.25s ease;
+}
+
+.pv-shortcuts-panel { max-width: 460px; }
+.pv-shortcuts-title {
+  font-family: var(--pv-font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 4px 2px;
+}
+.pv-shortcuts-list {
+  display: grid;
+  grid-template-columns: minmax(84px, auto) 1fr;
+  gap: 8px 14px;
+  padding: 4px 2px 8px;
+  list-style: none;
+  align-items: baseline;
+  /* Same rule as the settings body: the panel is a flex column, so the part
+     that can run long has to be the part that scrolls. */
+  overflow-y: auto;
+  min-height: 0;
+}
+.pv-shortcuts-list li { display: contents; }
+.pv-shortcuts-list kbd {
+  justify-self: start;
+  padding: 3px 8px;
+  border: 1px solid var(--pv-border-strong);
+  border-radius: 5px;
+  color: var(--pv-text-dim);
+  white-space: nowrap;
+}
+.pv-shortcuts-list span { font-size: 0.9rem; }
+
+@media (max-width: 560px) {
+  /* On a phone the bar would sit on top of the scrub controls it is meant to
+     explain; the picture is the only place with room left. */
+  .pv-resume-bar { left: 12px; right: 12px; bottom: 26%; max-width: none; }
+  .pv-autoskip-note { right: 12px; bottom: 32%; }
+}
 
 /* ===================== Progress bar + film-strip scrub preview (signature) ===================== */
 .pv-progress-wrap {
@@ -535,18 +626,30 @@
   justify-content: flex-end;
   padding: 16px;
 }
+/* A column with a pinned head and a scrolling body, rather than one scrolling
+   box. Scrolling the whole panel took the tab bar off screen with it, which on
+   a short player — 16:9 inside a page — meant reaching the bottom of a long tab
+   and no longer having any way back to the others. */
 .pv-settings-panel {
   width: 320px;
   max-width: 100%;
-  max-height: 70%;
-  overflow-y: auto;
+  max-height: 82%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: var(--pv-bg-elevated);
   border: 1px solid var(--pv-border-strong);
   border-radius: var(--pv-radius);
   padding: 10px;
   animation: pv-fade-in 0.2s ease;
 }
-.pv-settings-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.pv-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
 .pv-settings-tabs { display: flex; gap: 2px; flex-wrap: wrap; }
 .pv-settings-tabs button {
   background: transparent; border: none; color: var(--pv-text-dim);
@@ -554,7 +657,17 @@
 }
 .pv-settings-tabs button.active { background: rgba(227, 166, 78, 0.15); color: var(--pv-accent); }
 
-.pv-settings-list { display: flex; flex-direction: column; gap: 2px; padding: 6px 2px; }
+/* `min-height: 0` is what actually lets this shrink inside the flex column —
+   without it a flex child refuses to go below its content height and the
+   scrollbar never appears. */
+.pv-settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 2px;
+  overflow-y: auto;
+  min-height: 0;
+}
 .pv-settings-list button {
   background: transparent; border: none; color: var(--pv-text);
   text-align: left; padding: 9px 10px; border-radius: 6px; font-size: 0.88rem;

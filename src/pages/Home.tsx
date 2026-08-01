@@ -8,18 +8,16 @@ import { StatCard } from "../components/StatCard";
 import { PosterCard } from "../components/PosterCard";
 import { EmptyState } from "../components/EmptyState";
 import { PosterGridSkeleton, StatCardSkeleton } from "../components/Skeletons";
-import { PosterArt } from "../components/PosterArt";
-import { VoteBadge } from "../components/VoteBadge";
 import { UpcomingRow } from "../components/UpcomingRow";
 import { NightPickerButton } from "../components/NightPicker";
 import { Nastro } from "../components/Nastro";
 import { MarathonCard } from "../components/MarathonCard";
 import { ContinueSagaRow } from "../components/ContinueSagaRow";
+import { ContinueWatchingRow } from "../components/ContinueWatchingRow";
 import { PosterRow } from "../components/PosterRow";
 import { forYou, mostWatched, recentlyAdded } from "../lib/recommend";
 import { computeStats } from "../lib/stats";
 import { greeting } from "../lib/stats";
-import { formatRuntime } from "../lib/format";
 import { useAppReady } from "../lib/useAppReady";
 import { useVisibleItems } from "../lib/useVisibleItems";
 
@@ -31,10 +29,12 @@ export function Home() {
   const order = useHomeLayout((s) => s.order);
   const hidden = useHomeLayout((s) => s.hidden);
 
-  const stats = computeStats(items);
-  const watching = items.filter((i) => i.status === "In visione");
-  const planned = items.filter((i) => i.status === "Da vedere").slice(0, 4);
-  const favs = items.filter((i) => i.fav);
+  // Walks the whole library and derives a dozen aggregates, and this page
+  // re-renders on every store touch — ticking one episode counter should not
+  // recount every genre, actor and director you own.
+  const stats = useMemo(() => computeStats(items), [items]);
+  const planned = useMemo(() => items.filter((i) => i.status === "Da vedere").slice(0, 4), [items]);
+  const favs = useMemo(() => items.filter((i) => i.fav), [items]);
 
   // Each of these walks the whole library, and the Home page re-renders on
   // every store touch — a tick on an episode counter shouldn't recompute a
@@ -63,51 +63,10 @@ export function Home() {
       </section>
     ),
 
-    riprendi:
-      watching.length > 0 ? (
-        <section className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display text-xl font-semibold text-text">
-              Riprendi <span className="text-sm font-normal text-text-faint">· {watching.length}</span>
-            </h2>
-            <Link to="/libreria" className="text-sm font-medium" style={{ color: "var(--status-watching)" }}>
-              tutti
-            </Link>
-          </div>
-          <ul className="flex flex-col gap-2.5">
-            {watching.map((item) => {
-              const pct = item.episodes ? Math.round(((item.seen || 0) / item.episodes) * 100) : null;
-              return (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    onClick={() => openItem(item)}
-                    aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
-                    className="flex w-full items-center gap-3.5 rounded-md border border-border bg-surface p-3 text-left transition-colors hover:bg-surface-hover"
-                  >
-                    <PosterArt item={item} size="sm" className="w-14 shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-display text-sm font-semibold text-text">{item.title}</p>
-                      <p className="mt-0.5 text-xs text-text-faint">
-                        {item.seen}/{item.episodes} episodi · {formatRuntime(item.runtime)}
-                      </p>
-                      {pct !== null && (
-                        <div className="mt-1.5 h-[3px] w-full max-w-64 overflow-hidden rounded-full bg-surface-hover">
-                          <div
-                            className="h-full rounded-full"
-                            style={{ width: `${pct}%`, background: "var(--status-watching)" }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <VoteBadge vote={item.vote} size="sm" />
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      ) : null,
+    // Was a vertical list of series with an episode counter. It is now driven
+    // by the playhead instead, which covers the same titles plus every film,
+    // and can say the minute rather than only the episode.
+    riprendi: <ContinueWatchingRow />,
 
     saga: <ContinueSagaRow />,
 

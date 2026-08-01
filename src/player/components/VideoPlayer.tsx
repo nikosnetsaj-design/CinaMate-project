@@ -5,7 +5,12 @@ import { usePlaybackExtras } from '../hooks/usePlaybackExtras';
 import { useSubtitles } from '../hooks/useSubtitles';
 import { useCast } from '../hooks/useCast';
 import { usePlayerStats } from '../hooks/usePlayerStats';
-import { getResumePosition, saveProgress } from '../services/statsAndHistory';
+import { useProgressSaver } from '../hooks/useProgressSaver';
+import { useMediaSession } from '../hooks/useMediaSession';
+import { useWakeLock } from '../hooks/useWakeLock';
+import { useSleepTimer } from '../hooks/useSleepTimer';
+import { getResumePosition } from '../services/statsAndHistory';
+import { getPlaybackPrefs, setPlaybackPrefs, PREFS_EVENT, type PlaybackPrefs } from '../services/playbackPrefs';
 import { listDownloads } from '../services/downloadService';
 import { useNetworkQuality } from '../hooks/useNetworkQuality';
 import { usePlayerShortcuts } from '../hooks/usePlayerShortcuts';
@@ -16,7 +21,9 @@ import ControlsBar from './ControlsBar';
 import ProgressBar from './ProgressBar';
 import SettingsMenu from './SettingsMenu';
 import PlayerIndicators from './PlayerIndicators';
-import { SkipButton, NextUpOverlay, ErrorOverlay, SubtitleOverlay, EndScreenRecommendations, GestureOverlay } from './Overlays';
+import { SkipButton, NextUpOverlay, ErrorOverlay, SubtitleOverlay, EndScreenRecommendations, GestureOverlay, AutoSkipNote } from './Overlays';
+import ResumeBar from './ResumeBar';
+import ShortcutsHelp from './ShortcutsHelp';
 import type { Recommendation } from '../services/recommendationService';
 import { PlayIcon, PauseIcon, ExpandIcon } from './Icons';
 
@@ -70,8 +77,21 @@ export default function VideoPlayer({
   const [isMini, setIsMini] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showEndScreen, setShowEndScreen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [resumeDismissed, setResumeDismissed] = useState(false);
+
+  // The cross-title preferences, mirrored into state so every panel that shows
+  // them redraws when one of them changes it.
+  const [prefs, setPrefs] = useState<PlaybackPrefs>(getPlaybackPrefs);
+  useEffect(() => {
+    const sync = () => setPrefs(getPlaybackPrefs());
+    window.addEventListener(PREFS_EVENT, sync);
+    return () => window.removeEventListener(PREFS_EVENT, sync);
+  }, []);
+  const updatePrefs = useCallback((patch: Partial<PlaybackPrefs>) => setPlaybackPrefs(patch), []);
 
   const resumeSec = useMemo(() => getResumePosition(content.id), [content.id]);
+  useEffect(() => setResumeDismissed(false), [content.id]);
   const nextContentId = content.nextEpisode?.id ?? content.nextInSaga?.id ?? null;
 
   const goToNext = useCallback(() => {
@@ -84,19 +104,46 @@ export default function VideoPlayer({
   // correcting a moment later. Stalls are fed back in below.
   const network = useNetworkQuality();
 
+  // The measured length, mirrored into a ref because `onProgress` is handed to
+  // the player once, before `player.duration` exists — a closure over the state
+  // would keep reporting the 0 it had at mount.
+  const playerDurationRef = useRef(0);
+
   const player = useVideoPlayer(content, {
     dataSaverMode,
     startAtSec: resumeSec,
     activeHostOrigin,
     networkQuality: network.quality,
-    onProgress: (t) => { if (Math.floor(t) % 5 === 0) saveProgress(content.id, t); },
-    onEnded: () => { if (nextContentId) goToNext(); else setShowEndScreen(true); },
+    // The playhead is written by useProgressSaver below, on a real clock and
+    // at every moment the value is about to be lost — not from here, which
+    // fires several times a second and never once after a pause.
+    onEnded: () => { if (nextContentId && prefs.autoplayNext) goToNext(); else setShowEndScreen(true); },
   });
 
   useEffect(() => {
     if (player.isBuffering) network.reportStall();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [player.isBuffering]);
+
+  useEffect(() => {
+    playerDurationRef.current = player.duration;
+  }, [player.duration]);
+
+  // Reads the element, not React state: a flush on `pagehide` has to report
+  // where the playhead is *now*, and state is only as fresh as the last
+  // `timeupdate` the browser bothered to fire before the page went away.
+  useProgressSaver(
+    content.id,
+    useCallback(
+      () => ({
+        time: player.videoRef.current?.currentTime ?? 0,
+        duration: player.videoRef.current?.duration ?? playerDurationRef.current,
+      }),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [],
+    ),
+    player.isPlaying,
+  );
 
   // The video element is owned by useVideoPlayer, so the accessor is published
   // once rather than re-published on every render of the page around it.
@@ -105,9 +152,26 @@ export default function VideoPlayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onPlayerReady]);
 
+  // "Fine episodio" on the sleep timer: the countdown must not run tonight.
+  const [autoplayBlocked, setAutoplayBlocked] = useState(false);
+  const sleep = useSleepTimer(player.pause, setAutoplayBlocked);
+
   const extras = usePlaybackExtras({
     content, currentTime: player.currentTime, duration: player.duration,
     isPlaying: player.isPlaying, onPlayNext: goToNext, onCompleted,
+    seek: player.seek, blockAutoplay: autoplayBlocked,
+  });
+
+  // The lock is tied to playback, not to the page: a paused player has no claim
+  // on someone's battery.
+  const wakeLock = useWakeLock(prefs.keepScreenAwake && player.isPlaying);
+
+  useMediaSession(content, player.isPlaying, player.duration, player.currentTime, {
+    play: player.play,
+    pause: player.pause,
+    seekTo: player.seek,
+    seekBy: player.seekBy,
+    next: nextContentId ? goToNext : null,
   });
 
   const subtitles = useSubtitles(content.subtitleTracks, player.currentTime);
@@ -200,13 +264,24 @@ export default function VideoPlayer({
     // Goes through handleUserSeek, not player.seekBy, so a keyboard seek is
     // broadcast to the Watch Party exactly like one made with the scrub bar.
     seekBy: (delta) => handleUserSeek((player.videoRef.current?.currentTime ?? 0) + delta),
+    seekToFraction: (fraction) => {
+      const total = player.videoRef.current?.duration || player.duration;
+      if (total) handleUserSeek(total * fraction);
+    },
     nudgeVolume: (delta) => {
       const current = player.videoRef.current?.volume ?? 1;
       player.setVolume(Math.min(1, Math.max(0, current + delta)));
     },
+    nudgeRate: (delta) => {
+      const current = player.videoRef.current?.playbackRate ?? 1;
+      player.setPlaybackRate(Math.min(4, Math.max(0.25, Math.round((current + delta) * 100) / 100)));
+    },
     toggleMute: player.toggleMute,
     toggleFullscreen: () => player.toggleFullscreen(containerRef.current),
     toggleSubtitles: cycleSubtitles,
+    togglePiP: player.togglePiP,
+    toggleHelp: () => setHelpOpen((v) => !v),
+    playNext: nextContentId ? goToNext : null,
   });
 
   return (
@@ -277,13 +352,32 @@ export default function VideoPlayer({
             isDownloaded={isDownloaded}
             networkQuality={network.quality}
             sourceLabel={sourceLabel}
+            sleepAtEnd={sleep.choice === 'end-of-episode'}
+            sleepMinutes={sleep.remainingSec != null ? Math.ceil(sleep.remainingSec / 60) : null}
           />
 
           <GestureOverlay feedback={gestures.feedback} />
 
           <SubtitleOverlay text={subtitles.activeCueText} style={subtitles.style} />
 
-          {extras.activeMarker && <SkipButton marker={extras.activeMarker} onSkip={handleSkip} />}
+          {/* The button only appears when the skip is still a question. With
+              auto-skip on, the marker has already been jumped and offering to
+              jump it again would be nonsense. */}
+          {extras.activeMarker && prefs.autoSkip === 'manual' && (
+            <SkipButton marker={extras.activeMarker} onSkip={handleSkip} />
+          )}
+          {extras.autoSkipped && <AutoSkipNote type={extras.autoSkipped} />}
+
+          {resumeSec > 30 && !resumeDismissed && player.currentTime < resumeSec + 12 && (
+            <ResumeBar
+              positionSec={resumeSec}
+              onRestart={() => {
+                handleUserSeek(0);
+                setResumeDismissed(true);
+              }}
+              onDismiss={() => setResumeDismissed(true)}
+            />
+          )}
 
           {extras.countdown !== null && nextContentId && (
             <NextUpOverlay
@@ -306,7 +400,7 @@ export default function VideoPlayer({
             />
           )}
 
-          {player.error && <ErrorOverlay message={player.error} onRetry={player.retryPlayback} />}
+          {player.failure && <ErrorOverlay failure={player.failure} onRetry={player.retryPlayback} />}
 
           <ProgressBar
             currentTime={player.currentTime}
@@ -348,9 +442,16 @@ export default function VideoPlayer({
               onSelectBrightness={gestures.adjustBrightness}
               bufferHealthSec={player.bufferHealthSec}
               bufferTargetSec={player.bufferTargetSec}
+              prefs={prefs}
+              onUpdatePrefs={updatePrefs}
+              onSelectMaxHeight={player.setMaxHeight}
+              sleep={sleep}
+              wakeLockSupported={wakeLock.supported}
               onClose={() => setSettingsOpen(false)}
             />
           )}
+
+          {helpOpen && <ShortcutsHelp onClose={() => setHelpOpen(false)} />}
         </>
       )}
 

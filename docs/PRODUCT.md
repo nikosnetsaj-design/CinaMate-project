@@ -42,7 +42,7 @@ resta tua e non ti vende niente.
 
 | Sezione | Problema che risolve | Beneficio | Priorità |
 |---|---|---|---|
-| **Riprendi** | "A che episodio ero?" | Un tocco per ripartire, con progresso | Essenziale |
+| **Continua a guardare** | "A che punto ero?" | Un tocco e riparte dal secondo esatto: percentuale, S·E e minuti che restano | Essenziale ✅ |
 | **Il Nastro** | I dati personali sono tabelle morte | La tua visione come oggetto visivo | Essenziale ✅ |
 | **Cosa guardo stasera** | Paralisi da scelta davanti a 200 titoli | Una proposta sola, rilanciabile | Essenziale ✅ |
 | **In arrivo** | Perdi le uscite delle serie che segui | Conto alla rovescia per episodio | Essenziale ✅ |
@@ -126,7 +126,15 @@ il resto al servizio che ha la licenza.
 |---|---|---|---|
 | **Player HLS** | Hai una sorgente tua (un NAS, un tuo CDN) e ti serve un lettore | Qualità adattiva, selezione manuale, ripresa al secondo, velocità, PiP, mini player, schermo intero | Utile ✅ |
 | **Sottotitoli** | I sottotitoli nativi non si possono davvero impostare | Renderer proprio: dimensione, colore, sfondo, posizione, sincronizzazione | Utile ✅ |
-| **Salto intro/recap/crediti** | Riavvolgere a mano ogni episodio | Marker segnati dal punto in cui sei, con un tocco | Utile ✅ |
+| **Salto intro/recap/crediti** | Riavvolgere a mano ogni episodio | Marker segnati dal punto in cui sei, con un tocco — o saltati da soli, se lo chiedi | Utile ✅ |
+| **Preferenze che restano** | Rimettere lingua, volume e velocità a ogni episodio | Volume, muto, velocità, lingua di audio e sottotitoli, stile dei sottotitoli e tetto di qualità valgono per ogni titolo che apri | Essenziale ✅ |
+| **Controlli di sistema** | Il telefono in tasca non si mette in pausa | Titolo, copertina e comandi sulla schermata di blocco, nelle notifiche e sui tasti multimediali (Media Session) | Essenziale ✅ |
+| **Schermo che non si spegne** | Il telefono si oscura dopo trenta secondi di film | Wake Lock tenuto solo mentre scorre il video, mai in pausa | Essenziale ✅ |
+| **Errori che dicono il rimedio** | «Impossibile riprodurre il contenuto» non è una diagnosi | 404, CORS, accesso negato, codec, playlist non valida: ognuno con la sua causa e cosa fare — e «Riprova» solo dove aspettare può servire | Essenziale ✅ |
+| **Ritorno dalla rete** | Un tunnel chiude la serata | Riparte da solo quando la connessione torna, senza toccare niente | Essenziale ✅ |
+| **Ripresa dichiarata** | Un salto silenzioso a 1:12:40 sembra un guasto | Dice da dove ha ripreso e offre «ricomincia da capo» | Utile ✅ |
+| **Spegnimento automatico** | Ci si addormenta e partono altri quattro episodi | 15/30/60 minuti o «fine episodio», con l'indicatore sempre visibile | Utile ✅ |
+| **Scorciatoie complete** | Dodici tasti che nessuno può scoprire | Set alla YouTube (spazio, frecce, J/L, 0–9, M, F, C, P, `<`/`>`, N) e l'elenco su `?` | Utile ✅ |
 | **Anteprime sulla timeline** | Cercare una scena al buio | Il fotogramma del punto, non solo il minutaggio | Utile ✅ |
 | **Autoplay nell'ordine della saga** | Il "prossimo" contraddice l'ordine che hai scelto | Stessa coda della pagina Saghe, §3.4 | Utile ✅ |
 | **Consigli di fine visione** | Finisce un film e la scelta ricomincia da zero | Presi dal *tuo* scaffale, ognuno con il suo perché (regola 2) | Utile ✅ |
@@ -174,6 +182,9 @@ sezione: hanno il loro, con la licenza, e meglio. Questo player non è per loro 
 | Funzione | Problema | Beneficio | Priorità |
 |---|---|---|---|
 | Diario cronologico | "Quando l'ho visto?" | Storia consultabile | Essenziale ✅ |
+| **Profilo** | Le statistiche stanno in una pagina di analisi, non dove sei tu | Ore totali, livello, record e classifica serie in un posto solo | Essenziale ✅ |
+| **Grafico attività** | "Guardo davvero tutte le sere?" | Minuti per giorno, con vista settimana / mese / anno | Essenziale ✅ |
+| **Livello e record personale** | Contare le ore non è un traguardo | Un livello che cresce con le ore e il giorno record, con la striscia di giorni di fila | Utile ✅ |
 | Statistiche + anno in rassegna | I numeri non raccontano | Il tuo anno come storia, anno per anno | Essenziale ✅ |
 | Attori e registi più visti | "Chi guardo davvero?" | Classifica dal tuo storico, ogni nome apre la sua pagina | Utile ✅ |
 | Traguardi | Nessun ritorno emotivo | Riconoscimento delle abitudini, saghe e generi inclusi | Utile ✅ |
@@ -187,7 +198,18 @@ sezione: hanno il loro, con la licenza, e meglio. Questo player non è per loro 
 ### 3.8 Download
 
 **Metadati e copertine** per la consultazione offline: la libreria resta
-sfogliabile in aereo. → Utile.
+sfogliabile in aereo. → Utile ✅
+
+Fatto con un service worker scritto a mano, con una regola per tipo di
+richiesta: la pagina dalla rete con la copia in cache come rete di sicurezza,
+i file del build dalla cache (l'hash *è* la versione, quindi non può essere
+quella sbagliata), le copertine TMDB dalla cache con un tetto di 400. Fuori
+restano il JSON di TMDB e le chiamate all'IA — una risposta vecchia lì sarebbe
+peggio di un errore onesto — e i segmenti video, che hanno già il loro gestore
+di download su IndexedDB e riempirebbero il telefono di nascosto.
+
+Gli aggiornamenti si offrono, non si applicano: un ricaricamento deciso
+dall'app può cadere in mezzo a una recensione o a un film.
 
 Per i titoli con una sorgente propria c'è anche il download del video, dentro il
 player (§3.6): coda, pausa/ripresa, gestione dello spazio, riproduzione offline e

@@ -12,6 +12,8 @@ import { PersonSheetPortal } from "./components/PersonSheet";
 import { NextChapterPrompt } from "./components/NextChapterPrompt";
 import { ResumePrompt } from "./components/ResumePrompt";
 import { IncomingShare } from "./components/IncomingShare";
+import { UpdatePrompt } from "./components/UpdatePrompt";
+import { useOnline } from "./lib/useOnline";
 import { useTheme } from "./store/useTheme";
 import { applyAccent } from "./lib/accents";
 import { useLibrary } from "./store/useLibrary";
@@ -23,7 +25,9 @@ import { Library } from "./pages/Library";
 import { Sagas } from "./pages/Sagas";
 import { Discover } from "./pages/Discover";
 import { Stats } from "./pages/Stats";
+import { Profile } from "./pages/Profile";
 import { Critic } from "./pages/Critic";
+import { useWatchProgressSync } from "./store/useWatchProgress";
 
 
 /**
@@ -42,6 +46,29 @@ const Player = lazy(() => import("./pages/Player").then((m) => ({ default: m.Pla
  * the library.
  */
 const Diagnostics = lazy(() => import("./pages/Diagnostics").then((m) => ({ default: m.Diagnostics })));
+
+/**
+ * Says why the parts that need a network have gone quiet.
+ *
+ * Everything that matters here — the library, the diary, the statistics, the
+ * player's own sources — lives on the device and keeps working. What stops is
+ * TMDB and the AI critic, and without a word about it a search returning
+ * nothing looks like a broken app rather than a missing connection.
+ */
+function OfflineBanner() {
+  const online = useOnline();
+  if (online) return null;
+  return (
+    <div
+      role="status"
+      className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-4 py-2 text-xs text-text-muted sm:px-6"
+    >
+      <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "var(--danger)" }} />
+      Sei offline: la tua libreria funziona tutta, ma la ricerca su TMDB, le copertine nuove e il
+      critico restano in attesa della connessione.
+    </div>
+  );
+}
 
 function ErrorBanner() {
   const storageError = useLibrary((s) => s.storageError);
@@ -71,6 +98,9 @@ export default function App() {
   useAutoLinkTmdb();
   useAutoLinkSagas();
   useReleaseAlerts();
+  // Mounted once here rather than per row: the playhead is written every few
+  // seconds while something plays, and each listener costs a re-read.
+  useWatchProgressSync();
 
   useEffect(() => {
     // Dark is the base theme, so the light variant is the one that opts in.
@@ -95,6 +125,7 @@ export default function App() {
       <div className="grain-overlay" />
       <Nav />
       <div className="min-h-screen pb-16 pt-14 md:pb-0 md:pl-60 md:pt-0">
+        <OfflineBanner />
         <ErrorBanner />
         <main id="main-content">
           <Routes>
@@ -103,6 +134,7 @@ export default function App() {
             <Route path="/saghe" element={<Sagas />} />
             <Route path="/scopri" element={<Discover />} />
             <Route path="/dati" element={<Stats />} />
+            <Route path="/profilo" element={<Profile />} />
             <Route path="/critico" element={<Critic />} />
             <Route
               path="/diagnostica"
@@ -146,6 +178,7 @@ export default function App() {
       <ResumePrompt />
       <NextChapterPrompt />
       <IncomingShare />
+      <UpdatePrompt />
     </>
   );
 }

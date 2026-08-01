@@ -9,11 +9,16 @@ import "@fontsource/ibm-plex-mono/600.css";
 import "./index.css";
 import App from "./App.tsx";
 import { installGlobalErrorCapture } from "./lib/errorLog";
+import { registerServiceWorker } from "./lib/serviceWorker";
 
 // Installed before React mounts, so an error thrown during the very first
 // render is caught too — which is exactly the failure that otherwise leaves
 // nothing behind but a blank page.
 installGlobalErrorCapture();
+
+// The offline shell. Registered after load inside the function, so it never
+// competes with the first render for bandwidth.
+registerServiceWorker();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
