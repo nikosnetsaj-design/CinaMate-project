@@ -84,10 +84,29 @@ resta tua e non ti vende niente.
 | Funzione | Problema | Beneficio | Priorità |
 |---|---|---|---|
 | Provider legali per l'Italia | "Ce l'ho su Netflix o devo noleggiarlo?" | Risposta immediata, dati JustWatch | Essenziale ✅ |
-| **Apri sul servizio** | Cercare di nuovo dentro l'app del servizio | Deep link diretto al titolo | Essenziale |
+| **Apri sul servizio** | Cercare di nuovo dentro l'app del servizio | La pastiglia del provider è un collegamento: apre il servizio con la ricerca già scritta, e su telefono apre l'app | Essenziale ✅ |
 | **I miei abbonamenti** | Ti propongono cose che non puoi vedere | Filtro "solo ciò che ho già" | Utile |
 | Avviso "in scadenza" | I titoli lasciano i cataloghi in silenzio | "Esce da Netflix il 30" | Utile |
 | Link personali (2 per titolo) | Vuoi salvare un tuo riferimento | Segnalibri liberi | Essenziale ✅ |
+
+**Perché la ricerca e non la scheda del film.** L'indirizzo interno che Netflix o
+Disney+ usano per un titolo non è in nessun catalogo pubblico, TMDB compreso:
+JustWatch quegli indirizzi li ha perché li raccoglie servizio per servizio, e non
+li presta. Quello che si può costruire onestamente è la ricerca del servizio già
+compilata col titolo — un tocco invece di dieci — e l'interfaccia lo dichiara con
+una riga, invece di far finta che sia un salto esatto. Restano collegamenti
+`https://`, mai schemi tipo `nflx://`: sul telefono un indirizzo del sito apre già
+l'app quando è installata, mentre uno schema proprio, se l'app non c'è, lascia il
+browser su una navigazione morta.
+
+**Perché solo otto servizi.** Netflix, Prime Video, Disney+, Apple TV+,
+Paramount+, Crunchyroll, RaiPlay e MUBI hanno una rotta di ricerca verificata.
+Sky / NOW, HBO Max e Mediaset Infinity no: indovinarla significa mandare la gente
+su un 404, quindi le loro pastiglie restano etichette e la strada è il
+collegamento a JustWatch, meno diretto ma vero. Vale anche in senso opposto: la
+piattaforma che hai scritto tu sulla scheda diventa un "Apri su Netflix" anche
+senza chiave TMDB e anche per un titolo mai collegato al catalogo, perché quel
+dato l'app ce l'ha già.
 
 ### 3.4 Saghe, universi e ordine di visione — Essenziale
 
@@ -372,18 +391,19 @@ degli errori di battitura**, **ricerca in linguaggio naturale**, **riassunto
 senza spoiler**, **traduzione della sinossi**, righe **Per te / Più visti /
 Ultimi aggiunti / Simili sul tuo scaffale**, **obiettivi personali**, **tinte
 d'accento e Home riordinabile**, **condivisione di liste e codice QR**,
-**controllo genitori**, **diagnostica con test e log errori**, e nel player
-**gesture**, **buffer adattivo** e **host con test velocità, priorità
-automatica e bilanciamento**.
+**controllo genitori**, **diagnostica con test e log errori**, **apri sul
+servizio**, e nel player **gesture**, **buffer adattivo** e **host con test
+velocità, priorità automatica e bilanciamento**.
 
-**Prossimo (Essenziale)**
-1. **Apri sul servizio**: deep link diretto a Netflix/Prime/Disney+
+**Prossimo (Essenziale)** — niente. Con "apri sul servizio" l'ultima voce
+essenziale è chiusa: quello che resta qui sotto è utile, non necessario, e
+nessuna delle tre è un buco che si sente usando l'app.
 
 **Poi (Utile)**
-2. Liste personali salvate ("Da vedere col partner", "Horror di ottobre") —
+1. Liste personali salvate ("Da vedere col partner", "Horror di ottobre") —
    oggi una lista si condivide ma non si conserva
-3. Trailer in‑app con PiP
-4. Universi costruiti a mano dall'utente, oltre a quelli da keyword
+2. Trailer in‑app con PiP
+3. Universi costruiti a mano dall'utente, oltre a quelli da keyword
 
 **Futuro**
 5. Sync cloud con account
