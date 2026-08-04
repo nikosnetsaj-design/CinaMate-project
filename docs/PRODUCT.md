@@ -63,6 +63,13 @@ resta tua e non ti vende niente.
 
 | Funzione | Problema | Beneficio | Priorità |
 |---|---|---|---|
+| **Risultati mentre scrivi** | Cercare era: scrivi tutto, premi, aspetta | I titoli compaiono digitando; ogni tasto annulla la richiesta precedente, così una risposta lenta non copre mai quella giusta | Essenziale ✅ |
+| **Errori di battitura perdonati anche su TMDB** | Una lettera sbagliata dava «nessun titolo trovato» | TMDB cerca per sottostringa e non ha nulla di tollerante: quando la parola esatta fallisce la si accorcia — una lettera sbagliata in fondo smette di contare — e i risultati si riordinano per somiglianza, dichiarati come «forse cercavi» | Essenziale ✅ |
+| **Dettagli senza salvare** | Per leggere una trama bisognava prima aggiungere il titolo | Trama, regia, cast, durata, voto TMDB e dove guardarlo prima di decidere: chi cerca per curiosità non si ritrova la libreria da riordinare | Essenziale ✅ |
+| **«Ce l'hai già»** | Si ri-aggiungeva quello che si possedeva | I titoli della libreria che somigliano a ciò che scrivi compaiono per primi, senza chiave API e senza rete | Utile ✅ |
+
+| Funzione | Problema | Beneficio | Priorità |
+|---|---|---|---|
 | Ricerca istantanea | Aspettare i risultati | Filtra mentre digiti | Essenziale ✅ |
 | Per titolo/regista/genere/attore | Ricordi l'attore, non il titolo | Trovi da qualsiasi appiglio | Essenziale ✅ |
 | **Risultati raggruppati** | "nolan" è insieme un uomo e sei film | Titoli, saghe e persone come decisioni separate, non una zuppa ordinata | Essenziale ✅ |

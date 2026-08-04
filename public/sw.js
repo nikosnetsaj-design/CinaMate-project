@@ -70,9 +70,41 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Lets the page trigger the swap it just asked the user about.
 self.addEventListener('message', (event) => {
-  if (event.data === 'skip-waiting') self.skipWaiting();
+  // Lets the page trigger the swap it just asked the user about.
+  if (event.data === 'skip-waiting') {
+    self.skipWaiting();
+    return;
+  }
+
+  /*
+   * The page telling us which files it is actually made of.
+   *
+   * A worker cannot know this by itself: the filenames carry a build hash, and
+   * the ones loaded on the very first visit were requested *before* this worker
+   * took control, so they never passed through the fetch handler above and are
+   * not in any cache. Without this the app only survived going offline from the
+   * second visit onward — and "open it once with a connection" is exactly the
+   * promise the offline mode makes.
+   *
+   * The page knows precisely what it loaded, so it sends the list.
+   */
+  if (event.data && event.data.type === 'cache-assets' && Array.isArray(event.data.urls)) {
+    event.waitUntil(
+      caches.open(ASSET_CACHE).then(async (cache) => {
+        await Promise.all(
+          event.data.urls.map(async (url) => {
+            try {
+              if (await cache.match(url, { ignoreVary: true })) return;
+              await cache.add(url);
+            } catch {
+              // One asset that will not cache is not worth failing the rest for.
+            }
+          }),
+        );
+      }),
+    );
+  }
 });
 
 self.addEventListener('fetch', (event) => {
@@ -116,7 +148,9 @@ async function networkFirst(request) {
     }
     return response;
   } catch {
-    const cached = (await caches.match(SHELL_URL)) ?? (await caches.match(SCOPE.toString()));
+    const cached =
+      (await caches.match(SHELL_URL, { ignoreVary: true })) ??
+      (await caches.match(SCOPE.toString(), { ignoreVary: true }));
     if (cached) return cached;
     return new Response(
       '<!doctype html><meta charset="utf-8"><title>CineMate</title>' +
@@ -130,7 +164,14 @@ async function networkFirst(request) {
 
 async function cacheFirst(request, cacheName, maxEntries) {
   const cache = await caches.open(cacheName);
-  const cached = await cache.match(request);
+  // `ignoreVary` is what makes this work at all, and it took a fetch log inside
+  // the worker to see why. An asset precached by the page-priming message is
+  // stored against a request the worker issued, which carries no `Origin`
+  // header; the browser then asks for the same file with one, and because the
+  // server answers with `Vary`, the default match treats the two as different
+  // entries. The cache was full and every lookup missed — the app opened
+  // offline to a blank shell whose scripts all failed.
+  const cached = await cache.match(request, { ignoreVary: true });
   if (cached) return cached;
   try {
     const response = await fetch(request);

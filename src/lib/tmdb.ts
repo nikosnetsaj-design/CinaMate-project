@@ -66,7 +66,20 @@ export interface TmdbDetails {
   certification: string;
 }
 
-async function tmdbGet<T>(path: string, apiKey: string, params: Record<string, string> = {}): Promise<T> {
+/** Thrown when a request was deliberately cancelled — never worth reporting. */
+export class TmdbAbortError extends Error {
+  constructor() {
+    super("Richiesta annullata");
+    this.name = "TmdbAbortError";
+  }
+}
+
+async function tmdbGet<T>(
+  path: string,
+  apiKey: string,
+  params: Record<string, string> = {},
+  signal?: AbortSignal,
+): Promise<T> {
   if (!apiKey) throw new MissingTmdbKeyError();
   const url = new URL(`${BASE}${path}`);
   url.searchParams.set("api_key", apiKey);
@@ -75,8 +88,12 @@ async function tmdbGet<T>(path: string, apiKey: string, params: Record<string, s
 
   let response: Response;
   try {
-    response = await fetch(url.toString());
-  } catch {
+    response = await fetch(url.toString(), { signal });
+  } catch (e) {
+    // A cancelled request is not a failure: search-as-you-type abandons one on
+    // every keystroke, and logging those would fill the error page with noise
+    // and show the user a network error for a request nobody was waiting for.
+    if (signal?.aborted || (e instanceof DOMException && e.name === "AbortError")) throw new TmdbAbortError();
     // Logged as well as thrown: much of this runs in the background linker,
     // where the throw is swallowed on purpose so one unmatchable title doesn't
     // stop the pass — and the failure would otherwise leave no trace anywhere.
@@ -154,11 +171,17 @@ const GENRE_NAMES: Record<number, string> = {
   99: "Documentario",
 };
 
-export async function searchTitles(query: string, apiKey: string): Promise<TmdbSearchResult[]> {
-  const data = await tmdbGet<{ results: RawMultiSearchResult[] }>("/search/multi", apiKey, {
-    query,
-    include_adult: "false",
-  });
+export async function searchTitles(
+  query: string,
+  apiKey: string,
+  signal?: AbortSignal,
+): Promise<TmdbSearchResult[]> {
+  const data = await tmdbGet<{ results: RawMultiSearchResult[] }>(
+    "/search/multi",
+    apiKey,
+    { query, include_adult: "false" },
+    signal,
+  );
   return data.results
     .filter((r): r is RawMultiSearchResult & { media_type: "movie" | "tv" } => r.media_type === "movie" || r.media_type === "tv")
     .slice(0, 8)
