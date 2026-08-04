@@ -13,7 +13,7 @@ function fold(value: string): string {
  * to run on every keystroke. Only two rows are kept — the full matrix is never
  * needed when all we want is the final number.
  */
-function editDistance(a: string, b: string, max: number): number {
+export function editDistance(a: string, b: string, max: number): number {
   if (a === b) return 0;
   if (Math.abs(a.length - b.length) > max) return max + 1;
 

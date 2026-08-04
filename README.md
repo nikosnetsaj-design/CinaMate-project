@@ -134,6 +134,15 @@ rete che non è la tua.
 - **Ricerca intelligente**: una sola barra che trova titoli, saghe, universi,
   attori e registi, con i risultati raggruppati per tipo — e che perdona gli
   errori di battitura, proponendo il titolo che intendevi.
+- **Cercare un titolo nuovo**: i risultati arrivano mentre scrivi, senza premere
+  niente. Se sbagli una lettera non ti lascia a mani vuote: TMDB non ha una
+  ricerca tollerante, quindi quando la parola esatta non trova nulla la si
+  accorcia — così una lettera sbagliata in fondo smette di contare — e i
+  risultati vengono riordinati per somiglianza a quello che avevi scritto, sotto
+  la riga «forse cercavi». Intanto ti dice anche se quel titolo ce l'hai già.
+- **Dettagli prima di salvare**: tocca un risultato e vedi trama, regia, cast,
+  durata, voto TMDB e dove guardarlo — senza doverlo prima aggiungere alla
+  libreria. Aggiungerlo resta un secondo passo, se lo vuoi.
 - **Filtri avanzati**: tipo, stato, genere, studio, paese, lingua audio,
   qualità della tua copia, durata, anno, il tuo voto e quello di TMDB, e
   "solo con sottotitoli". Le opzioni sono prese dal tuo scaffale, quindi ogni
