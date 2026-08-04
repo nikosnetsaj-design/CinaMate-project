@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSettings } from "../store/useSettings";
 import { useWatchSession } from "../store/useWatchSession";
 import { getWatchProviders, type TmdbWatchProvider } from "../lib/tmdb";
+import { serviceLinkFor } from "../lib/deepLinks";
 import type { Item } from "../types";
 
 function linkLabel(url: string): string {
@@ -11,6 +12,8 @@ function linkLabel(url: string): string {
     return url;
   }
 }
+
+const CHIP = "rounded-full px-2.5 py-1 text-xs";
 
 function WatchProviders({ item }: { item: Item }) {
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
@@ -38,44 +41,100 @@ function WatchProviders({ item }: { item: Item }) {
     };
   }, [item.tmdbId, item.tmdbMediaType, tmdbApiKey]);
 
-  if (!item.tmdbId || !item.tmdbMediaType) return null;
+  const linked = Boolean(item.tmdbId && item.tmdbMediaType);
+  const openable = providers.map((p) => ({ name: p.name, link: serviceLinkFor(p.name, item.title) }));
+
+  /**
+   * La piattaforma che l'utente ha scritto sulla scheda. Vale come scorciatoia
+   * anche senza chiave TMDB e anche per un titolo mai collegato al catalogo:
+   * è un'informazione che l'app ha già. Si mostra solo quando TMDB non ha già
+   * elencato lo stesso servizio, per non offrire due volte lo stesso tocco.
+   */
+  const own = serviceLinkFor(item.platform, item.title);
+  // Finché TMDB sta ancora rispondendo la scorciatoia resta nascosta: comparire
+  // per mezzo secondo e poi sparire, sostituita dalla pastiglia dello stesso
+  // servizio, è un tremolio che non serve a nessuno.
+  const pending = linked && Boolean(tmdbApiKey) && state !== "done" && state !== "error";
+  const showOwn = own !== null && !pending && !openable.some((p) => p.link?.service === own.service);
+
+  if (!linked && !own) return null;
 
   return (
     <div>
       <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Dove guardarlo</span>
-      {!tmdbApiKey && <p className="text-xs text-text-faint">Aggiungi la tua chiave TMDB nelle Impostazioni per vedere la disponibilità.</p>}
-      {tmdbApiKey && state === "busy" && (
+      {linked && !tmdbApiKey && (
+        <p className="text-xs text-text-faint">Aggiungi la tua chiave TMDB nelle Impostazioni per vedere la disponibilità.</p>
+      )}
+      {linked && tmdbApiKey && state === "busy" && (
         <div className="flex items-center gap-2 text-xs text-text-faint">
           <span className="spinner h-3.5 w-3.5 rounded-full border-2" style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }} />
           Verifico su TMDB…
         </div>
       )}
-      {tmdbApiKey && state === "error" && <p className="text-xs text-text-faint">Non disponibile al momento.</p>}
-      {tmdbApiKey && state === "done" && providers.length === 0 && (
+      {linked && tmdbApiKey && state === "error" && <p className="text-xs text-text-faint">Non disponibile al momento.</p>}
+      {linked && tmdbApiKey && state === "done" && providers.length === 0 && (
         <p className="text-xs text-text-faint">Non risulta in streaming in Italia al momento.</p>
       )}
-      {tmdbApiKey && state === "done" && providers.length > 0 && (
-        <>
-          <div className="flex flex-wrap gap-1.5">
-            {providers.map((p) => (
-              <span key={p.name} className="rounded-full bg-surface-hover px-2.5 py-1 text-xs text-text">
+      {linked && tmdbApiKey && state === "done" && providers.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {openable.map((p) =>
+            p.link ? (
+              <a
+                key={p.name}
+                href={p.link.url}
+                onClick={() => startWatching(item.id)}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={`Apri ${item.title} su ${p.link.service}`}
+                className={`${CHIP} border border-border-strong font-medium hover:bg-surface-hover`}
+                style={{ color: "var(--accent-text)" }}
+              >
+                {p.name} ↗
+              </a>
+            ) : (
+              <span key={p.name} className={`${CHIP} bg-surface-hover text-text`}>
                 {p.name}
               </span>
-            ))}
-          </div>
-          {link && (
-            <a
-              href={link}
-              onClick={() => startWatching(item.id)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-1.5 inline-block text-xs underline-offset-2 hover:underline"
-              style={{ color: "var(--accent-text)" }}
-            >
-              Vedi tutte le opzioni su JustWatch →
-            </a>
+            ),
           )}
-        </>
+        </div>
+      )}
+
+      {own && showOwn && (
+        <a
+          href={own.url}
+          onClick={() => startWatching(item.id)}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={`Apri ${item.title} su ${own.service}`}
+          className={`${CHIP} mt-1.5 inline-block border border-border-strong font-medium hover:bg-surface-hover`}
+          style={{ color: "var(--accent-text)" }}
+        >
+          Apri su {own.service} ↗
+        </a>
+      )}
+
+      {/*
+        Detto una volta sola, sotto le pastiglie: il collegamento apre la
+        ricerca del servizio, non la scheda del film. Nessun catalogo pubblico
+        espone l'indirizzo interno di un titolo, e promettere un salto esatto
+        che non c'è è peggio che spiegare quello che si fa davvero.
+      */}
+      {(showOwn || openable.some((p) => p.link)) && (
+        <p className="mt-1.5 text-xs text-text-faint">Si apre la ricerca del servizio, già scritta. Su telefono apre l'app, se ce l'hai.</p>
+      )}
+
+      {linked && tmdbApiKey && state === "done" && providers.length > 0 && link && (
+        <a
+          href={link}
+          onClick={() => startWatching(item.id)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-1.5 inline-block text-xs underline-offset-2 hover:underline"
+          style={{ color: "var(--accent-text)" }}
+        >
+          Vedi tutte le opzioni su JustWatch →
+        </a>
       )}
     </div>
   );
@@ -84,7 +143,8 @@ function WatchProviders({ item }: { item: Item }) {
 export function WatchAndLinks({ item }: { item: Item }) {
   const startWatching = useWatchSession((s) => s.start);
   const hasLinks = item.links.length > 0;
-  if (!item.tmdbId && !item.trailerUrl && !hasLinks) return null;
+  const hasPlatformLink = serviceLinkFor(item.platform, item.title) !== null;
+  if (!item.tmdbId && !item.trailerUrl && !hasLinks && !hasPlatformLink) return null;
 
   return (
     <div className="mt-4 flex flex-col gap-3.5 rounded-md border border-border bg-surface-2 p-4">

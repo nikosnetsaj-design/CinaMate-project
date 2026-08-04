@@ -61,8 +61,8 @@ src/
                 genitori, tema, UI)
   lib/          dominio e utility (tmdb, sagas, universes, upcoming, stats,
                 activity, continueWatching, achievements, search, filters,
-                recommend, goals, parental, accents, share, anthropic, backup,
-                errorLog, selfTest)
+                recommend, goals, parental, accents, share, deepLinks,
+                anthropic, backup, errorLog, selfTest)
   player/       il player, autonomo dal resto dell'app:
                   hooks/      motore video (hls.js), gesture, sottotitoli,
                               maratona, download, watch party, cast,
@@ -143,6 +143,16 @@ rete che non è la tua.
 - **Dettagli prima di salvare**: tocca un risultato e vedi trama, regia, cast,
   durata, voto TMDB e dove guardarlo — senza doverlo prima aggiungere alla
   libreria. Aggiungerlo resta un secondo passo, se lo vuoi.
+- **Apri sul servizio**: la pastiglia del provider è un collegamento. Un tocco e
+  si apre Netflix, Prime Video, Disney+, Apple TV+, Paramount+, Crunchyroll,
+  RaiPlay o MUBI con la ricerca del titolo già scritta — e sul telefono si apre
+  l'app, non il sito, se ce l'hai installata. Vale anche per la piattaforma che
+  hai indicato tu sulla scheda, quindi funziona pure senza chiave TMDB. Si apre
+  la ricerca e non la scheda del film perché l'indirizzo interno di un titolo non
+  è in nessun catalogo pubblico: l'app lo dice invece di prometterti un salto
+  esatto che non può fare. I servizi senza una rotta di ricerca stabile — Sky /
+  NOW, HBO Max, Mediaset Infinity — restano etichette, con il collegamento a
+  JustWatch accanto.
 - **Filtri avanzati**: tipo, stato, genere, studio, paese, lingua audio,
   qualità della tua copia, durata, anno, il tuo voto e quello di TMDB, e
   "solo con sottotitoli". Le opzioni sono prese dal tuo scaffale, quindi ogni

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { PosterArt } from "./PosterArt";
 import { getDetails, TmdbApiError, type TmdbDetails, type TmdbSearchResult } from "../lib/tmdb";
 import { formatRuntime } from "../lib/format";
+import { serviceLinkFor } from "../lib/deepLinks";
 
 /**
  * The full card of a title you have not added — and may decide not to.
@@ -131,11 +132,28 @@ export function TitlePreview({
       {details && details.watchProviders.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="text-xs text-text-muted">Dove guardarlo:</span>
-          {details.watchProviders.slice(0, 5).map((p) => (
-            <span key={p.name} className="rounded-full bg-surface-hover px-2.5 py-1 text-xs text-text">
-              {p.name}
-            </span>
-          ))}
+          {details.watchProviders.slice(0, 5).map((p) => {
+            // Apribile anche da qui: capita di cercare un titolo per guardarlo
+            // stasera, non per metterlo in libreria.
+            const link = serviceLinkFor(p.name, details.title);
+            return link ? (
+              <a
+                key={p.name}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={`Apri ${details.title} su ${link.service}`}
+                className="rounded-full border border-border-strong px-2.5 py-1 text-xs font-medium hover:bg-surface-hover"
+                style={{ color: "var(--accent-text)" }}
+              >
+                {p.name} ↗
+              </a>
+            ) : (
+              <span key={p.name} className="rounded-full bg-surface-hover px-2.5 py-1 text-xs text-text">
+                {p.name}
+              </span>
+            );
+          })}
         </div>
       )}
 
