@@ -247,7 +247,12 @@ function ViewerFrame({
     if (!page.ok) {
       setExtractError(
         page.reason === "bloccato-cors"
-          ? "Il sito risponde ma non lascia che questa pagina ne legga il sorgente (CORS). Il riquadro qui sotto lo mostra lo stesso — è il browser a mostrarlo, non io a leggerlo — ma l'indirizzo del flusso da qui non si può isolare."
+          ? // Prima questa frase diceva anche «il riquadro qui sotto lo mostra
+            // lo stesso». Non è vero quando il sito rifiuta pure di essere
+            // incorniciato — che è il caso frequente, visto che sono due modi
+            // di dire la stessa cosa — e una rassicurazione falsa è peggio che
+            // nessuna rassicurazione.
+            "Il sito risponde ma non lascia che questa pagina ne legga il sorgente (CORS), quindi da qui l'indirizzo del flusso non si può isolare. Aprilo in una scheda e cerca il video lì."
           : page.reason === "non-e-una-pagina"
             ? "Quell'indirizzo non serve una pagina: è già un file."
             : "Nessuna risposta da quell'indirizzo.",
@@ -456,7 +461,42 @@ function ViewerFrame({
         )}
       </motion.div>
 
-      <div className="relative flex-1 bg-black">
+      <div className="relative flex-1">
+        {/*
+          La spiegazione del riquadro vuoto sta *dietro* al riquadro, non sotto.
+          Prima era un paragrafo in fondo alla finestra: un muro di testo sempre
+          presente, che chi vedeva la pagina caricarsi non aveva motivo di
+          leggere e chi si trovava davanti al bianco non collegava al bianco.
+          Qui compare esattamente quando è vera — cioè quando è la sola cosa
+          rimasta da guardare — e porta con sé l'unica azione che in quel caso
+          funziona, invece di nominarla in mezzo a una frase.
+        */}
+        <div className="absolute inset-0 z-0 flex items-center justify-center bg-surface p-6">
+          <div className="max-w-sm text-center">
+            <p className="text-sm font-medium text-text">Questo sito non si lascia incorniciare</p>
+            <p className="mt-1.5 text-xs leading-relaxed text-text-faint">
+              Risponde <span className="font-mono">X-Frame-Options</span> o{" "}
+              <span className="font-mono">frame-ancestors</span>, e da una pagina web non c'è modo
+              di convincerlo. Aprilo in una scheda: lì funziona come sempre.
+            </p>
+            <a
+              href={current}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className="mt-3 inline-block rounded-sm px-4 py-2 text-xs font-semibold"
+              style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+            >
+              Apri in una scheda ↗
+            </a>
+            {context && (
+              <p className="mt-3 text-[11px] leading-relaxed text-text-faint">
+                Quando ci hai trovato il video, torna qui: incolla l'indirizzo del flusso nel
+                pannello Sorgenti del player, oppure premi «Estrai il flusso» sulla pagina giusta.
+              </p>
+            )}
+          </div>
+        </div>
+
         {level === "hookata" ? (
           hookedDoc ? (
             <iframe
@@ -467,10 +507,10 @@ function ViewerFrame({
               referrerPolicy="no-referrer"
               allow=""
               title="Web Viewer — lettura hookata"
-              className="h-full w-full border-0 bg-white"
+              className="relative z-10 h-full w-full border-0"
             />
           ) : (
-            <div className="flex h-full items-center justify-center p-6 text-center">
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-surface p-6 text-center">
               <p className="max-w-md text-xs leading-relaxed text-text-faint">
                 {hookedError ?? "Leggo la pagina e ci metto lo script davanti…"}
               </p>
@@ -486,17 +526,32 @@ function ViewerFrame({
             // né posizione, né riproduzione automatica.
             allow=""
             title="Web Viewer"
-            className="h-full w-full border-0 bg-white"
+            // Nessuno sfondo dichiarato: `bg-white` copriva la spiegazione qui
+            // sopra anche quando il riquadro non aveva niente da mostrare, che
+            // è il solo caso in cui quella spiegazione serve.
+            className="relative z-10 h-full w-full border-0"
           />
         )}
+
+        {/*
+          La via d'uscita, sempre visibile e sopra al riquadro. Un riquadro
+          rifiutato in certi browser viene dipinto di bianco opaco, e coprirebbe
+          il pannello dietro: questa pastiglia è la garanzia che l'azione ci sia
+          comunque, qualunque cosa il browser decida di dipingere.
+        */}
+        <a
+          href={current}
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+          className="absolute bottom-3 right-3 z-20 rounded-full border border-border-strong bg-surface/95 px-3 py-1.5 text-xs font-medium text-text shadow-[var(--shadow-lg)] backdrop-blur-sm hover:bg-surface-hover"
+        >
+          Apri in una scheda ↗
+        </a>
       </div>
 
-      <p className="border-t border-border bg-surface-2 px-3 py-2 text-[11px] leading-relaxed text-text-faint">
-        Se il riquadro resta bianco, quel sito rifiuta di essere incorniciato
-        (<span className="font-mono">X-Frame-Options</span>) e non c'è modo di convincerlo da qui:
-        usa ↗ per aprirlo in una scheda. La barra qui sopra dice dove l'ho mandato io, non dove sei
-        arrivato cliccando dentro: un riquadro di un altro dominio non lascia leggere il proprio
-        indirizzo.
+      <p className="border-t border-border bg-surface-2 px-3 py-1.5 text-[11px] leading-relaxed text-text-faint">
+        La barra dell'indirizzo dice dove l'ho mandato io, non dove sei arrivato cliccando dentro:
+        un riquadro di un altro dominio non lascia leggere il proprio indirizzo.
       </p>
     </div>,
     document.body,
