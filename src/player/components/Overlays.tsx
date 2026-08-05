@@ -8,9 +8,9 @@ import { AUTOPLAY_COUNTDOWN_SEC } from '../hooks/usePlaybackExtras';
 import { ErrorIcon } from './Icons';
 
 const MARKER_LABELS: Record<SkipMarker['type'], string> = {
-  intro: 'Salta Intro',
-  recap: 'Salta Recap',
-  credits: 'Salta Crediti',
+  intro: "Salta l'intro",
+  recap: 'Salta il riepilogo',
+  credits: 'Salta i titoli di coda',
 };
 
 export function SkipButton({ marker, onSkip }: { marker: SkipMarker; onSkip: () => void }) {
@@ -21,25 +21,47 @@ export function SkipButton({ marker, onSkip }: { marker: SkipMarker; onSkip: () 
   );
 }
 
-export function NextUpOverlay({
+/**
+ * La schermata di fine: cosa parte dopo, e le due sole risposte possibili.
+ *
+ * Occupa tutta la scena invece di essere una tessera in un angolo, perché a
+ * fine episodio la scena non serve più a niente — sono i titoli di coda — e una
+ * decisione che parte da sola in otto secondi merita di essere davanti agli
+ * occhi. "Guarda i titoli di coda" è l'annullamento detto per quello che è:
+ * nessuno annulla un episodio, si sceglie di restare su questo.
+ */
+export function PostPlayOverlay({
   seconds, title, posterUrl, onCancel, onPlayNow,
 }: {
   seconds: number; title: string; posterUrl: string; onCancel: () => void; onPlayNow: () => void;
 }) {
   const pct = Math.round(((AUTOPLAY_COUNTDOWN_SEC - seconds) / AUTOPLAY_COUNTDOWN_SEC) * 100);
   return (
-    <div className="pv-next-up">
-      <div className="pv-next-up-ring" style={{ '--pct': pct } as CSSProperties}>
-        <span>{seconds}</span>
-      </div>
-      {posterUrl && <img className="pv-next-up-poster" src={posterUrl} alt="" />}
-      <div className="pv-next-up-body">
-        <span className="pv-dim">Il prossimo contenuto sta per iniziare</span>
-        <h4>{title}</h4>
-        <div className="pv-next-up-actions">
-          <button onClick={onPlayNow}>Riproduci ora</button>
-          <button className="pv-btn-secondary" onClick={onCancel}>Annulla</button>
+    <div className="pv-postplay">
+      <div className="pv-postplay-next">
+        {posterUrl && <img className="pv-postplay-poster" src={posterUrl} alt="" />}
+        <div>
+          <span className="pv-dim">Il prossimo</span>
+          <h4>{title}</h4>
         </div>
+      </div>
+
+      <div className="pv-postplay-actions">
+        <button type="button" className="pv-btn-secondary" onClick={onCancel}>
+          Guarda i titoli di coda
+        </button>
+        <button type="button" className="pv-postplay-play" onClick={onPlayNow}>
+          {/* Il riempimento *è* il conto alla rovescia: un numero che scende
+              va letto, una barra che avanza si vede con la coda dell'occhio. */}
+          <span className="pv-postplay-fill" style={{ '--pct': `${pct}%` } as CSSProperties} aria-hidden="true" />
+          <span className="pv-postplay-label">
+            <svg viewBox="0 0 24 24" width={18} height={18} aria-hidden="true">
+              <polygon points="6,4 20,12 6,20" fill="currentColor" />
+            </svg>
+            Prossimo episodio
+            <span className="pv-mono">{seconds}</span>
+          </span>
+        </button>
       </div>
     </div>
   );

@@ -1,9 +1,7 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useLibrary } from "../store/useLibrary";
 import { useSettings } from "../store/useSettings";
 import { useSelectedItem } from "../store/useSelectedItem";
-import { loadUpcoming, trackedKey, type UpcomingEntry } from "../lib/upcoming";
+import { useUpcoming } from "../lib/useUpcoming";
 import { countdown } from "../lib/format";
 import { PosterArt } from "./PosterArt";
 
@@ -11,24 +9,9 @@ import { PosterArt } from "./PosterArt";
 const MAX_ON_HOME = 8;
 
 export function UpcomingRow() {
-  const items = useLibrary((s) => s.items);
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
   const openItem = useSelectedItem((s) => s.open);
-  const [upcoming, setUpcoming] = useState<UpcomingEntry[]>([]);
-
-  // Depend on the tracked titles themselves, not on the array identity, so
-  // unrelated library edits don't retrigger the sweep.
-  const key = trackedKey(items);
-
-  useEffect(() => {
-    let cancelled = false;
-    void loadUpcoming(useLibrary.getState().items, tmdbApiKey).then((list) => {
-      if (!cancelled) setUpcoming(list);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [tmdbApiKey, key]);
+  const upcoming = useUpcoming();
 
   if (!tmdbApiKey || upcoming.length === 0) return null;
 

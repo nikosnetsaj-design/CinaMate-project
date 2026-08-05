@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useLibrary } from "../store/useLibrary";
 import { useSagas } from "../store/useSagas";
 import { usePlayerSources } from "../store/usePlayerSources";
@@ -27,10 +27,15 @@ import { useWebViewer } from "../store/useWebViewer";
 import { LinkHostPanel } from "../player/components/LinkHostPanel";
 import { SourcePanel } from "../player/SourcePanel";
 import { EMPTY_SOURCE } from "../store/usePlayerSources";
-import type { MediaContent } from "../player/types";
+import type { MediaContent, Reaction } from "../player/types";
+import type { PlaylistEntry } from "../player/components/EpisodesPanel";
 import "../player/styles/player.css";
 import { useVisibleItems } from "../lib/useVisibleItems";
 import { useVisibleInterval } from "../lib/useVisibleInterval";
+import { REACTION_VOTE, reactionOf } from "../lib/reactions";
+import { resumeLabel } from "../lib/continueWatching";
+import { momentShareUrl, shareOrCopy } from "../lib/share";
+import { voteWord } from "../lib/vote";
 
 const IDENTITY_KEY = "cinemate:player-identity";
 
@@ -129,6 +134,15 @@ export function Player() {
   useEffect(() => {
     if (requestedId) setSelectedId(requestedId);
   }, [requestedId]);
+
+  // Aperto da un momento condiviso (?t=): quel secondo vince sul segnalibro.
+  // Vale solo per il titolo che il link nominava — passare al successivo deve
+  // ripartire da dove eri, non dal minuto di un altro film.
+  const requestedStartSec = Number(searchParams.get("t"));
+  const startAtSec =
+    requestedId && selectedId === requestedId && Number.isFinite(requestedStartSec) && requestedStartSec > 0
+      ? requestedStartSec
+      : null;
 
   const baseContent = playable.find((c) => c.id === selectedId) ?? playable[0];
 
@@ -337,6 +351,59 @@ export function Player() {
   const hasOwnSources = catalog.length > 0;
   const selectedItem = items.find((i) => i.id === content.id) ?? null;
 
+  // --- Quello che il player mostra della libreria ---------------------------
+
+  const navigate = useNavigate();
+  const updateItem = useLibrary((s) => s.updateItem);
+  const pushToast = useLibrary((s) => s.pushToast);
+
+  // "S1:E4 «Titolo»" per una serie, il solo titolo per un film. L'etichetta è
+  // costruita qui e non nel player perché è la libreria a sapere a che punto
+  // della serie sei — il player conosce solo il file che sta riproducendo.
+  const label = useMemo(() => {
+    if (!selectedItem) return content.title;
+    if (selectedItem.kind === "film" || selectedItem.kind === "doc") return selectedItem.title;
+    const position = resumeLabel(selectedItem).replace(" · ", ":");
+    return `${position} «${selectedItem.title}»`;
+  }, [selectedItem, content.title]);
+
+  const react = useCallback(
+    (reaction: Reaction) => {
+      if (!selectedItem) return;
+      const vote = REACTION_VOTE[reaction];
+      updateItem(selectedItem.id, { vote });
+      pushToast("success", `Voto salvato: ${voteWord(vote).toLowerCase()} (${vote}/10)`);
+    },
+    [selectedItem, updateItem, pushToast],
+  );
+
+  // Cosa altro si può riprodurre, per il pannello "Episodi" dentro la scena.
+  const playlist = useMemo<PlaylistEntry[]>(
+    () =>
+      playable.map((c) => {
+        const item = items.find((i) => i.id === c.id);
+        return {
+          id: c.id,
+          title: c.title,
+          posterUrl: c.posterUrl,
+          subtitle: item ? resumeLabel(item) : undefined,
+        };
+      }),
+    [playable, items],
+  );
+
+  const shareMoment = useCallback(
+    async (startSec: number, lengthSec: number) => {
+      if (!selectedItem) return "failed" as const;
+      return shareOrCopy({
+        title: selectedItem.title,
+        text: `Un momento di ${selectedItem.title}`,
+        url: momentShareUrl(selectedItem.id, startSec, lengthSec),
+      });
+    },
+    [selectedItem],
+  );
+
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-4 px-4 py-6 sm:px-6 sm:py-10">
       <header className="flex flex-col gap-1.5">
@@ -410,25 +477,9 @@ export function Player() {
         </div>
       )}
 
-      {playable.length > 1 && (
-        <div className="flex flex-wrap gap-2">
-          {playable.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => selectContent(c.id)}
-              aria-current={c.id === content.id}
-              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                c.id === content.id
-                  ? "border-accent text-text"
-                  : "border-border-strong text-text-muted hover:bg-surface-hover"
-              }`}
-            >
-              {c.title}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* La scelta del titolo stava qui, in una fila di pastiglie: fuori dalla
+          scena, invisibile a schermo intero e illeggibile oltre la mezza
+          dozzina di titoli. Ora è il pannello "Episodi" dentro il player. */}
 
       <div className="pv-app">
         <VideoPlayer
@@ -443,6 +494,13 @@ export function Player() {
           onPlayerReady={onPlayerReady}
           sourceLabel={isOffline ? "Dai download" : null}
           onCompleted={markWatchedInLibrary}
+          label={label}
+          reaction={reactionOf(selectedItem?.vote)}
+          onReact={selectedItem ? react : undefined}
+          onClose={() => navigate(-1)}
+          playlist={playlist}
+          onShareMoment={selectedItem ? shareMoment : undefined}
+          startAtSec={startAtSec}
         />
 
         <MarathonBar marathon={marathon} onJumpTo={(i) => selectContent(marathonPlaylist[i]?.id ?? null)} />

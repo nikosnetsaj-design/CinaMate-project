@@ -1,12 +1,13 @@
 import type { Item } from "../types";
 import { posterUrl } from "../lib/tmdb";
+import { minimumAge } from "../lib/parental";
 import { orderParts, findLibraryMatch } from "../lib/sagas";
 import { candidatesFor } from "../lib/sourceTemplate";
 import type { SagaOrders, WatchOrder } from "../lib/sagas";
 import type { TmdbSaga } from "../lib/tmdb";
 import { EMPTY_SOURCE } from "../store/usePlayerSources";
 import type { PlayerSource } from "../store/usePlayerSources";
-import type { MediaContent, SagaEntry, SubtitleTrack, SkipMarker } from "./types";
+import type { ContentRating, MediaContent, SagaEntry, SubtitleTrack, SkipMarker } from "./types";
 
 /**
  * Bridge between CineMate's library and the player's content model.
@@ -85,10 +86,34 @@ function markersOf(source: PlayerSource): SkipMarker[] {
   return source.markers.filter((m) => m.endSec > m.startSec);
 }
 
+/**
+ * La classificazione da mostrare in apertura, o `undefined` quando il titolo
+ * non ne ha una. Un cartello che dicesse "non classificato" a ogni avvio
+ * sarebbe rumore: l'assenza di dato non è un dato da annunciare.
+ */
+function ratingOf(item: Item): ContentRating | undefined {
+  const certification = item.certification?.trim();
+  if (!certification) return undefined;
+  // Scritta a partire dall'età, non presa da AGE_LABELS: quella tabella
+  // conosce cinque scalini (0, 6, 12, 14, 18) mentre le sigle ne producono
+  // anche altri — PG-13 vale 13, R vale 17 — e arrotondarli a uno scalino
+  // vicino direbbe un'età che nessun ente ha mai scritto.
+  const age = minimumAge(item);
+  return {
+    certification: certification.toUpperCase(),
+    ageLabel: age === null ? undefined : age === 0 ? "Per tutti" : `Dai ${age} anni`,
+    descriptors: (item.contentWarnings ?? "")
+      .split(",")
+      .map((w) => w.trim())
+      .filter(Boolean),
+  };
+}
+
 function toMediaContent(item: Item, manifestUrl: string, source: PlayerSource): MediaContent {
   const poster = posterUrl(item.posterPath, "w342") ?? "";
   return {
     id: item.id,
+    rating: ratingOf(item),
     // Every library title is a single playable asset (one manifest), not one
     // episode of many — the player's per-episode fields stay unused.
     type: "movie",

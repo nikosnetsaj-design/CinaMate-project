@@ -5,6 +5,7 @@ import { VoteBadge } from "./VoteBadge";
 import { useSelectedItem } from "../store/useSelectedItem";
 import type { Item } from "../types";
 import type { Suggestion } from "../lib/recommend";
+import type { PosterBadge } from "../lib/homeBadges";
 
 /**
  * A horizontal shelf of titles. Takes suggestions rather than bare items so a
@@ -17,6 +18,7 @@ export function PosterRow({
   count,
   moreHref,
   note,
+  badges,
 }: {
   title: string;
   entries: (Suggestion | { item: Item; reason?: string })[];
@@ -25,6 +27,8 @@ export function PosterRow({
   moreHref?: string;
   /** One line explaining what the whole row is, when the reasons alone don't. */
   note?: ReactNode;
+  /** Le pastiglie "Nuova stagione" / "Aggiunto di recente", per id del titolo. */
+  badges?: Record<string, PosterBadge>;
 }) {
   const openItem = useSelectedItem((s) => s.open);
   if (entries.length === 0) return null;
@@ -52,7 +56,7 @@ export function PosterRow({
             aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
             className="w-28 shrink-0 text-left"
           >
-            <PosterArt item={item} size="sm" className="w-28" />
+            <PosterArt item={item} size="sm" className="w-28" badge={badges?.[item.id]} />
             <p className="mt-1.5 line-clamp-2 text-xs font-medium text-text">{item.title}</p>
             {reason ? (
               <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-text-faint">{reason}</p>

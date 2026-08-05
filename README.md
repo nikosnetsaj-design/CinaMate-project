@@ -63,6 +63,14 @@ src/
                 activity, continueWatching, achievements, search, filters,
                 recommend, goals, parental, accents, share, deepLinks,
                 spatialNav, anthropic, backup, errorLog, selfTest)
+                  featured.ts       chi finisce in vetrina, e la riga che dice
+                                    perché: una gerarchia dichiarata, non un
+                                    sorteggio
+                  homeBadges.ts     la pastiglia sulla copertina, al massimo una
+                                    e solo con un fatto dietro
+                  reactions.ts      i tre pollici del player ↔ il voto da 1 a 10
+                  useUpcoming.ts    le uscite in arrivo, condivise fra vetrina,
+                                    riga «In arrivo» e pastiglie
                   linkHost.ts       i siti su cui cercare: concatenazione dei
                                     metadati e costruzione della ricerca
                   streamExtract.ts  lettura di una pagina, isolamento dell'.m3u8
@@ -79,8 +87,12 @@ src/
                   services/   download su IndexedDB, lettura delle playlist HLS,
                               cronologia e statistiche, trasporto realtime,
                               salute, velocità e storico degli host
-                  components/ shell del player, controlli, timeline, overlay,
-                              impostazioni, pannelli download/party/host
+                  components/ shell del player, barra del titolo con i tre
+                              pollici, comandi al centro, colonna della
+                              luminosità, riga di azioni, cartello della
+                              classificazione, foglio Episodi, Ritaglia,
+                              schermata di fine, impostazioni, pannelli
+                              download/party/host
                   styles/     player.css — palette propria, tutta sotto .pv-app
                   ── strato di collegamento con CineMate ──
                   fromLibrary.ts        da titolo della libreria a contenuto
@@ -128,6 +140,18 @@ rete che non è la tua.
   salvato fra sessioni e riavvii, e ogni capitolo completato fa avanzare la coda.
 - **Continua la storia**: appena finisci un capitolo, l'app propone il
   successivo della stessa saga.
+- **In vetrina**: la Home si apre con un titolo solo, grande, e due pulsanti —
+  **Riproduci** e **La mia lista**. Sotto al titolo c'è sempre un fatto
+  verificabile e mai uno slogan: la data del prossimo episodio, i minuti che
+  restano, o il giorno in cui l'hai aggiunto. Chi ci finisce lo decide una
+  gerarchia dichiarata (prima una data in arrivo, poi ciò che hai lasciato a
+  metà, poi un preferito mai visto) e non un sorteggio a ogni apertura.
+- **Pastiglie sulle copertine**: «Nuova stagione — tra 3 giorni», «Aggiunto di
+  recente». Al massimo una per copertina e solo quando dietro c'è un fatto, così
+  la riga mantiene una gerarchia invece di essere tutta marchiata.
+- **Perché hai guardato…**: una riga di consigli che parte dall'ultimo titolo che
+  hai finito davvero. Il motivo è il titolo stesso della riga, e se dallo
+  scaffale non emerge niente che gli somigli la riga non compare.
 - **Continua a guardare**: la riga in cima alla Home tiene da parte tutto quello
   che hai lasciato a metà, dal più recente. Ogni scheda dice a che percentuale
   sei, quale stagione ed episodio ti aspetta e quanti minuti mancano alla fine;
@@ -231,6 +255,52 @@ rete che non è la tua.
   tua libreria, Chromecast/AirPlay, Watch Party con chat e reazioni, download
   offline riproducibile senza rete, e failover fra host mirror — con test di
   velocità, priorità automatica a punteggio e bilanciamento del carico.
+
+## Il player: com'è fatta la scena
+
+I comandi stanno in tre fasce, e ognuna risponde a una domanda diversa.
+
+**In alto: cosa sto guardando.** L'etichetta dice `S1:E10 «Titolo»` per una
+serie e il solo titolo per un film. Accanto ci sono i tre pollici — *non fa per
+me*, *mi piace*, *adoro* — che **scrivono il voto della libreria** (4, 8, 10):
+non è un giudizio parallelo, è lo stesso campo che poi leggi nella scheda, e da
+lì puoi sempre aggiustare la sfumatura. A destra: trasmetti, lucchetto, chiudi.
+
+**Il lucchetto blocca i comandi, non lo schermo.** Un telefono tenuto in mano
+durante un film riceve decine di tocchi involontari; da bloccato la scena non
+risponde più né al dito né alla tastiera, e resta solo il pulsante per
+sbloccare.
+
+**Al centro: il tempo.** Indietro di 10, play/pausa, avanti di 10, grandi e
+lontani fra loro — tre bersagli premibili al buio invece di undici icone in
+fila. Sul bordo sinistro c'è la colonna della luminosità, che fa la stessa cosa
+dello scorrimento col dito ma si vede: e come sempre scurisce *l'immagine*, non
+la retroilluminazione dello schermo, che nessuna pagina web può toccare.
+
+**In fondo: l'avanzamento e le azioni.** A destra della barra c'è quanto manca
+alla fine, non quanto è passato. Sotto, cinque azioni con l'etichetta scritta:
+
+- **Ritaglia** — segna un momento e lo condivide. Il collegamento apre il player
+  a quel secondo: il video non viene copiato né caricato da nessuna parte, e il
+  foglio lo dice invece di far credere che parta uno spezzone.
+- **Velocità** e **Audio e sottotitoli** — aprono le impostazioni già sulla
+  scheda giusta.
+- **Episodi** — l'elenco di cosa altro c'è da riprodurre, in un foglio laterale
+  con copertina e posizione. Prima era una fila di pastiglie fuori dal player,
+  quindi invisibile a schermo intero.
+- **Pross. ep.** — manda avanti subito.
+
+Volume, PiP, mini player e schermo intero restano a destra come icone sole.
+
+**All'avvio, il cartello della classificazione.** Sigla dell'ente (`TV-14`,
+`VM14`) e, sotto, le avvertenze che hai scritto tu nella scheda del titolo alla
+voce **Avvertenze** — «linguaggio forte, consumo di tabacco». Sono scritte a
+mano perché nessun catalogo pubblico le espone in modo affidabile e dedurle dal
+genere significherebbe inventarle. Senza classificazione il cartello non compare
+affatto.
+
+**A fine episodio**, «Guarda i titoli di coda» oppure «Prossimo episodio», con
+il conto alla rovescia che riempie il pulsante mentre scorre.
 
 ## Player: come dargli qualcosa da riprodurre
 

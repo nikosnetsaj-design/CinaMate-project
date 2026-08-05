@@ -66,11 +66,35 @@ export type SagaEntry = {
   posterUrl: string;
 };
 
+/**
+ * Come si giudica un titolo mentre lo si guarda: i tre gesti che Netflix ha
+ * reso standard, tenuti astratti perché il player non sa nulla della scala di
+ * voti dell'app che lo ospita — la traduzione avviene in lib/reactions.ts.
+ */
+export type Reaction = 'down' | 'up' | 'love';
+
+/**
+ * La classificazione per età così come l'ha emessa l'ente, più le avvertenze
+ * scritte da chi tiene la libreria. Facoltativa: senza classificazione il
+ * cartello d'apertura non compare affatto, che è meglio di un cartello che
+ * dichiara "non classificato" a ogni avvio.
+ */
+export type ContentRating = {
+  /** "VM14", "TV-14", "PG-13" — la sigla, non un'età dedotta. */
+  certification: string;
+  /** "Dai 14 anni": la lettura in chiaro della sigla, quando è nota. */
+  ageLabel?: string;
+  /** "linguaggio forte", "consumo di tabacco". */
+  descriptors: string[];
+};
+
 export type MediaContent = {
   id: string;
   type: 'movie' | 'episode';
   title: string;
   seriesTitle?: string;
+  /** Mostrata nel cartello dei primi secondi — vedi RatingCard. */
+  rating?: ContentRating;
   posterUrl: string;
   backdropUrl: string;
   durationSec: number;

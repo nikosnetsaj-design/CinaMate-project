@@ -15,17 +15,26 @@ import { listDownloads } from '../services/downloadService';
 import { useNetworkQuality } from '../hooks/useNetworkQuality';
 import { usePlayerShortcuts } from '../hooks/usePlayerShortcuts';
 import { usePlayerGestures } from '../hooks/usePlayerGestures';
-import type { MediaContent } from '../types';
+import type { MediaContent, Reaction } from '../types';
 import type { useWatchParty } from '../hooks/useWatchParty';
 import ControlsBar from './ControlsBar';
 import ProgressBar from './ProgressBar';
 import SettingsMenu from './SettingsMenu';
+import type { SettingsTab } from './SettingsMenu';
 import PlayerIndicators from './PlayerIndicators';
-import { SkipButton, NextUpOverlay, ErrorOverlay, SubtitleOverlay, EndScreenRecommendations, GestureOverlay, AutoSkipNote } from './Overlays';
+import PlayerTopBar from './PlayerTopBar';
+import CenterTransport from './CenterTransport';
+import BrightnessRail from './BrightnessRail';
+import RatingCard from './RatingCard';
+import EpisodesPanel from './EpisodesPanel';
+import type { PlaylistEntry } from './EpisodesPanel';
+import ClipSheet from './ClipSheet';
+import type { ClipResult } from './ClipSheet';
+import { SkipButton, PostPlayOverlay, ErrorOverlay, SubtitleOverlay, EndScreenRecommendations, GestureOverlay, AutoSkipNote } from './Overlays';
 import ResumeBar from './ResumeBar';
 import ShortcutsHelp from './ShortcutsHelp';
 import type { Recommendation } from '../services/recommendationService';
-import { PlayIcon, PauseIcon, ExpandIcon } from './Icons';
+import { PlayIcon, PauseIcon, ExpandIcon, UnlockIcon } from './Icons';
 
 type Props = {
   content: MediaContent;
@@ -55,6 +64,28 @@ type Props = {
   sourceLabel?: string | null;
   /** Fired once per title once enough of it has been watched to count. */
   onCompleted?: (contentId: string) => void;
+  /**
+   * L'etichetta in cima alla scena: "S2:E10 «Braccata come dai segugi»". La
+   * costruisce chi ospita il player, che è l'unico a sapere a che punto della
+   * serie si trova; senza, resta il titolo così com'è.
+   */
+  label?: string;
+  /** Il voto già dato a questo titolo, tradotto nei tre gesti. */
+  reaction?: Reaction | null;
+  /** Assente per un contenuto che la libreria non conosce (lo stream di test). */
+  onReact?: (reaction: Reaction) => void;
+  /** Dove torna la X in alto a destra. Assente: la X non compare. */
+  onClose?: () => void;
+  /** Cos'altro c'è da riprodurre, per il pannello "Episodi". */
+  playlist?: PlaylistEntry[];
+  /** Come si condivide un momento — vedi ClipSheet. */
+  onShareMoment?: (startSec: number, lengthSec: number) => Promise<ClipResult>;
+  /**
+   * Un punto d'inizio chiesto esplicitamente — di norma un collegamento a un
+   * momento condiviso. Vince sul segnalibro salvato: chi ha aperto quel link
+   * vuole quel secondo, non l'ultimo dove si era fermato.
+   */
+  startAtSec?: number | null;
 };
 
 export default function VideoPlayer({
@@ -69,13 +100,29 @@ export default function VideoPlayer({
   onPlayerReady,
   sourceLabel,
   onCompleted,
+  label,
+  reaction = null,
+  onReact,
+  onClose,
+  playlist,
+  onShareMoment,
+  startAtSec = null,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const idleTimer = useRef<number | null>(null);
   const lastTouchRef = useRef(0);
   const [controlsVisible, setControlsVisible] = useState(true);
   const [isMini, setIsMini] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<SettingsTab | null>(null);
+  const [episodesOpen, setEpisodesOpen] = useState(false);
+  /** Il secondo da cui parte il momento da condividere, o null a foglio chiuso. */
+  const [clipStart, setClipStart] = useState<number | null>(null);
+  /**
+   * Comandi bloccati: un film si guarda tenendo il telefono in mano, e ogni
+   * tocco involontario è una pausa o un salto di dieci secondi. Da bloccato la
+   * scena non risponde più a niente tranne al lucchetto stesso.
+   */
+  const [locked, setLocked] = useState(false);
   const [showEndScreen, setShowEndScreen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [resumeDismissed, setResumeDismissed] = useState(false);
@@ -90,7 +137,11 @@ export default function VideoPlayer({
   }, []);
   const updatePrefs = useCallback((patch: Partial<PlaybackPrefs>) => setPlaybackPrefs(patch), []);
 
-  const resumeSec = useMemo(() => getResumePosition(content.id), [content.id]);
+  const savedResumeSec = useMemo(() => getResumePosition(content.id), [content.id]);
+  // Un punto chiesto dal collegamento non è una ripresa: la barra "riprendi da"
+  // non ha nulla da offrire, perché è già lì che il video sta partendo.
+  const resumeSec = startAtSec ?? savedResumeSec;
+  const askedForPoint = startAtSec != null;
   useEffect(() => setResumeDismissed(false), [content.id]);
   const nextContentId = content.nextEpisode?.id ?? content.nextInSaga?.id ?? null;
 
@@ -203,7 +254,7 @@ export default function VideoPlayer({
     seek: handleUserSeek,
     setVolume: player.setVolume,
     togglePlay: player.togglePlay,
-    enabled: !isMini,
+    enabled: !isMini && !locked,
   });
 
   useEffect(() => {
@@ -244,6 +295,21 @@ export default function VideoPlayer({
 
   const handleSkip = () => extras.activeMarker && handleUserSeek(extras.activeMarker.endSec);
   const resumedBadge = resumeSec > 2 && player.currentTime < resumeSec + 3;
+
+  /**
+   * Il cartello della classificazione vive nei primi secondi e poi sparisce da
+   * solo, come al cinema. Legato al tempo del video e non a un timer: chi mette
+   * in pausa per leggerlo se lo tiene davanti finché non riparte, e chi torna
+   * all'inizio lo rivede, che è esattamente quando serve.
+   */
+  const showRatingCard = !!content.rating && player.currentTime < 7 && !showEndScreen;
+
+  /** Ritagliare vuol dire scegliere un punto: il video si ferma su quel punto. */
+  const openClip = useCallback(() => {
+    player.pause();
+    setClipStart(player.videoRef.current?.currentTime ?? 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player.pause]);
 
   // C cycles the subtitle tracks and then back off, which is more useful than a
   // plain on/off toggle when a title carries more than one language.
@@ -295,7 +361,9 @@ export default function VideoPlayer({
       className={`pv-shell ${isMini ? 'pv-shell--mini' : ''} ${controlsVisible ? '' : 'pv-controls-hidden'}`}
       style={{ '--pv-picture-brightness': gestures.brightness } as CSSProperties}
       onMouseMove={handleActivity}
-      onKeyDown={handleShortcut}
+      // Da bloccato la tastiera tace come tace il tocco: metà blocco sarebbe
+      // peggio di nessun blocco.
+      onKeyDown={locked ? undefined : handleShortcut}
       onTouchStart={(e) => {
         handleActivity();
         gestures.handlers.onTouchStart(e);
@@ -329,6 +397,7 @@ export default function VideoPlayer({
         ref={player.videoRef}
         className="pv-video"
         onClick={() => {
+          if (locked) return; // il blocco vale prima di tutto il resto
           if (Date.now() - lastTouchRef.current < 500) return; // the tap already decided
           player.togglePlay();
         }}
@@ -336,10 +405,35 @@ export default function VideoPlayer({
         autoPlay
       />
 
-      {!isMini && (
+      {/* Da bloccato resta solo il lucchetto, e compare con lo stesso gesto che
+          altrove fa apparire i comandi: toccare la scena. */}
+      {locked && !isMini && (
+        <div className="pv-lock-layer">
+          <button
+            type="button"
+            className="pv-lock-btn"
+            aria-label="Sblocca i comandi"
+            onClick={() => setLocked(false)}
+          >
+            <UnlockIcon />
+            <span>Comandi bloccati</span>
+          </button>
+        </div>
+      )}
+
+      {!isMini && !locked && (
         <>
           <div className="pv-gradient-top" />
           <div className="pv-gradient-bottom" />
+
+          <PlayerTopBar
+            label={label ?? (content.seriesTitle ? `${content.seriesTitle} — ${content.title}` : content.title)}
+            reaction={reaction}
+            onReact={onReact}
+            cast={cast}
+            onLock={() => setLocked(true)}
+            onClose={onClose}
+          />
 
           <PlayerIndicators
             quality={player.levels.find(l => Number(l.id) === player.currentLevel)}
@@ -356,7 +450,22 @@ export default function VideoPlayer({
             sleepMinutes={sleep.remainingSec != null ? Math.ceil(sleep.remainingSec / 60) : null}
           />
 
+          {showRatingCard && content.rating && <RatingCard rating={content.rating} />}
+
           <GestureOverlay feedback={gestures.feedback} />
+
+          <BrightnessRail value={gestures.brightness} onChange={gestures.adjustBrightness} />
+
+          {/* Al centro solo quando al centro non c'è già altro da leggere: la
+              schermata di fine e l'errore occupano la stessa area, e due strati
+              sovrapposti sono peggio di nessuno dei due. */}
+          {!showEndScreen && !player.failure && (
+            <CenterTransport
+              isPlaying={player.isPlaying}
+              onTogglePlay={player.togglePlay}
+              onSeekBy={(delta) => handleUserSeek((player.videoRef.current?.currentTime ?? 0) + delta)}
+            />
+          )}
 
           <SubtitleOverlay text={subtitles.activeCueText} style={subtitles.style} />
 
@@ -368,7 +477,7 @@ export default function VideoPlayer({
           )}
           {extras.autoSkipped && <AutoSkipNote type={extras.autoSkipped} />}
 
-          {resumeSec > 30 && !resumeDismissed && player.currentTime < resumeSec + 12 && (
+          {!askedForPoint && resumeSec > 30 && !resumeDismissed && player.currentTime < resumeSec + 12 && (
             <ResumeBar
               positionSec={resumeSec}
               onRestart={() => {
@@ -380,7 +489,7 @@ export default function VideoPlayer({
           )}
 
           {extras.countdown !== null && nextContentId && (
-            <NextUpOverlay
+            <PostPlayOverlay
               seconds={extras.countdown}
               title={content.nextEpisode?.title ?? content.nextInSaga?.title ?? ''}
               posterUrl={content.nextEpisode?.posterUrl ?? content.nextInSaga?.posterUrl ?? ''}
@@ -402,26 +511,46 @@ export default function VideoPlayer({
 
           {player.failure && <ErrorOverlay failure={player.failure} onRetry={player.retryPlayback} />}
 
-          <ProgressBar
-            currentTime={player.currentTime}
-            duration={player.duration}
-            bufferedEnd={player.bufferedEnd}
-            skipMarkers={content.skipMarkers}
-            thumbnailSprite={content.thumbnailSprite}
-            onSeek={handleUserSeek}
-          />
-
           <ControlsBar
             player={player}
-            title={content.title}
-            seriesTitle={content.seriesTitle}
-            cast={cast}
-            onOpenSettings={() => setSettingsOpen(true)}
+            progress={
+              <ProgressBar
+                currentTime={player.currentTime}
+                duration={player.duration}
+                bufferedEnd={player.bufferedEnd}
+                skipMarkers={content.skipMarkers}
+                thumbnailSprite={content.thumbnailSprite}
+                onSeek={handleUserSeek}
+              />
+            }
+            onOpenSettings={setSettingsTab}
+            onOpenEpisodes={() => setEpisodesOpen(true)}
+            hasEpisodes={(playlist?.length ?? 0) > 1}
+            onOpenClip={openClip}
+            onNext={nextContentId ? goToNext : null}
             onToggleMini={() => setIsMini(true)}
             onToggleFullscreen={() => player.toggleFullscreen(containerRef.current)}
           />
 
-          {settingsOpen && (
+          {episodesOpen && playlist && (
+            <EpisodesPanel
+              entries={playlist}
+              currentId={content.id}
+              onSelect={onSelectContent}
+              onClose={() => setEpisodesOpen(false)}
+            />
+          )}
+
+          {clipStart !== null && onShareMoment && (
+            <ClipSheet
+              startSec={clipStart}
+              title={content.title}
+              onShare={onShareMoment}
+              onClose={() => setClipStart(null)}
+            />
+          )}
+
+          {settingsTab && (
             <SettingsMenu
               levels={player.levels}
               currentLevel={player.currentLevel}
@@ -447,7 +576,8 @@ export default function VideoPlayer({
               onSelectMaxHeight={player.setMaxHeight}
               sleep={sleep}
               wakeLockSupported={wakeLock.supported}
-              onClose={() => setSettingsOpen(false)}
+              initialTab={settingsTab}
+              onClose={() => setSettingsTab(null)}
             />
           )}
 

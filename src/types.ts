@@ -81,6 +81,16 @@ export interface Item {
    */
   certification?: string;
   /**
+   * Le avvertenze come le scriveresti tu — "linguaggio forte, consumo di
+   * tabacco" — mostrate nel cartello che il player apre nei primi secondi.
+   *
+   * Scritte a mano e non dedotte: nessun catalogo pubblico le espone in modo
+   * affidabile, e ricavarle dal genere ("è un horror, quindi violenza")
+   * significherebbe inventarle. Assente vuol dire assente, e il cartello mostra
+   * solo la sigla.
+   */
+  contentWarnings?: string;
+  /**
    * The quality of the copy *you* have. Set by hand rather than detected: no
    * catalogue knows what is on your server, and a manifest only reveals its
    * renditions once something plays it.

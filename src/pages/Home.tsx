@@ -15,7 +15,12 @@ import { MarathonCard } from "../components/MarathonCard";
 import { ContinueSagaRow } from "../components/ContinueSagaRow";
 import { ContinueWatchingRow } from "../components/ContinueWatchingRow";
 import { PosterRow } from "../components/PosterRow";
-import { forYou, mostWatched, recentlyAdded } from "../lib/recommend";
+import { Billboard } from "../components/Billboard";
+import { becauseYouWatched, forYou, mostWatched, recentlyAdded } from "../lib/recommend";
+import { lastSeenDates } from "../lib/continueWatching";
+import { badgeFor, type PosterBadge } from "../lib/homeBadges";
+import { byItemId, useUpcoming } from "../lib/useUpcoming";
+import { useLibrary } from "../store/useLibrary";
 import { computeStats } from "../lib/stats";
 import { greeting } from "../lib/stats";
 import { useAppReady } from "../lib/useAppReady";
@@ -43,6 +48,23 @@ export function Home() {
   const watchedMost = useMemo(() => mostWatched(items), [items]);
   const latest = useMemo(() => recentlyAdded(items), [items]);
 
+  const history = useLibrary((s) => s.history);
+  const because = useMemo(() => becauseYouWatched(items, lastSeenDates(history)), [items, history]);
+
+  // Le pastiglie sulle copertine si calcolano una volta per tutta la pagina:
+  // ogni riga chiede gli stessi titoli, e ricalcolarle riga per riga
+  // significherebbe rifare lo stesso lavoro cinque volte per scorrimento.
+  const upcoming = useUpcoming();
+  const badges = useMemo(() => {
+    const next = byItemId(upcoming);
+    const map: Record<string, PosterBadge> = {};
+    for (const item of items) {
+      const badge = badgeFor(item, next[item.id]);
+      if (badge) map[item.id] = badge;
+    }
+    return map;
+  }, [items, upcoming]);
+
   const today = new Intl.DateTimeFormat("it-IT", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
 
   // Every row is built here and picked from below, rather than written inline
@@ -50,6 +72,8 @@ export function Home() {
   // with the markup interleaved, "sposta su" could only ever move the rows
   // that happened to sit next to each other in the file.
   const sections: Record<HomeSectionId, ReactNode> = {
+    vetrina: <Billboard />,
+
     nastro: items.length > 0 ? <Nastro days={30} height={58} /> : null,
 
     maratona: <MarathonCard />,
@@ -66,7 +90,7 @@ export function Home() {
     // Was a vertical list of series with an episode counter. It is now driven
     // by the playhead instead, which covers the same titles plus every film,
     // and can say the minute rather than only the episode.
-    riprendi: <ContinueWatchingRow />,
+    riprendi: <ContinueWatchingRow badges={badges} />,
 
     saga: <ContinueSagaRow />,
 
@@ -77,18 +101,29 @@ export function Home() {
         title="Per te"
         entries={suggestions}
         note="Dai voti che hai già dato: ogni titolo dice perché è qui."
+        badges={badges}
       />
     ),
 
+    // Il perché sta nel titolo della riga, quindi le singole copertine non
+    // ripetono la loro motivazione: sarebbe la stessa frase otto volte.
+    perche: because ? (
+      <PosterRow
+        title={`Perché hai guardato ${because.seed.title}`}
+        entries={because.entries}
+        badges={badges}
+      />
+    ) : null,
+
     preferiti:
       favs.length > 0 ? (
-        <PosterRow title="I tuoi preferiti" entries={favs.map((item) => ({ item }))} count={favs.length} />
+        <PosterRow title="I tuoi preferiti" entries={favs.map((item) => ({ item }))} count={favs.length} badges={badges} />
       ) : null,
 
-    piuVisti: <PosterRow title="Più visti" entries={watchedMost} />,
+    piuVisti: <PosterRow title="Più visti" entries={watchedMost} badges={badges} />,
 
     ultimiAggiunti: (
-      <PosterRow title="Ultimi aggiunti" entries={latest.map((item) => ({ item }))} moreHref="/libreria" />
+      <PosterRow title="Ultimi aggiunti" entries={latest.map((item) => ({ item }))} moreHref="/libreria" badges={badges} />
     ),
 
     watchlist:
@@ -107,7 +142,7 @@ export function Home() {
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {planned.map((item) => (
-              <PosterCard key={item.id} item={item} onOpen={openItem} />
+              <PosterCard key={item.id} item={item} onOpen={openItem} badge={badges[item.id]} />
             ))}
           </div>
         </section>

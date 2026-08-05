@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { Item, Kind } from "../types";
+import type { PosterBadge } from "../lib/homeBadges";
 import { paletteFor } from "../lib/palette";
 import { posterUrl, posterSrcSet, type PosterSize } from "../lib/tmdb";
 import { AnimeKindIcon, DocKindIcon, FilmKindIcon, SerieKindIcon } from "./icons";
@@ -20,6 +21,25 @@ function Sprockets({ side }: { side: "left" | "right" }) {
       {Array.from({ length: 9 }).map((_, i) => (
         <span key={i} className="aspect-square w-full rounded-[1.5px] bg-black/35" />
       ))}
+    </div>
+  );
+}
+
+/**
+ * La pastiglia in fondo alla copertina: perché questo titolo vale uno sguardo
+ * adesso. Due toni — la riga forte sull'accento, il contorno su fondo chiaro —
+ * perché "Nuova stagione" e "prossimamente" non hanno lo stesso peso e in una
+ * riga scorrevole si legge solo la prima.
+ */
+function StatusRibbon({ badge }: { badge: PosterBadge }) {
+  return (
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col text-center text-[10px] font-semibold leading-tight">
+      <span className="px-1 py-1 truncate" style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}>
+        {badge.label}
+      </span>
+      {badge.detail && (
+        <span className="truncate bg-white px-1 py-1 text-black">{badge.detail}</span>
+      )}
     </div>
   );
 }
@@ -58,11 +78,14 @@ export function PosterArt({
   showTitle = true,
   className = "",
   priority = false,
+  badge,
 }: {
   item: Pick<Item, "title" | "kind"> & { posterPath?: string | null };
   size?: "sm" | "md" | "lg";
   showTitle?: boolean;
   className?: string;
+  /** La pastiglia in fondo alla copertina — vedi lib/homeBadges. */
+  badge?: PosterBadge | null;
   /**
    * Set on the few posters that are on screen before any scrolling. Lazy
    * loading them is a net loss: the browser waits for layout before it will
@@ -95,6 +118,7 @@ export function PosterArt({
           className="h-full w-full object-cover"
         />
         <KindBadge kind={item.kind} size={size} />
+        {badge && <StatusRibbon badge={badge} />}
       </div>
     );
   }
@@ -127,7 +151,9 @@ export function PosterArt({
         })()}
       </div>
       {showTitle && (
-        <div className="absolute inset-x-[9%] bottom-[7%] top-auto flex flex-col gap-1">
+        <div
+          className={`absolute inset-x-[9%] top-auto flex flex-col gap-1 ${badge ? "bottom-[24%]" : "bottom-[7%]"}`}
+        >
           <span
             className={`font-display font-semibold leading-[1.05] text-white/95 ${titleSize}`}
             style={{ textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}
@@ -136,6 +162,7 @@ export function PosterArt({
           </span>
         </div>
       )}
+      {badge && <StatusRibbon badge={badge} />}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 opacity-[0.07] mix-blend-overlay"

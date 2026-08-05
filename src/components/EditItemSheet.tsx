@@ -231,6 +231,23 @@ function EditItemForm() {
           </div>
         </div>
 
+        {/* Quello che il player scrive nel cartello dei primi secondi, sotto la
+            sigla della classificazione. A mano perché nessun catalogo pubblico
+            le espone in modo affidabile: meglio vuoto che inventato. */}
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Avvertenze</span>
+          <input
+            value={draft.contentWarnings ?? ""}
+            onChange={(e) => patch({ contentWarnings: e.target.value })}
+            placeholder="linguaggio forte, consumo di tabacco"
+            className={inputCls}
+          />
+          <span className="text-[11px] text-text-faint">
+            Separate da virgola. Compaiono all'avvio del player accanto alla classificazione
+            {draft.certification ? ` (${draft.certification})` : ""}.
+          </span>
+        </label>
+
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Note personali</span>
           <textarea

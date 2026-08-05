@@ -203,10 +203,59 @@
 .pv-controls-hidden .pv-gradient-bottom { opacity: 0; }
 .pv-controls-hidden .pv-video { cursor: none; }
 
+/* ===================== Barra in cima alla scena ===================== */
+/*
+ * Titolo, voto e uscite. Sta sopra tutto tranne i fogli modali, e sparisce con
+ * gli altri comandi: a schermo intero, dopo tre secondi di immobilità, resta
+ * solo il film.
+ */
+.pv-topbar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.pv-controls-hidden .pv-topbar { opacity: 0; transform: translateY(-6px); pointer-events: none; }
+
+.pv-topbar-label {
+  font-family: var(--pv-font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.pv-topbar-right { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+
+/* I tre pollici. Cerchi pieni e non icone nude: sono l'unico posto della scena
+   in cui si *scrive* qualcosa invece di muovere il tempo, e devono sembrare
+   premibili anche da fermi. */
+.pv-reactions { display: flex; align-items: center; gap: 8px; }
+.pv-reaction {
+  width: 40px; height: 40px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(245, 241, 232, 0.14);
+  color: var(--pv-text);
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+.pv-reaction:hover { background: rgba(245, 241, 232, 0.26); transform: scale(1.06); }
+.pv-reaction.active { background: var(--pv-accent); color: #1a1408; }
+
 /* ===================== Indicators ===================== */
 .pv-indicators {
   position: absolute;
-  top: 16px; left: 16px;
+  /* Sotto la barra del titolo, che occupa la riga in cui stavano prima. */
+  top: 62px; left: 16px;
   z-index: 4;
   display: flex;
   gap: 6px;
@@ -249,83 +298,206 @@
   line-height: 1.35;
 }
 
+/* ===================== Comandi al centro ===================== */
+.pv-transport {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(36px, 12vw, 96px);
+  /* Il contenitore non deve intercettare i tocchi: la scena sotto è ancora
+     play/pausa al tocco e scorrimento al trascinamento. Solo i tre pulsanti
+     rispondono. */
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.pv-controls-hidden .pv-transport { opacity: 0; }
+
+.pv-transport-btn {
+  pointer-events: auto;
+  background: transparent;
+  border: none;
+  color: var(--pv-text);
+  padding: 6px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.pv-transport-btn:hover { transform: scale(1.08); }
+.pv-transport-btn:active { transform: scale(0.94); }
+.pv-controls-hidden .pv-transport-btn { pointer-events: none; }
+
+.pv-transport-play svg { width: 46px; height: 46px; }
+
+/* ===================== Colonna della luminosità ===================== */
+/*
+ * Delimitata sopra e sotto invece che centrata: la scena è alta quanto un 16:9
+ * dentro una pagina, e una colonna centrata verticalmente finiva addosso alla
+ * riga delle azioni. Così non può, qualunque sia l'altezza.
+ */
+.pv-brightness {
+  position: absolute;
+  left: 18px;
+  top: 76px;
+  /* In quota, non in pixel: la fascia dei comandi cresce di una riga quando le
+     icone di destra vanno a capo, e un valore fisso ci finiva sotto. */
+  bottom: clamp(120px, 32%, 240px);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--pv-text);
+  transition: opacity 0.35s ease;
+}
+.pv-controls-hidden .pv-brightness { opacity: 0; pointer-events: none; }
+
+.pv-brightness-range {
+  /* `writing-mode` è la strada standard per una slitta verticale; l'appearance
+     WebKit resta come rete per i browser che non la implementano ancora. */
+  writing-mode: vertical-lr;
+  direction: rtl;
+  appearance: slider-vertical;
+  -webkit-appearance: slider-vertical;
+  width: 6px;
+  height: 100%;
+  max-height: 190px;
+  min-height: 0;
+  accent-color: var(--pv-accent);
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
+}
+
+/* ===================== Blocco comandi ===================== */
+.pv-lock-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 clamp(16px, 6vw, 64px);
+  transition: opacity 0.35s ease;
+}
+.pv-controls-hidden .pv-lock-layer { opacity: 0; pointer-events: none; }
+.pv-lock-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 18px;
+  border-radius: var(--pv-radius);
+  border: 1px solid var(--pv-border-strong);
+  background: rgba(19, 17, 22, 0.82);
+  color: var(--pv-text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+}
+.pv-lock-btn svg { width: 22px; height: 22px; }
+
+/* ===================== Cartello della classificazione ===================== */
+.pv-rating-card {
+  position: absolute;
+  /* A destra della colonna della luminosità, che parte dallo stesso bordo. */
+  top: 64px; left: 62px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px 0 2px 14px;
+  /* Il filetto rosso è la convenzione che tutti riconoscono su questo cartello.
+     Qui è un bordo, non del testo, e per un bordo --pv-accent-2 basta. */
+  border-left: 3px solid var(--pv-accent-2);
+  max-width: min(70%, 460px);
+  animation: pv-fade-in 0.3s ease;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+}
+.pv-rating-cert {
+  font-family: var(--pv-font-display);
+  font-size: clamp(0.95rem, 2.4vw, 1.3rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.pv-rating-detail { font-size: clamp(0.8rem, 2vw, 1rem); color: var(--pv-text); }
+
 /* ===================== Skip button ===================== */
 .pv-skip-btn {
   position: absolute;
-  right: 20px; bottom: 22%;
+  right: 20px; bottom: 25%;
   z-index: 6;
-  background: rgba(19, 17, 22, 0.85);
+  background: rgba(19, 17, 22, 0.9);
   color: var(--pv-text);
   border: 1px solid var(--pv-border-strong);
   border-radius: 6px;
-  padding: 10px 18px;
+  padding: 12px 26px;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   backdrop-filter: blur(8px);
   animation: pv-fade-in 0.25s ease;
 }
-.pv-skip-btn:hover { border-color: var(--pv-accent); color: var(--pv-accent); }
+.pv-skip-btn:hover { background: var(--pv-text); color: #131116; border-color: var(--pv-text); }
 
-/* ===================== Next up overlay — "film leader countdown" signature ===================== */
-.pv-next-up {
+/* ===================== Schermata di fine ===================== */
+.pv-postplay {
   position: absolute;
-  right: 20px; bottom: 22%;
+  inset: 0;
   z-index: 6;
   display: flex;
-  align-items: center;
-  gap: 14px;
-  background: rgba(19, 17, 22, 0.88);
-  border: 1px solid var(--pv-border-strong);
-  border-radius: var(--pv-radius);
-  padding: 14px;
-  max-width: 380px;
-  backdrop-filter: blur(10px);
-  animation: pv-fade-in 0.25s ease;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 18px;
+  padding: clamp(18px, 5vw, 44px);
+  background: linear-gradient(to top, rgba(10, 9, 12, 0.92) 35%, rgba(10, 9, 12, 0.25));
+  animation: pv-fade-in 0.3s ease;
 }
-.pv-next-up-ring {
-  --pct: 0;
-  position: relative;
-  width: 56px; height: 56px;
-  min-width: 56px;
-  border-radius: 50%;
-  background: conic-gradient(var(--pv-accent) calc(var(--pct) * 1%), rgba(245, 241, 232, 0.15) 0);
-  display: grid;
-  place-items: center;
-}
-.pv-next-up-ring::before {
-  content: '';
-  position: absolute;
-  inset: 4px;
-  border-radius: 50%;
-  background: var(--pv-bg-elevated);
-}
-.pv-next-up-ring span {
-  position: relative;
-  z-index: 1;
+.pv-postplay-next { display: flex; align-items: center; gap: 14px; }
+.pv-postplay-poster { width: 54px; height: 78px; object-fit: cover; border-radius: 4px; border: 1px solid var(--pv-border); }
+.pv-postplay-next .pv-dim { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.1em; }
+.pv-postplay-next h4 {
+  margin: 2px 0 0;
   font-family: var(--pv-font-display);
-  font-size: 1.6rem;
+  font-size: clamp(1.2rem, 3.4vw, 1.9rem);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.pv-postplay-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+.pv-postplay-actions button {
+  border: none;
+  border-radius: 5px;
+  padding: 13px 22px;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.pv-postplay-actions .pv-btn-secondary {
+  background: rgba(245, 241, 232, 0.16);
   color: var(--pv-text);
 }
-.pv-next-up-poster { width: 48px; height: 68px; object-fit: cover; border-radius: 4px; display: none; }
-.pv-next-up-body h4 {
-  margin: 2px 0 8px;
-  font-family: var(--pv-font-display);
-  font-size: 1.3rem;
-  letter-spacing: 0.02em;
-  font-weight: 400;
+.pv-postplay-actions .pv-btn-secondary:hover { background: rgba(245, 241, 232, 0.26); }
+
+/* Il pulsante che parte da solo: il riempimento avanza col conto alla
+   rovescia, così il tempo che resta si legge senza leggere il numero. */
+.pv-postplay-play {
+  position: relative;
+  overflow: hidden;
+  background: var(--pv-text);
+  color: #131116;
 }
-.pv-next-up-body .pv-dim { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; }
-.pv-next-up-actions { display: flex; gap: 8px; }
-.pv-next-up-actions button {
-  border: none;
-  border-radius: 6px;
-  padding: 7px 14px;
-  font-weight: 700;
-  font-size: 0.82rem;
+.pv-postplay-fill {
+  position: absolute;
+  inset: 0;
+  width: var(--pct, 0%);
   background: var(--pv-accent);
-  color: #1a1408;
+  transition: width 1s linear;
 }
-.pv-next-up-actions .pv-btn-secondary { background: transparent; color: var(--pv-text-dim); border: 1px solid var(--pv-border-strong); }
+.pv-postplay-label { position: relative; display: inline-flex; align-items: center; gap: 9px; }
+.pv-postplay-label .pv-mono { opacity: 0.7; }
 
 /* ===================== End screen recommendations ===================== */
 .pv-recommendations {
@@ -486,13 +658,26 @@
 .pv-progress-wrap {
   position: relative;
   z-index: 4;
-  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
   transition: opacity 0.35s ease;
 }
 .pv-controls-hidden .pv-progress-wrap { opacity: 0; pointer-events: none; }
 
+/* Quanto manca, in cifre monospaziate perché non balli mentre scende. */
+.pv-remaining {
+  flex: 0 0 auto;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--pv-text);
+  font-variant-numeric: tabular-nums;
+}
+
 .pv-progress-track {
   position: relative;
+  flex: 1;
+  min-width: 0;
   height: 4px;
   border-radius: 999px;
   background: rgba(245, 241, 232, 0.18);
@@ -565,12 +750,36 @@
 }
 .pv-controls-hidden .pv-controls-bar { opacity: 0; transform: translateY(6px); pointer-events: none; }
 
-.pv-controls-titles { margin-bottom: 6px; display: flex; flex-direction: column; }
-.pv-controls-series { font-size: 0.72rem; color: var(--pv-text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
-.pv-controls-title { font-family: var(--pv-font-display); font-size: 1.15rem; letter-spacing: 0.02em; }
+/* La riga delle azioni: icona sopra, parola sotto quando c'è spazio, in fila
+   quando non ce n'è. Le etichette sono scritte per esteso — "Audio e
+   sottotitoli", non un fumetto — perché è ciò che rende il player leggibile a
+   chi non lo ha mai aperto. */
+.pv-actions {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 3vw, 30px);
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.pv-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: transparent;
+  border: none;
+  color: var(--pv-text);
+  padding: 6px 2px;
+  border-radius: 6px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+.pv-action:hover { opacity: 0.72; }
+.pv-action svg { width: 20px; height: 20px; }
 
-.pv-controls-row { display: flex; align-items: center; gap: 4px; }
-.pv-controls-spacer { flex: 1; }
+.pv-controls-spacer { flex: 1 1 auto; }
+.pv-actions-tools { display: flex; align-items: center; gap: 2px; }
 
 .pv-icon-btn {
   background: transparent;
@@ -584,36 +793,133 @@
 }
 .pv-icon-btn:hover { background: rgba(245, 241, 232, 0.1); }
 .pv-icon-btn.active { color: var(--pv-accent); }
-.pv-seek-label { font-family: var(--pv-font-mono); font-size: 0.65rem; }
-
-.pv-btn-play { padding: 8px 10px; }
-.pv-btn-play svg { width: 22px; height: 22px; }
-
-.pv-time { font-size: 0.78rem; color: var(--pv-text-dim); margin-left: 6px; white-space: nowrap; }
 
 .pv-volume { display: flex; align-items: center; gap: 4px; }
 .pv-volume input[type='range'] { width: 70px; accent-color: var(--pv-accent); }
 
-.pv-rate-menu { position: relative; }
-.pv-dropdown {
+/* ===================== Foglio laterale: Episodi ===================== */
+.pv-side-overlay {
   position: absolute;
-  bottom: 100%; right: 0;
-  margin-bottom: 6px;
-  background: var(--pv-bg-elevated);
-  border: 1px solid var(--pv-border);
-  border-radius: 8px;
-  padding: 4px;
+  inset: 0;
+  z-index: 8;
+  background: rgba(10, 9, 12, 0.55);
+  display: flex;
+  justify-content: flex-end;
+  animation: pv-fade-in 0.2s ease;
+}
+.pv-side-overlay--center { align-items: center; justify-content: center; padding: 16px; }
+
+.pv-side-panel {
+  width: min(420px, 88%);
+  height: 100%;
   display: flex;
   flex-direction: column;
-  min-width: 70px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  background: var(--pv-bg-elevated);
+  border-left: 1px solid var(--pv-border-strong);
+  padding: 12px;
+  overflow: hidden;
 }
-.pv-dropdown button {
-  background: transparent; border: none; color: var(--pv-text);
-  padding: 6px 10px; text-align: left; border-radius: 4px; font-size: 0.85rem;
+.pv-side-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
 }
-.pv-dropdown button:hover { background: rgba(245, 241, 232, 0.08); }
-.pv-dropdown button.active { color: var(--pv-accent); }
+.pv-side-header h3 {
+  margin: 0;
+  font-family: var(--pv-font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.pv-episode-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  min-height: 0;
+}
+.pv-episode {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--pv-text);
+  text-align: left;
+}
+.pv-episode:hover { background: rgba(245, 241, 232, 0.07); }
+.pv-episode.active { background: rgba(227, 166, 78, 0.12); }
+.pv-episode-art { position: relative; flex: 0 0 auto; width: 52px; height: 76px; }
+.pv-episode-art img,
+.pv-episode-art-empty {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--pv-border);
+  display: block;
+  background: var(--pv-bg);
+}
+.pv-episode-now {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(10, 9, 12, 0.45);
+  border-radius: 4px;
+  color: var(--pv-accent);
+}
+.pv-episode-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pv-episode-text strong { font-size: 0.92rem; font-weight: 600; }
+.pv-episode-text .pv-dim { font-size: 0.76rem; }
+.pv-episode-flag {
+  flex: 0 0 auto;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--pv-accent);
+}
+
+/* ===================== Ritaglia ===================== */
+.pv-clip-panel {
+  width: min(420px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--pv-bg-elevated);
+  border: 1px solid var(--pv-border-strong);
+  border-radius: var(--pv-radius);
+  padding: 16px;
+  max-height: 100%;
+  overflow-y: auto;
+}
+.pv-clip-range {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.pv-clip-note { margin: 0; font-size: 0.8rem; line-height: 1.5; }
+.pv-clip-share {
+  border: none;
+  border-radius: 6px;
+  padding: 11px 16px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  background: var(--pv-accent);
+  color: #1a1408;
+}
+.pv-clip-share:disabled { opacity: 0.6; cursor: progress; }
+.pv-clip-result { margin: 0; font-size: 0.82rem; color: var(--pv-text-dim); }
+.pv-clip-result--bad { color: var(--pv-accent-2-text); }
 
 /* ===================== Settings menu ===================== */
 .pv-settings-overlay {
@@ -988,17 +1294,23 @@
 
 /* ===================== Mobile ===================== */
 @media (max-width: 560px) {
-  .pv-controls-title { font-size: 1rem; }
+  .pv-topbar-label { font-size: 0.9rem; }
+  .pv-reaction { width: 34px; height: 34px; }
+  .pv-reaction svg { width: 16px; height: 16px; }
   .pv-volume input[type='range'] { width: 46px; }
-  /* A phone can't fit eleven controls on one line; without this the row is
-     clipped by the player shell and the right-hand buttons — fullscreen
-     among them — become unreachable. */
-  .pv-controls-row { flex-wrap: wrap; row-gap: 2px; }
-  .pv-controls-spacer { flex-basis: 100%; }
+  /* Su un telefono le parole delle azioni non ci stanno tutte in riga: restano
+     le icone, che a quel punto sono già state imparate leggendole altrove. */
+  .pv-action span { display: none; }
+  .pv-action { padding: 8px; }
+  .pv-actions { gap: 4px; justify-content: space-between; }
+  .pv-transport-play svg { width: 34px; height: 34px; }
+  .pv-brightness { left: 8px; }
   .pv-app-toolbar { flex-wrap: wrap; }
   .pv-stat-chip { margin-left: 0; flex-basis: 100%; }
   .pv-settings-panel { width: 100%; }
-  .pv-next-up { max-width: 280px; }
+  .pv-side-panel { width: 100%; }
+  .pv-rating-card { top: 52px; left: 46px; }
+  .pv-postplay-actions button { flex: 1 1 auto; }
   /* Clear CineMate's bottom tab bar, which the mini player would otherwise
      sit right on top of. */
   .pv-shell--mini { width: 220px; bottom: calc(env(safe-area-inset-bottom) + 4rem); }

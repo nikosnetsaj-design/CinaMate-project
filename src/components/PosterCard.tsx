@@ -4,15 +4,19 @@ import { VoteBadge } from "./VoteBadge";
 import { StatusChip } from "./StatusChip";
 import { HeartIcon } from "./icons";
 import type { Item } from "../types";
+import type { PosterBadge } from "../lib/homeBadges";
 
 export function PosterCard({
   item,
   onOpen,
   progress = false,
+  badge,
 }: {
   item: Item;
   onOpen: (item: Item) => void;
   progress?: boolean;
+  /** La pastiglia sulla copertina — vedi lib/homeBadges. */
+  badge?: PosterBadge;
 }) {
   const pct = item.kind !== "film" && item.episodes ? Math.round(((item.seen || 0) / item.episodes) * 100) : null;
 
@@ -34,7 +38,7 @@ export function PosterCard({
         transition={{ type: "spring", stiffness: 380, damping: 26 }}
         className="cursor-pointer overflow-hidden rounded-sm shadow-[var(--shadow-sm)] transition-shadow duration-200 group-hover:shadow-[var(--shadow-md)]"
       >
-        <PosterArt item={item} size="sm" />
+        <PosterArt item={item} size="sm" badge={badge} />
       </motion.div>
       <div className="flex flex-col gap-1 px-0.5">
         <div className="flex items-center gap-1">
