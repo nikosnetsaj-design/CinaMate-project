@@ -467,6 +467,3 @@ sono decise.
 3. **Niente pattern che trattengono.** L'app deve farti *scegliere in fretta*,
    non farti restare.
 4. **I dati sono dell'utente.** Esportabili in un file leggibile, sempre.
-5. **Il player riproduce, non procura.** Le sorgenti le indichi tu; quello che
-   ci metti dentro è una tua scelta, esattamente come per un lettore installato
-   sul computer.

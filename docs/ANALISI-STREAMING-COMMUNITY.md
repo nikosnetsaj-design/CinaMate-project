@@ -158,21 +158,19 @@ diritti di distribuire. La struttura a strati non cambia cosa fa il software:
 sposta soltanto su chi lo usa la responsabilità di quello che il software è
 costruito per rendere facile.
 
-Quindi no, e per tre ragioni che stanno in piedi anche da sole:
+Quindi no, per due ragioni:
 
-1. **È una decisione già presa in questo repo.** Il titolo di `PRODUCT.md` §3.3
-   è, alla lettera, *"Dove guardarlo — Essenziale (sostituisce il Link Host)"*.
-   Il posto del Link Host in CineMate è già occupato dai provider legali, dal
-   collegamento a JustWatch e — da oggi — dal "apri sul servizio".
-2. **Contraddice la regola di prodotto n. 5**, *"il player riproduce, non
-   procura"*: le sorgenti le indichi tu, e l'app non ha strumenti per andarle a
-   cercare da nessuna parte. È la riga che separa un lettore video da un
-   procacciatore, e sta scritta da prima di questa analisi.
-3. **Non lo scrivo.** Un estrattore di flussi, un blocco pubblicitario pensato
-   per rendere navigabili quei siti e una guida a cambiare DNS per raggiungerli
-   quando l'operatore li blocca sono, nell'insieme, gli attrezzi di quel
-   mestiere. Vale la pena dirlo per esteso una volta invece di lasciarlo
-   implicito in un "fuori ambito".
+1. **Il posto è già occupato.** Il titolo di `PRODUCT.md` §3.3 è, alla lettera,
+   *"Dove guardarlo — Essenziale (sostituisce il Link Host)"*: in CineMate quel
+   ruolo lo fanno i provider legali, il collegamento a JustWatch e — da oggi — il
+   "apri sul servizio".
+2. **Non lo scrivo io.** Un estrattore di flussi da siti terzi, un blocco
+   pubblicitario pensato per rendere navigabili quei siti e una guida a cambiare
+   DNS per raggiungerli quando l'operatore li blocca sono, nell'insieme, gli
+   attrezzi di quel mestiere. Questa seconda ragione è la mia, non del documento:
+   resta valida anche se le regole di prodotto cambiano, perché non discende da
+   loro. Vale la pena dirla per esteso una volta invece di lasciarla implicita in
+   un "fuori ambito".
 
 **Cosa si salva di quel livello.** Una cosa, e c'era già: il principio per cui
 gli indirizzi delle sorgenti non stanno nel codice ma li scrive l'utente e
