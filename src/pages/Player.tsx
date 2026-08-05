@@ -19,7 +19,12 @@ import { WebSocketTransport } from "../player/services/watchPartyTransport";
 import { buildPlayerCatalog, originOf, streamUrlOf } from "../player/fromLibrary";
 import { recommendFromLibrary } from "../player/recommendFromLibrary";
 import { resolvePlayable } from "../player/resolveSource";
+import type { SearchOutcome } from "../player/searchOnLinkHost";
+import { outcomeMessage } from "../player/searchOnLinkHost";
 import { useSourceAddresses } from "../player/sourceAddresses";
+import { useLinkHosts } from "../store/useLinkHosts";
+import { useWebViewer } from "../store/useWebViewer";
+import { LinkHostPanel } from "../player/components/LinkHostPanel";
 import { SourcePanel } from "../player/SourcePanel";
 import { EMPTY_SOURCE } from "../store/usePlayerSources";
 import type { MediaContent } from "../player/types";
@@ -47,10 +52,11 @@ const TEST_STREAM: MediaContent = {
   skipMarkers: [],
 };
 
-type Panel = "sources" | "downloads" | "party" | "hosts" | null;
+type Panel = "sources" | "sites" | "downloads" | "party" | "hosts" | null;
 
 const TABS: { id: Exclude<Panel, null>; label: string }[] = [
   { id: "sources", label: "Sorgenti" },
+  { id: "sites", label: "Siti" },
   { id: "downloads", label: "Download" },
   { id: "party", label: "Watch Party" },
   { id: "hosts", label: "Host" },
@@ -99,6 +105,10 @@ export function Player() {
   // The three fields in Settings *and* the hosts from the panel below: both are
   // "where my videos live", and both are tried for every title.
   const addresses = useSourceAddresses();
+  // The sites to ask when none of the above has the title. Tried last, and only
+  // when the addresses came up empty — see resolveSource.ts.
+  const linkHosts = useLinkHosts((s) => s.hosts);
+  const openViewer = useWebViewer((s) => s.open);
 
   const catalog = useMemo(
     () =>
@@ -128,29 +138,42 @@ export function Player() {
   // answers — this is what lets you write an address once and have every title
   // resolve, and what makes the second and third slots act as fallbacks.
   const [resolved, setResolved] = useState<Record<string, string | null>>({});
+  const [siteOutcome, setSiteOutcome] = useState<SearchOutcome | null>(null);
   const [resolving, setResolving] = useState(false);
   const targetItem = items.find((i) => i.id === baseContent.id) ?? null;
 
   // What was already searched for is remembered, so switching between titles
   // doesn't re-probe the whole list every time. Adding an address invalidates
   // all of it: the answer "nothing responds" was true of the old list only.
-  useEffect(() => setResolved({}), [addresses]);
+  // The Link Hosts do the same, for the same reason.
+  useEffect(() => setResolved({}), [addresses, linkHosts]);
 
   useEffect(() => {
     if (!targetItem) return;
     if (resolved[targetItem.id] !== undefined) return;
     const controller = new AbortController();
     setResolving(true);
-    resolvePlayable(targetItem, lookup, addresses, controller.signal)
-      .then((found) => {
+    setSiteOutcome(null);
+    resolvePlayable(targetItem, lookup, addresses, {
+      signal: controller.signal,
+      linkHosts,
+      // Quale episodio chiedere ai siti: quello scritto nel pannello Siti,
+      // quando c'è, invece di S01E{visti+1}.
+      position: {
+        season: lookup(targetItem.id).searchSeason,
+        episode: lookup(targetItem.id).searchEpisode,
+      },
+    })
+      .then((res) => {
         if (controller.signal.aborted) return;
-        setResolved((r) => ({ ...r, [targetItem.id]: found?.url ?? null }));
+        setResolved((r) => ({ ...r, [targetItem.id]: res.source?.url ?? null }));
+        setSiteOutcome(res.site ?? null);
       })
       .finally(() => {
         if (!controller.signal.aborted) setResolving(false);
       });
     return () => controller.abort();
-  }, [targetItem, lookup, addresses, resolved]);
+  }, [targetItem, lookup, addresses, linkHosts, resolved]);
 
   const resolvedUrl = targetItem ? resolved[targetItem.id] : undefined;
   const networkContent = useMemo(
@@ -339,11 +362,12 @@ export function Player() {
             className="spinner h-3 w-3 rounded-full border-2"
             style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }}
           />
-          Cerco «{baseContent.title}» sui tuoi indirizzi…
+          Cerco «{baseContent.title}» sui tuoi indirizzi
+          {linkHosts.some((h) => h.enabled) ? " e sui siti che hai indicato" : ""}…
         </p>
       )}
       {!resolving && resolvedUrl === null && (
-        <p
+        <div
           role="alert"
           className="rounded-sm border px-3 py-2 text-xs leading-relaxed"
           style={{
@@ -351,11 +375,39 @@ export function Player() {
             color: "var(--danger)",
           }}
         >
-          «{baseContent.title}» non si trova su nessuno dei tuoi indirizzi: ho provato i nomi soliti
-          e ho letto le cartelle che li pubblicano. Controlla gli indirizzi in Impostazioni e gli
-          host qui sotto, che il server sia raggiungibile e che permetta le richieste da questa
-          pagina (CORS). Se sai già dove sta il file, incollalo nel pannello Sorgenti.
-        </p>
+          <p>
+            «{baseContent.title}» non si trova su nessuno dei tuoi indirizzi: ho provato i nomi
+            soliti e ho letto le cartelle che li pubblicano. Controlla gli indirizzi in Impostazioni
+            e gli host qui sotto, che il server sia raggiungibile e che permetta le richieste da
+            questa pagina (CORS). Se sai già dove sta il file, incollalo nel pannello Sorgenti.
+          </p>
+          {/* Come è andata la ricerca sui siti, quando ce n'era uno da
+              interrogare: senza questa riga «non trovato» copre due situazioni
+              molto diverse — il titolo non c'era, oppure il browser non ci ha
+              lasciato leggere la risposta — e solo la seconda si risolve
+              aprendo il Web Viewer. */}
+          {siteOutcome && siteOutcome.kind !== "niente-host" && (
+            <p className="mt-1.5 border-t border-current/25 pt-1.5">
+              {outcomeMessage(siteOutcome)}
+              {(siteOutcome.kind === "solo-pagina" ||
+                siteOutcome.kind === "bloccato" ||
+                siteOutcome.kind === "nessun-risultato") && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    openViewer(
+                      siteOutcome.kind === "solo-pagina" ? siteOutcome.pageUrl : siteOutcome.searchUrl,
+                      targetItem ? { itemId: targetItem.id, title: targetItem.title } : undefined,
+                    )
+                  }
+                  className="ml-1.5 underline underline-offset-2"
+                >
+                  Apri nel Web Viewer
+                </button>
+              )}
+            </p>
+          )}
+        </div>
       )}
 
       {playable.length > 1 && (
@@ -430,6 +482,9 @@ export function Player() {
               </p>
             </div>
           )
+        )}
+        {panel === "sites" && (
+          <LinkHostPanel item={targetItem} outcome={siteOutcome} busy={resolving} />
         )}
         {panel === "downloads" && (
           <DownloadManagerUI

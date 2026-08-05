@@ -3,6 +3,9 @@ import { candidatesFor } from "../lib/sourceTemplate";
 import { discoverOnHosts } from "./discoverOnHost";
 import { isHlsUrl } from "./fromLibrary";
 import type { SourceLookup } from "./fromLibrary";
+import type { EpisodePosition, LinkHost } from "../lib/linkHost";
+import { searchOnLinkHosts } from "./searchOnLinkHost";
+import type { SearchOutcome } from "./searchOnLinkHost";
 
 /**
  * Where a title's stream comes from, in priority order:
@@ -13,22 +16,44 @@ import type { SourceLookup } from "./fromLibrary";
  *      hosts in the player's Host panel (see sourceAddresses.ts) — either
  *      written as a pattern or left bare, in which case the usual layouts under
  *      them are tried;
- *   4. failing all that, the folder listing of those same addresses, read to
- *      find the file whose name matches the title.
+ *   4. failing that, the folder listing of those same addresses, read to find
+ *      the file whose name matches the title;
+ *   5. failing *that*, the Link Hosts: the sites you named, searched with the
+ *      title's own metadata, with the `.m3u8` pulled out of whatever answers
+ *      (see searchOnLinkHost.ts).
  *
  * (3) and (4) are what remove the per-title work: name your server once and
  * every title on the shelf resolves through it. They are also the fallback
  * chain — if the first host doesn't answer, the second is tried, then the
  * third.
+ *
+ * (5) is last on purpose, and the order is the whole argument. Steps 1–4 ask a
+ * server you own for a file you know is there; step 5 asks a stranger a
+ * question and reads the answer. The first four are cheap, private and almost
+ * always right, so a title that resolves on your own host never touches a third
+ * site at all.
  */
 
 export type ResolvedSource = {
   url: string;
   /** How it was found — shown in the UI so the origin is never a mystery. */
-  via: "titolo" | "link" | "modello" | "indice";
+  via: "titolo" | "link" | "modello" | "indice" | "sito";
   /** Index of the address that produced it, when via === "modello". */
   templateIndex?: number;
+  /** The page the stream was lifted from, when via === "sito". */
+  pageUrl?: string;
 };
+
+/**
+ * The answer *and* what happened on the way. The player needs both: a title
+ * that didn't resolve has to say whether nothing matched, or the browser
+ * refused to read the page — the two lead to different next steps, and only
+ * one of them is worth opening the Web Viewer for.
+ */
+export interface Resolution {
+  source: ResolvedSource | null;
+  site?: SearchOutcome;
+}
 
 /** Everything that could serve this title, cheapest-to-know first. */
 export function candidateSources(
@@ -67,18 +92,32 @@ export async function resolvePlayable(
   item: Item,
   lookup: SourceLookup,
   addresses: string[],
-  signal?: AbortSignal,
-): Promise<ResolvedSource | null> {
+  options: {
+    signal?: AbortSignal;
+    linkHosts?: LinkHost[];
+    /** Quale episodio chiedere ai siti, quando non è `S01E{visti+1}`. */
+    position?: Partial<EpisodePosition>;
+  } = {},
+): Promise<Resolution> {
+  const { signal, linkHosts = [], position } = options;
   const candidates = candidateSources(item, lookup, addresses);
   const pinned = candidates.find((c) => c.via !== "modello");
-  if (pinned) return pinned;
+  if (pinned) return { source: pinned };
 
   const guessed = await firstResponding(candidates, signal);
-  if (guessed) return guessed;
+  if (guessed) return { source: guessed };
 
   // Nothing was where it would have been. Ask the folders themselves.
   const found = await discoverOnHosts(item, addresses, signal);
-  return found ? { url: found, via: "indice" } : null;
+  if (found) return { source: { url: found, via: "indice" } };
+
+  // Still nothing of your own. Now, and only now, ask the sites.
+  if (!linkHosts.length) return { source: null };
+  const site = await searchOnLinkHosts(item, linkHosts, signal, position);
+  return {
+    source: site.kind === "flusso" ? { url: site.url, via: "sito", pageUrl: site.pageUrl } : null,
+    site,
+  };
 }
 
 const PROBE_TIMEOUT_MS = 5000;
@@ -137,7 +176,18 @@ async function request(url: string, init: RequestInit, outer?: AbortSignal): Pro
   }
 }
 
-/** True when a title has at least one address worth trying. */
-export function hasAnySource(item: Item, lookup: SourceLookup, addresses: string[]): boolean {
-  return candidateSources(item, lookup, addresses).length > 0;
+/**
+ * True when a title has at least one address worth trying — a built address, a
+ * pinned one, or a site to ask. A Link Host counts even though nothing has been
+ * probed yet: it is a real way for the title to start, and hiding "Guarda"
+ * until after a network round trip would make the button flicker in and out.
+ */
+export function hasAnySource(
+  item: Item,
+  lookup: SourceLookup,
+  addresses: string[],
+  linkHosts: LinkHost[] = [],
+): boolean {
+  if (candidateSources(item, lookup, addresses).length > 0) return true;
+  return linkHosts.some((h) => h.enabled && h.url.trim());
 }

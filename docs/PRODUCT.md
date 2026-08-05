@@ -79,7 +79,7 @@ resta tua e non ti vende niente.
 | Ricerca vocale | Mani occupate, mobile | Web Speech API, zero costi | Utile |
 | Ricerca per immagine | Locandina fotografata | Riconoscimento visivo | **Futura** — costo alto, uso raro |
 
-### 3.3 Dove guardarlo — Essenziale *(sostituisce il Link Host)*
+### 3.3 Dove guardarlo — Essenziale
 
 | Funzione | Problema | Beneficio | Priorità |
 |---|---|---|---|
@@ -88,6 +88,45 @@ resta tua e non ti vende niente.
 | **I miei abbonamenti** | Ti propongono cose che non puoi vedere | Filtro "solo ciò che ho già" | Utile |
 | Avviso "in scadenza" | I titoli lasciano i cataloghi in silenzio | "Esce da Netflix il 30" | Utile |
 | Link personali (2 per titolo) | Vuoi salvare un tuo riferimento | Segnalibri liberi | Essenziale ✅ |
+| **Link Host** | Un sito che conosci tu, e ogni volta la stessa ricerca da riscrivere a mano | I metadati del titolo diventano la ricerca del sito, la pagina che risponde viene letta e l'`.m3u8` finisce nel lettore. §3.3.1 | Essenziale ✅ |
+
+Questa sezione si intitolava *"sostituisce il Link Host"*: la posizione era che
+i provider legali e il collegamento a JustWatch occupassero quel posto per
+intero. Non è più così — il Link Host è stato costruito, sta in §3.3.1 — ma la
+riga di sopra resta quella predefinita e quella che risponde per prima. Un
+titolo sotto licenza continua a portare al servizio che ce l'ha.
+
+#### 3.3.1 Link Host — Essenziale ✅
+
+| Funzione | Problema | Beneficio |
+|---|---|---|
+| **Concatenazione dei metadati** | Riscrivere «Breaking Bad 2008 S02E05» nella casella del sito, ogni volta | Titolo, anno, stagione ed episodio diventano una domanda sola, con quattro ricette per decidere quanto metterci |
+| **Ricerca automatica sul sito** | Il sito ha la sua rotta e non te la ricordi | Due famiglie provate in ordine: la ricerca (`/?s=`…), che perdona uno slug approssimativo, e i percorsi diretti (`/film/interstellar-2014/`, `/serie/the-boys/stagione-3/episodio-1/`), che saltano la pagina dei risultati quando indovinano. Tre codifiche della domanda perché i siti non concordano su come si scrive uno spazio |
+| **Quale episodio** | «Visti: 27» non dice se sei a S02E03 o S03E01 | Predefinito onesto — S01E{visti+1} — e due caselle nel pannello Siti per correggerlo. Sono ciò che rende raggiungibili i percorsi annidati per stagione |
+| **Estrazione del flusso** | Il player della pagina è sepolto sotto la pagina | L'`.m3u8` viene isolato dal sorgente e mandato al lettore proprio. Il master firmato batte la variante 720p; i manifest di reti pubblicitarie note sono scartati; gli indirizzi senza estensione che promettono una playlist si confermano dal MIME type o dal `#EXTM3U` |
+| **Più siti insieme** | Tre mirror lenti sono tre timeout sommati | Ricerca in parallelo, e fra le risposte vince la migliore invece della prima: si legge il master di ognuna e la risoluzione pesa più della latenza |
+| **Web Viewer con ad-block** | Quei siti sono inguardabili | `<iframe sandbox>` a permessi zero: niente script, quindi niente overlay, pop-under o redirect al terzo clic. `allow-popups`, `allow-top-navigation` e `allow-modals` non si concedono a nessun livello |
+| **Redirect tracking** | Il sito trasloca e l'indirizzo salvato è morto | Il redirect viene seguito e il nuovo dominio **proposto**, mai applicato da solo. Quando è sparito del tutto, lo stesso nome si cerca sotto altre estensioni: prima al DNS, poi si bussa solo a chi risolve |
+| **DNS: diagnosi, non solo scheda** | Un host muto può essere spento *o* avere un nome che non si traduce, e sono due rimedi diversi | Cloudflare e Google servono il resolver in JSON con CORS aperto, quindi l'app li interroga davvero: «il nome non esiste», «esiste ma il server tace», «risponde ma non si lascia leggere». Più la scheda su DoH/DoT e i resolver pubblici |
+
+**Tre vincoli, che sono la funzione tanto quanto le righe qui sopra.**
+
+1. *Nessun indirizzo nel codice.* La lista parte vuota. CineMate non conosce e
+   non propone alcun sito; quello che ci scrivi resta su questo dispositivo.
+2. *I siti sono l'ultimo passo.* Si interrogano solo dopo che l'indirizzo del
+   titolo, i link personali, i modelli, gli host e l'indice delle cartelle hanno
+   dato niente. Ciò che sta su un server tuo non tocca mai un sito terzo.
+3. *Il limite si dichiara.* Siamo in un browser: leggere il sorgente di un altro
+   dominio dipende dai suoi header CORS, che i siti di terzi quasi mai mandano.
+   Un fallimento dice quale dei due è — "non trovato" o "il browser non mi ha
+   lasciato leggere" — perché solo il secondo si risolve col Web Viewer. Le
+   tecniche che richiederebbero una WebView nativa (intercettare le richieste di
+   un iframe, iniettarvi script, impostare `Referer` e `Cookie`, un proxy locale)
+   sono elencate una per una nel README invece di essere lasciate implicite: ogni
+   voce poggia su un permesso che una pagina web non ha per costruzione.
+4. *Il DoH è diagnosi, non instradamento.* L'app interroga un resolver pubblico
+   per capire se un host muto sia spento o abbia un nome che non si traduce.
+   Non cambia — e non potrebbe — come il browser risolve i nomi.
 
 **Perché la ricerca e non la scheda del film.** L'indirizzo interno che Netflix o
 Disney+ usano per un titolo non è in nessun catalogo pubblico, TMDB compreso:
@@ -469,4 +508,7 @@ sono decise.
 4. **I dati sono dell'utente.** Esportabili in un file leggibile, sempre.
 5. **Il player riproduce, non procura.** Le sorgenti le indichi tu; quello che
    ci metti dentro è una tua scelta, esattamente come per un lettore installato
-   sul computer.
+   sul computer. Il Link Host (§3.3.1) non è un'eccezione ma la stessa regola
+   spostata di un passo: cerca *solo* sui siti che hai scritto tu, e solo dopo
+   che le tue sorgenti hanno dato niente. L'app non contiene, non propone e non
+   scopre alcun indirizzo per conto suo.

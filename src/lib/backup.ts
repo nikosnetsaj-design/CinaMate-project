@@ -40,6 +40,13 @@ export interface PlayerBackup {
   prefs?: unknown;
   /** Mirror hosts, with their roles and priority order. */
   hosts?: unknown;
+  /**
+   * The Link Hosts: the sites to search, with their search pattern and the
+   * recipe for the query. In the export by the same rule as everything else
+   * here — you typed them, nothing can derive them again — and out of it
+   * nothing is lost but a list of addresses this device never invented.
+   */
+  linkHosts?: unknown;
   /** `{ "yyyy-mm-dd": seconds }` — minutes watched per day, for the profile. */
   daily?: unknown;
 }
@@ -128,7 +135,13 @@ function parseSagaBackup(value: unknown): SagaBackup | undefined {
  */
 function parsePlayerBackup(value: unknown): PlayerBackup | undefined {
   if (!isRecord(value)) return undefined;
-  return { sources: value.sources, prefs: value.prefs, hosts: value.hosts, daily: value.daily };
+  return {
+    sources: value.sources,
+    prefs: value.prefs,
+    hosts: value.hosts,
+    linkHosts: value.linkHosts,
+    daily: value.daily,
+  };
 }
 
 export class BackupParseError extends Error {

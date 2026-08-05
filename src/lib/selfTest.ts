@@ -1,6 +1,10 @@
 import { searchTitles } from "./tmdb";
 import { getHosts } from "../player/services/hostStore";
 import { checkHost } from "../player/services/hostHealthService";
+import { enabledLinkHosts } from "../store/useLinkHosts";
+import { effectiveUrl } from "./linkHost";
+import { probeRedirect } from "./hostRedirect";
+import type { RedirectStatus } from "./hostRedirect";
 
 export type TestStatus = "pass" | "warn" | "fail" | "skip";
 
@@ -120,6 +124,52 @@ async function testHosts(): Promise<TestResult> {
   };
 }
 
+/**
+ * I Link Host, controllati per quello che il browser lascia sapere: se
+ * rispondono, se hanno traslocato, e — la parte che conta di più qui — se si
+ * lasciano leggere. Un sito che risponde ma non manda gli header CORS non è
+ * rotto: è la condizione normale, e la ricerca automatica lì non arriverà mai.
+ * Dirlo in diagnostica evita di scoprirlo un titolo alla volta.
+ */
+async function testLinkHosts(): Promise<TestResult> {
+  const base = { id: "link-host", label: "Link Host" };
+  const hosts = enabledLinkHosts();
+  if (hosts.length === 0) {
+    return { ...base, status: "skip", detail: "Nessuno configurato. La ricerca automatica sui siti è spenta." };
+  }
+
+  const probes = await Promise.all(hosts.map((h) => probeRedirect(effectiveUrl(h))));
+  const count = (status: RedirectStatus) => probes.filter((p) => p.status === status).length;
+  const moved = count("traslocato");
+  const opaque = count("raggiungibile-ma-opaco");
+  const noName = count("nome-non-risolto");
+  const mute = count("risolve-ma-muto");
+  const dead = count("non-raggiungibile") + noName + mute;
+
+  if (dead === hosts.length) {
+    return {
+      ...base,
+      status: "fail",
+      // Il DoH ha già separato i due casi: dirlo qui invece di rimandare
+      // l'utente a indagare è tutto il punto di averlo interrogato.
+      detail: noName
+        ? `Nessuno dei ${hosts.length} risponde, e ${noName} ${noName === 1 ? "ha un nome che non esiste" : "hanno nomi che non esistono"} nemmeno per un resolver pubblico: non è il tuo DNS.`
+        : `Nessuno dei ${hosts.length} risponde. I nomi si risolvono, i server dietro no.`,
+    };
+  }
+  const notes = [
+    moved ? `${moved} ha traslocato (l'aggiornamento va accettato in Impostazioni)` : "",
+    opaque ? `${opaque} risponde ma non si lascia leggere: lì resta il Web Viewer` : "",
+    noName ? `${noName} ha un nome che non esiste più` : "",
+    mute ? `${mute} risolve ma il server non risponde` : "",
+  ].filter(Boolean);
+  return {
+    ...base,
+    status: notes.length ? "warn" : "pass",
+    detail: notes.length ? `${hosts.length} configurati — ${notes.join("; ")}.` : `${hosts.length} configurati, tutti raggiungibili e leggibili.`,
+  };
+}
+
 function testNotifications(): TestResult {
   const base = { id: "notifiche", label: "Notifiche dei promemoria" };
   if (!("Notification" in window)) return { ...base, status: "skip", detail: "Il browser non le supporta." };
@@ -139,11 +189,21 @@ function testOnline(): TestResult {
 
 /** Runs everything and returns the results in a stable order. */
 export async function runSelfTests(keys: { tmdb: string; anthropic: string }): Promise<TestResult[]> {
-  const [storage, indexeddb, tmdb, hosts] = await Promise.all([
+  const [storage, indexeddb, tmdb, hosts, linkHosts] = await Promise.all([
     testLocalStorage(),
     testIndexedDb(),
     testTmdb(keys.tmdb),
     testHosts(),
+    testLinkHosts(),
   ]);
-  return [testOnline(), storage, indexeddb, tmdb, testAnthropic(keys.anthropic), hosts, testNotifications()];
+  return [
+    testOnline(),
+    storage,
+    indexeddb,
+    tmdb,
+    testAnthropic(keys.anthropic),
+    hosts,
+    linkHosts,
+    testNotifications(),
+  ];
 }

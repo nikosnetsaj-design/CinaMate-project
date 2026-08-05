@@ -16,6 +16,9 @@ import { useTvMode, type TvPreference } from "../store/useTvMode";
 import { useHomeLayout, HOME_SECTIONS } from "../store/useHomeLayout";
 import { ACCENTS } from "../lib/accents";
 import { ParentalSettings } from "./ParentalSettings";
+import { LinkHostSettings } from "./LinkHostSettings";
+import { DnsGuideButton } from "./DnsGuide";
+import { useLinkHosts } from "../store/useLinkHosts";
 import { TEMPLATE_FIELDS, previewTemplate, previewCount } from "../lib/sourceTemplate";
 import { getHosts, restoreHosts } from "../player/services/hostStore";
 import { getDailySeconds, restoreDailySeconds } from "../player/services/statsAndHistory";
@@ -376,6 +379,7 @@ function SettingsForm() {
           sourceTemplates: playerPrefs.sourceTemplates,
         },
         hosts: getHosts(),
+        linkHosts: useLinkHosts.getState().hosts,
         // Not derivable on the next device — see PlayerBackup.
         daily: getDailySeconds(),
       },
@@ -421,10 +425,11 @@ function SettingsForm() {
     // player existed, or a hand-edited one, can't wipe settings it says
     // nothing about.
     if (backup.player) {
-      const { sources, prefs, hosts, daily } = backup.player;
+      const { sources, prefs, hosts, linkHosts, daily } = backup.player;
       if (sources !== undefined) usePlayerSources.getState().restore(sources);
       if (prefs !== undefined) usePlayerPrefs.getState().restore(prefs);
       if (hosts !== undefined) restoreHosts(hosts);
+      if (linkHosts !== undefined) useLinkHosts.getState().restore(linkHosts);
       // Merged rather than replaced, then re-read so the profile redraws with
       // the days the file brought.
       if (daily !== undefined) {
@@ -581,6 +586,20 @@ function SettingsForm() {
         </div>
 
         <SourceTemplates />
+
+        <LinkHostSettings />
+
+        <div>
+          <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">
+            Quando un indirizzo non si risolve
+          </span>
+          <p className="mb-2 text-xs leading-relaxed text-text-faint">
+            Un host che «non risponde» a volte non è spento: è il nome che non viene tradotto in un
+            indirizzo. Il DNS è quel passaggio, viaggia in chiaro per impostazione predefinita, e il
+            resolver dell'operatore è solo uno dei tanti possibili.
+          </p>
+          <DnsGuideButton />
+        </div>
 
         <AppearanceSettings />
 
