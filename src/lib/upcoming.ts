@@ -15,6 +15,13 @@ interface CachedDate {
   date: string | null;
   season: number | null;
   episode: number | null;
+  /**
+   * L'ultima data *passata*: quando il film è uscito, o quando è andato in onda
+   * l'ultimo episodio disponibile. Serve a distinguere «sta per arrivare» da
+   * «è arrivato la settimana scorsa», che sono due pastiglie diverse e finora
+   * erano la stessa (nessuna).
+   */
+  lastDate: string | null;
   fetchedAt: number;
 }
 
@@ -58,19 +65,70 @@ async function lookup(item: Item, apiKey: string): Promise<CachedDate | null> {
         date: next.airDate,
         season: next.seasonNumber,
         episode: next.episodeNumber,
+        lastDate: next.lastAirDate,
         fetchedAt: Date.now(),
       };
       dateCache.set(key, fresh);
       return fresh;
     }
     const date = await getReleaseDate(item.tmdbId!, "movie", apiKey);
-    const fresh = { date, season: null, episode: null, fetchedAt: Date.now() };
+    // Per un film la data è una sola: se è passata è quella dell'uscita, se è
+    // futura è quella dell'attesa. Non ci sono due campi da riempire.
+    const past = date != null && daysBetweenToday(date) < 0;
+    const fresh = {
+      date: past ? null : date,
+      season: null,
+      episode: null,
+      lastDate: past ? date : null,
+      fetchedAt: Date.now(),
+    };
     dateCache.set(key, fresh);
     return fresh;
   } catch {
     // Offline or rate limited: skip this title rather than failing the sweep.
     return null;
   }
+}
+
+/**
+ * Le date di un titolo, in avanti e all'indietro: cosa sta per uscire e quando
+ * è uscito l'ultimo pezzo disponibile.
+ *
+ * È la stessa ricognizione di `loadUpcoming` — stessa cache, stesse richieste —
+ * esposta senza il filtro sul futuro, perché le pastiglie sulle copertine hanno
+ * bisogno anche del passato recente.
+ */
+export interface TitleDates {
+  itemId: string;
+  type: "episodio" | "film";
+  /** La prossima uscita, se c'è. */
+  date: string | null;
+  season: number | null;
+  episode: number | null;
+  /** L'ultima uscita già avvenuta, se nota. */
+  lastDate: string | null;
+}
+
+export async function loadTitleDates(items: Item[], apiKey: string): Promise<TitleDates[]> {
+  if (!apiKey) return [];
+  const tracked = trackedForUpcoming(items).slice(0, MAX_LOOKUPS);
+
+  const results = await Promise.all(
+    tracked.map(async (item): Promise<TitleDates | null> => {
+      const found = await lookup(item, apiKey);
+      if (!found) return null;
+      return {
+        itemId: item.id,
+        type: item.tmdbMediaType === "tv" ? "episodio" : "film",
+        date: found.date,
+        season: found.season,
+        episode: found.episode,
+        lastDate: found.lastDate,
+      };
+    }),
+  );
+
+  return results.filter((r): r is TitleDates => r !== null);
 }
 
 /**

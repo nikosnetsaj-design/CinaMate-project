@@ -18,8 +18,8 @@ import { PosterRow } from "../components/PosterRow";
 import { Billboard } from "../components/Billboard";
 import { becauseYouWatched, forYou, mostWatched, recentlyAdded } from "../lib/recommend";
 import { lastSeenDates } from "../lib/continueWatching";
-import { badgeFor, type PosterBadge } from "../lib/homeBadges";
-import { byItemId, useUpcoming } from "../lib/useUpcoming";
+import { badgeFor } from "../lib/homeBadges";
+import { badgesFor, useUpcoming } from "../lib/useUpcoming";
 import { useLibrary } from "../store/useLibrary";
 import { computeStats } from "../lib/stats";
 import { greeting } from "../lib/stats";
@@ -54,16 +54,8 @@ export function Home() {
   // Le pastiglie sulle copertine si calcolano una volta per tutta la pagina:
   // ogni riga chiede gli stessi titoli, e ricalcolarle riga per riga
   // significherebbe rifare lo stesso lavoro cinque volte per scorrimento.
-  const upcoming = useUpcoming();
-  const badges = useMemo(() => {
-    const next = byItemId(upcoming);
-    const map: Record<string, PosterBadge> = {};
-    for (const item of items) {
-      const badge = badgeFor(item, next[item.id]);
-      if (badge) map[item.id] = badge;
-    }
-    return map;
-  }, [items, upcoming]);
+  const { byItem } = useUpcoming();
+  const badges = useMemo(() => badgesFor(items, byItem, badgeFor), [items, byItem]);
 
   const today = new Intl.DateTimeFormat("it-IT", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
 

@@ -1,8 +1,7 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useFocusTrap } from "../lib/useFocusTrap";
-import { similarInLibrary } from "../lib/recommend";
 import { paletteFor } from "../lib/palette";
 import { formatRuntime } from "../lib/format";
 import { STATUSES } from "../lib/status";
@@ -16,6 +15,7 @@ import { LinkToTmdb } from "./LinkToTmdb";
 import { ItemSagaStrip } from "./ItemSagaStrip";
 import { CastRow } from "./CastRow";
 import { ShareSheet } from "./ShareSheet";
+import { SimilarTitles } from "./SimilarTitles";
 import { EpisodeList } from "./EpisodeList";
 import { DownloadButton } from "./DownloadButton";
 import { SpoilerFreeRecap, TranslateOverview } from "./AiItemExtras";
@@ -23,7 +23,6 @@ import { HeartIcon, PlayIcon } from "./icons";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useLibrary } from "../store/useLibrary";
 import { useEditSheet } from "../store/useEditSheet";
-import { useAddSheet } from "../store/useAddSheet";
 import { useCriticDraft } from "../store/useCriticDraft";
 import { useTitleLogo } from "../lib/useTitleLogo";
 import type { Item, Status } from "../types";
@@ -72,8 +71,6 @@ type Tab = "episodi" | "dettagli" | "saga" | "simili";
 
 function ItemDetail({ item }: { item: Item }) {
   const close = useSelectedItem((s) => s.close);
-  const open = useSelectedItem((s) => s.open);
-  const items = useLibrary((s) => s.items);
   const setStatus = useLibrary((s) => s.setStatus);
   const toggleFav = useLibrary((s) => s.toggleFav);
   const incrementEpisode = useLibrary((s) => s.incrementEpisode);
@@ -82,14 +79,12 @@ function ItemDetail({ item }: { item: Item }) {
   const setRewatch = useLibrary((s) => s.setRewatch);
   const removeItem = useLibrary((s) => s.removeItem);
   const openEdit = useEditSheet((s) => s.openEdit);
-  const openAddSheet = useAddSheet((s) => s.open);
   const setCriticQuestion = useCriticDraft((s) => s.setQuestion);
   const navigate = useNavigate();
 
   const containerRef = useFocusTrap(close);
   const titleId = `item-detail-${item.id}`;
   const logo = useTitleLogo(item);
-  const shelfMates = useMemo(() => similarInLibrary(item, items), [item, items]);
   const [sharing, setSharing] = useState(false);
   const [a, b] = paletteFor(item.title);
   const isSeries = item.kind !== "film" && item.kind !== "doc";
@@ -430,55 +425,7 @@ function ItemDetail({ item }: { item: Item }) {
 
           {tab === "simili" && (
             <div className="flex flex-col">
-              {/* Due domande diverse, quindi due sezioni. Questa è "questi ce
-                  li hai già"; quella sotto è la lista TMDB di ciò che non hai,
-                  ed è per questo che una apre un titolo e l'altra il foglio di
-                  aggiunta. */}
-              {shelfMates.length > 0 && (
-                <div>
-                  <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">
-                    {isSeries ? "Serie simili sul tuo scaffale" : "Film simili sul tuo scaffale"}
-                  </span>
-                  <div className="flex gap-3 overflow-x-auto pb-1">
-                    {shelfMates.map(({ item: other, reason }) => (
-                      <button
-                        key={other.id}
-                        type="button"
-                        onClick={() => open(other)}
-                        aria-label={`Apri dettagli di ${other.title}, ${other.year}`}
-                        className="w-24 shrink-0 text-left"
-                      >
-                        <PosterArt item={other} size="sm" className="w-24" />
-                        <p className="mt-1.5 line-clamp-2 text-xs font-medium text-text">{other.title}</p>
-                        <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-text-faint">{reason}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {item.similar.length > 0 && (
-                <div className="mt-4">
-                  <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">
-                    Se ti è piaciuto — da aggiungere
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {item.similar.map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => {
-                          close();
-                          openAddSheet(s);
-                        }}
-                        className="rounded-full border border-border-strong px-3 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
-                      >
-                        {s} <span style={{ color: "var(--accent-text)" }}>＋</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <SimilarTitles item={item} />
 
               <button
                 type="button"

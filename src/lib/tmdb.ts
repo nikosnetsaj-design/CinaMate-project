@@ -587,18 +587,28 @@ export interface TmdbUpcomingEpisode {
   airDate: string | null;
   seasonNumber: number | null;
   episodeNumber: number | null;
+  /**
+   * Quando è andato in onda l'ultimo episodio *già uscito*.
+   *
+   * È la metà che mancava: con la sola data futura si può dire «sta per
+   * arrivare» e non «è arrivato ieri», che è l'informazione per cui una
+   * pastiglia «novità» ha senso di esistere.
+   */
+  lastAirDate: string | null;
 }
 
 interface RawTvMinimal {
   next_episode_to_air?: { air_date: string; season_number: number; episode_number: number } | null;
+  last_episode_to_air?: { air_date: string } | null;
 }
 
 export async function getNextEpisode(tmdbId: number, apiKey: string): Promise<TmdbUpcomingEpisode> {
   const data = await tmdbGet<RawTvMinimal>(`/tv/${tmdbId}`, apiKey);
   const next = data.next_episode_to_air;
+  const lastAirDate = data.last_episode_to_air?.air_date || null;
   return next
-    ? { airDate: next.air_date, seasonNumber: next.season_number, episodeNumber: next.episode_number }
-    : { airDate: null, seasonNumber: null, episodeNumber: null };
+    ? { airDate: next.air_date, seasonNumber: next.season_number, episodeNumber: next.episode_number, lastAirDate }
+    : { airDate: null, seasonNumber: null, episodeNumber: null, lastAirDate };
 }
 
 export interface TmdbPersonHit {
@@ -648,6 +658,61 @@ export async function searchPeople(
     department: DEPARTMENTS[r.known_for_department ?? ""] ?? r.known_for_department ?? "",
     knownFor: (r.known_for ?? []).map((k) => k.title || k.name || "").filter(Boolean).slice(0, 3),
   }));
+}
+
+/* ------------------------------------------------------------------ */
+/* Titoli somiglianti                                                  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * I titoli che TMDB consiglia a chi ha guardato questo.
+ *
+ * `/recommendations` e non `/similar`: il secondo confronta generi e parole
+ * chiave e produce esattamente la lista che fa dire «e questo perché?» — due
+ * horror qualunque si somigliano per definizione. Il primo è costruito su cosa
+ * la gente guarda davvero dopo, ed è il motivo per cui la riga può chiamarsi
+ * «Chi ha visto questo ha visto anche» senza mentire.
+ *
+ * Il record della libreria conserva solo tre titoli come stringhe (`similar`),
+ * salvati il giorno in cui l'hai aggiunto: bastavano per una fila di pastiglie
+ * e non per una riga di copertine, e invecchiano. Questi arrivano al momento.
+ */
+const recommendCache = new Map<string, TmdbSearchResult[]>();
+
+export async function getRecommendations(
+  tmdbId: number,
+  mediaType: "movie" | "tv",
+  apiKey: string,
+  limit = 12,
+): Promise<TmdbSearchResult[]> {
+  const key = `${mediaType}:${tmdbId}`;
+  const hit = recommendCache.get(key);
+  if (hit) return hit.slice(0, limit);
+
+  const data = await tmdbGet<{ results?: RawMultiSearchResult[] }>(
+    `/${mediaType}/${tmdbId}/recommendations`,
+    apiKey,
+  );
+  const rows = (data.results ?? [])
+    .slice(0, 20)
+    .map((r) => {
+      const genreNames = (r.genre_ids ?? []).map((id) => GENRE_NAMES[id]).filter((n): n is string => !!n);
+      const dateStr = r.release_date || r.first_air_date;
+      const type: "movie" | "tv" = r.title ? "movie" : "tv";
+      return {
+        tmdbId: r.id,
+        mediaType: type,
+        title: r.title || r.name || "",
+        year: dateStr ? Number(dateStr.slice(0, 4)) : null,
+        overview: r.overview ?? "",
+        posterPath: r.poster_path ?? null,
+        kind: guessKind(type, genreNames, r.origin_country),
+      };
+    })
+    .filter((r) => r.title);
+
+  recommendCache.set(key, rows);
+  return rows.slice(0, limit);
 }
 
 /* ------------------------------------------------------------------ */

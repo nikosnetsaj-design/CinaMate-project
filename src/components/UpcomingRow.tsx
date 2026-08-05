@@ -11,7 +11,7 @@ const MAX_ON_HOME = 8;
 export function UpcomingRow() {
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
   const openItem = useSelectedItem((s) => s.open);
-  const upcoming = useUpcoming();
+  const { upcoming } = useUpcoming();
 
   if (!tmdbApiKey || upcoming.length === 0) return null;
 

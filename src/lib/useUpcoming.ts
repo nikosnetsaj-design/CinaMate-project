@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useLibrary } from "../store/useLibrary";
 import { useSettings } from "../store/useSettings";
-import { loadUpcoming, trackedKey, type UpcomingEntry } from "./upcoming";
+import { loadTitleDates, trackedKey, type TitleDates, type UpcomingEntry } from "./upcoming";
+import { daysBetweenToday } from "./format";
+import type { Item } from "../types";
 
 /**
- * Le uscite che stai aspettando, disponibili a chiunque sulla Home.
+ * Le date dei titoli che segui: cosa sta per uscire e cosa è appena uscito.
  *
  * Tre punti dell'app fanno ormai la stessa domanda — la riga "In arrivo", la
  * vetrina in cima e le pastiglie sulle copertine — e ognuno la faceva a modo
@@ -12,10 +14,19 @@ import { loadUpcoming, trackedKey, type UpcomingEntry } from "./upcoming";
  * `upcoming.ts` (sei ore), quindi il costo vero è uno solo: qui si condivide il
  * codice, non il traffico.
  */
-export function useUpcoming(): UpcomingEntry[] {
+export interface TitleDatesResult {
+  /** Solo le uscite future, in ordine di data: la riga "In arrivo" e la vetrina. */
+  upcoming: UpcomingEntry[];
+  /** Tutte le date per titolo, passato compreso: le pastiglie sulle copertine. */
+  byItem: Record<string, TitleDates>;
+}
+
+const EMPTY: TitleDatesResult = { upcoming: [], byItem: {} };
+
+export function useUpcoming(): TitleDatesResult {
   const items = useLibrary((s) => s.items);
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
-  const [upcoming, setUpcoming] = useState<UpcomingEntry[]>([]);
+  const [result, setResult] = useState<TitleDatesResult>(EMPTY);
 
   // Dipende dai titoli seguiti, non dall'identità dell'array: una modifica
   // qualunque della libreria non deve far ripartire la ricognizione.
@@ -23,24 +34,40 @@ export function useUpcoming(): UpcomingEntry[] {
 
   useEffect(() => {
     let cancelled = false;
-    void loadUpcoming(useLibrary.getState().items, tmdbApiKey).then((list) => {
-      if (!cancelled) setUpcoming(list);
+    void loadTitleDates(useLibrary.getState().items, tmdbApiKey).then((dates) => {
+      if (cancelled) return;
+      const byId = new Map(useLibrary.getState().items.map((i) => [i.id, i] as const));
+      const byItem: Record<string, TitleDates> = {};
+      for (const entry of dates) byItem[entry.itemId] = entry;
+
+      const upcoming = dates
+        .flatMap((d): UpcomingEntry[] => {
+          const item = byId.get(d.itemId);
+          if (!item || !d.date || daysBetweenToday(d.date) < 0) return [];
+          return [{ item, date: d.date, type: d.type, season: d.season, episode: d.episode }];
+        })
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      setResult({ upcoming, byItem });
     });
     return () => {
       cancelled = true;
     };
   }, [tmdbApiKey, key]);
 
-  return upcoming;
+  return result;
 }
 
-/** Le uscite indicizzate per titolo — come le legge una pastiglia su una copertina. */
-export function byItemId(entries: UpcomingEntry[]): Record<string, UpcomingEntry> {
-  const map: Record<string, UpcomingEntry> = {};
-  for (const entry of entries) {
-    // Il primo vince: `loadUpcoming` restituisce la lista in ordine di data, e
-    // di un titolo interessa la prossima uscita, non l'ultima.
-    if (!map[entry.item.id]) map[entry.item.id] = entry;
+/** Le pastiglie di una libreria intera, calcolate una volta per pagina. */
+export function badgesFor(
+  items: Item[],
+  byItem: Record<string, TitleDates>,
+  badgeFor: (item: Item, dates?: TitleDates) => { label: string; detail?: string } | null,
+): Record<string, { label: string; detail?: string }> {
+  const map: Record<string, { label: string; detail?: string }> = {};
+  for (const item of items) {
+    const badge = badgeFor(item, byItem[item.id]);
+    if (badge) map[item.id] = badge;
   }
   return map;
 }

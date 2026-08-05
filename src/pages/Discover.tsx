@@ -2,10 +2,9 @@ import { useEffect, useState } from "react";
 import { useLibrary } from "../store/useLibrary";
 import { useSettings } from "../store/useSettings";
 import { useSettingsSheet } from "../store/useSettingsSheet";
-import { useEditSheet } from "../store/useEditSheet";
+import { useTitlePreview } from "../store/useTitlePreview";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { getFeed, type DiscoverFeed, type TmdbSearchResult } from "../lib/tmdb";
-import { draftFromTmdb } from "../lib/addFromTmdb";
 import { PosterArt } from "../components/PosterArt";
 import { EmptyState } from "../components/EmptyState";
 import { UpcomingBoard } from "../components/UpcomingBoard";
@@ -22,11 +21,10 @@ const FEEDS: { id: DiscoverFeed; title: string; why: string }[] = [
 function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: string }) {
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
   const items = useLibrary((s) => s.items);
-  const openNew = useEditSheet((s) => s.openNew);
+  const openPreview = useTitlePreview((s) => s.open);
   const openItem = useSelectedItem((s) => s.open);
   const [rows, setRows] = useState<TmdbSearchResult[] | null>(null);
   const [failed, setFailed] = useState(false);
-  const [picking, setPicking] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -38,26 +36,14 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
     };
   }, [feed, tmdbApiKey]);
 
-  async function choose(r: TmdbSearchResult) {
-    // Already in the library: open what you have rather than adding a twin.
+  // Come nella ricerca: un tocco apre l'anteprima — trama, cast, dove
+  // guardarlo — e da lì si decide se salvare. Prima portava dritto al modulo
+  // di inserimento, cioè faceva pagare la curiosità con uno scaffale da
+  // riordinare.
+  function choose(r: TmdbSearchResult) {
     const owned = items.find((i) => i.tmdbId === r.tmdbId);
-    if (owned) {
-      openItem(owned);
-      return;
-    }
-    setPicking(r.tmdbId);
-    try {
-      openNew(
-        await draftFromTmdb(r.tmdbId, r.mediaType, r.kind, tmdbApiKey, {
-          title: r.title,
-          year: r.year,
-          posterPath: r.posterPath,
-        }),
-      );
-    } catch {
-      setFailed(true);
-    }
-    setPicking(null);
+    if (owned) openItem(owned);
+    else openPreview(r);
   }
 
   if (failed) return null;
@@ -81,9 +67,8 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
                   key={r.tmdbId}
                   type="button"
                   onClick={() => choose(r)}
-                  disabled={picking !== null}
-                  aria-label={owned ? `${r.title} — già in libreria, apri` : `Aggiungi ${r.title} alla libreria`}
-                  className="w-28 shrink-0 text-left disabled:opacity-60"
+                  aria-label={owned ? `${r.title} — già in libreria, apri` : `Vedi i dettagli di ${r.title}`}
+                  className="w-28 shrink-0 text-left"
                 >
                   <div className="relative">
                     <PosterArt item={{ title: r.title, kind: r.kind, posterPath: r.posterPath }} size="sm" className="w-28" showTitle={!r.posterPath} />
@@ -97,9 +82,7 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
                     )}
                   </div>
                   <p className="mt-1.5 line-clamp-2 text-xs font-medium text-text">{r.title}</p>
-                  <p className="font-mono tabular text-[10px] text-text-faint">
-                    {picking === r.tmdbId ? "…" : (r.year ?? "")}
-                  </p>
+                  <p className="font-mono tabular text-[10px] text-text-faint">{r.year ?? ""}</p>
                 </button>
               );
             })}

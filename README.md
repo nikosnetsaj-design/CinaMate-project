@@ -167,18 +167,29 @@ rete che non è la tua.
   di solitudine» nel suo lettering *è* la locandina, lo stesso nome nel font
   dell'app è una didascalia — e quando non c'è resta il titolo scritto.
 - **Cerca**: una pagina con la casella appesa in alto, due schede — **Film & TV**
-  e **Persone** — e la griglia dei risultati, tenendo separato quello che hai
-  (si apre) da quello che non hai (si aggiunge). A casella vuota propone cosa
-  riprendere invece di una pagina bianca.
+  e **Persone** — e la griglia dei risultati. Toccare un titolo che non hai
+  **lo mostra**, non lo salva: trama, cast, durata, voto TMDB e dove guardarlo
+  legalmente, con «Aggiungi alla libreria» come pulsante dentro l'anteprima e
+  non come prezzo per vederla. A casella vuota propone cosa riprendere invece
+  di una pagina bianca. Vale anche per Scopri.
+- **Simili**: una sezione sola, non due. I tuoi vengono per primi col segno di
+  spunta e il motivo scritto («Anche questo è di X», «Stessa saga: Y»), gli
+  altri seguono col «＋» e si aprono in anteprima. Il genere in comune non basta
+  più a chiamare due titoli simili — «stesso genere: horror» accostava mezzo
+  scaffale — e i consigli non tuoi arrivano da `/recommendations` di TMDB, che
+  è costruito su cosa la gente guarda davvero dopo.
 - **In vetrina**: la Home si apre con un titolo solo, grande, e due pulsanti —
   **Riproduci** e **La mia lista**. Sotto al titolo c'è sempre un fatto
   verificabile e mai uno slogan: la data del prossimo episodio, i minuti che
   restano, o il giorno in cui l'hai aggiunto. Chi ci finisce lo decide una
   gerarchia dichiarata (prima una data in arrivo, poi ciò che hai lasciato a
   metà, poi un preferito mai visto) e non un sorteggio a ogni apertura.
-- **Pastiglie sulle copertine**: «Nuova stagione — tra 3 giorni», «Aggiunto di
-  recente». Al massimo una per copertina e solo quando dietro c'è un fatto, così
-  la riga mantiene una gerarchia invece di essere tutta marchiata.
+- **Pastiglie sulle copertine**: dicono che *adesso* è cambiato qualcosa —
+  «Prossimamente», «Nuova stagione · tra 3 giorni», «Nuovo episodio ·
+  disponibile», «Uscito da poco». Guardano le date del titolo, non il giorno in
+  cui l'hai archiviato: aggiungere venti film in una sera non li rende novità,
+  e prima li marchiava tutti. Al massimo una per copertina, e su quasi tutta la
+  libreria nessuna — che è esattamente il punto.
 - **Perché hai guardato…**: una riga di consigli che parte dall'ultimo titolo che
   hai finito davvero. Il motivo è il titolo stesso della riga, e se dallo
   scaffale non emerge niente che gli somigli la riga non compare.

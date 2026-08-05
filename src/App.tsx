@@ -5,6 +5,7 @@ import { ToastStack } from "./components/ToastStack";
 import { CommandPalette } from "./components/CommandPalette";
 import { ItemDetailSheetPortal } from "./components/ItemDetailSheet";
 import { AddItemSheetPortal } from "./components/AddItemSheet";
+import { TitlePreviewSheetPortal } from "./components/TitlePreviewSheet";
 import { EditItemSheetPortal } from "./components/EditItemSheet";
 import { SettingsSheetPortal } from "./components/SettingsSheet";
 import { SagaSheetPortal } from "./components/SagaSheet";
@@ -180,6 +181,7 @@ export default function App() {
       <SagaSheetPortal />
       <PersonSheetPortal />
       <AddItemSheetPortal />
+      <TitlePreviewSheetPortal />
       <EditItemSheetPortal />
       <SettingsSheetPortal />
       <ResumePrompt />

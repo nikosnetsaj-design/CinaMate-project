@@ -5,13 +5,12 @@ import { useSettings } from "../store/useSettings";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useSelectedPerson } from "../store/useSelectedPerson";
-import { useEditSheet } from "../store/useEditSheet";
+import { useTitlePreview } from "../store/useTitlePreview";
 import { useWatchProgress } from "../store/useWatchProgress";
 import { useVisibleItems } from "../lib/useVisibleItems";
 import { matchesQuery, didYouMean } from "../lib/search";
 import { searchTitlesForgiving } from "../lib/tmdbSearch";
 import { searchPeople, profileUrl, backdropUrl, posterUrl, type TmdbPersonHit, type TmdbSearchResult } from "../lib/tmdb";
-import { draftFromTmdb } from "../lib/addFromTmdb";
 import { continueWatching, lastSeenDates } from "../lib/continueWatching";
 import { forYou } from "../lib/recommend";
 import { prefetchHandlers } from "../lib/prefetch";
@@ -128,10 +127,9 @@ function TitleResults({ query }: { query: string }) {
   const items = useVisibleItems();
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
   const openItem = useSelectedItem((s) => s.open);
-  const openNew = useEditSheet((s) => s.openNew);
+  const openPreview = useTitlePreview((s) => s.open);
   const [remote, setRemote] = useState<TmdbSearchResult[] | null>(null);
   const [corrected, setCorrected] = useState<string | null>(null);
-  const [adding, setAdding] = useState<number | null>(null);
 
   const mine = useMemo(() => (query ? items.filter((i) => matchesQuery(i, query)) : []), [items, query]);
   const suggestion = useMemo(() => (query && mine.length === 0 ? didYouMean(query, items) : null), [query, mine, items]);
@@ -160,27 +158,13 @@ function TitleResults({ query }: { query: string }) {
     };
   }, [query, tmdbApiKey]);
 
-  async function add(result: TmdbSearchResult) {
+  // Toccare un risultato *mostra* il titolo, non lo salva: trama, cast, durata
+  // e dove guardarlo sono i fatti che servono per decidere se salvarlo, e
+  // chiederli dopo l'inserimento è l'ordine al contrario.
+  function show(result: TmdbSearchResult) {
     const owned = items.find((i) => i.tmdbId === result.tmdbId);
-    if (owned) {
-      openItem(owned);
-      return;
-    }
-    setAdding(result.tmdbId);
-    try {
-      openNew(
-        await draftFromTmdb(result.tmdbId, result.mediaType, result.kind, tmdbApiKey, {
-          title: result.title,
-          year: result.year,
-          posterPath: result.posterPath,
-        }),
-      );
-    } catch {
-      // Il foglio di aggiunta si apre comunque con quel poco che sappiamo:
-      // meglio un titolo da completare a mano che un tocco che non fa nulla.
-      openNew({ title: result.title, year: result.year ?? new Date().getFullYear(), kind: result.kind });
-    }
-    setAdding(null);
+    if (owned) openItem(owned);
+    else openPreview(result);
   }
 
   const ownedIds = new Set(items.map((i) => i.tmdbId).filter((id): id is number => id != null));
@@ -233,10 +217,9 @@ function TitleResults({ query }: { query: string }) {
                   <button
                     key={result.tmdbId}
                     type="button"
-                    onClick={() => add(result)}
-                    disabled={adding !== null}
-                    aria-label={owned ? `${result.title} — già in libreria, apri` : `Aggiungi ${result.title}`}
-                    className="text-left disabled:opacity-60"
+                    onClick={() => show(result)}
+                    aria-label={owned ? `${result.title} — già in libreria, apri` : `Vedi i dettagli di ${result.title}`}
+                    className="text-left"
                   >
                     <div className="relative">
                       <PosterArt
@@ -254,9 +237,7 @@ function TitleResults({ query }: { query: string }) {
                       )}
                     </div>
                     <p className="mt-1.5 line-clamp-2 text-xs font-medium text-text">{result.title}</p>
-                    <p className="font-mono tabular text-[10px] text-text-faint">
-                      {adding === result.tmdbId ? "…" : (result.year ?? "")}
-                    </p>
+                    <p className="font-mono tabular text-[10px] text-text-faint">{result.year ?? ""}</p>
                   </button>
                 );
               })}

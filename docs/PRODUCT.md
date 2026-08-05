@@ -45,7 +45,8 @@ resta tua e non ti vende niente.
 | **In vetrina** | Si apre l'app e si guarda una griglia, non una proposta | Un titolo solo, grande, con Riproduci e La mia lista — e sotto sempre un fatto: una data, i minuti che restano | Essenziale ✅ |
 | **Continua a guardare** | "A che punto ero?" | Un tocco e riparte dal secondo esatto: percentuale, S·E e minuti che restano; play sempre visibile, scheda e altre azioni sotto la copertina | Essenziale ✅ |
 | **Perché hai guardato X** | Un consiglio senza radice è pubblicità | Somiglianze con l'ultimo titolo finito: il perché è il titolo stesso della riga | Utile ✅ |
-| **Pastiglie sulle copertine** | "Nuova stagione" lo scopri per caso | Al massimo una per copertina, e solo con un fatto dietro: una data in arrivo, o un titolo entrato da pochi giorni | Utile ✅ |
+| **Pastiglie sulle copertine** | "Nuova stagione" lo scopri per caso | Al massimo una per copertina e solo sulle date del titolo: cosa sta per uscire («Prossimamente», «Nuova stagione», «Nuovo episodio») e cosa è appena diventato disponibile. Non su quando l'hai archiviato: aggiungerne venti in una sera non li rende novità | Utile ✅ |
+| **Simili che reggono** | «Stesso genere: horror» accostava mezzo scaffale, e i consigli erano tre nomi nudi salvati il giorno dell'inserimento | Una sezione sola: i tuoi col motivo vero (saga, regia, cast), gli altri da `/recommendations` di TMDB con la copertina, e il genere in comune che non basta più a fare una somiglianza | Utile ✅ |
 | **Il Nastro** | I dati personali sono tabelle morte | La tua visione come oggetto visivo | Essenziale ✅ |
 | **Cosa guardo stasera** | Paralisi da scelta davanti a 200 titoli | Una proposta sola, rilanciabile | Essenziale ✅ |
 | **In arrivo** | Perdi le uscite delle serie che segui | Conto alla rovescia per episodio | Essenziale ✅ |
@@ -91,6 +92,7 @@ resta tua e non ti vende niente.
 | **Dettagli senza salvare** | Per leggere una trama bisognava prima aggiungere il titolo | Trama, regia, cast, durata, voto TMDB e dove guardarlo prima di decidere: chi cerca per curiosità non si ritrova la libreria da riordinare | Essenziale ✅ |
 | **«Ce l'hai già»** | Si ri-aggiungeva quello che si possedeva | I titoli della libreria che somigliano a ciò che scrivi compaiono per primi, senza chiave API e senza rete | Utile ✅ |
 | **Cerca come destinazione** | La ricerca viveva nella palette dei comandi: ottima da tastiera, introvabile su un telefono | Una pagina con la casella appesa in alto, due schede (Film & TV, Persone) e la griglia dei risultati; a casella vuota propone cosa riprendere invece di una pagina bianca | Essenziale ✅ |
+| **Un risultato si guarda, non si salva** | Toccare un titolo apriva il modulo di inserimento: per leggere una trama bisognava prima decidere di tenerlo | L'anteprima si apre sopra i risultati, e «Aggiungi alla libreria» è un pulsante dentro, non il prezzo del biglietto | Essenziale ✅ |
 | **Persone come risultato** | Un attore si cercava solo dai crediti di un titolo che avevi già | La scheda Persone interroga TMDB per nome e apre la scheda della persona | Utile ✅ |
 
 | Funzione | Problema | Beneficio | Priorità |

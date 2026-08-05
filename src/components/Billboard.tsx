@@ -32,7 +32,7 @@ export function Billboard() {
   const items = useVisibleItems();
   const history = useLibrary((s) => s.history);
   const progress = useWatchProgress((s) => s.progress);
-  const upcoming = useUpcoming();
+  const { upcoming } = useUpcoming();
   const setStatus = useLibrary((s) => s.setStatus);
   const pushToast = useLibrary((s) => s.pushToast);
   const openItem = useSelectedItem((s) => s.open);

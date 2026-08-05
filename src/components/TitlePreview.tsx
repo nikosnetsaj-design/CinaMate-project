@@ -19,6 +19,8 @@ export function TitlePreview({
   adding,
   alreadyInLibrary,
   apiKey,
+  backLabel = "Torna ai risultati",
+  onOpenOwned,
 }: {
   result: TmdbSearchResult;
   onBack: () => void;
@@ -26,6 +28,10 @@ export function TitlePreview({
   adding: boolean;
   alreadyInLibrary: boolean;
   apiKey: string;
+  /** "Torna ai risultati" dentro il foglio di ricerca, "Chiudi" da solo. */
+  backLabel?: string;
+  /** Presente quando il titolo è già tuo: porta alla scheda invece di duplicarlo. */
+  onOpenOwned?: () => void;
 }) {
   const [details, setDetails] = useState<TmdbDetails | null>(null);
   const [error, setError] = useState("");
@@ -60,7 +66,7 @@ export function TitlePreview({
         onClick={onBack}
         className="-ml-1 w-fit rounded-sm px-1 py-0.5 text-sm text-text-muted hover:text-text"
       >
-        ← Torna ai risultati
+        ← {backLabel}
       </button>
 
       <div className="flex gap-4">
@@ -158,15 +164,26 @@ export function TitlePreview({
       )}
 
       <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => details && onAdd(details)}
-          disabled={!details || adding}
-          className="flex-1 rounded-sm px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
-          style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
-        >
-          {adding ? "…" : alreadyInLibrary ? "Aggiungi comunque" : "Aggiungi alla libreria"}
-        </button>
+        {onOpenOwned ? (
+          <button
+            type="button"
+            onClick={onOpenOwned}
+            className="flex-1 rounded-sm px-4 py-2.5 text-sm font-semibold"
+            style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+          >
+            Apri la tua scheda
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => details && onAdd(details)}
+            disabled={!details || adding}
+            className="flex-1 rounded-sm px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
+            style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+          >
+            {adding ? "…" : alreadyInLibrary ? "Aggiungi comunque" : "Aggiungi alla libreria"}
+          </button>
+        )}
         {details?.trailerUrl && (
           <a
             href={details.trailerUrl}

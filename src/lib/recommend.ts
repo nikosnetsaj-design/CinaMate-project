@@ -120,9 +120,20 @@ export function forYou(items: Item[], limit = 6): Suggestion[] {
 }
 
 /**
- * Titles on your shelf that resemble this one, with the thing they share
- * spelled out. Distinct from `item.similar`, which is TMDB's list of things you
- * *don't* own: this one is "you already have these".
+ * Quanto deve valere un legame per meritarsi la parola «simile».
+ *
+ * Il genere da solo vale 2 e non basta più: «stesso genere: horror» accostava
+ * *Obsession* e *Noi* a *L'avvocato del diavolo* e a qualunque altro horror
+ * dello scaffale, cioè diceva una cosa vera e inutile. Da qui in su servono un
+ * regista in comune (6), un attore (4), una saga (10) — legami che spiegano
+ * davvero perché due titoli stiano nella stessa frase.
+ */
+const SIMILAR_THRESHOLD = 4;
+
+/**
+ * Titoli del tuo scaffale che somigliano a questo, con detto *cosa* hanno in
+ * comune. Diverso dai consigli di TMDB, che sono cose che non hai: questa lista
+ * è "questi ce li hai già".
  */
 export function similarInLibrary(item: Item, items: Item[], limit = 6): Suggestion[] {
   const directors = new Set(names(item.director));
@@ -143,6 +154,8 @@ export function similarInLibrary(item: Item, items: Item[], limit = 6): Suggesti
       const sharedActor = other.cast.find((n) => cast.has(n));
       if (sharedActor) parts.push({ score: 4, reason: `Anche con ${sharedActor}` });
 
+      // Genere e studio non fanno somiglianza da soli (restano sotto la
+      // soglia): rafforzano un legame che c'è già.
       if (item.genre && other.genre === item.genre) {
         parts.push({ score: 2, reason: `Stesso genere: ${item.genre.toLowerCase()}` });
       }
@@ -163,7 +176,7 @@ export function similarInLibrary(item: Item, items: Item[], limit = 6): Suggesti
     });
 
   return scored
-    .filter((entry) => entry.total >= 2)
+    .filter((entry) => entry.total >= SIMILAR_THRESHOLD)
     .sort((a, b) => b.total - a.total || (b.item.vote ?? 0) - (a.item.vote ?? 0))
     .slice(0, limit)
     .map(({ item: found, reason }) => ({ item: found, reason }));
