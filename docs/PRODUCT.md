@@ -66,6 +66,18 @@ resta tua e non ti vende niente.
 > verificabile — e non ruota a caso a ogni apertura, perché una vetrina che
 > cambia da sola insegna a ignorarla.
 
+### 3.1-bis Scheda del titolo — Essenziale
+
+| Funzione | Problema | Beneficio | Priorità |
+|---|---|---|---|
+| **Intestazione larga con Riproduci** | La scheda si apriva su una fascia di dati e il "guarda" stava sotto le note | Copertina orizzontale con il play al centro, riga dei fatti (anno · classificazione · stagioni · durata · qualità) e un solo pulsante pieno | Essenziale ✅ |
+| **Cinque azioni tonde** | Le stesse cose erano sparse fra pastiglie di stato e pulsanti in fondo | Trailer, Preferito, Voto, Guardato, Condividi: tutte reversibili e tutte con un effetto visibile | Utile ✅ |
+| **Schede invece di una colonna** | La scheda era lunga quanto tre schermate | Episodi · Dettagli · Saga · Simili: si apre su ciò che serve, e per una serie è l'elenco delle puntate | Utile ✅ |
+| **Episodi per stagione** | La libreria sapeva *quanti* episodi avevi visto, non quali | Titolo, durata, voto, trama e miniatura di ogni puntata (TMDB, in cache sei ore); il segno di spunta segna "visto fino a qui" | Utile ✅ |
+| **Riproduci quella puntata** | La stagione era fissa a 1 e l'episodio era «visti + 1» | Il play su una riga scrive stagione ed episodio nelle sorgenti del titolo: gli indirizzi costruiti diventano `…/s02e07.m3u8` e la ricerca sui siti chiede quella puntata | Utile ✅ |
+
+---
+
 ### 3.2 Ricerca — Essenziale
 
 | Funzione | Problema | Beneficio | Priorità |
@@ -74,6 +86,8 @@ resta tua e non ti vende niente.
 | **Errori di battitura perdonati anche su TMDB** | Una lettera sbagliata dava «nessun titolo trovato» | TMDB cerca per sottostringa e non ha nulla di tollerante: quando la parola esatta fallisce la si accorcia — una lettera sbagliata in fondo smette di contare — e i risultati si riordinano per somiglianza, dichiarati come «forse cercavi» | Essenziale ✅ |
 | **Dettagli senza salvare** | Per leggere una trama bisognava prima aggiungere il titolo | Trama, regia, cast, durata, voto TMDB e dove guardarlo prima di decidere: chi cerca per curiosità non si ritrova la libreria da riordinare | Essenziale ✅ |
 | **«Ce l'hai già»** | Si ri-aggiungeva quello che si possedeva | I titoli della libreria che somigliano a ciò che scrivi compaiono per primi, senza chiave API e senza rete | Utile ✅ |
+| **Cerca come destinazione** | La ricerca viveva nella palette dei comandi: ottima da tastiera, introvabile su un telefono | Una pagina con la casella appesa in alto, due schede (Film & TV, Persone) e la griglia dei risultati; a casella vuota propone cosa riprendere invece di una pagina bianca | Essenziale ✅ |
+| **Persone come risultato** | Un attore si cercava solo dai crediti di un titolo che avevi già | La scheda Persone interroga TMDB per nome e apre la scheda della persona | Utile ✅ |
 
 | Funzione | Problema | Beneficio | Priorità |
 |---|---|---|---|
@@ -389,6 +403,11 @@ micro‑animazioni ovunque: rispetto di `prefers-reduced-motion` sempre.
 
 **Vetro e sfocatura:** solo dove separano davvero due piani (barre fisse,
 fogli modali). Mai come decorazione.
+
+**Impostazioni a due livelli:** un indice di righe raggruppate (icona, titolo,
+sottotitolo, freccia) e una schermata per volta. Le sezioni sono le stesse di
+prima; quello che cambia è che per cambiare accento non si passa più davanti a
+due chiavi API e al controllo genitori.
 
 **Accessibilità:** ogni coppia testo/sfondo ≥ WCAG AA, verificata da script —
 oggi 168 coppie, zero fallimenti. Focus ring visibile, navigazione da tastiera,

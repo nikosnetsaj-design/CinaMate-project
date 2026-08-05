@@ -78,14 +78,16 @@ export async function searchTitlesForgiving(
   term: string,
   apiKey: string,
   signal?: AbortSignal,
+  /** Quanti risultati tenere: pochi in un elenco a discesa, molti in una griglia. */
+  limit = 8,
 ): Promise<ForgivingSearch> {
   const query = term.trim();
-  const direct = await searchTitles(query, apiKey, signal);
+  const direct = await searchTitles(query, apiKey, signal, limit);
   if (direct.length > 0) return { results: direct, corrected: false, usedTerm: query };
 
   for (const attempt of relaxations(query)) {
     if (signal?.aborted) break;
-    const results = await searchTitles(attempt, apiKey, signal);
+    const results = await searchTitles(attempt, apiKey, signal, limit);
     if (results.length === 0) continue;
     const ranked = results
       .map((r) => ({ r, score: closeness(r.title, query) }))

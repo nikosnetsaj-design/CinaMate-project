@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLibrary } from "../store/useLibrary";
 import { useSelectedItem } from "../store/useSelectedItem";
@@ -6,7 +6,7 @@ import { useWatchProgress } from "../store/useWatchProgress";
 import { useVisibleItems } from "../lib/useVisibleItems";
 import { useUpcoming } from "../lib/useUpcoming";
 import { continueWatching, lastSeenDates } from "../lib/continueWatching";
-import { pickFeatured } from "../lib/featured";
+import { pickFeaturedList } from "../lib/featured";
 import { backdropSrcSet, backdropUrl, posterUrl } from "../lib/tmdb";
 import { paletteFor } from "../lib/palette";
 import { CheckIcon, InfoIcon, PlayIcon, PlusIcon } from "./icons";
@@ -37,10 +37,16 @@ export function Billboard() {
     () => continueWatching(items, progress, lastSeenDates(history)),
     [items, progress, history],
   );
-  const featured = useMemo(() => pickFeatured(items, upcoming, resuming), [items, upcoming, resuming]);
+  const featured = useMemo(() => pickFeaturedList(items, upcoming, resuming), [items, upcoming, resuming]);
 
-  if (!featured) return null;
-  const { item, line } = featured;
+  // Quale delle proposte è a schermo. Non gira da sola: un carosello che si
+  // muove mentre stai leggendo è la ragione per cui i caroselli si ignorano.
+  const [index, setIndex] = useState(0);
+  const touchX = useRef<number | null>(null);
+  const current = featured[Math.min(index, featured.length - 1)];
+
+  if (!current) return null;
+  const { item, line } = current;
 
   // L'immagine orizzontale quando c'è; la locandina quando manca — riempita e
   // sfocata sotto una sfumatura, che è meglio di un ritaglio a mezzo mento.
@@ -50,7 +56,24 @@ export function Billboard() {
   const inList = item.status === "Da vedere";
 
   return (
-    <section aria-label="In vetrina" className="relative overflow-hidden rounded-md">
+    <section
+      aria-label="In vetrina"
+      aria-roledescription="carosello"
+      className="relative overflow-hidden rounded-md"
+      onTouchStart={(e) => {
+        touchX.current = e.touches[0]?.clientX ?? null;
+      }}
+      onTouchEnd={(e) => {
+        const start = touchX.current;
+        touchX.current = null;
+        const end = e.changedTouches[0]?.clientX;
+        if (start == null || end == null) return;
+        const delta = end - start;
+        // Quaranta pixel: sotto è un tocco storto, non uno scorrimento.
+        if (Math.abs(delta) < 40) return;
+        setIndex((i) => Math.min(featured.length - 1, Math.max(0, i + (delta < 0 ? 1 : -1))));
+      }}
+    >
       {/* Alta come una locandina sul telefono, larga come una scena sul
           desktop, e mai più di due terzi dello schermo: una vetrina che copre
           tutta la pagina nasconde proprio le righe che deve introdurre. */}
@@ -132,6 +155,26 @@ export function Billboard() {
               <InfoIcon size={19} />
             </button>
           </div>
+
+          {featured.length > 1 && (
+            <div className="mt-1 flex items-center justify-center gap-2" role="tablist" aria-label="Proposte in vetrina">
+              {featured.map((entry, i) => (
+                <button
+                  key={entry.item.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={i === index}
+                  aria-label={`Vetrina ${i + 1} di ${featured.length}: ${entry.item.title}`}
+                  onClick={() => setIndex(i)}
+                  className="h-2 rounded-full transition-all"
+                  style={{
+                    width: i === index ? 22 : 8,
+                    background: i === index ? "var(--accent)" : "rgba(255,255,255,0.45)",
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>

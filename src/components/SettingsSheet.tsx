@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Sheet } from "./Sheet";
@@ -25,6 +26,7 @@ import { getDailySeconds, restoreDailySeconds } from "../player/services/statsAn
 import { useWatchProgress } from "../store/useWatchProgress";
 import { buildBackup, parseBackup, BackupParseError } from "../lib/backup";
 import { resetAutoLinkAttempts } from "../lib/useAutoLinkTmdb";
+import { BookIcon, CompassIcon, HomeIcon, PersonIcon, PlayIcon, PulseIcon, SparkleIcon, StackIcon, SunIcon } from "./icons";
 
 /**
  * Where your own sources live, written once instead of pasted per title.
@@ -332,6 +334,80 @@ function SourceTemplates() {
   );
 }
 
+/**
+ * Impostazioni a due livelli: un indice di righe raggruppate, e una schermata
+ * per volta.
+ *
+ * Era una colonna sola, lunga tredici sezioni: per cambiare accento si passava
+ * davanti a due chiavi API, ai modelli di indirizzo e al controllo genitori. Un
+ * indice non toglie niente — le sezioni sono le stesse — ma rende vero il fatto
+ * che sono cose diverse, e fa entrare ognuna in una schermata che si legge
+ * tutta senza scorrere.
+ */
+type PanelId = "chiavi" | "sorgenti" | "linkhost" | "aspetto" | "home" | "tv" | "genitori" | "dati";
+
+const PANEL_TITLES: Record<PanelId, string> = {
+  chiavi: "Chiavi e modello",
+  sorgenti: "Indirizzi delle tue sorgenti",
+  linkhost: "Gestisci Link Host",
+  aspetto: "Aspetto",
+  home: "Home su misura",
+  tv: "Televisore",
+  genitori: "Controllo genitori",
+  dati: "Dati e backup",
+};
+
+function SettingsRow({
+  icon,
+  title,
+  subtitle,
+  onClick,
+  to,
+  onNavigate,
+}: {
+  icon: ReactNode;
+  title: string;
+  subtitle: string;
+  onClick?: () => void;
+  to?: string;
+  onNavigate?: () => void;
+}) {
+  const body = (
+    <>
+      <span className="mt-0.5 shrink-0 text-accent-text">{icon}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium text-text">{title}</span>
+        <span className="mt-0.5 block text-xs leading-snug text-text-faint">{subtitle}</span>
+      </span>
+      <span aria-hidden="true" className="mt-0.5 shrink-0 text-text-faint">
+        ›
+      </span>
+    </>
+  );
+  const className =
+    "flex w-full items-start gap-3 px-3.5 py-3 text-left transition-colors hover:bg-surface-hover";
+  return to ? (
+    <Link to={to} onClick={onNavigate} className={className}>
+      {body}
+    </Link>
+  ) : (
+    <button type="button" onClick={onClick} className={className}>
+      {body}
+    </button>
+  );
+}
+
+function SettingsGroup({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <section>
+      <h3 className="mb-1.5 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-text-faint">{label}</h3>
+      <div className="divide-y divide-border overflow-hidden rounded-md border border-border bg-surface-2">
+        {children}
+      </div>
+    </section>
+  );
+}
+
 function SettingsForm() {
   const close = useSettingsSheet((s) => s.close);
   const apiKey = useSettings((s) => s.apiKey);
@@ -354,6 +430,7 @@ function SettingsForm() {
   const [revealTmdb, setRevealTmdb] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const titleId = "settings-sheet-title";
+  const [panel, setPanel] = useState<PanelId | null>(null);
 
   function exportData() {
     const sagas = useSagas.getState();
@@ -443,10 +520,95 @@ function SettingsForm() {
   return (
     <Sheet onClose={close} titleId={titleId} maxWidthClass="max-w-md">
       <div className="flex flex-col gap-5 p-5 pt-8 sm:p-6">
-        <h2 id={titleId} className="font-display text-xl font-semibold text-text">
-          Impostazioni
-        </h2>
+        <div className="flex items-center gap-2.5">
+          {panel && (
+            <button
+              type="button"
+              onClick={() => setPanel(null)}
+              aria-label="Torna alle impostazioni"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border-strong text-text-muted"
+            >
+              ←
+            </button>
+          )}
+          <h2 id={titleId} className="font-display text-xl font-semibold text-text">
+            {panel ? PANEL_TITLES[panel] : "Impostazioni"}
+          </h2>
+        </div>
 
+        {panel === null && (
+          <div className="flex flex-col gap-5">
+            <SettingsGroup label="Catalogo e intelligenza">
+              <SettingsRow
+                icon={<SparkleIcon size={17} />}
+                title="Chiavi e modello"
+                subtitle="TMDB per copertine e cast, Anthropic per il critico. Restano su questo dispositivo."
+                onClick={() => setPanel("chiavi")}
+              />
+            </SettingsGroup>
+
+            <SettingsGroup label="Riproduzione">
+              <SettingsRow
+                icon={<PlayIcon size={17} />}
+                title="Indirizzi delle tue sorgenti"
+                subtitle="Dove stanno i tuoi video: scrivilo una volta e ogni titolo ha il suo pulsante Guarda."
+                onClick={() => setPanel("sorgenti")}
+              />
+              <SettingsRow
+                icon={<CompassIcon size={17} />}
+                title="Gestisci Link Host"
+                subtitle="I siti su cui cercare quando le tue sorgenti non hanno il titolo."
+                onClick={() => setPanel("linkhost")}
+              />
+            </SettingsGroup>
+
+            <SettingsGroup label="App">
+              <SettingsRow
+                icon={<SunIcon size={17} />}
+                title="Aspetto"
+                subtitle="Tema chiaro o scuro e colore d'accento."
+                onClick={() => setPanel("aspetto")}
+              />
+              <SettingsRow
+                icon={<HomeIcon size={17} />}
+                title="Home su misura"
+                subtitle="Quali righe vedere in Home, e in che ordine."
+                onClick={() => setPanel("home")}
+              />
+              <SettingsRow
+                icon={<StackIcon size={17} />}
+                title="Televisore"
+                subtitle="Comandi grandi e navigazione con le frecce del telecomando."
+                onClick={() => setPanel("tv")}
+              />
+              <SettingsRow
+                icon={<PersonIcon size={17} />}
+                title="Controllo genitori"
+                subtitle="Nasconde i titoli sopra una certa età, protetto da un PIN."
+                onClick={() => setPanel("genitori")}
+              />
+            </SettingsGroup>
+
+            <SettingsGroup label="Dati">
+              <SettingsRow
+                icon={<BookIcon size={17} />}
+                title="Dati e backup"
+                subtitle="Esporta, importa, svuota. Tutto vive solo in questo browser."
+                onClick={() => setPanel("dati")}
+              />
+              <SettingsRow
+                icon={<PulseIcon size={17} />}
+                title="Diagnostica"
+                subtitle="Test automatici, stato degli host e registro degli errori."
+                to="/diagnostica"
+                onNavigate={close}
+              />
+            </SettingsGroup>
+          </div>
+        )}
+
+        {panel === "chiavi" && (
+          <>
         <div>
           <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">
             Chiave API Anthropic
@@ -585,9 +747,12 @@ function SettingsForm() {
           </div>
         </div>
 
-        <SourceTemplates />
+          </>
+        )}
 
-        <LinkHostSettings />
+        {panel === "sorgenti" && (
+          <>
+        <SourceTemplates />
 
         <div>
           <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">
@@ -600,15 +765,16 @@ function SettingsForm() {
           </p>
           <DnsGuideButton />
         </div>
+          </>
+        )}
 
-        <AppearanceSettings />
+        {panel === "linkhost" && <LinkHostSettings />}
+        {panel === "aspetto" && <AppearanceSettings />}
+        {panel === "tv" && <TvSettings />}
+        {panel === "home" && <HomeLayoutSettings />}
+        {panel === "genitori" && <ParentalSettings />}
 
-        <TvSettings />
-
-        <HomeLayoutSettings />
-
-        <ParentalSettings />
-
+        {panel === "dati" && (
         <div>
           <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Dati locali</span>
           <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
@@ -643,13 +809,6 @@ function SettingsForm() {
                 if (file) void handleImportFile(file);
               }}
             />
-            <Link
-              to="/diagnostica"
-              onClick={close}
-              className="w-full rounded-sm border border-border-strong px-3.5 py-2.5 text-left text-sm text-text"
-            >
-              Diagnostica: test, host e log errori
-            </Link>
             <button
               type="button"
               disabled={items.length === 0}
@@ -671,6 +830,7 @@ function SettingsForm() {
             </button>
           </div>
         </div>
+        )}
       </div>
     </Sheet>
   );

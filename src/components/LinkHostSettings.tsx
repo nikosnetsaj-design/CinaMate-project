@@ -55,23 +55,9 @@ export function LinkHostSettings() {
 
   return (
     <div>
-      <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">
-        Link Host
+      <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">
+        {hosts.length > 0 ? "I tuoi siti" : "Nessun sito configurato"}
       </span>
-      <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
-        L'indirizzo di un <strong className="font-medium text-text-muted">sito</strong> su cui
-        cercare, invece della cartella da cui leggere. Quando premi{" "}
-        <strong className="font-medium text-text-muted">Guarda</strong> su un titolo, CineMate
-        concatena i suoi metadati — titolo, anno, stagione ed episodio — li trasforma nella ricerca
-        del sito, legge la pagina che risponde e, se ci trova un{" "}
-        <span className="font-mono">.m3u8</span>, lo manda al lettore senza farti vedere la pagina.
-        Se non ci arriva, resta il Web Viewer per cercare a mano.
-      </p>
-      <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
-        CineMate non conosce nessun sito e non ne propone: la lista è vuota finché non ci scrivi
-        qualcosa tu, e quello che ci scrivi resta su questo dispositivo. Quello che ci metti, e cosa
-        ne fai, è una tua responsabilità.
-      </p>
 
       <form onSubmit={submit} className="mb-3 flex flex-col gap-2">
         <input
@@ -127,6 +113,70 @@ export function LinkHostSettings() {
         {showHelp ? "Nascondi i segnaposto" : "Come si scrive un percorso di ricerca"}
       </button>
       {showHelp && <PatternHelp />}
+
+      <HowItWorks />
+    </div>
+  );
+}
+
+/**
+ * Le due schede in fondo: cosa fa questa funzione, e di chi è la
+ * responsabilità di quello che ci si mette dentro.
+ *
+ * La spiegazione stava in due paragrafi grigi sopra al modulo, dove si legge
+ * una volta sola — il giorno in cui la casella è vuota. Come schede in fondo
+ * resta leggibile anche dopo, che è quando serve: uno strumento che va a
+ * leggere un sito qualunque per conto tuo deve dire ogni volta cosa fa e cosa
+ * non fa, e l'avviso non è un fastidio da nascondere una volta accettato.
+ */
+function HowItWorks() {
+  return (
+    <div className="mt-4 flex flex-col gap-3">
+      <div className="rounded-md border border-border bg-surface-2 p-4">
+        <h4 className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-text">
+          <span
+            aria-hidden="true"
+            className="flex h-5 w-5 items-center justify-center rounded-full text-[11px]"
+            style={{ border: "1.5px solid var(--accent)", color: "var(--accent-text)" }}
+          >
+            ?
+          </span>
+          Come funziona?
+        </h4>
+        <p className="text-xs leading-relaxed text-text-faint">
+          CineMate non ospita né fornisce alcun contenuto. Un Link Host è l'indirizzo di un{" "}
+          <strong className="font-medium text-text-muted">sito</strong> che indichi tu, usato come
+          punto di partenza tecnico per la ricerca: quando premi{" "}
+          <strong className="font-medium text-text-muted">Guarda</strong> su un titolo, l'app
+          concatena i suoi metadati — titolo, anno, stagione ed episodio — li trasforma nella
+          ricerca di quel sito, legge la pagina che risponde e, se ci trova un{" "}
+          <span className="font-mono">.m3u8</span>, lo manda al lettore. Se non ci arriva, resta il
+          Web Viewer per cercare a mano.
+        </p>
+        <p className="mt-2 text-xs leading-relaxed text-text-faint">
+          L'app non conosce nessun sito e non ne propone: la lista è vuota finché non ci scrivi
+          qualcosa tu, e quello che ci scrivi resta su questo dispositivo.
+        </p>
+      </div>
+
+      <div
+        className="rounded-md border p-4"
+        style={{
+          borderColor: "color-mix(in srgb, var(--danger) 40%, transparent)",
+          background: "color-mix(in srgb, var(--danger) 8%, transparent)",
+        }}
+      >
+        <h4 className="mb-1.5 flex items-center gap-2 text-sm font-semibold" style={{ color: "var(--danger)" }}>
+          <span aria-hidden="true">⚠</span>
+          Attenzione
+        </h4>
+        <p className="text-xs leading-relaxed text-text-muted">
+          Accedere a materiale protetto da copyright senza autorizzazione viola i termini di
+          servizio dei siti e le leggi vigenti. CineMate non è affiliata a nessun Link Host e non
+          verifica cosa ci sia dietro l'indirizzo che scrivi: quello che ci metti, e cosa ne fai, è
+          una tua responsabilità.
+        </p>
+      </div>
     </div>
   );
 }

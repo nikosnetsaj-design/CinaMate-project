@@ -54,8 +54,8 @@ npm run lint      # oxlint
 ```
 src/
   components/   componenti UI (poster, sheet, saghe, maratona, timeline, nav…)
-  pages/        Home, Libreria, Saghe, Scopri, Dati, Profilo, Critico, Player,
-                Diagnostica
+  pages/        Home, Libreria, Saghe, Cerca, Scopri, Dati, Profilo, Critico,
+                Player, Diagnostica
   store/        stato Zustand (libreria, saghe, maratona, promemoria,
                 obiettivi, layout della Home, punto di ripresa, controllo
                 genitori, tema, UI)
@@ -140,6 +140,21 @@ rete che non è la tua.
   salvato fra sessioni e riavvii, e ogni capitolo completato fa avanzare la coda.
 - **Continua la storia**: appena finisci un capitolo, l'app propone il
   successivo della stessa saga.
+- **Scheda del titolo**: si apre con la copertina larga e il play al centro,
+  la riga dei fatti (anno · classificazione · stagioni · durata · qualità), un
+  solo pulsante pieno — **Guarda** — e cinque azioni tonde: Trailer, Preferito,
+  Voto, Guardato, Condividi. Sotto, quattro schede: **Episodi**, Dettagli, Saga,
+  Simili.
+- **Episodi per stagione**: per una serie collegata a TMDB l'elenco delle
+  puntate con miniatura, durata, voto e trama. Il segno di spunta segna «visto
+  fino a qui» — traducendo la puntata nel totale che la libreria tiene — e il
+  play su una riga apre *quella* puntata: stagione ed episodio finiscono nelle
+  sorgenti del titolo, quindi l'indirizzo costruito diventa `…/s02e07.m3u8`
+  invece del solito `S01E{visti+1}`.
+- **Cerca**: una pagina con la casella appesa in alto, due schede — **Film & TV**
+  e **Persone** — e la griglia dei risultati, tenendo separato quello che hai
+  (si apre) da quello che non hai (si aggiunge). A casella vuota propone cosa
+  riprendere invece di una pagina bianca.
 - **In vetrina**: la Home si apre con un titolo solo, grande, e due pulsanti —
   **Riproduci** e **La mia lista**. Sotto al titolo c'è sempre un fatto
   verificabile e mai uno slogan: la data del prossimo episodio, i minuti che
@@ -255,6 +270,30 @@ rete che non è la tua.
   tua libreria, Chromecast/AirPlay, Watch Party con chat e reazioni, download
   offline riproducibile senza rete, e failover fra host mirror — con test di
   velocità, priorità automatica a punteggio e bilanciamento del carico.
+
+## Impostazioni, e il Link Host
+
+Le impostazioni sono un indice: righe raggruppate — icona, titolo, sottotitolo,
+freccia — e una schermata per volta. Le sezioni sono le stesse di prima
+(chiavi e modello, indirizzi delle sorgenti, Link Host, aspetto, Home su
+misura, televisore, controllo genitori, dati e backup, diagnostica); quello che
+cambia è che per cambiare il colore d'accento non si passa più davanti a due
+chiavi API.
+
+**Gestisci Link Host** ha la sua schermata, con due schede in fondo che restano
+leggibili anche dopo il primo giorno:
+
+- **Come funziona?** — CineMate non ospita né fornisce alcun contenuto. Un Link
+  Host è l'indirizzo di un *sito* che indichi tu, usato come punto di partenza
+  tecnico per la ricerca: l'app concatena i metadati del titolo, li trasforma
+  nella ricerca di quel sito, legge la pagina che risponde e, se ci trova un
+  `.m3u8`, lo manda al lettore. L'app non conosce nessun sito e non ne propone:
+  la lista è vuota finché non ci scrivi qualcosa tu.
+- **Attenzione** — accedere a materiale protetto da copyright senza
+  autorizzazione viola i termini di servizio dei siti e le leggi vigenti.
+  CineMate non è affiliata a nessun Link Host e non verifica cosa ci sia dietro
+  l'indirizzo che scrivi: quello che ci metti, e cosa ne fai, è una tua
+  responsabilità.
 
 ## Il player: com'è fatta la scena
 
