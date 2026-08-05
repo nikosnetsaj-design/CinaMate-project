@@ -3,6 +3,7 @@ import { usePlayerSources, EMPTY_SOURCE } from "../store/usePlayerSources";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { useSourceAddresses } from "../player/sourceAddresses";
 import { hasAnySource } from "../player/resolveSource";
+import { useLinkHosts } from "../store/useLinkHosts";
 import { PlayIcon } from "./icons";
 import type { Item } from "../types";
 import { prefetchHandlers } from "../lib/prefetch";
@@ -22,8 +23,9 @@ export function WatchButton({ item, onNavigate }: { item: Item; onNavigate?: () 
   const addresses = useSourceAddresses();
   const sources = usePlayerSources((s) => s.sources);
   const openSettings = useSettingsSheet((s) => s.open);
+  const linkHosts = useLinkHosts((s) => s.hosts);
 
-  const playable = hasAnySource(item, (id) => sources[id] ?? EMPTY_SOURCE, addresses);
+  const playable = hasAnySource(item, (id) => sources[id] ?? EMPTY_SOURCE, addresses, linkHosts);
 
   if (!playable) {
     return (

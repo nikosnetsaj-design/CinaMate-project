@@ -3,6 +3,9 @@ import { useSettings } from "../store/useSettings";
 import { useWatchSession } from "../store/useWatchSession";
 import { getWatchProviders, type TmdbWatchProvider } from "../lib/tmdb";
 import { serviceLinkFor } from "../lib/deepLinks";
+import { useLinkHosts } from "../store/useLinkHosts";
+import { useWebViewer } from "../store/useWebViewer";
+import { buildQuery, effectiveUrl, hostLabel, searchUrlsFor } from "../lib/linkHost";
 import type { Item } from "../types";
 
 function linkLabel(url: string): string {
@@ -140,15 +143,68 @@ function WatchProviders({ item }: { item: Item }) {
   );
 }
 
+/**
+ * La stessa ricerca del player, ma sulla scheda del titolo: la domanda è già
+ * scritta, e il tocco apre il Web Viewer su quella pagina invece che sulla
+ * home del sito.
+ *
+ * Sta qui e non solo nel player perché la scheda è il punto in cui uno decide
+ * *se* guardare qualcosa, non solo dove: chi sta leggendo la trama e vuole
+ * dare un'occhiata al sito non ha motivo di passare per il lettore.
+ */
+function LinkHostSearch({ item }: { item: Item }) {
+  const hosts = useLinkHosts((s) => s.hosts);
+  const openViewer = useWebViewer((s) => s.open);
+  const startWatching = useWatchSession((s) => s.start);
+  const enabled = hosts.filter((h) => h.enabled && h.url.trim());
+  if (!enabled.length) return null;
+
+  return (
+    <div>
+      <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">
+        Cerca sui tuoi siti
+      </span>
+      <div className="flex flex-wrap gap-1.5">
+        {enabled.map((host) => {
+          const url = searchUrlsFor({ ...host, url: effectiveUrl(host) }, item)[0];
+          if (!url) return null;
+          return (
+            <button
+              key={host.id}
+              type="button"
+              onClick={() => {
+                startWatching(item.id);
+                openViewer(url, { itemId: item.id, title: item.title });
+              }}
+              title={url}
+              className={`${CHIP} border border-border-strong font-medium hover:bg-surface-hover`}
+              style={{ color: "var(--accent-text)" }}
+            >
+              {hostLabel(effectiveUrl(host))} ⧉
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-1.5 text-xs text-text-faint">
+        Si apre il Web Viewer con la ricerca già scritta:{" "}
+        <span className="font-mono">{buildQuery(item, enabled[0].recipe)}</span>. Script, pop-up e
+        cambi di pagina restano bloccati.
+      </p>
+    </div>
+  );
+}
+
 export function WatchAndLinks({ item }: { item: Item }) {
   const startWatching = useWatchSession((s) => s.start);
+  const hasLinkHosts = useLinkHosts((s) => s.hosts.some((h) => h.enabled && h.url.trim()));
   const hasLinks = item.links.length > 0;
   const hasPlatformLink = serviceLinkFor(item.platform, item.title) !== null;
-  if (!item.tmdbId && !item.trailerUrl && !hasLinks && !hasPlatformLink) return null;
+  if (!item.tmdbId && !item.trailerUrl && !hasLinks && !hasPlatformLink && !hasLinkHosts) return null;
 
   return (
     <div className="mt-4 flex flex-col gap-3.5 rounded-md border border-border bg-surface-2 p-4">
       <WatchProviders item={item} />
+      <LinkHostSearch item={item} />
       {(item.trailerUrl || hasLinks) && (
         <div className="flex flex-wrap gap-2">
           {item.trailerUrl && (

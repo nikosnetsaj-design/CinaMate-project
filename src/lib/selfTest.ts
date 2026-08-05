@@ -1,6 +1,9 @@
 import { searchTitles } from "./tmdb";
 import { getHosts } from "../player/services/hostStore";
 import { checkHost } from "../player/services/hostHealthService";
+import { enabledLinkHosts } from "../store/useLinkHosts";
+import { effectiveUrl } from "./linkHost";
+import { probeRedirect } from "./hostRedirect";
 
 export type TestStatus = "pass" | "warn" | "fail" | "skip";
 
@@ -120,6 +123,44 @@ async function testHosts(): Promise<TestResult> {
   };
 }
 
+/**
+ * I Link Host, controllati per quello che il browser lascia sapere: se
+ * rispondono, se hanno traslocato, e — la parte che conta di più qui — se si
+ * lasciano leggere. Un sito che risponde ma non manda gli header CORS non è
+ * rotto: è la condizione normale, e la ricerca automatica lì non arriverà mai.
+ * Dirlo in diagnostica evita di scoprirlo un titolo alla volta.
+ */
+async function testLinkHosts(): Promise<TestResult> {
+  const base = { id: "link-host", label: "Link Host" };
+  const hosts = enabledLinkHosts();
+  if (hosts.length === 0) {
+    return { ...base, status: "skip", detail: "Nessuno configurato. La ricerca automatica sui siti è spenta." };
+  }
+
+  const probes = await Promise.all(hosts.map((h) => probeRedirect(effectiveUrl(h))));
+  const dead = probes.filter((p) => p.status === "non-raggiungibile").length;
+  const moved = probes.filter((p) => p.status === "traslocato").length;
+  const opaque = probes.filter((p) => p.status === "raggiungibile-ma-opaco").length;
+
+  if (dead === hosts.length) {
+    return {
+      ...base,
+      status: "fail",
+      detail: `Nessuno dei ${hosts.length} risponde. Può essere il sito, può essere il DNS: vedi la scheda DNS in Impostazioni.`,
+    };
+  }
+  const notes = [
+    moved ? `${moved} ha traslocato (l'aggiornamento va accettato in Impostazioni)` : "",
+    opaque ? `${opaque} risponde ma non si lascia leggere: lì resta il Web Viewer` : "",
+    dead ? `${dead} non risponde` : "",
+  ].filter(Boolean);
+  return {
+    ...base,
+    status: notes.length ? "warn" : "pass",
+    detail: notes.length ? `${hosts.length} configurati — ${notes.join("; ")}.` : `${hosts.length} configurati, tutti raggiungibili e leggibili.`,
+  };
+}
+
 function testNotifications(): TestResult {
   const base = { id: "notifiche", label: "Notifiche dei promemoria" };
   if (!("Notification" in window)) return { ...base, status: "skip", detail: "Il browser non le supporta." };
@@ -139,11 +180,21 @@ function testOnline(): TestResult {
 
 /** Runs everything and returns the results in a stable order. */
 export async function runSelfTests(keys: { tmdb: string; anthropic: string }): Promise<TestResult[]> {
-  const [storage, indexeddb, tmdb, hosts] = await Promise.all([
+  const [storage, indexeddb, tmdb, hosts, linkHosts] = await Promise.all([
     testLocalStorage(),
     testIndexedDb(),
     testTmdb(keys.tmdb),
     testHosts(),
+    testLinkHosts(),
   ]);
-  return [testOnline(), storage, indexeddb, tmdb, testAnthropic(keys.anthropic), hosts, testNotifications()];
+  return [
+    testOnline(),
+    storage,
+    indexeddb,
+    tmdb,
+    testAnthropic(keys.anthropic),
+    hosts,
+    linkHosts,
+    testNotifications(),
+  ];
 }

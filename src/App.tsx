@@ -13,6 +13,7 @@ import { NextChapterPrompt } from "./components/NextChapterPrompt";
 import { ResumePrompt } from "./components/ResumePrompt";
 import { IncomingShare } from "./components/IncomingShare";
 import { UpdatePrompt } from "./components/UpdatePrompt";
+import { WebViewer } from "./components/WebViewer";
 import { useOnline } from "./lib/useOnline";
 import { useTheme } from "./store/useTheme";
 import { applyAccent } from "./lib/accents";
@@ -183,6 +184,11 @@ export default function App() {
       <NextChapterPrompt />
       <IncomingShare />
       <UpdatePrompt />
+      {/* In fondo a tutto e fuori da ogni rotta: il Web Viewer si apre dalle
+          Impostazioni, dal player e dalla scheda di un titolo, e da qualunque
+          punto parta deve coprire lo schermo intero senza portarsi via la
+          pagina che c'era. */}
+      <WebViewer />
     </>
   );
 }

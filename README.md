@@ -63,6 +63,12 @@ src/
                 activity, continueWatching, achievements, search, filters,
                 recommend, goals, parental, accents, share, deepLinks,
                 spatialNav, anthropic, backup, errorLog, selfTest)
+                  linkHost.ts       i siti su cui cercare: concatenazione dei
+                                    metadati e costruzione della ricerca
+                  streamExtract.ts  lettura di una pagina, isolamento dell'.m3u8
+                                    e scelta del risultato che è il titolo
+                  hostRedirect.ts   dove è finito un indirizzo che ha traslocato
+                  dnsGuide.ts       riferimento DoH/DoT e resolver pubblici
   player/       il player, autonomo dal resto dell'app:
                   hooks/      motore video (hls.js), gesture, sottotitoli,
                               maratona, download, watch party, cast,
@@ -80,6 +86,8 @@ src/
                   SourcePanel.tsx       configurazione per titolo (stream,
                                         sottotitoli, marker, anteprime)
                   resolveSource.ts      quale indirizzo usare, provandoli in ordine
+                  searchOnLinkHost.ts   la ricerca sui siti indicati, ultimo
+                                        passo di resolveSource
                   clock.ts              minutaggi mm:ss
 ```
 
@@ -90,10 +98,11 @@ di CineMate; `player/components/` e `player/hooks/` non ne sanno nulla — l'uni
 eccezione è `useFocusTrap`, che è un'utility generica per i modali usata da tutti
 i fogli dell'app e che riscrivere qui sarebbe peggio che condividere.
 
-Gli store lato CineMate sono `usePlayerSources` (le sorgenti per titolo) e
+Gli store lato CineMate sono `usePlayerSources` (le sorgenti per titolo),
 `usePlayerPrefs` (modelli di indirizzo, risparmio dati, relay della Watch Party,
-nome nella stanza); i modelli si compilano in `lib/sourceTemplate.ts`.
-Entrambi, più la lista degli host, finiscono nell'**esporta/importa**: sono dati
+nome nella stanza) e `useLinkHosts` (i siti su cui cercare); i modelli si
+compilano in `lib/sourceTemplate.ts`, le ricerche in `lib/linkHost.ts`.
+Tutti e tre, più la lista degli host, finiscono nell'**esporta/importa**: sono dati
 scritti a mano che nessuno può ricostruire, quindi seguono la stessa regola della
 libreria. Le misure del player (posizioni di ripresa, ping storici) restano fuori
 perché si rifanno da sole, e i ping di un altro dispositivo descriverebbero una
@@ -264,11 +273,12 @@ disponibili (`{slug}`, `{titolo}`, `{anno}`, `{tmdb}`, `{s}`, `{e}`, `{ss}`,
 3. il titolo compare fra quelli riproducibili in cima alla pagina Player.
 
 Il player prova nell'ordine: l'indirizzo del singolo titolo, poi il suo link
-personale, poi gli indirizzi delle Impostazioni e gli host, e come ultima cosa
-l'indice delle cartelle di quegli stessi indirizzi.
+personale, poi gli indirizzi delle Impostazioni e gli host, poi l'indice delle
+cartelle di quegli stessi indirizzi, e come ultima cosa i **Link Host** — i siti
+che hai indicato tu, se ne hai indicati.
 
-Quello che non fa, in nessuno di questi passaggi: cercare il titolo altrove. Ogni
-indirizzo provato sta su un server che hai indicato tu.
+Ogni indirizzo provato sta su un server o su un sito che hai scritto tu.
+CineMate non ne contiene nessuno.
 
 Gli altri link personali restano segnalibri normali: solo l'estensione `.m3u8`
 viene interpretata come sorgente video. Senza nessuna sorgente la pagina mostra
@@ -300,6 +310,101 @@ solo queste, ed è documentato cosa servirebbe:
 
 Le **tracce audio** non vanno configurate: sono dichiarate dal manifest e hls.js
 le trova da sé.
+
+## Link Host: cercare su un sito invece che su una cartella
+
+Un **Link Host** è l'indirizzo di un *sito* su cui cercare, invece
+dell'indirizzo di una *cartella* da cui leggere. È l'altra metà della domanda
+"dove sta questo titolo": gli indirizzi delle sorgenti indovinano un percorso,
+un Link Host pone una domanda.
+
+Si aggiunge in **Impostazioni → Link Host**. Basta l'indirizzo nudo:
+
+```
+https://sito.tld
+```
+
+Da lì in avanti, quando premi **Guarda** su un titolo che i tuoi indirizzi non
+hanno:
+
+1. **I metadati vengono concatenati.** Titolo, anno e — per le serie — stagione
+   ed episodio diventano una domanda sola: `Breaking Bad 2008 S01E04`. Quanto
+   metterci lo decidi tu, con quattro ricette (solo il titolo, titolo e anno,
+   titolo ed episodio, tutto).
+2. **La domanda diventa la ricerca del sito.** Senza un percorso scritto da te
+   vengono provati gli otto soliti — `/?s=`, `/search?q=`, `/cerca/`… — finché
+   uno risponde. Se lo conosci, scrivilo (`/find?title={query-}`) ed è l'unico
+   provato. I segnaposto sono elencati nelle Impostazioni: `{query}`,
+   `{query+}` e `{query-}` sono la stessa domanda in tre codifiche, perché i
+   siti non sono d'accordo fra loro su come si scrive uno spazio.
+3. **La pagina che risponde viene letta** e se ne isola l'`.m3u8`, che finisce
+   nel lettore senza farti vedere la pagina. Fra più manifest vince il master
+   firmato, non la variante a 720p e non il pre-roll pubblicitario.
+
+### Il Web Viewer, e perché serve
+
+Quando la catena non arriva in fondo c'è il **Web Viewer**: una finestra sul
+sito con gli script spenti. Non è una lista di domini pubblicitari da
+aggiornare — è l'attributo `sandbox` di un `<iframe>`, che parte da zero
+permessi. Senza script non c'è quasi niente di quello che rende quelle pagine
+insopportabili: gli overlay, i pop-under, il redirect al terzo clic. Tre
+permessi non si concedono a nessun livello — `allow-popups`,
+`allow-top-navigation`, `allow-modals` — perché sono esattamente i tre
+comportamenti che il viewer esiste per togliere.
+
+Tre livelli: **Rigido** (niente script né moduli), **Normale** (i moduli
+funzionano, per i siti la cui ricerca è un form), **Minimo** (gli script girano,
+per i player che si caricano da JavaScript). Da dentro, il pulsante **Estrai il
+flusso** rilegge la pagina corrente e, se ci trova un manifest, lo collega al
+titolo e apre il lettore.
+
+### Il limite, detto una volta
+
+CineMate è una pagina web, non un'app nativa. **Leggere il sorgente di una
+pagina di un altro dominio richiede che quel dominio mandi gli header CORS**, e
+i siti di terzi quasi mai li mandano. Quindi:
+
+| Passo | Su un host tuo | Su un sito di terzi |
+|---|---|---|
+| Costruire la ricerca | ✅ sempre | ✅ sempre |
+| Leggere i risultati ed estrarre l'`.m3u8` | ✅ se manda CORS | ⛔️ quasi sempre bloccato dal browser |
+| Vedere la pagina nel Web Viewer | ✅ | ✅ salvo `X-Frame-Options` |
+| Riprodurre l'`.m3u8` trovato | ✅ se manda CORS | ⛔️ stesso muro |
+
+Non è un difetto da correggere: è come funziona il browser, e il codice lo
+riporta invece di mascherarlo. Un fallimento dice *quale* dei due è —
+"non l'ho trovato" o "il browser non mi ha lasciato leggere" — perché solo il
+secondo si risolve aprendo il Web Viewer.
+
+### Quando un sito cambia indirizzo
+
+**Controlla l'indirizzo** segue i redirect e, se il dominio finale è diverso da
+quello salvato, lo propone. *Propone*: non riscrive niente da solo. Un redirect
+può portare a una pagina di cortesia o a un dominio parcheggiato, e cambiare in
+silenzio un indirizzo che hai scritto tu sarebbe sbagliato anche quando indovina.
+La stessa verifica gira nella pagina **Diagnostica**, per tutti gli host insieme.
+
+### La scheda DNS
+
+**Impostazioni → Quando un indirizzo non si risolve** apre un riferimento su DoH
+(DNS su HTTPS) e DoT (DNS su TLS): cosa sono, la tabella dei resolver pubblici
+— Cloudflare, Google, Quad9, AdGuard, con IPv4, IPv6, endpoint DoH e hostname
+DoT — e dove si scrivono su Android, iOS, Windows, macOS, Firefox, Chrome e sul
+router. È lì perché un host che "non risponde" a volte non è spento: è il nome
+che non viene tradotto.
+
+Quello che la scheda dice per esteso: cambiare resolver sposta **chi vede le tue
+richieste di risoluzione**, non ti rende anonimo e non cambia cosa è lecito
+guardare. I blocchi che non passano dal DNS — per IP, per rotta, applicati dal
+servizio stesso — restano dove sono.
+
+### Dove finiscono i tuoi indirizzi
+
+Da nessuna parte. La lista parte vuota, CineMate non conosce e non propone
+nessun sito, e quello che ci scrivi resta in `localStorage` su questo
+dispositivo. Entra nel backup insieme al resto della configurazione, per lo
+stesso motivo per cui ci entrano le altre cose che hai digitato: nessun altro
+può ricostruirle. Cosa ci metti, e cosa ne fai, è una tua responsabilità.
 
 ### Comandi da tastiera
 

@@ -79,7 +79,7 @@ resta tua e non ti vende niente.
 | Ricerca vocale | Mani occupate, mobile | Web Speech API, zero costi | Utile |
 | Ricerca per immagine | Locandina fotografata | Riconoscimento visivo | **Futura** — costo alto, uso raro |
 
-### 3.3 Dove guardarlo — Essenziale *(sostituisce il Link Host)*
+### 3.3 Dove guardarlo — Essenziale
 
 | Funzione | Problema | Beneficio | Priorità |
 |---|---|---|---|
@@ -88,6 +88,36 @@ resta tua e non ti vende niente.
 | **I miei abbonamenti** | Ti propongono cose che non puoi vedere | Filtro "solo ciò che ho già" | Utile |
 | Avviso "in scadenza" | I titoli lasciano i cataloghi in silenzio | "Esce da Netflix il 30" | Utile |
 | Link personali (2 per titolo) | Vuoi salvare un tuo riferimento | Segnalibri liberi | Essenziale ✅ |
+| **Link Host** | Un sito che conosci tu, e ogni volta la stessa ricerca da riscrivere a mano | I metadati del titolo diventano la ricerca del sito, la pagina che risponde viene letta e l'`.m3u8` finisce nel lettore. §3.3.1 | Essenziale ✅ |
+
+Questa sezione si intitolava *"sostituisce il Link Host"*: la posizione era che
+i provider legali e il collegamento a JustWatch occupassero quel posto per
+intero. Non è più così — il Link Host è stato costruito, sta in §3.3.1 — ma la
+riga di sopra resta quella predefinita e quella che risponde per prima. Un
+titolo sotto licenza continua a portare al servizio che ce l'ha.
+
+#### 3.3.1 Link Host — Essenziale ✅
+
+| Funzione | Problema | Beneficio |
+|---|---|---|
+| **Concatenazione dei metadati** | Riscrivere «Breaking Bad 2008 S01E04» nella casella del sito, ogni volta | Titolo, anno, stagione ed episodio diventano una domanda sola, con quattro ricette per decidere quanto metterci |
+| **Ricerca automatica sul sito** | Il sito ha la sua rotta di ricerca e non te la ricordi | Otto percorsi soliti provati in ordine, o il tuo se lo scrivi. Tre codifiche della domanda (`{query}`, `{query+}`, `{query-}`) perché i siti non concordano su come si scrive uno spazio |
+| **Estrazione del flusso** | Il player della pagina è sepolto sotto la pagina | L'`.m3u8` viene isolato dal sorgente e mandato al lettore proprio. Fra più manifest vince il master firmato, non la variante 720p né il pre-roll |
+| **Web Viewer con ad-block** | Quei siti sono inguardabili | `<iframe sandbox>` a permessi zero: niente script, quindi niente overlay, pop-under o redirect al terzo clic. `allow-popups`, `allow-top-navigation` e `allow-modals` non si concedono a nessun livello |
+| **Redirect tracking** | Il sito trasloca e l'indirizzo salvato è morto | Il redirect viene seguito e il nuovo dominio **proposto**, mai applicato da solo |
+| **Scheda DNS** | Un nome che non si risolve sembra un sito spento | Riferimento su DoH e DoT: tabella dei resolver pubblici e dove si scrivono, per sistema |
+
+**Tre vincoli, che sono la funzione tanto quanto le righe qui sopra.**
+
+1. *Nessun indirizzo nel codice.* La lista parte vuota. CineMate non conosce e
+   non propone alcun sito; quello che ci scrivi resta su questo dispositivo.
+2. *I siti sono l'ultimo passo.* Si interrogano solo dopo che l'indirizzo del
+   titolo, i link personali, i modelli, gli host e l'indice delle cartelle hanno
+   dato niente. Ciò che sta su un server tuo non tocca mai un sito terzo.
+3. *Il limite si dichiara.* Siamo in un browser: leggere il sorgente di un altro
+   dominio dipende dai suoi header CORS, che i siti di terzi quasi mai mandano.
+   Un fallimento dice quale dei due è — "non trovato" o "il browser non mi ha
+   lasciato leggere" — perché solo il secondo si risolve col Web Viewer.
 
 **Perché la ricerca e non la scheda del film.** L'indirizzo interno che Netflix o
 Disney+ usano per un titolo non è in nessun catalogo pubblico, TMDB compreso:
@@ -469,4 +499,7 @@ sono decise.
 4. **I dati sono dell'utente.** Esportabili in un file leggibile, sempre.
 5. **Il player riproduce, non procura.** Le sorgenti le indichi tu; quello che
    ci metti dentro è una tua scelta, esattamente come per un lettore installato
-   sul computer.
+   sul computer. Il Link Host (§3.3.1) non è un'eccezione ma la stessa regola
+   spostata di un passo: cerca *solo* sui siti che hai scritto tu, e solo dopo
+   che le tue sorgenti hanno dato niente. L'app non contiene, non propone e non
+   scopre alcun indirizzo per conto suo.
