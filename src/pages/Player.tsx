@@ -154,7 +154,16 @@ export function Player() {
     const controller = new AbortController();
     setResolving(true);
     setSiteOutcome(null);
-    resolvePlayable(targetItem, lookup, addresses, { signal: controller.signal, linkHosts })
+    resolvePlayable(targetItem, lookup, addresses, {
+      signal: controller.signal,
+      linkHosts,
+      // Quale episodio chiedere ai siti: quello scritto nel pannello Siti,
+      // quando c'è, invece di S01E{visti+1}.
+      position: {
+        season: lookup(targetItem.id).searchSeason,
+        episode: lookup(targetItem.id).searchEpisode,
+      },
+    })
       .then((res) => {
         if (controller.signal.aborted) return;
         setResolved((r) => ({ ...r, [targetItem.id]: res.source?.url ?? null }));

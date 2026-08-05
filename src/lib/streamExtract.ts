@@ -107,10 +107,58 @@ const ABSOLUTE_MANIFEST = /https?:\/\/[^\s"'<>\\)\]]+\.m3u8[^\s"'<>\\)\]]*/gi;
 const QUOTED_RELATIVE = /["'](\/[^"'<>\s]+\.m3u8[^"'<>\s]*)["']/gi;
 const ABSOLUTE_OTHER = /https?:\/\/[^\s"'<>\\)\]]+\.(mpd|mp4)[^\s"'<>\\)\]]*/gi;
 
+/**
+ * Gli indirizzi che *dichiarano* di essere una playlist senza avere `.m3u8`
+ * nel percorso. Un manifest servito da una API firmata è spesso
+ * `/stream?id=…&sig=…`, e la sola cosa che lo qualifica è il MIME type. Qui si
+ * raccolgono i candidati da confermare leggendoli — vedi `looksLikeManifest`.
+ */
+const QUOTED_ENDPOINT = /["'](https?:\/\/[^"'<>\s]+|\/[^"'<>\s]+)["']/gi;
+const ENDPOINT_HINT = /(manifest|playlist|\bhls\b|getlink|stream|master)/i;
+
+/** I due MIME type con cui una playlist HLS viene servita. */
+export const HLS_MIME = /application\/(x-mpegurl|vnd\.apple\.mpegurl)/i;
+
+/** La prima riga di ogni playlist HLS, per RFC 8216. */
+export function looksLikeManifest(body: string): boolean {
+  return /^\s*#EXTM3U/.test(body);
+}
+
+/**
+ * I domini da cui un manifest non è mai il film.
+ *
+ * Non è un ad-blocker — quello è la sandbox del Web Viewer, che agisce sulla
+ * pagina. Questa lista agisce sull'*estrazione*: fra i manifest che una pagina
+ * nomina ce ne sono di pubblicitari, e prenderne uno significa mandare nel
+ * lettore trenta secondi di pre-roll invece del titolo. Sono nomi di rete
+ * pubblicitaria, non di siti.
+ */
+const AD_HOSTS = [
+  "doubleclick.net", "googlesyndication.com", "googleadservices.com", "google-analytics.com",
+  "adservice.google.com", "adnxs.com", "adsrvr.org", "rubiconproject.com", "pubmatic.com",
+  "openx.net", "criteo.com", "taboola.com", "outbrain.com", "scorecardresearch.com",
+  "moatads.com", "serving-sys.com", "smartadserver.com", "spotxchange.com", "springserve.com",
+  "imasdk.googleapis.com", "amazon-adsystem.com", "casalemedia.com", "onetag-sys.com",
+  "propellerads.com", "popads.net", "poweredby.jads.co", "exoclick.com", "juicyads.com",
+];
+
+/** Se un indirizzo appartiene a una rete pubblicitaria nota. */
+export function isAdHost(url: string): boolean {
+  let hostname: string;
+  try {
+    hostname = new URL(url).hostname.toLowerCase();
+  } catch {
+    return false;
+  }
+  return AD_HOSTS.some((ad) => hostname === ad || hostname.endsWith(`.${ad}`));
+}
+
 export interface FoundStream {
   url: string;
   /** `hls` è quello che il lettore sa suonare; gli altri sono ripieghi. */
   kind: "hls" | "dash" | "file";
+  /** Vero quando è un candidato da confermare leggendolo, non un `.m3u8`. */
+  unconfirmed?: boolean;
 }
 
 /**
@@ -149,8 +197,9 @@ export function streamsIn(html: string, pageUrl: string): FoundStream[] {
   const seen = new Set<string>();
   const hls: { url: string; score: number }[] = [];
   const others: FoundStream[] = [];
+  const maybe: { url: string; score: number }[] = [];
 
-  const add = (raw: string, kind: FoundStream["kind"]) => {
+  const add = (raw: string, kind: FoundStream["kind"] | "forse") => {
     let absolute: string;
     try {
       absolute = new URL(raw, pageUrl).toString();
@@ -160,7 +209,12 @@ export function streamsIn(html: string, pageUrl: string): FoundStream[] {
     }
     if (seen.has(absolute)) return;
     seen.add(absolute);
+    // Un manifest servito da una rete pubblicitaria non è mai il film: scartato
+    // qui invece che penalizzato, perché non c'è nessun caso in cui vincere sia
+    // la risposta giusta.
+    if (isAdHost(absolute)) return;
     if (kind === "hls") hls.push({ url: absolute, score: scoreManifest(absolute) });
+    else if (kind === "forse") maybe.push({ url: absolute, score: scoreManifest(absolute) });
     else others.push({ url: absolute, kind });
   };
 
@@ -169,16 +223,89 @@ export function streamsIn(html: string, pageUrl: string): FoundStream[] {
   for (const match of text.matchAll(ABSOLUTE_OTHER)) {
     add(match[0], /\.mpd/i.test(match[0]) ? "dash" : "file");
   }
+  // Gli indirizzi senza estensione ma con un nome che promette una playlist.
+  // Sono candidati, non risultati: si confermano solo leggendoli.
+  for (const match of text.matchAll(QUOTED_ENDPOINT)) {
+    const raw = match[1];
+    if (!ENDPOINT_HINT.test(raw) || /\.(m3u8?|mpd|mp4|js|css|png|jpe?g|svg|webp|woff2?)($|\?)/i.test(raw)) {
+      continue;
+    }
+    add(raw, "forse");
+  }
 
   return [
     ...hls.sort((a, b) => b.score - a.score).map((h) => ({ url: h.url, kind: "hls" as const })),
     ...others,
+    ...maybe
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 4)
+      .map((m) => ({ url: m.url, kind: "hls" as const, unconfirmed: true })),
   ];
 }
 
-/** Il flusso migliore di una pagina, o niente. */
+/**
+ * Conferma un candidato senza estensione leggendolo: se il MIME type è quello
+ * di una playlist, o se il corpo comincia con `#EXTM3U`, è un manifest.
+ *
+ * Il corpo si guarda anche quando il MIME dice altro, perché mezza rete serve
+ * le playlist come `text/plain` o `application/octet-stream`. La riga `#EXTM3U`
+ * invece è obbligatoria e non ammette equivoci.
+ */
+export async function confirmManifest(url: string, signal?: AbortSignal): Promise<boolean> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), PAGE_TIMEOUT_MS);
+  const onAbort = () => controller.abort();
+  signal?.addEventListener("abort", onAbort);
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      cache: "no-store",
+      referrerPolicy: "no-referrer",
+      // Una playlist è testo e sta in pochi kB: il range evita di tirare giù un
+      // video intero se il candidato si rivela essere il file e non la lista.
+      headers: { Range: "bytes=0-2047" },
+    });
+    if (!res.ok) return false;
+    if (HLS_MIME.test(res.headers.get("content-type") ?? "")) return true;
+    return looksLikeManifest(await res.text());
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", onAbort);
+  }
+}
+
+/** Il flusso migliore di una pagina, o niente. Solo quelli certi. */
 export function bestStreamIn(html: string, pageUrl: string): FoundStream | null {
-  return streamsIn(html, pageUrl)[0] ?? null;
+  return streamsIn(html, pageUrl).find((s) => !s.unconfirmed) ?? null;
+}
+
+/**
+ * Come sopra, ma quando nella pagina non c'è nessun `.m3u8` esplicito prova a
+ * confermare i candidati senza estensione leggendoli.
+ *
+ * Vale la richiesta in più: le pagine che nascondono il manifest dietro una
+ * chiamata firmata sono la maggioranza di quelle che lo nascondono, e senza
+ * questo passo il risultato sarebbe «non trovato» su pagine in cui l'indirizzo
+ * c'era, scritto per intero, solo senza `.m3u8` in fondo.
+ */
+export async function bestStreamConfirmed(
+  html: string,
+  pageUrl: string,
+  signal?: AbortSignal,
+): Promise<FoundStream | null> {
+  const all = streamsIn(html, pageUrl);
+  const certain = all.find((s) => !s.unconfirmed);
+  if (certain) return certain;
+
+  for (const candidate of all.filter((s) => s.unconfirmed)) {
+    if (signal?.aborted) return null;
+    if (await confirmManifest(candidate.url, signal)) {
+      return { url: candidate.url, kind: "hls" };
+    }
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { isRecord, readJson, writeJson } from "../lib/localStore";
-import type { LinkHost, QueryRecipe } from "../lib/linkHost";
-import { QUERY_RECIPES } from "../lib/linkHost";
+import type { LayoutFamily, LinkHost, QueryRecipe } from "../lib/linkHost";
+import { LAYOUT_FAMILIES, QUERY_RECIPES } from "../lib/linkHost";
 
 const KEY = "cinemate:link-hosts:v1";
 
@@ -36,6 +36,10 @@ function isRecipe(value: unknown): value is QueryRecipe {
   return QUERY_RECIPES.some((r) => r.id === value);
 }
 
+function isLayout(value: unknown): value is LayoutFamily {
+  return LAYOUT_FAMILIES.some((l) => l.id === value);
+}
+
 function isHost(value: unknown): value is LinkHost {
   return (
     isRecord(value) &&
@@ -55,6 +59,7 @@ function normalize(value: LinkHost): LinkHost {
     ...value,
     searchPattern: typeof value.searchPattern === "string" ? value.searchPattern : "",
     recipe: isRecipe(value.recipe) ? value.recipe : "titolo-anno",
+    layout: isLayout(value.layout) ? value.layout : "entrambi",
     enabled: typeof value.enabled === "boolean" ? value.enabled : true,
     addedAt: typeof value.addedAt === "number" ? value.addedAt : Date.now(),
   };
@@ -86,6 +91,7 @@ export const useLinkHosts = create<LinkHostState>((set, get) => ({
       url,
       searchPattern: input.searchPattern?.trim() ?? "",
       recipe: input.recipe ?? "titolo-anno",
+      layout: "entrambi",
       enabled: true,
       addedAt: Date.now(),
     };

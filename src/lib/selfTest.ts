@@ -4,6 +4,7 @@ import { checkHost } from "../player/services/hostHealthService";
 import { enabledLinkHosts } from "../store/useLinkHosts";
 import { effectiveUrl } from "./linkHost";
 import { probeRedirect } from "./hostRedirect";
+import type { RedirectStatus } from "./hostRedirect";
 
 export type TestStatus = "pass" | "warn" | "fail" | "skip";
 
@@ -138,21 +139,29 @@ async function testLinkHosts(): Promise<TestResult> {
   }
 
   const probes = await Promise.all(hosts.map((h) => probeRedirect(effectiveUrl(h))));
-  const dead = probes.filter((p) => p.status === "non-raggiungibile").length;
-  const moved = probes.filter((p) => p.status === "traslocato").length;
-  const opaque = probes.filter((p) => p.status === "raggiungibile-ma-opaco").length;
+  const count = (status: RedirectStatus) => probes.filter((p) => p.status === status).length;
+  const moved = count("traslocato");
+  const opaque = count("raggiungibile-ma-opaco");
+  const noName = count("nome-non-risolto");
+  const mute = count("risolve-ma-muto");
+  const dead = count("non-raggiungibile") + noName + mute;
 
   if (dead === hosts.length) {
     return {
       ...base,
       status: "fail",
-      detail: `Nessuno dei ${hosts.length} risponde. Può essere il sito, può essere il DNS: vedi la scheda DNS in Impostazioni.`,
+      // Il DoH ha già separato i due casi: dirlo qui invece di rimandare
+      // l'utente a indagare è tutto il punto di averlo interrogato.
+      detail: noName
+        ? `Nessuno dei ${hosts.length} risponde, e ${noName} ${noName === 1 ? "ha un nome che non esiste" : "hanno nomi che non esistono"} nemmeno per un resolver pubblico: non è il tuo DNS.`
+        : `Nessuno dei ${hosts.length} risponde. I nomi si risolvono, i server dietro no.`,
     };
   }
   const notes = [
     moved ? `${moved} ha traslocato (l'aggiornamento va accettato in Impostazioni)` : "",
     opaque ? `${opaque} risponde ma non si lascia leggere: lì resta il Web Viewer` : "",
-    dead ? `${dead} non risponde` : "",
+    noName ? `${noName} ha un nome che non esiste più` : "",
+    mute ? `${mute} risolve ma il server non risponde` : "",
   ].filter(Boolean);
   return {
     ...base,

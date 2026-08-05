@@ -67,8 +67,11 @@ src/
                                     metadati e costruzione della ricerca
                   streamExtract.ts  lettura di una pagina, isolamento dell'.m3u8
                                     e scelta del risultato che è il titolo
-                  hostRedirect.ts   dove è finito un indirizzo che ha traslocato
+                  hostRedirect.ts   dove è finito un indirizzo che ha traslocato,
+                                    e i nomi alternativi quando è sparito
                   dnsGuide.ts       riferimento DoH/DoT e resolver pubblici
+                  doh.ts            risoluzione via DoH dal browser, come
+                                    diagnosi: è il nome o è il server?
   player/       il player, autonomo dal resto dell'app:
                   hooks/      motore video (hls.js), gesture, sottotitoli,
                               maratona, download, watch party, cast,
@@ -328,18 +331,39 @@ Da lì in avanti, quando premi **Guarda** su un titolo che i tuoi indirizzi non
 hanno:
 
 1. **I metadati vengono concatenati.** Titolo, anno e — per le serie — stagione
-   ed episodio diventano una domanda sola: `Breaking Bad 2008 S01E04`. Quanto
+   ed episodio diventano una domanda sola: `Breaking Bad 2008 S02E05`. Quanto
    metterci lo decidi tu, con quattro ricette (solo il titolo, titolo e anno,
    titolo ed episodio, tutto).
-2. **La domanda diventa la ricerca del sito.** Senza un percorso scritto da te
-   vengono provati gli otto soliti — `/?s=`, `/search?q=`, `/cerca/`… — finché
-   uno risponde. Se lo conosci, scrivilo (`/find?title={query-}`) ed è l'unico
-   provato. I segnaposto sono elencati nelle Impostazioni: `{query}`,
-   `{query+}` e `{query-}` sono la stessa domanda in tre codifiche, perché i
-   siti non sono d'accordo fra loro su come si scrive uno spazio.
+2. **La domanda diventa un indirizzo**, in due famiglie che si provano in
+   ordine. Prima la **ricerca del sito** — `/?s=`, `/search?q=`, `/cerca/`… —
+   che perdona uno slug approssimativo; poi i **percorsi diretti**, che saltano
+   la pagina dei risultati quando indovinano: `/film/interstellar-2014/`,
+   `/serie/the-boys/stagione-3/episodio-1/`. Se conosci il tuo sito puoi
+   dichiarare quale delle due usare, o scrivere il percorso esatto
+   (`/find?title={query-}`) ed è l'unico provato. I segnaposto sono elencati
+   nelle Impostazioni: `{query}`, `{query+}` e `{query-}` sono la stessa domanda
+   in tre codifiche, perché i siti non sono d'accordo su come si scrive uno
+   spazio; `{sNeN}` e `{sxe}` sono `S02E05` e `2x05`.
 3. **La pagina che risponde viene letta** e se ne isola l'`.m3u8`, che finisce
    nel lettore senza farti vedere la pagina. Fra più manifest vince il master
-   firmato, non la variante a 720p e non il pre-roll pubblicitario.
+   firmato, non la variante a 720p; quelli serviti da una rete pubblicitaria
+   nota vengono scartati del tutto, così un pre-roll non finisce mai nel
+   lettore. Se nella pagina non c'è nessun `.m3u8` esplicito, gli indirizzi che
+   *promettono* una playlist (`/getlink?id=…&sig=…`) vengono letti per
+   confermarli dal MIME type o dalla riga `#EXTM3U`.
+
+**Quale episodio.** La libreria conta gli episodi visti come un totale unico,
+non per stagione: da «visti: 27» non si ricava se sia S02E03 o S03E01, e
+indovinare è il tipo di errore che ti fa partire l'episodio sbagliato. Quindi il
+valore predefinito è l'unico onesto — stagione 1, episodio `visti + 1` — e il
+pannello **Siti** del player ha due caselle per correggerlo. Sono anche ciò che
+rende raggiungibili i percorsi annidati per stagione.
+
+**Più siti insieme.** Con più Link Host la ricerca parte su tutti in parallelo,
+non uno dopo l'altro: in fila, tre siti lenti sono tre timeout sommati. E fra
+più risposte non vince la più veloce ma la migliore — si legge il master di
+ognuna e la risoluzione pesa più della latenza, perché un titolo si apre una
+volta e si guarda per due ore.
 
 ### Il Web Viewer, e perché serve
 
@@ -376,27 +400,68 @@ riporta invece di mascherarlo. Un fallimento dice *quale* dei due è —
 "non l'ho trovato" o "il browser non mi ha lasciato leggere" — perché solo il
 secondo si risolve aprendo il Web Viewer.
 
+#### Cosa richiederebbe una WebView nativa
+
+L'architettura di riferimento di queste funzioni è quella di un'app Android con
+una WebView, che ha permessi che una pagina web non ha. Vale la pena elencare
+cosa resta di là dal muro, invece di lasciarlo scoprire:
+
+| Tecnica dell'app nativa | Perché non si fa qui | Cosa si fa invece |
+|---|---|---|
+| `shouldInterceptRequest` per vedere ogni risorsa che la pagina chiede | Un `<iframe>` di un altro dominio non espone le sue richieste alla pagina che lo contiene, e non esiste API per intercettarle | Si legge il sorgente con `fetch` quando CORS lo permette, e si sniffa il `#EXTM3U` sui candidati senza estensione |
+| Hooking di `window.fetch` e `XMLHttpRequest.prototype.open` dentro la pagina | Iniettare script in un documento cross-origin è precisamente ciò che la same-origin policy vieta | — |
+| Riuso di `Referer`, `Origin`, `User-Agent`, `Cookie` nelle richieste del player | Sono *forbidden headers*: il browser li gestisce e `fetch` rifiuta di impostarli | Un manifest che richiede quegli header non si riproduce, e il player lo dice |
+| Ad-block a livello di rete su blacklist di domini | Nessun modo di filtrare le richieste di un iframe cross-origin | La sandbox toglie gli script, che è ciò che genera quelle richieste; la blacklist si applica all'*estrazione*, così un pre-roll non finisce mai nel lettore |
+| `shouldOverrideUrlLoading` per tenere la navigazione sul dominio | Non si può osservare né bloccare la navigazione interna di un iframe cross-origin | `allow-top-navigation` resta negato: la pagina non può portarsi via l'app, anche se dentro il riquadro può andare dove vuole |
+| Reverse proxy locale su `127.0.0.1` per iniettare header e decifrare AES-128 | Non c'è un server locale in una pagina web | hls.js decifra da sé l'AES-128 quando la chiave è raggiungibile; per gli header non c'è rimedio |
+| Resolver DoH usato per *tutte* le connessioni dell'app | Una pagina non può dirottare la propria risoluzione dei nomi, ed è giusto così | Il DoH si interroga come **diagnosi** — vedi sotto — non come instradamento |
+
 ### Quando un sito cambia indirizzo
 
 **Controlla l'indirizzo** segue i redirect e, se il dominio finale è diverso da
 quello salvato, lo propone. *Propone*: non riscrive niente da solo. Un redirect
 può portare a una pagina di cortesia o a un dominio parcheggiato, e cambiare in
 silenzio un indirizzo che hai scritto tu sarebbe sbagliato anche quando indovina.
+
+Quando invece non risponde proprio niente, **Cerca un nome alternativo** prova
+lo stesso nome sotto una quindicina di estensioni diverse. Prima chiede al DNS e
+bussa solo a chi ha risposto: quindici domini inesistenti sarebbero quindici
+timeout in fila. Anche qui il risultato è una lista da guardare, non una
+sostituzione automatica — che `esempio.net` esista non dice chi ci sia dietro.
+
 La stessa verifica gira nella pagina **Diagnostica**, per tutti gli host insieme.
 
-### La scheda DNS
+### La scheda DNS, e il resolver che funziona davvero
 
 **Impostazioni → Quando un indirizzo non si risolve** apre un riferimento su DoH
-(DNS su HTTPS) e DoT (DNS su TLS): cosa sono, la tabella dei resolver pubblici
-— Cloudflare, Google, Quad9, AdGuard, con IPv4, IPv6, endpoint DoH e hostname
-DoT — e dove si scrivono su Android, iOS, Windows, macOS, Firefox, Chrome e sul
-router. È lì perché un host che "non risponde" a volte non è spento: è il nome
-che non viene tradotto.
+(DNS su HTTPS, porta 443) e DoT (DNS su TLS, porta 853): cosa sono, la tabella
+dei resolver pubblici — Cloudflare, Google, Quad9, AdGuard, OpenDNS,
+CleanBrowsing, con IPv4, IPv6, endpoint DoH e hostname DoT — e dove si scrivono
+su Android, iOS, Windows, macOS, Firefox, Chrome e sul router.
 
-Quello che la scheda dice per esteso: cambiare resolver sposta **chi vede le tue
-richieste di risoluzione**, non ti rende anonimo e non cambia cosa è lecito
-guardare. I blocchi che non passano dal DNS — per IP, per rotta, applicati dal
-servizio stesso — restano dove sono.
+La parte che non è solo documentazione: **Cloudflare e Google servono il
+resolver anche in JSON su HTTPS, con `Access-Control-Allow-Origin: *`**. Una
+pagina web può interrogarli, e CineMate lo fa. Serve a rispondere a una domanda
+che prima l'app poteva solo girare all'utente:
+
+> Questo host che non risponde è spento, o è il *nome* che non diventa un
+> indirizzo?
+
+Sono due guasti con due rimedi diversi. Ora l'app li distingue: «Il nome non
+esiste» (nemmeno per un resolver pubblico — non è il tuo DNS, è il dominio),
+«Il nome esiste, il server non risponde» (il dominio c'è, dietro non c'è
+nessuno), «Risponde ma non si lascia leggere» (CORS). La scheda ha anche una
+casella per provare un nome a mano e confrontare cosa rispondono i due resolver.
+
+**Cosa questo non fa**, ed è scritto anche nella scheda: non cambia come il
+browser risolve i nomi. Quella decisione è del sistema operativo, o del browser
+se ha il DoH acceso nelle sue impostazioni; nessuna pagina web può dirottare la
+propria risoluzione dei nomi, e sarebbe grave se potesse. Quello che l'app fa è
+una **diagnosi**, non un instradamento.
+
+Cambiare resolver sposta **chi vede le tue richieste di risoluzione**, non ti
+rende anonimo e non cambia cosa è lecito guardare. I blocchi che non passano dal
+DNS — per IP, per rotta, applicati dal servizio stesso — restano dove sono.
 
 ### Dove finiscono i tuoi indirizzi
 

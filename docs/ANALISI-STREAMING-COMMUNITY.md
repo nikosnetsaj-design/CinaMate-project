@@ -209,6 +209,41 @@ arriva all'utente come due frasi diverse, perché portano a due gesti diversi.
 È anche la ragione per cui il Web Viewer non è un accessorio: sui siti che
 bloccano la lettura è l'unica metà del livello che funziona davvero.
 
+**Cosa resta di là dal muro.** Una descrizione architetturale più dettagliata
+(`WebViewClient.shouldInterceptRequest`, hooking di `window.fetch` e
+`XMLHttpRequest.prototype.open`, riuso di `Referer`/`Origin`/`Cookie`, ad-block
+su blacklist di rete, `shouldOverrideUrlLoading`, reverse proxy su `127.0.0.1`)
+è stata passata voce per voce: la tabella completa di cosa si è potuto fare e
+cosa no sta nel README, §*Cosa richiederebbe una WebView nativa*. Il riassunto è
+che ogni tecnica di quell'elenco poggia su un permesso che una pagina web non ha
+per costruzione — vedere le richieste di un iframe cross-origin, iniettarvi
+script, impostare header che il browser si riserva. Non sono ostacoli da
+aggirare: sono la same-origin policy, e aggirarla non è un obiettivo.
+
+### La sorpresa: il DoH funziona davvero
+
+Un pezzo di quel documento si è rivelato più fattibile del previsto, e vale la
+pena registrarlo perché contraddice la prima stima.
+
+Il livello DNS era stato accantonato come "documentazione, non funzione": una
+pagina non può cambiare la propria risoluzione dei nomi, quindi sembrava che
+restasse solo una scheda da leggere. Poi si è verificato, e **Cloudflare e
+Google servono la variante JSON del resolver con `Access-Control-Allow-Origin:
+*`**: una pagina web può interrogarli.
+
+Non cambia l'instradamento — quello resta del sistema operativo — ma risponde
+alla domanda che finora l'app girava all'utente: *un host muto è spento, o è il
+nome che non si traduce?* `lib/doh.ts` la pone, e `probeRedirect` restituisce
+tre stati dove prima ce n'era uno vago: `nome-non-risolto`, `risolve-ma-muto`,
+`raggiungibile-ma-opaco`. La differenza pratica è fra «aspetta che torni»,
+«cerca un altro indirizzo» e «apri il Web Viewer», che sono tre gesti diversi.
+
+Ne è nata anche l'euristica dei nomi alternativi (`findMirrors`), che il
+documento chiamava *euristiche di ripristino fallback*: si chiede al DNS per una
+quindicina di TLD e si bussa solo a chi risolve, invece di collezionare quindici
+timeout. Come per il redirect, quello che trova è un candidato da guardare, mai
+una sostituzione automatica.
+
 ---
 
 ## PARTE 4 — Cosa è stato preso, e com'è fatto

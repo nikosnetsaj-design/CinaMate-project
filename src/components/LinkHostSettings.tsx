@@ -3,8 +3,11 @@ import type { FormEvent } from "react";
 import { useLinkHosts } from "../store/useLinkHosts";
 import { useWebViewer } from "../store/useWebViewer";
 import { useLibrary } from "../store/useLibrary";
-import type { LinkHost, QueryRecipe } from "../lib/linkHost";
+import type { LayoutFamily, LinkHost, QueryRecipe } from "../lib/linkHost";
 import {
+  EPISODE_PATH_LAYOUTS,
+  FILM_PATH_LAYOUTS,
+  LAYOUT_FAMILIES,
   LINK_HOST_TOKENS,
   QUERY_RECIPES,
   SEARCH_LAYOUTS,
@@ -13,8 +16,8 @@ import {
   previewSearchCount,
   previewSearchUrl,
 } from "../lib/linkHost";
-import { REDIRECT_HINT, REDIRECT_LABEL, probeRedirect } from "../lib/hostRedirect";
-import type { RedirectStatus } from "../lib/hostRedirect";
+import { REDIRECT_HINT, REDIRECT_LABEL, findMirrors, probeRedirect } from "../lib/hostRedirect";
+import type { MirrorCandidate, RedirectStatus } from "../lib/hostRedirect";
 
 /**
  * Il pannello dei Link Host in Impostazioni.
@@ -133,15 +136,36 @@ function PatternHelp() {
     <div className="mt-2 rounded-sm border border-border bg-surface-2 p-3">
       <p className="mb-2 text-xs leading-relaxed text-text-faint">
         Se sai già com'è fatta la ricerca del sito, scrivila e sarà l'unica provata. Altrimenti si
-        provano queste, in ordine:
+        provano queste, in ordine — prima la ricerca, che perdona uno slug approssimativo, poi i
+        percorsi diretti, più veloci quando indovinano e muti quando no:
       </p>
-      <ul className="mb-3 flex flex-wrap gap-1.5">
-        {SEARCH_LAYOUTS.map((layout) => (
-          <li key={layout} className="rounded-full bg-surface-hover px-2 py-0.5 font-mono text-[10px] text-text-muted">
-            {layout}
-          </li>
-        ))}
-      </ul>
+      {[
+        { label: "Ricerca", list: SEARCH_LAYOUTS },
+        { label: "Percorso diretto — film", list: FILM_PATH_LAYOUTS },
+        { label: "Percorso diretto — episodi", list: EPISODE_PATH_LAYOUTS },
+      ].map((group) => (
+        <div key={group.label} className="mb-2">
+          <span className="mb-1 block text-[10px] uppercase tracking-wide text-text-faint">
+            {group.label}
+          </span>
+          <ul className="flex flex-wrap gap-1.5">
+            {group.list.map((layout) => (
+              <li
+                key={layout}
+                className="rounded-full bg-surface-hover px-2 py-0.5 font-mono text-[10px] text-text-muted"
+              >
+                {layout}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+      <p className="mb-3 mt-2 text-xs leading-relaxed text-text-faint">
+        La stagione vale 1 se non la scrivi: la libreria conta gli episodi visti come un totale, non
+        per stagione, e da «visti: 27» non si ricava se sia S02E03. Il pannello{" "}
+        <strong className="font-medium text-text-muted">Siti</strong> del player ha due caselle per
+        dirlo, ed è quello che rende raggiungibili i percorsi annidati per stagione.
+      </p>
       <dl className="flex flex-col gap-1.5">
         {LINK_HOST_TOKENS.map((t) => (
           <div key={t.token} className="flex flex-wrap items-baseline gap-x-2 text-xs">
@@ -169,6 +193,9 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
   const [open, setOpen] = useState(false);
   const [checking, setChecking] = useState(false);
   const [status, setStatus] = useState<RedirectStatus | null>(null);
+  const [addresses, setAddresses] = useState<string[]>([]);
+  const [hunting, setHunting] = useState(false);
+  const [mirrors, setMirrors] = useState<MirrorCandidate[] | null>(null);
 
   const preview = previewSearchUrl(host);
   const others = Math.max(previewSearchCount(host) - 1, 0);
@@ -176,14 +203,25 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
   async function check() {
     setChecking(true);
     setStatus(null);
+    setAddresses([]);
     const probe = await probeRedirect(effectiveUrl(host));
     setChecking(false);
     setStatus(probe.status);
+    setAddresses(probe.addresses ?? []);
     update(host.id, { lastCheckedAt: probe.checkedAt });
     if (probe.status === "traslocato" && probe.finalUrl) {
       update(host.id, { movedTo: probe.finalUrl });
       pushToast("info", `«${host.name}» risponde da ${hostLabel(probe.finalUrl)}.`);
     }
+  }
+
+  async function hunt() {
+    setHunting(true);
+    setMirrors(null);
+    const found = await findMirrors(effectiveUrl(host));
+    setHunting(false);
+    setMirrors(found);
+    if (!found.length) pushToast("info", "Nessun nome alternativo risolve.");
   }
 
   return (
@@ -259,7 +297,46 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
       {status && (
         <p className="mt-1.5 text-[11px] leading-relaxed text-text-faint">
           <span className="text-text-muted">{REDIRECT_LABEL[status]}.</span> {REDIRECT_HINT[status]}
+          {addresses.length > 0 && (
+            <span className="font-mono"> Risolve in {addresses.join(", ")}.</span>
+          )}
         </p>
+      )}
+
+      {mirrors && mirrors.length > 0 && (
+        <div className="mt-2 rounded-sm border border-border-strong bg-surface p-2.5">
+          <p className="mb-1.5 text-[11px] leading-relaxed text-text-faint">
+            Lo stesso nome risolve anche sotto queste estensioni. Che un dominio esista non dice
+            chi ci sia dietro: guardalo prima di adottarlo.
+          </p>
+          <div className="flex flex-col gap-1">
+            {mirrors.map((m) => (
+              <div key={m.url} className="flex flex-wrap items-center gap-1.5">
+                <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-text-muted">
+                  {hostLabel(m.url)} {m.answers ? "· risponde" : "· non risponde"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => openViewer(m.url)}
+                  className="rounded-sm border border-border-strong px-2 py-0.5 text-[10px] text-text-muted hover:bg-surface-hover"
+                >
+                  Guarda
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    update(host.id, { url: m.url, movedTo: undefined });
+                    setMirrors(null);
+                    pushToast("success", `Indirizzo aggiornato a ${hostLabel(m.url)}.`);
+                  }}
+                  className="rounded-sm border border-border-strong px-2 py-0.5 text-[10px] text-text-muted hover:bg-surface-hover"
+                >
+                  Usa questo
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       <div className="mt-2 flex flex-wrap gap-1.5">
@@ -278,6 +355,15 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
           className="rounded-sm border border-border-strong px-2.5 py-1 text-[11px] text-text-muted hover:bg-surface-hover disabled:opacity-50"
         >
           {checking ? "Controllo…" : "Controlla l'indirizzo"}
+        </button>
+        <button
+          type="button"
+          onClick={hunt}
+          disabled={hunting}
+          title="Cerca lo stesso nome sotto altre estensioni di dominio"
+          className="rounded-sm border border-border-strong px-2.5 py-1 text-[11px] text-text-muted hover:bg-surface-hover disabled:opacity-50"
+        >
+          {hunting ? "Cerco…" : "Cerca un nome alternativo"}
         </button>
         <button
           type="button"
@@ -329,6 +415,30 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
               className={INPUT}
             />
           </label>
+          <fieldset className="flex flex-col gap-1">
+            <legend className="mb-1 text-xs text-text-faint">Com'è fatto il sito</legend>
+            <div className="flex flex-wrap gap-1.5">
+              {LAYOUT_FAMILIES.map((l) => (
+                <button
+                  key={l.id}
+                  type="button"
+                  onClick={() => update(host.id, { layout: l.id as LayoutFamily })}
+                  aria-pressed={(host.layout ?? "entrambi") === l.id}
+                  title={l.hint}
+                  className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
+                    (host.layout ?? "entrambi") === l.id
+                      ? "border-accent text-text"
+                      : "border-border-strong text-text-muted hover:bg-surface-hover"
+                  }`}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1 text-[11px] text-text-faint">
+              {LAYOUT_FAMILIES.find((l) => l.id === (host.layout ?? "entrambi"))?.hint}
+            </p>
+          </fieldset>
           <fieldset className="flex flex-col gap-1">
             <legend className="mb-1 text-xs text-text-faint">Cosa finisce nella domanda</legend>
             <div className="flex flex-wrap gap-1.5">

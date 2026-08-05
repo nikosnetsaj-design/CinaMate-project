@@ -49,6 +49,18 @@ export interface PlayerSource {
   subtitles: PlayerSubtitle[];
   markers: PlayerMarker[];
   sprite?: PlayerSprite;
+  /**
+   * Which episode a Link Host search should ask for.
+   *
+   * The library counts episodes watched as one running total, not per season,
+   * so `seen: 27` cannot say whether that is S02E03 or S03E01 — see
+   * lib/linkHost.ts. These two are the way out: absent, the search asks for
+   * season 1 episode `seen + 1`; set, they win. Without them the site layouts
+   * that nest by season (`/serie/x/stagione-3/episodio-1/`) would never be
+   * reachable, because the 3 existed nowhere.
+   */
+  searchSeason?: number;
+  searchEpisode?: number;
 }
 
 export const EMPTY_SOURCE: PlayerSource = { subtitles: [], markers: [] };

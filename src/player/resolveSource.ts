@@ -3,7 +3,7 @@ import { candidatesFor } from "../lib/sourceTemplate";
 import { discoverOnHosts } from "./discoverOnHost";
 import { isHlsUrl } from "./fromLibrary";
 import type { SourceLookup } from "./fromLibrary";
-import type { LinkHost } from "../lib/linkHost";
+import type { EpisodePosition, LinkHost } from "../lib/linkHost";
 import { searchOnLinkHosts } from "./searchOnLinkHost";
 import type { SearchOutcome } from "./searchOnLinkHost";
 
@@ -92,9 +92,14 @@ export async function resolvePlayable(
   item: Item,
   lookup: SourceLookup,
   addresses: string[],
-  options: { signal?: AbortSignal; linkHosts?: LinkHost[] } = {},
+  options: {
+    signal?: AbortSignal;
+    linkHosts?: LinkHost[];
+    /** Quale episodio chiedere ai siti, quando non è `S01E{visti+1}`. */
+    position?: Partial<EpisodePosition>;
+  } = {},
 ): Promise<Resolution> {
-  const { signal, linkHosts = [] } = options;
+  const { signal, linkHosts = [], position } = options;
   const candidates = candidateSources(item, lookup, addresses);
   const pinned = candidates.find((c) => c.via !== "modello");
   if (pinned) return { source: pinned };
@@ -108,7 +113,7 @@ export async function resolvePlayable(
 
   // Still nothing of your own. Now, and only now, ask the sites.
   if (!linkHosts.length) return { source: null };
-  const site = await searchOnLinkHosts(item, linkHosts, signal);
+  const site = await searchOnLinkHosts(item, linkHosts, signal, position);
   return {
     source: site.kind === "flusso" ? { url: site.url, via: "sito", pageUrl: site.pageUrl } : null,
     site,

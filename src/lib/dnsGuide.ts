@@ -21,13 +21,19 @@ export interface Resolver {
   name: string;
   /** IPv4, come si scrivono nelle impostazioni di rete. */
   ipv4: [string, string];
-  ipv6: [string, string];
-  /** Endpoint DNS over HTTPS. */
+  ipv6?: [string, string];
+  /** Endpoint DNS over HTTPS — porta TCP 443. */
   doh: string;
-  /** Hostname DNS over TLS. */
+  /** Hostname DNS over TLS — porta TCP 853. */
   dot: string;
   note: string;
 }
+
+/**
+ * La differenza fra i due protocolli in una riga, perché è la sola cosa che
+ * conta davvero nello scegliere.
+ */
+export const PORTS = { doh: 443, dot: 853 } as const;
 
 /**
  * I due che l'utente chiede per nome, più due che vale la pena conoscere:
@@ -67,6 +73,22 @@ export const RESOLVERS: Resolver[] = [
     doh: "https://dns.adguard-dns.com/dns-query",
     dot: "dns.adguard-dns.com",
     note: "Blocca pubblicità e tracker a livello di nome. È un ad-block che vale per tutto il dispositivo, app comprese.",
+  },
+  {
+    name: "OpenDNS",
+    ipv4: ["208.67.222.222", "208.67.220.220"],
+    ipv6: ["2620:119:35::35", "2620:119:53::53"],
+    doh: "https://doh.opendns.com/dns-query",
+    dot: "dns.opendns.com",
+    note: "Di Cisco. Infrastruttura stabile e filtri di sicurezza opzionali, configurabili da un account.",
+  },
+  {
+    name: "CleanBrowsing",
+    ipv4: ["185.228.168.9", "185.228.169.9"],
+    ipv6: ["2a0d:2a00:1::2", "2a0d:2a00:2::2"],
+    doh: "https://doh.cleanbrowsing.org/doh/security-filter/",
+    dot: "security-filter-dns.cleanbrowsing.org",
+    note: "Tre profili distinti — sicurezza, famiglia, adulti — e quello elencato qui è il profilo sicurezza.",
   },
 ];
 
@@ -157,6 +179,10 @@ export const DNS_FAQ: FaqEntry[] = [
   {
     q: "Che differenza c'è fra DoH e DoT?",
     a: "Cifrano la stessa cosa in due modi. DoT usa una porta sua, la 853: è pulito da amministrare e facile da distinguere sulla rete, quindi anche facile da bloccare. DoH viaggia sulla 443 insieme a tutto il traffico HTTPS: è indistinguibile dal resto, e per questo è quello che i browser hanno adottato. Sul piano della riservatezza sono equivalenti.",
+  },
+  {
+    q: "Se CineMate sa già interrogare il DoH, perché devo configurare qualcosa?",
+    a: "Perché sono due cose diverse. La casella qui sotto interroga un resolver pubblico e ti dice cosa risponde: è una diagnosi, e serve a distinguere «il sito è spento» da «il nome non si traduce». Non cambia come il browser risolve i nomi quando apre una pagina — quella decisione è del sistema operativo, o del browser se ha il DoH acceso nelle sue impostazioni. Nessuna pagina web può dirottare la propria risoluzione dei nomi, e sarebbe grave se potesse.",
   },
   {
     q: "Cambiare DNS mi rende anonimo?",

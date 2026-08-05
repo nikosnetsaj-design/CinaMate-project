@@ -4,7 +4,7 @@ import { useWebViewer } from "../../store/useWebViewer";
 import { useSettingsSheet } from "../../store/useSettingsSheet";
 import { usePlayerSources } from "../../store/usePlayerSources";
 import { useLibrary } from "../../store/useLibrary";
-import { effectiveUrl, hostLabel, searchUrlsFor, buildQuery } from "../../lib/linkHost";
+import { effectiveUrl, hostLabel, searchUrlsFor, buildQuery, defaultPosition } from "../../lib/linkHost";
 import { searchOnLinkHosts, outcomeMessage } from "../searchOnLinkHost";
 import type { SearchOutcome } from "../searchOnLinkHost";
 import type { Item } from "../../types";
@@ -33,7 +33,17 @@ export function LinkHostPanel({
   const openViewer = useWebViewer((s) => s.open);
   const openSettings = useSettingsSheet((s) => s.open);
   const patchSource = usePlayerSources((s) => s.patch);
+  const source = usePlayerSources((s) => (item ? s.sources[item.id] : undefined));
   const pushToast = useLibrary((s) => s.pushToast);
+
+  // Assente = «usa il valore ricavato»: stagione 1, episodio visti+1. Scritto =
+  // vince. Vedi PlayerSource.searchSeason.
+  const fallback = item ? defaultPosition(item) : { season: 1, episode: 1 };
+  const position = {
+    season: source?.searchSeason ?? fallback.season,
+    episode: source?.searchEpisode ?? fallback.episode,
+  };
+  const overridden = source?.searchSeason !== undefined || source?.searchEpisode !== undefined;
 
   const [retrying, setRetrying] = useState(false);
   const [retryOutcome, setRetryOutcome] = useState<SearchOutcome | null>(null);
@@ -60,7 +70,7 @@ export function LinkHostPanel({
     abortRef.current = controller;
     setRetrying(true);
     setRetryOutcome(null);
-    const result = await searchOnLinkHosts(item, enabled, controller.signal);
+    const result = await searchOnLinkHosts(item, enabled, controller.signal, position);
     if (controller.signal.aborted) return;
     setRetrying(false);
     setRetryOutcome(result);
@@ -92,12 +102,60 @@ export function LinkHostPanel({
         <>
           <p className="pv-dim" style={{ fontSize: "0.8rem", lineHeight: 1.5 }}>
             La domanda per «{item.title}»:{" "}
-            <span className="pv-mono">{buildQuery(item, enabled[0].recipe)}</span>
+            <span className="pv-mono">{buildQuery(item, enabled[0].recipe, position)}</span>
           </p>
+
+          {/*
+            La libreria conta gli episodi come un totale unico, non per
+            stagione: da «visti: 27» non si ricava se sia S02E03 o S03E01, e
+            indovinare quale episodio stai per guardare è il tipo di errore che
+            ti fa partire quello sbagliato. Quindi il valore predefinito è
+            l'unico onesto — S01E{visti+1} — e queste due caselle sono il modo
+            di correggerlo. Senza, i percorsi annidati per stagione non
+            avrebbero mai un numero da mettere dentro.
+          */}
+          {item.kind !== "film" && (
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-end", flexWrap: "wrap" }}>
+              <label className="pv-field" style={{ padding: 0, maxWidth: 110 }}>
+                <span>Stagione</span>
+                <input
+                  type="number"
+                  min={1}
+                  value={position.season}
+                  onChange={(e) =>
+                    patchSource(item.id, { searchSeason: Math.max(1, Number(e.target.value) || 1) })
+                  }
+                />
+              </label>
+              <label className="pv-field" style={{ padding: 0, maxWidth: 110 }}>
+                <span>Episodio</span>
+                <input
+                  type="number"
+                  min={1}
+                  value={position.episode}
+                  onChange={(e) =>
+                    patchSource(item.id, { searchEpisode: Math.max(1, Number(e.target.value) || 1) })
+                  }
+                />
+              </label>
+              {overridden && (
+                <button
+                  type="button"
+                  className="pv-btn-tiny"
+                  onClick={() =>
+                    patchSource(item.id, { searchSeason: undefined, searchEpisode: undefined })
+                  }
+                >
+                  Torna a S{String(fallback.season).padStart(2, "0")}E
+                  {String(fallback.episode).padStart(2, "0")}
+                </button>
+              )}
+            </div>
+          )}
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {enabled.map((host) => {
-              const urls = searchUrlsFor({ ...host, url: effectiveUrl(host) }, item);
+              const urls = searchUrlsFor({ ...host, url: effectiveUrl(host) }, item, position);
               return (
                 <div
                   key={host.id}

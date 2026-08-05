@@ -28,6 +28,24 @@ export const QUERY_RECIPES: { id: QueryRecipe; label: string; hint: string }[] =
   { id: "completo", label: "Tutto", hint: "Breaking Bad 2008 S01E04" },
 ];
 
+/**
+ * Come è fatto il sito: si interroga la sua ricerca, o si costruisce
+ * direttamente l'indirizzo della scheda?
+ *
+ * Sono due strutture diverse e vanno provate diversamente. Un sito con la
+ * ricerca risponde a `/?s=inception+2010`; uno a percorsi diretti pubblica la
+ * scheda a `/film/interstellar-2014/` e una ricerca non ce l'ha proprio. Il
+ * valore predefinito le prova entrambe perché a monte non si sa quale sia, ma
+ * chi conosce il proprio sito può dimezzare i tentativi.
+ */
+export type LayoutFamily = "entrambi" | "ricerca" | "percorso";
+
+export const LAYOUT_FAMILIES: { id: LayoutFamily; label: string; hint: string }[] = [
+  { id: "entrambi", label: "Provali entrambi", hint: "Prima la ricerca del sito, poi i percorsi diretti." },
+  { id: "ricerca", label: "Solo la ricerca", hint: "/?s=… , /search?q=… — il sito ha una casella di ricerca." },
+  { id: "percorso", label: "Solo i percorsi", hint: "/film/titolo-anno/ , /serie/titolo/stagione-2/episodio-5/ — la scheda ha un indirizzo prevedibile." },
+];
+
 export interface LinkHost {
   id: string;
   /** Come lo chiami tu. Serve solo a distinguerlo nell'elenco. */
@@ -40,6 +58,8 @@ export interface LinkHost {
    */
   searchPattern: string;
   recipe: QueryRecipe;
+  /** Quali famiglie di percorsi provare. Assente sui record più vecchi. */
+  layout?: LayoutFamily;
   enabled: boolean;
   addedAt: number;
   /**
@@ -55,22 +75,51 @@ export interface LinkHost {
 // Concatenazione dei metadati
 // ---------------------------------------------------------------------------
 
-// La libreria conta gli episodi visti come un totale unico, non per stagione,
-// quindi non esiste un modo onesto di ricavarne la stagione corrente. `{s}` è
-// un 1 fisso — stessa scelta, e stessa ragione, di `lib/sourceTemplate.ts`.
-const SEASON = 1;
+/**
+ * Quale episodio chiedere al sito.
+ *
+ * La libreria conta gli episodi visti come un totale unico, non per stagione:
+ * `seen: 27` non dice se sia la stagione 2 episodio 3 o la stagione 3 episodio
+ * 1, e nessun calcolo lo ricava senza inventare. Quindi il valore predefinito è
+ * l'unica cosa onesta — stagione 1, episodio `visti + 1` — **ed è
+ * sovrascrivibile**: il pannello Siti del player ha due caselle, e per una
+ * serie oltre la prima stagione basta scriverci dentro.
+ *
+ * Senza questa possibilità i percorsi gerarchici del tipo
+ * `/serie/the-boys/stagione-3/episodio-1/` non sarebbero mai stati
+ * raggiungibili, perché il `3` non c'era da nessuna parte.
+ */
+export interface EpisodePosition {
+  season: number;
+  episode: number;
+}
 
-function episodeOf(item: Item): number {
-  return (item.seen || 0) + 1;
+export function defaultPosition(item: Item): EpisodePosition {
+  return { season: 1, episode: (item.seen || 0) + 1 };
+}
+
+function positionFor(item: Item, override?: Partial<EpisodePosition>): EpisodePosition {
+  const base = defaultPosition(item);
+  return {
+    season: override?.season && override.season > 0 ? Math.floor(override.season) : base.season,
+    episode: override?.episode && override.episode > 0 ? Math.floor(override.episode) : base.episode,
+  };
 }
 
 function pad(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-/** `S01E04`, la forma che quasi ogni sito riconosce. */
-export function episodeTag(item: Item): string {
-  return `S${pad(SEASON)}E${pad(episodeOf(item))}`;
+/** `S02E05`, la forma che quasi ogni sito riconosce. */
+export function episodeTag(item: Item, position?: Partial<EpisodePosition>): string {
+  const { season, episode } = positionFor(item, position);
+  return `S${pad(season)}E${pad(episode)}`;
+}
+
+/** `2x05`, l'altra notazione diffusa. */
+export function episodeTagX(item: Item, position?: Partial<EpisodePosition>): string {
+  const { season, episode } = positionFor(item, position);
+  return `${season}x${pad(episode)}`;
 }
 
 /**
@@ -81,12 +130,16 @@ export function episodeTag(item: Item): string {
  * ricerca che non trova niente, e la ricetta «completo» su un film deve
  * comportarsi come «titolo e anno» invece che sporcare la domanda.
  */
-export function buildQuery(item: Item, recipe: QueryRecipe): string {
+export function buildQuery(
+  item: Item,
+  recipe: QueryRecipe,
+  position?: Partial<EpisodePosition>,
+): string {
   const parts = [item.title.trim()];
   const wantsYear = recipe === "titolo-anno" || recipe === "completo";
   const wantsEpisode = recipe === "titolo-episodio" || recipe === "completo";
   if (wantsYear && item.year) parts.push(String(item.year));
-  if (wantsEpisode && item.kind !== "film") parts.push(episodeTag(item));
+  if (wantsEpisode && item.kind !== "film") parts.push(episodeTag(item, position));
   return parts.filter(Boolean).join(" ");
 }
 
@@ -116,33 +169,47 @@ export const LINK_HOST_TOKENS: TokenDoc[] = [
   { token: "{slug}", label: "Solo il titolo, coi trattini", example: "il-padrino" },
   { token: "{anno}", label: "Anno di uscita", example: "1972" },
   { token: "{tmdb}", label: "Id TMDB, quando il titolo è collegato", example: "238" },
-  { token: "{s}", label: "Stagione — sempre 1: la libreria conta gli episodi, non le stagioni", example: "1" },
-  { token: "{e}", label: "Episodio: il prossimo da vedere", example: "4" },
-  { token: "{ss}", label: "Stagione a due cifre", example: "01" },
-  { token: "{ee}", label: "Episodio a due cifre", example: "04" },
+  { token: "{s}", label: "Stagione — 1, o quella scritta nel pannello Siti", example: "2" },
+  { token: "{e}", label: "Episodio: il prossimo da vedere, o quello scritto", example: "5" },
+  { token: "{ss}", label: "Stagione a due cifre", example: "02" },
+  { token: "{ee}", label: "Episodio a due cifre", example: "05" },
+  { token: "{sxe}", label: "L'altra notazione diffusa", example: "2x05" },
+  { token: "{sNeN}", label: "La notazione compatta", example: "S02E05" },
 ];
 
 /** Riempie un modello di ricerca con i metadati del titolo. */
-export function fillSearchPattern(pattern: string, item: Item, recipe: QueryRecipe): string {
-  const query = buildQuery(item, recipe);
+export function fillSearchPattern(
+  pattern: string,
+  item: Item,
+  recipe: QueryRecipe,
+  position?: Partial<EpisodePosition>,
+): string {
+  const query = buildQuery(item, recipe, position);
+  const { season, episode } = positionFor(item, position);
   let out = pattern;
   for (const [token, encode] of Object.entries(ENCODERS)) {
     // I segnaposto sono letterali con le graffe: `split`/`join` evita di
     // costruire una regex intorno a `{query+}`, dove il `+` andrebbe protetto.
     out = out.split(token).join(encode(query));
   }
-  return out
-    .replace(/\{titolo\}/gi, encodeURIComponent(item.title))
-    .replace(/\{slug\}/gi, slugify(item.title))
-    .replace(/\{anno\}/gi, item.year ? String(item.year) : "")
-    .replace(/\{tmdb\}/gi, item.tmdbId == null ? "" : String(item.tmdbId))
-    .replace(/\{ss\}/gi, pad(SEASON))
-    .replace(/\{ee\}/gi, pad(episodeOf(item)))
-    .replace(/\{s\}/gi, String(SEASON))
-    .replace(/\{e\}/gi, String(episodeOf(item)));
+  return (
+    out
+      .replace(/\{titolo\}/gi, encodeURIComponent(item.title))
+      .replace(/\{slug\}/gi, slugify(item.title))
+      .replace(/\{anno\}/gi, item.year ? String(item.year) : "")
+      .replace(/\{tmdb\}/gi, item.tmdbId == null ? "" : String(item.tmdbId))
+      // I composti prima dei semplici: `{sNeN}` contiene `{s}` come
+      // sottostringa solo se lo si sostituisce nell'ordine sbagliato.
+      .replace(/\{sNeN\}/gi, `S${pad(season)}E${pad(episode)}`)
+      .replace(/\{sxe\}/gi, `${season}x${pad(episode)}`)
+      .replace(/\{ss\}/gi, pad(season))
+      .replace(/\{ee\}/gi, pad(episode))
+      .replace(/\{s\}/gi, String(season))
+      .replace(/\{e\}/gi, String(episode))
+  );
 }
 
-const QUERY_PLACEHOLDER = /\{(query[+-]?|titolo|slug|anno|tmdb|ss|ee|s|e)\}/i;
+const QUERY_PLACEHOLDER = /\{(query[+-]?|titolo|slug|anno|tmdb|sNeN|sxe|ss|ee|s|e)\}/i;
 
 /** Se l'indirizzo dice già dov'è la domanda, o è solo il sito. */
 export function hasQueryPlaceholder(address: string): boolean {
@@ -167,6 +234,41 @@ export const SEARCH_LAYOUTS = [
   "/ricerca?q={query+}",
   "/cerca/{query-}",
   "/cerca?q={query+}",
+];
+
+/**
+ * I percorsi diretti alla scheda, per i siti che non hanno una ricerca da
+ * interrogare ma un indirizzo prevedibile.
+ *
+ * Sono più fragili delle ricerche — un solo carattere di differenza nello slug
+ * e il percorso è un 404, mentre una ricerca perdona — ma quando indovinano
+ * saltano un passaggio intero: la pagina del titolo si apre direttamente, senza
+ * leggere prima quella dei risultati.
+ */
+export const FILM_PATH_LAYOUTS = [
+  "/film/{slug}-{anno}/",
+  "/film/{slug}/",
+  "/movie/{slug}-{anno}/",
+  "/movies/{slug}/",
+  "/{slug}-{anno}/",
+  "/{slug}/",
+];
+
+/**
+ * Gli stessi per qualcosa con episodi, e qui la nidificazione è il punto: un
+ * sito che pubblica per stagione ed episodio ha un percorso a più livelli, e
+ * `{s}`/`{e}` ci vanno dentro. La stagione la scrivi tu nel pannello Siti
+ * quando non è la prima — vedi `EpisodePosition`.
+ */
+export const EPISODE_PATH_LAYOUTS = [
+  "/serie/{slug}/stagione-{s}/episodio-{e}/",
+  "/serie/{slug}/{s}x{ee}/",
+  "/serie/{slug}-{sNeN}/",
+  "/tv/{slug}/season-{s}/episode-{e}/",
+  "/tv/{slug}/{sNeN}/",
+  "/{slug}/stagione-{s}/episodio-{e}/",
+  "/{slug}/{sNeN}/",
+  "/episodio/{slug}-{sxe}/",
 ];
 
 /**
@@ -204,32 +306,53 @@ function isHttpUrl(url: string): boolean {
  * ordine. Un modello scritto da te ne dà uno solo — sai già com'è fatta quella
  * ricerca, provarne altri otto sarebbe rumore. Un indirizzo nudo li dà tutti.
  */
-export function searchUrlsFor(host: LinkHost, item: Item): string[] {
+export function searchUrlsFor(
+  host: LinkHost,
+  item: Item,
+  position?: Partial<EpisodePosition>,
+): string[] {
   const address = host.url.trim();
   if (!address) return [];
 
   if (hasQueryPlaceholder(address)) {
-    const url = fillSearchPattern(withProtocol(address), item, host.recipe);
+    const url = fillSearchPattern(withProtocol(address), item, host.recipe, position);
     return isHttpUrl(url) ? [url] : [];
   }
 
   const root = normalizeSite(address);
   if (!root) return [];
 
-  const layouts = host.searchPattern.trim()
-    ? [host.searchPattern.trim()]
-    : SEARCH_LAYOUTS;
-
   const seen = new Set<string>();
   const out: string[] = [];
-  for (const layout of layouts) {
-    const path = fillSearchPattern(layout, item, host.recipe);
+  for (const layout of layoutsFor(host, item)) {
+    const path = fillSearchPattern(layout, item, host.recipe, position);
     const url = `${root}${path.startsWith("/") ? "" : "/"}${path}`;
     if (!isHttpUrl(url) || seen.has(url)) continue;
     seen.add(url);
     out.push(url);
   }
   return out;
+}
+
+/**
+ * Quali percorsi provare, e in che ordine.
+ *
+ * La ricerca viene prima dei percorsi diretti anche quando si provano entrambi:
+ * perdona gli slug approssimativi, e uno slug approssimativo è la norma appena
+ * un titolo ha un sottotitolo, un numero romano o un accento. I percorsi
+ * diretti sono la seconda mano — più veloci quando indovinano, muti quando no.
+ */
+function layoutsFor(host: LinkHost, item: Item): string[] {
+  if (host.searchPattern.trim()) return [host.searchPattern.trim()];
+  const paths = item.kind === "film" ? FILM_PATH_LAYOUTS : EPISODE_PATH_LAYOUTS;
+  switch (host.layout ?? "entrambi") {
+    case "ricerca":
+      return SEARCH_LAYOUTS;
+    case "percorso":
+      return paths;
+    default:
+      return [...SEARCH_LAYOUTS, ...paths];
+  }
 }
 
 /** L'indirizzo effettivo dell'host: quello nuovo se ne ha traslocato uno. */
@@ -258,7 +381,7 @@ const SAMPLE_SERIES: Pick<Item, "title" | "year" | "tmdbId" | "seen" | "kind"> =
   title: "Breaking Bad",
   year: 2008,
   tmdbId: 1396,
-  seen: 3,
+  seen: 4,
   kind: "serie",
 };
 
