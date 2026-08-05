@@ -264,11 +264,12 @@ disponibili (`{slug}`, `{titolo}`, `{anno}`, `{tmdb}`, `{s}`, `{e}`, `{ss}`,
 3. il titolo compare fra quelli riproducibili in cima alla pagina Player.
 
 Il player prova nell'ordine: l'indirizzo del singolo titolo, poi il suo link
-personale, poi gli indirizzi delle Impostazioni e gli host, e come ultima cosa
-l'indice delle cartelle di quegli stessi indirizzi.
+personale, poi gli indirizzi delle Impostazioni e gli host, poi l'indice delle
+cartelle di quegli stessi indirizzi, e come ultima cosa i **Link Host** — i siti
+su cui cercare, che si aggiungono in Impostazioni.
 
-Quello che non fa, in nessuno di questi passaggi: cercare il titolo altrove. Ogni
-indirizzo provato sta su un server che hai indicato tu.
+Ogni indirizzo provato sta su un server o su un sito che hai indicato tu:
+CineMate non ne contiene nessuno.
 
 Gli altri link personali restano segnalibri normali: solo l'estensione `.m3u8`
 viene interpretata come sorgente video. Senza nessuna sorgente la pagina mostra

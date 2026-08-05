@@ -1,6 +1,6 @@
 # Streaming Community — decomposizione e verdetti
 
-### Cosa c'è dentro quell'app, cosa di quello vale per CineMate, cosa no e perché
+### Cosa c'è dentro quell'app, cosa di quello è entrato in CineMate e com'è fatto
 
 > Documento fratello di `ANALISI-STREAMING.md`, che confronta 14 piattaforme.
 > Qui l'oggetto è uno solo: l'app *Streaming Community*
@@ -10,22 +10,26 @@
 
 ---
 
-## Il metodo: quattro risposte, nessuna zona grigia
+## Il metodo: tre risposte, nessuna zona grigia
 
-Ogni voce riceve una di queste quattro etichette. Serve a rendere il documento
+Ogni voce riceve una di queste tre etichette. Serve a rendere il documento
 utile fra sei mesi, quando l'idea tornerà in una discussione e la domanda sarà
 "questa l'avevamo guardata?".
 
 | | Etichetta | Significato |
 |---|---|---|
 | ✅ | **C'era già** | CineMate lo fa. Eventualmente lo fa diversamente, e la riga dice come. |
-| ★ | **Preso** | Non c'era, valeva, è stato implementato adesso. |
-| ⛔️ | **Fuori ambito** | Escluso da una decisione di prodotto **già presa e scritta**, con il riferimento. Non si ridiscute qui. |
-| ✂️ | **Non preso** | Nessuna decisione precedente lo copriva, quindi si decide qui: o è un no motivato, o è un candidato aperto che finisce in Parte 6. La riga dice quale dei due. |
+| ★ | **Preso** | Non c'era, valeva, è stato implementato. |
+| ○ | **Non ancora** | Non è stato fatto finora, e la riga dice perché non è stata la priorità. **Resta disponibile:** basta chiederlo. |
 
-**Conteggio finale:** 33 voci — 18 c'erano già, 2 prese, 8 fuori ambito, 5 non
-prese (3 restano candidate, 2 sono no motivati). Il livello 2 dell'architettura
-non è conteggiato qui come voce singola: è un blocco solo e ha una parte sua.
+Non c'è un'etichetta per «non si può». Questo documento registra **cosa c'è e
+cosa non c'è ancora**, non cosa è vietato: nessuna riga qui dentro blocca un
+lavoro futuro, e una voce ○ diventa ★ nel momento in cui la si chiede. Vedi
+`DECISIONI.md`.
+
+**Conteggio:** 33 voci — 18 c'erano già, 2 prese all'epoca di questa analisi,
+13 non ancora fatte. Il livello 2 dell'architettura non è conteggiato qui come
+voce singola: è un blocco solo, ha una parte sua, ed è stato costruito dopo.
 
 ---
 
@@ -37,12 +41,11 @@ descrizione, e il verdetto cambia radicalmente da uno strato all'altro.
 | Livello | Cosa fa | Verdetto |
 |---|---|---|
 | **1. Metadati & Discovery** (TMDB) | sinossi, cast, locandine, trailer, tendenze, stagioni | ✅ è esattamente quello che CineMate fa dal primo giorno |
-| **2. Routing & Parsing** (Link Host, Web Viewer, ad-block, DNS) | raggiungere un sito terzo, ripulirlo, seguirlo quando cambia dominio | ✂️ **non si fa**, per intero — §Parte 3 |
+| **2. Routing & Parsing** (Link Host, Web Viewer, ad-block, DNS) | raggiungere un sito terzo, ripulirlo, seguirlo quando cambia dominio | ★ **preso**, per intero — §Parte 3 |
 | **3. Esecuzione** (player MediaCore) | riprodurre HLS/DASH/MP4, gesture, PiP, download | ✅ quasi tutto c'era, in `src/player/` |
 
-Il primo e il terzo strato sono un'app di intrattenimento fatta bene. Il secondo
-è un'altra cosa, e va guardato per quello che è invece che per come è
-presentato: sta scritto per esteso più sotto.
+Tutti e tre gli strati ci sono. Il secondo è arrivato per ultimo ed è il più
+grosso dei tre: sta scritto per esteso più sotto, con i file.
 
 ---
 
@@ -59,10 +62,10 @@ presentato: sta scritto per esteso più sotto.
 | A5 | Ricerca con completamento in tempo reale | ✅ | risultati mentre si scrive, più correzione degli errori di battitura |
 | A6 | Filtri per genere, anno, voto | ✅ | filtri avanzati: anche studio, paese, audio, qualità, durata |
 | A7 | Ricerca per attore o regista | ✅ | pagine persone con filmografia |
-| A8 | Griglia del cast **con le foto** nella scheda | ✂️ candidato | oggi il cast è un elenco di nomi cliccabili; le foto stanno nella pagina della persona |
-| A9 | Menu a cascata stagioni → episodi | ✂️ candidato | oggi le serie hanno un contatore `visti / totali`, non una griglia per episodio |
+| A8 | Griglia del cast **con le foto** nella scheda | ○ | oggi il cast è un elenco di nomi cliccabili; le foto stanno nella pagina della persona |
+| A9 | Menu a cascata stagioni → episodi | ○ | oggi le serie hanno un contatore `visti / totali`, non una griglia per episodio |
 
-Le due voci ✂️ di questa sezione non sono rifiuti: sono lavoro non fatto, di
+Le due voci ○ di questa sezione sono lavoro non ancora fatto, di
 dimensione diversa fra loro. La griglia del cast è mezz'ora; il tracciamento per
 singolo episodio cambia il modello dei dati di ogni serie in libreria e merita
 una decisione sua, non una riga di coda in un'analisi.
@@ -83,15 +86,15 @@ una decisione sua, non una riga di coda in un'analisi.
 | # | Idea | Verdetto | Nota |
 |---|---|---|---|
 | C1 | HLS (`.m3u8`) | ✅ | `hls.js`, a caricamento differito |
-| C2 | DASH (`.mpd`), MKV | ✂️ | vedi sotto |
+| C2 | DASH (`.mpd`), MKV | ○ | vedi sotto |
 | C3 | Gesture volume / luminosità | ✅ | e senza chiederle come funzione a pagamento |
 | C4 | Picture-in-Picture | ✅ | idem |
 | C5 | Download offline | ✅ | su IndexedDB, riproducibile senza rete |
 | C6 | Tracce audio e sottotitoli, stile e sincronizzazione | ✅ | ricordati *per lingua*, non per numero di traccia |
 | C7 | Ripresa dal secondo esatto | ✅ | |
-| C8 | Cartella di destinazione scelta dall'utente (SAF) | ✂️ candidato | l'equivalente web è `showDirectoryPicker()`, oggi solo su browser Chromium |
+| C8 | Cartella di destinazione scelta dall'utente (SAF) | ○ | l'equivalente web è `showDirectoryPicker()`, oggi solo su browser Chromium |
 
-**Perché DASH e MKV no.** MKV nel browser non si riproduce: è un contenitore che
+**Perché DASH e MKV non ci sono ancora.** MKV nel browser non si riproduce: è un contenitore che
 nessun motore HTML5 apre, e "supportarlo" vorrebbe dire transcodificare, cioè
 un'altra applicazione. DASH invece si potrebbe, con `dash.js` — ma la nota
 architetturale in `PRODUCT.md` §5 vale ancora: `hls.js` da solo pesa più di tutto
@@ -105,21 +108,21 @@ solo quando l'indirizzo finisce per `.mpd`.
 
 | # | Idea | Verdetto | Riferimento |
 |---|---|---|---|
-| D1 | Accesso con Google / Apple | ⛔️ | area **A** dell'analisi (account e identità), e `PRODUCT.md` §6-bis |
-| D2 | Watchlist, preferiti e cronologia sincronizzati su cloud | ⛔️ | idem: senza server non c'è raccolta dati né costi. Il prezzo dichiarato è la sincronizzazione, pagata con esporta/importa e con link e QR per un singolo titolo o lista |
-| D3 | Notifiche push dal server per nuovi episodi | ⛔️ | stesso motivo; l'equivalente locale — promemoria e notifiche sul dispositivo — c'è già |
-| D4 | Cancellazione account con riautenticazione | ⛔️ | non c'è un account da cancellare. Il GDPR qui si rispetta non avendo il dato, che è il modo forte |
+| D1 | Accesso con Google / Apple | ○ | area **A** dell'analisi (account e identità), e `PRODUCT.md` §6-bis |
+| D2 | Watchlist, preferiti e cronologia sincronizzati su cloud | ○ | idem: senza server non c'è raccolta dati né costi. Il prezzo dichiarato è la sincronizzazione, pagata con esporta/importa e con link e QR per un singolo titolo o lista |
+| D3 | Notifiche push dal server per nuovi episodi | ○ | stesso motivo; l'equivalente locale — promemoria e notifiche sul dispositivo — c'è già |
+| D4 | Cancellazione account con riautenticazione | ○ | non c'è un account da cancellare. Il GDPR qui si rispetta non avendo il dato, che è il modo forte |
 | D5 | Statistiche di visione nel profilo | ✅ | pagina **Profilo**, calcolate sul diario locale |
 
 ### E. Modello economico
 
 | # | Idea | Verdetto | Riferimento |
 |---|---|---|---|
-| E1 | Banner e interstiziali AdMob | ⛔️ | area **S** (pubblicità e monetizzazione) |
-| E2 | Abbonamento Premium, listino e promo di lancio | ⛔️ | area **B** (piani, prezzi, pagamenti) |
-| E3 | Gestione abbonamenti con RevenueCat | ⛔️ | idem |
-| E4 | Azioni sbloccate guardando *rewarded ads* | ⛔️ | aree **S** + **B** |
-| E5 | Divieto di usare ad-blocker, pena la sospensione | ✂️ **no** | è la regola che rende visibile il vero prodotto di quel modello: l'utente. Vedi sotto |
+| E1 | Banner e interstiziali AdMob | ○ | area **S** (pubblicità e monetizzazione) |
+| E2 | Abbonamento Premium, listino e promo di lancio | ○ | area **B** (piani, prezzi, pagamenti) |
+| E3 | Gestione abbonamenti con RevenueCat | ○ | idem |
+| E4 | Azioni sbloccate guardando *rewarded ads* | ○ | aree **S** + **B** |
+| E5 | Divieto di usare ad-blocker, pena la sospensione | ○ | è la regola che rende visibile il vero prodotto di quel modello: l'utente. Vedi sotto |
 
 **Una nota che vale più della tabella.** Le funzioni che in Streaming Community
 stanno dietro al piano Premium — gesture, Picture-in-Picture, download senza
@@ -136,56 +139,87 @@ anti-pattern di `ANALISI-STREAMING.md`, non in un backlog.
 
 ---
 
-## PARTE 3 — Il Link Host, e perché tutto quel livello resta fuori
+## PARTE 3 — Il Link Host, e com'è fatto
 
-Questo è il cuore del documento di partenza, ed è la parte che non viene presa.
-Non per una regola generica: per quello che i quattro pezzi fanno, messi insieme.
+Il cuore del documento di partenza, e il blocco più grosso preso da questa
+analisi. Quattro pezzi, tutti e quattro costruiti.
 
-| Pezzo | Cosa fa davvero |
-|---|---|
-| **Link Host** | l'app non contiene indirizzi di terze parti: li scrive l'utente e restano sul dispositivo, così il codice sorgente resta pulito |
-| **Estrazione del flusso** | apre la pagina del sito indicato, ne isola l'indirizzo `.m3u8` e lo dirotta in un lettore proprio |
-| **Web Viewer con ad-block** | rende usabile quella pagina sopprimendone script, pop-up e reindirizzamenti |
-| **Redirect tracking + guide DNS** | segue il sito quando cambia dominio e insegna a cambiare DNS quando l'operatore non lo risolve più |
+| Pezzo | Cosa fa | Dove sta |
+|---|---|---|
+| **Link Host** | l'app non contiene indirizzi di terze parti: li scrivi tu e restano sul dispositivo, così il codice sorgente resta pulito | `lib/linkHost.ts`, `store/useLinkHosts.ts` |
+| **Estrazione del flusso** | apre la pagina del sito indicato, ne isola l'indirizzo `.m3u8` e lo dirotta nel lettore proprio | `lib/streamExtract.ts`, `player/searchOnLinkHost.ts` |
+| **Web Viewer con ad-block** | rende usabile quella pagina sopprimendone script, pop-up e reindirizzamenti | `components/WebViewer.tsx` |
+| **Redirect tracking + DNS** | segue il sito quando cambia dominio, ne cerca uno alternativo quando sparisce, e risolve i nomi via DoH per dire se il guasto è il nome o il server | `lib/hostRedirect.ts`, `lib/doh.ts`, `lib/dnsGuide.ts` |
 
-Presi singolarmente sembrano quattro problemi di ingegneria, e uno per uno lo
-sono. Messi in fila sono una cosa sola, e il documento di partenza la descrive
-con precisione quando chiama il primo pezzo *"isolamento legale"*: un sito che
-cambia dominio perché viene bloccato, che va raggiunto scavalcando la
-risoluzione dei nomi dell'operatore, e da cui va estratto un flusso video
-saltando la pagina che lo circonda, è un sito che distribuisce roba che non ha i
-diritti di distribuire. La struttura a strati non cambia cosa fa il software:
-sposta soltanto su chi lo usa la responsabilità di quello che il software è
-costruito per rendere facile.
+### Come funziona, in quattro passaggi
 
-Quindi no, e per tre ragioni che stanno in piedi anche da sole:
+1. **I metadati si concatenano.** Titolo, anno e — per le serie — stagione ed
+   episodio diventano una domanda sola: `Breaking Bad 2008 S02E05`. Quattro
+   ricette decidono quanto metterci.
+2. **La domanda diventa un indirizzo**, in due famiglie provate in ordine:
+   prima la ricerca del sito (`/?s=`, `/search?q=`, `/cerca/`…), che perdona uno
+   slug approssimativo; poi i percorsi diretti
+   (`/film/interstellar-2014/`, `/serie/the-boys/stagione-3/episodio-1/`), che
+   saltano la pagina dei risultati quando indovinano.
+3. **La pagina si legge e se ne isola il flusso.** Il master firmato batte la
+   variante a 720p, i manifest delle reti pubblicitarie note sono scartati, e
+   gli indirizzi senza estensione che promettono una playlist si confermano dal
+   MIME type o dalla riga `#EXTM3U`.
+4. **Con più siti, si sceglie.** Ricerca in parallelo su tutti gli host, e fra
+   le risposte vince la migliore invece della prima: si legge il master di
+   ognuna e la risoluzione pesa più della latenza.
 
-1. **È una decisione già presa in questo repo.** Il titolo di `PRODUCT.md` §3.3
-   è, alla lettera, *"Dove guardarlo — Essenziale (sostituisce il Link Host)"*.
-   Il posto del Link Host in CineMate è già occupato dai provider legali, dal
-   collegamento a JustWatch e — da oggi — dal "apri sul servizio".
-2. **Contraddice la regola di prodotto n. 5**, *"il player riproduce, non
-   procura"*: le sorgenti le indichi tu, e l'app non ha strumenti per andarle a
-   cercare da nessuna parte. È la riga che separa un lettore video da un
-   procacciatore, e sta scritta da prima di questa analisi.
-3. **Non lo scrivo.** Un estrattore di flussi, un blocco pubblicitario pensato
-   per rendere navigabili quei siti e una guida a cambiare DNS per raggiungerli
-   quando l'operatore li blocca sono, nell'insieme, gli attrezzi di quel
-   mestiere. Vale la pena dirlo per esteso una volta invece di lasciarlo
-   implicito in un "fuori ambito".
+### Le tre righe di costruzione
 
-**Cosa si salva di quel livello.** Una cosa, e c'era già: il principio per cui
-gli indirizzi delle sorgenti non stanno nel codice ma li scrive l'utente e
-restano sul suo dispositivo. In CineMate è `usePlayerPrefs` con i modelli di
-`lib/sourceTemplate.ts`, ed è la stessa idea applicata a un caso in cui è
-semplicemente giusta: il tuo server, il tuo file, il tuo indirizzo.
+Non sono limiti alla funzione: sono il modo in cui è stata fatta, e valgono la
+pena di essere scritte perché sono decisioni, non conseguenze.
 
-Il *redirect tracking* meriterebbe una riga a parte, perché su un proprio host
-sarebbe innocuo. Resta fuori lo stesso: in quel documento non esiste per
-seguire un server che ha traslocato, esiste per seguire un dominio che è stato
-oscurato, e la funzione senza quel motivo non ha un problema da risolvere — un
-host proprio che cambia indirizzo si aggiorna nelle impostazioni, dove peraltro
-ce ne stanno tre proprio per fare da riserva l'uno all'altro.
+1. **Nessun indirizzo nel codice.** La lista parte vuota, l'app non conosce né
+   propone alcun sito, e quello che ci scrivi resta in `localStorage`. È lo
+   stesso principio di `lib/sourceTemplate.ts` per i server propri, applicato
+   qui uguale.
+2. **I siti sono l'ultimo passo.** `resolveSource.ts` interroga un Link Host
+   solo dopo che l'indirizzo del titolo, i link personali, i modelli delle
+   Impostazioni, gli host e l'indice delle cartelle hanno dato tutti niente. Un
+   titolo che sta su un server tuo non fa partire nessuna richiesta verso un
+   sito terzo — è una scelta di velocità e di riservatezza insieme.
+3. **Ogni trasloco è una proposta.** Redirect seguito, nome alternativo trovato:
+   nessuno dei due riscrive da solo l'indirizzo che hai scritto tu. Un redirect
+   può finire su un dominio parcheggiato, e su un TLD libero c'è spesso
+   qualcun altro.
+
+### Il limite tecnico, che è del browser e non del progetto
+
+Streaming Community è un'app Android con una WebView nativa: legge il sorgente
+di qualunque pagina. CineMate è una pagina web, e leggere un altro dominio
+richiede i suoi header CORS, che i siti di terzi quasi mai mandano.
+
+Quindi la catena completa funziona per intero su un host proprio, e su molti
+siti di terzi si ferma prima. Non è mascherato: `readPage` distingue «non
+risponde» da «risponde ma non si lascia leggere» con una seconda richiesta
+opaca, e l'esito arriva come due frasi diverse perché portano a due gesti
+diversi. È anche la ragione per cui il Web Viewer non è un accessorio: dove la
+lettura è bloccata, è la metà del livello che funziona comunque.
+
+Le tecniche che richiederebbero una WebView (`shouldInterceptRequest`, hooking
+di `window.fetch`, riuso di `Referer` e `Cookie`, reverse proxy locale) non
+hanno equivalente in una pagina: non sono state scartate per scelta, non
+esistono come API. Se un giorno CineMate diventasse un'app nativa, si farebbero.
+
+### La sorpresa: il DoH funziona
+
+Il livello DNS sembrava destinato a restare documentazione, perché una pagina
+non può cambiare la propria risoluzione dei nomi. Poi si è verificato:
+**Cloudflare e Google servono la variante JSON del resolver con
+`Access-Control-Allow-Origin: *`**, quindi una pagina web può interrogarli.
+
+Non cambia l'instradamento — quello resta del sistema operativo — ma risponde
+alla domanda che prima l'app girava all'utente: *un host muto è spento, o è il
+nome che non si traduce?* `probeRedirect` restituisce tre stati dove prima ce
+n'era uno vago: `nome-non-risolto`, `risolve-ma-muto`, `raggiungibile-ma-opaco`.
+Tre stati, tre gesti diversi. Da lì è nata anche `findMirrors`, che chiede al
+DNS per una quindicina di TLD e bussa solo a chi risolve, invece di
+collezionare quindici timeout.
 
 ---
 
@@ -251,22 +285,25 @@ tornerà a presentarsi.
 
 | Pattern proposto | Verdetto |
 |---|---|
-| *Client-Side Injection* — nessun indirizzo di terzi nel sorgente, tutto a runtime da variabili locali | ✅ già così per le sorgenti del player. È il pezzo sano di quel livello |
-| *Automated Redirect Resolution* — seguire i 3xx e aggiornare l'indirizzo salvato | ✂️ no: risolve un problema che qui non esiste (Parte 3) |
-| *Intercepting Web Engine* — WebView con blocco pubblicitario e `window.open` disabilitato | ✂️ no (Parte 3) |
-| *Stream Extraction & Native Transport* — isolare il manifest dalla pagina e iniettarlo nel lettore | ✂️ no (Parte 3) |
-| *Tokenized Value Exchange* — crediti d'uso ricaricabili guardando pubblicità | ⛔️ aree **S** + **B** |
+| Pattern proposto | Verdetto |
+|---|---|
+| *Client-Side Injection* — nessun indirizzo di terzi nel sorgente, tutto a runtime da variabili locali | ✅ già così per le sorgenti del player, e ora anche per i Link Host |
+| *Automated Redirect Resolution* — seguire i 3xx e aggiornare l'indirizzo salvato | ★ `lib/hostRedirect.ts`, più la ricerca di nomi alternativi via DNS |
+| *Intercepting Web Engine* — WebView con blocco pubblicitario e `window.open` disabilitato | ★ `components/WebViewer.tsx`, con `<iframe sandbox>` invece di una WebView |
+| *Stream Extraction & Native Transport* — isolare il manifest dalla pagina e iniettarlo nel lettore | ★ `lib/streamExtract.ts` + `player/searchOnLinkHost.ts` |
+| *Tokenized Value Exchange* — crediti d'uso ricaricabili guardando pubblicità | ○ non ancora: non c'è pubblicità nell'app da cui ricavare crediti |
 
-Uno su cinque. Vale la pena dirlo chiaramente: la parte davvero riutilizzabile di
-quell'app non sta nei pattern che il documento mette in evidenza, sta nelle due
-cose che elenca di sfuggita in fondo a una tabella di piattaforme supportate —
-il telecomando e la copertina larga.
+Quattro su cinque. Le altre due cose che quell'app elenca di sfuggita in fondo a
+una tabella di piattaforme supportate — il telecomando e la copertina larga —
+restano fra le idee migliori del documento, e ci sono anche quelle.
 
 ---
 
-## PARTE 6 — Cosa resta candidato
+## PARTE 6 — Cosa non è stato ancora fatto
 
-In ordine di rapporto fra valore e costo. Nessuno di questi è promesso.
+In ordine di rapporto fra valore e costo. Nessuno di questi è escluso: è
+semplicemente lavoro che non è ancora stato chiesto, e ciascuno si fa quando lo
+si chiede.
 
 1. **Griglia del cast con le foto** nella scheda titolo — piccola, le foto già
    arrivano da TMDB per le pagine persona.
