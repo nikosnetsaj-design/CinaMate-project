@@ -63,15 +63,6 @@ src/
                 activity, continueWatching, achievements, search, filters,
                 recommend, goals, parental, accents, share, deepLinks,
                 spatialNav, anthropic, backup, errorLog, selfTest)
-                  linkHost.ts       i siti su cui cercare: concatenazione dei
-                                    metadati e costruzione della ricerca
-                  streamExtract.ts  lettura di una pagina, isolamento dell'.m3u8
-                                    e scelta del risultato che è il titolo
-                  hostRedirect.ts   dove è finito un indirizzo che ha traslocato,
-                                    e i nomi alternativi quando è sparito
-                  dnsGuide.ts       riferimento DoH/DoT e resolver pubblici
-                  doh.ts            risoluzione via DoH dal browser, come
-                                    diagnosi: è il nome o è il server?
   player/       il player, autonomo dal resto dell'app:
                   hooks/      motore video (hls.js), gesture, sottotitoli,
                               maratona, download, watch party, cast,
@@ -89,8 +80,6 @@ src/
                   SourcePanel.tsx       configurazione per titolo (stream,
                                         sottotitoli, marker, anteprime)
                   resolveSource.ts      quale indirizzo usare, provandoli in ordine
-                  searchOnLinkHost.ts   la ricerca sui siti indicati, ultimo
-                                        passo di resolveSource
                   clock.ts              minutaggi mm:ss
 ```
 
@@ -101,11 +90,10 @@ di CineMate; `player/components/` e `player/hooks/` non ne sanno nulla — l'uni
 eccezione è `useFocusTrap`, che è un'utility generica per i modali usata da tutti
 i fogli dell'app e che riscrivere qui sarebbe peggio che condividere.
 
-Gli store lato CineMate sono `usePlayerSources` (le sorgenti per titolo),
+Gli store lato CineMate sono `usePlayerSources` (le sorgenti per titolo) e
 `usePlayerPrefs` (modelli di indirizzo, risparmio dati, relay della Watch Party,
-nome nella stanza) e `useLinkHosts` (i siti su cui cercare); i modelli si
-compilano in `lib/sourceTemplate.ts`, le ricerche in `lib/linkHost.ts`.
-Tutti e tre, più la lista degli host, finiscono nell'**esporta/importa**: sono dati
+nome nella stanza); i modelli si compilano in `lib/sourceTemplate.ts`.
+Entrambi, più la lista degli host, finiscono nell'**esporta/importa**: sono dati
 scritti a mano che nessuno può ricostruire, quindi seguono la stessa regola della
 libreria. Le misure del player (posizioni di ripresa, ping storici) restano fuori
 perché si rifanno da sole, e i ping di un altro dispositivo descriverebbero una
@@ -276,12 +264,11 @@ disponibili (`{slug}`, `{titolo}`, `{anno}`, `{tmdb}`, `{s}`, `{e}`, `{ss}`,
 3. il titolo compare fra quelli riproducibili in cima alla pagina Player.
 
 Il player prova nell'ordine: l'indirizzo del singolo titolo, poi il suo link
-personale, poi gli indirizzi delle Impostazioni e gli host, poi l'indice delle
-cartelle di quegli stessi indirizzi, e come ultima cosa i **Link Host** — i siti
-che hai indicato tu, se ne hai indicati.
+personale, poi gli indirizzi delle Impostazioni e gli host, e come ultima cosa
+l'indice delle cartelle di quegli stessi indirizzi.
 
-Ogni indirizzo provato sta su un server o su un sito che hai scritto tu.
-CineMate non ne contiene nessuno.
+Quello che non fa, in nessuno di questi passaggi: cercare il titolo altrove. Ogni
+indirizzo provato sta su un server che hai indicato tu.
 
 Gli altri link personali restano segnalibri normali: solo l'estensione `.m3u8`
 viene interpretata come sorgente video. Senza nessuna sorgente la pagina mostra
@@ -313,163 +300,6 @@ solo queste, ed è documentato cosa servirebbe:
 
 Le **tracce audio** non vanno configurate: sono dichiarate dal manifest e hls.js
 le trova da sé.
-
-## Link Host: cercare su un sito invece che su una cartella
-
-Un **Link Host** è l'indirizzo di un *sito* su cui cercare, invece
-dell'indirizzo di una *cartella* da cui leggere. È l'altra metà della domanda
-"dove sta questo titolo": gli indirizzi delle sorgenti indovinano un percorso,
-un Link Host pone una domanda.
-
-Si aggiunge in **Impostazioni → Link Host**. Basta l'indirizzo nudo:
-
-```
-https://sito.tld
-```
-
-Da lì in avanti, quando premi **Guarda** su un titolo che i tuoi indirizzi non
-hanno:
-
-1. **I metadati vengono concatenati.** Titolo, anno e — per le serie — stagione
-   ed episodio diventano una domanda sola: `Breaking Bad 2008 S02E05`. Quanto
-   metterci lo decidi tu, con quattro ricette (solo il titolo, titolo e anno,
-   titolo ed episodio, tutto).
-2. **La domanda diventa un indirizzo**, in due famiglie che si provano in
-   ordine. Prima la **ricerca del sito** — `/?s=`, `/search?q=`, `/cerca/`… —
-   che perdona uno slug approssimativo; poi i **percorsi diretti**, che saltano
-   la pagina dei risultati quando indovinano: `/film/interstellar-2014/`,
-   `/serie/the-boys/stagione-3/episodio-1/`. Se conosci il tuo sito puoi
-   dichiarare quale delle due usare, o scrivere il percorso esatto
-   (`/find?title={query-}`) ed è l'unico provato. I segnaposto sono elencati
-   nelle Impostazioni: `{query}`, `{query+}` e `{query-}` sono la stessa domanda
-   in tre codifiche, perché i siti non sono d'accordo su come si scrive uno
-   spazio; `{sNeN}` e `{sxe}` sono `S02E05` e `2x05`.
-3. **La pagina che risponde viene letta** e se ne isola l'`.m3u8`, che finisce
-   nel lettore senza farti vedere la pagina. Fra più manifest vince il master
-   firmato, non la variante a 720p; quelli serviti da una rete pubblicitaria
-   nota vengono scartati del tutto, così un pre-roll non finisce mai nel
-   lettore. Se nella pagina non c'è nessun `.m3u8` esplicito, gli indirizzi che
-   *promettono* una playlist (`/getlink?id=…&sig=…`) vengono letti per
-   confermarli dal MIME type o dalla riga `#EXTM3U`.
-
-**Quale episodio.** La libreria conta gli episodi visti come un totale unico,
-non per stagione: da «visti: 27» non si ricava se sia S02E03 o S03E01, e
-indovinare è il tipo di errore che ti fa partire l'episodio sbagliato. Quindi il
-valore predefinito è l'unico onesto — stagione 1, episodio `visti + 1` — e il
-pannello **Siti** del player ha due caselle per correggerlo. Sono anche ciò che
-rende raggiungibili i percorsi annidati per stagione.
-
-**Più siti insieme.** Con più Link Host la ricerca parte su tutti in parallelo,
-non uno dopo l'altro: in fila, tre siti lenti sono tre timeout sommati. E fra
-più risposte non vince la più veloce ma la migliore — si legge il master di
-ognuna e la risoluzione pesa più della latenza, perché un titolo si apre una
-volta e si guarda per due ore.
-
-### Il Web Viewer, e perché serve
-
-Quando la catena non arriva in fondo c'è il **Web Viewer**: una finestra sul
-sito con gli script spenti. Non è una lista di domini pubblicitari da
-aggiornare — è l'attributo `sandbox` di un `<iframe>`, che parte da zero
-permessi. Senza script non c'è quasi niente di quello che rende quelle pagine
-insopportabili: gli overlay, i pop-under, il redirect al terzo clic. Tre
-permessi non si concedono a nessun livello — `allow-popups`,
-`allow-top-navigation`, `allow-modals` — perché sono esattamente i tre
-comportamenti che il viewer esiste per togliere.
-
-Tre livelli: **Rigido** (niente script né moduli), **Normale** (i moduli
-funzionano, per i siti la cui ricerca è un form), **Minimo** (gli script girano,
-per i player che si caricano da JavaScript). Da dentro, il pulsante **Estrai il
-flusso** rilegge la pagina corrente e, se ci trova un manifest, lo collega al
-titolo e apre il lettore.
-
-### Il limite, detto una volta
-
-CineMate è una pagina web, non un'app nativa. **Leggere il sorgente di una
-pagina di un altro dominio richiede che quel dominio mandi gli header CORS**, e
-i siti di terzi quasi mai li mandano. Quindi:
-
-| Passo | Su un host tuo | Su un sito di terzi |
-|---|---|---|
-| Costruire la ricerca | ✅ sempre | ✅ sempre |
-| Leggere i risultati ed estrarre l'`.m3u8` | ✅ se manda CORS | ⛔️ quasi sempre bloccato dal browser |
-| Vedere la pagina nel Web Viewer | ✅ | ✅ salvo `X-Frame-Options` |
-| Riprodurre l'`.m3u8` trovato | ✅ se manda CORS | ⛔️ stesso muro |
-
-Non è un difetto da correggere: è come funziona il browser, e il codice lo
-riporta invece di mascherarlo. Un fallimento dice *quale* dei due è —
-"non l'ho trovato" o "il browser non mi ha lasciato leggere" — perché solo il
-secondo si risolve aprendo il Web Viewer.
-
-#### Cosa richiederebbe una WebView nativa
-
-L'architettura di riferimento di queste funzioni è quella di un'app Android con
-una WebView, che ha permessi che una pagina web non ha. Vale la pena elencare
-cosa resta di là dal muro, invece di lasciarlo scoprire:
-
-| Tecnica dell'app nativa | Perché non si fa qui | Cosa si fa invece |
-|---|---|---|
-| `shouldInterceptRequest` per vedere ogni risorsa che la pagina chiede | Un `<iframe>` di un altro dominio non espone le sue richieste alla pagina che lo contiene, e non esiste API per intercettarle | Si legge il sorgente con `fetch` quando CORS lo permette, e si sniffa il `#EXTM3U` sui candidati senza estensione |
-| Hooking di `window.fetch` e `XMLHttpRequest.prototype.open` dentro la pagina | Iniettare script in un documento cross-origin è precisamente ciò che la same-origin policy vieta | — |
-| Riuso di `Referer`, `Origin`, `User-Agent`, `Cookie` nelle richieste del player | Sono *forbidden headers*: il browser li gestisce e `fetch` rifiuta di impostarli | Un manifest che richiede quegli header non si riproduce, e il player lo dice |
-| Ad-block a livello di rete su blacklist di domini | Nessun modo di filtrare le richieste di un iframe cross-origin | La sandbox toglie gli script, che è ciò che genera quelle richieste; la blacklist si applica all'*estrazione*, così un pre-roll non finisce mai nel lettore |
-| `shouldOverrideUrlLoading` per tenere la navigazione sul dominio | Non si può osservare né bloccare la navigazione interna di un iframe cross-origin | `allow-top-navigation` resta negato: la pagina non può portarsi via l'app, anche se dentro il riquadro può andare dove vuole |
-| Reverse proxy locale su `127.0.0.1` per iniettare header e decifrare AES-128 | Non c'è un server locale in una pagina web | hls.js decifra da sé l'AES-128 quando la chiave è raggiungibile; per gli header non c'è rimedio |
-| Resolver DoH usato per *tutte* le connessioni dell'app | Una pagina non può dirottare la propria risoluzione dei nomi, ed è giusto così | Il DoH si interroga come **diagnosi** — vedi sotto — non come instradamento |
-
-### Quando un sito cambia indirizzo
-
-**Controlla l'indirizzo** segue i redirect e, se il dominio finale è diverso da
-quello salvato, lo propone. *Propone*: non riscrive niente da solo. Un redirect
-può portare a una pagina di cortesia o a un dominio parcheggiato, e cambiare in
-silenzio un indirizzo che hai scritto tu sarebbe sbagliato anche quando indovina.
-
-Quando invece non risponde proprio niente, **Cerca un nome alternativo** prova
-lo stesso nome sotto una quindicina di estensioni diverse. Prima chiede al DNS e
-bussa solo a chi ha risposto: quindici domini inesistenti sarebbero quindici
-timeout in fila. Anche qui il risultato è una lista da guardare, non una
-sostituzione automatica — che `esempio.net` esista non dice chi ci sia dietro.
-
-La stessa verifica gira nella pagina **Diagnostica**, per tutti gli host insieme.
-
-### La scheda DNS, e il resolver che funziona davvero
-
-**Impostazioni → Quando un indirizzo non si risolve** apre un riferimento su DoH
-(DNS su HTTPS, porta 443) e DoT (DNS su TLS, porta 853): cosa sono, la tabella
-dei resolver pubblici — Cloudflare, Google, Quad9, AdGuard, OpenDNS,
-CleanBrowsing, con IPv4, IPv6, endpoint DoH e hostname DoT — e dove si scrivono
-su Android, iOS, Windows, macOS, Firefox, Chrome e sul router.
-
-La parte che non è solo documentazione: **Cloudflare e Google servono il
-resolver anche in JSON su HTTPS, con `Access-Control-Allow-Origin: *`**. Una
-pagina web può interrogarli, e CineMate lo fa. Serve a rispondere a una domanda
-che prima l'app poteva solo girare all'utente:
-
-> Questo host che non risponde è spento, o è il *nome* che non diventa un
-> indirizzo?
-
-Sono due guasti con due rimedi diversi. Ora l'app li distingue: «Il nome non
-esiste» (nemmeno per un resolver pubblico — non è il tuo DNS, è il dominio),
-«Il nome esiste, il server non risponde» (il dominio c'è, dietro non c'è
-nessuno), «Risponde ma non si lascia leggere» (CORS). La scheda ha anche una
-casella per provare un nome a mano e confrontare cosa rispondono i due resolver.
-
-**Cosa questo non fa**, ed è scritto anche nella scheda: non cambia come il
-browser risolve i nomi. Quella decisione è del sistema operativo, o del browser
-se ha il DoH acceso nelle sue impostazioni; nessuna pagina web può dirottare la
-propria risoluzione dei nomi, e sarebbe grave se potesse. Quello che l'app fa è
-una **diagnosi**, non un instradamento.
-
-Cambiare resolver sposta **chi vede le tue richieste di risoluzione**, non ti
-rende anonimo e non cambia cosa è lecito guardare. I blocchi che non passano dal
-DNS — per IP, per rotta, applicati dal servizio stesso — restano dove sono.
-
-### Dove finiscono i tuoi indirizzi
-
-Da nessuna parte. La lista parte vuota, CineMate non conosce e non propone
-nessun sito, e quello che ci scrivi resta in `localStorage` su questo
-dispositivo. Entra nel backup insieme al resto della configurazione, per lo
-stesso motivo per cui ci entrano le altre cose che hai digitato: nessun altro
-può ricostruirle. Cosa ci metti, e cosa ne fai, è una tua responsabilità.
 
 ### Comandi da tastiera
 

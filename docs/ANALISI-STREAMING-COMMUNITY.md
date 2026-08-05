@@ -25,10 +25,7 @@ utile fra sei mesi, quando l'idea tornerà in una discussione e la domanda sarà
 
 **Conteggio finale:** 33 voci — 18 c'erano già, 2 prese, 8 fuori ambito, 5 non
 prese (3 restano candidate, 2 sono no motivati). Il livello 2 dell'architettura
-non è conteggiato qui come voce singola: è un blocco solo e ha una parte sua —
-ed è l'unica voce del documento il cui verdetto è stato **ribaltato dopo**, da
-"non si fa" a "preso". La Parte 3 spiega com'è andata e cosa è cambiato nel
-costruirlo.
+non è conteggiato qui come voce singola: è un blocco solo e ha una parte sua.
 
 ---
 
@@ -40,7 +37,7 @@ descrizione, e il verdetto cambia radicalmente da uno strato all'altro.
 | Livello | Cosa fa | Verdetto |
 |---|---|---|
 | **1. Metadati & Discovery** (TMDB) | sinossi, cast, locandine, trailer, tendenze, stagioni | ✅ è esattamente quello che CineMate fa dal primo giorno |
-| **2. Routing & Parsing** (Link Host, Web Viewer, ad-block, DNS) | raggiungere un sito terzo, ripulirlo, seguirlo quando cambia dominio | ★ **preso**, per intero, dopo una decisione ribaltata — §Parte 3 |
+| **2. Routing & Parsing** (Link Host, Web Viewer, ad-block, DNS) | raggiungere un sito terzo, ripulirlo, seguirlo quando cambia dominio | ✂️ **non si fa**, per intero — §Parte 3 |
 | **3. Esecuzione** (player MediaCore) | riprodurre HLS/DASH/MP4, gesture, PiP, download | ✅ quasi tutto c'era, in `src/player/` |
 
 Il primo e il terzo strato sono un'app di intrattenimento fatta bene. Il secondo
@@ -139,25 +136,17 @@ anti-pattern di `ANALISI-STREAMING.md`, non in un backlog.
 
 ---
 
-## PARTE 3 — Il Link Host
+## PARTE 3 — Il Link Host, e perché tutto quel livello resta fuori
 
-> **Revisione.** Questa parte diceva *"non si fa, per intero"*. La decisione è
-> stata ribaltata dal proprietario di prodotto, il livello è stato costruito, e
-> il documento è riscritto invece che contraddetto da un file che dice il
-> contrario. L'argomento originale resta qui sotto — cancellarlo avrebbe reso
-> il documento inutile fra sei mesi, che è esattamente il motivo per cui è
-> stato scritto.
+Questo è il cuore del documento di partenza, ed è la parte che non viene presa.
+Non per una regola generica: per quello che i quattro pezzi fanno, messi insieme.
 
-I quattro pezzi, e cosa fanno davvero:
-
-| Pezzo | Cosa fa davvero | Dove sta ora |
-|---|---|---|
-| **Link Host** | l'app non contiene indirizzi di terze parti: li scrive l'utente e restano sul dispositivo, così il codice sorgente resta pulito | `lib/linkHost.ts`, `store/useLinkHosts.ts` |
-| **Estrazione del flusso** | apre la pagina del sito indicato, ne isola l'indirizzo `.m3u8` e lo dirotta in un lettore proprio | `lib/streamExtract.ts`, `player/searchOnLinkHost.ts` |
-| **Web Viewer con ad-block** | rende usabile quella pagina sopprimendone script, pop-up e reindirizzamenti | `components/WebViewer.tsx` |
-| **Redirect tracking + scheda DNS** | segue il sito quando cambia dominio; spiega DoH e DoT quando un nome non si risolve | `lib/hostRedirect.ts`, `lib/dnsGuide.ts` |
-
-### L'argomento contrario, che resta valido come argomento
+| Pezzo | Cosa fa davvero |
+|---|---|
+| **Link Host** | l'app non contiene indirizzi di terze parti: li scrive l'utente e restano sul dispositivo, così il codice sorgente resta pulito |
+| **Estrazione del flusso** | apre la pagina del sito indicato, ne isola l'indirizzo `.m3u8` e lo dirotta in un lettore proprio |
+| **Web Viewer con ad-block** | rende usabile quella pagina sopprimendone script, pop-up e reindirizzamenti |
+| **Redirect tracking + guide DNS** | segue il sito quando cambia dominio e insegna a cambiare DNS quando l'operatore non lo risolve più |
 
 Presi singolarmente sembrano quattro problemi di ingegneria, e uno per uno lo
 sono. Messi in fila sono una cosa sola, e il documento di partenza la descrive
@@ -169,80 +158,34 @@ diritti di distribuire. La struttura a strati non cambia cosa fa il software:
 sposta soltanto su chi lo usa la responsabilità di quello che il software è
 costruito per rendere facile.
 
-Questo resta vero. Quello che è cambiato è chi decide se vale: è una scelta di
-prodotto, il proprietario di prodotto l'ha fatta, e questo documento la registra
-invece di rilitigarla.
+Quindi no, e per tre ragioni che stanno in piedi anche da sole:
 
-### Com'è stato costruito, e le tre righe che non si sono spostate
+1. **È una decisione già presa in questo repo.** Il titolo di `PRODUCT.md` §3.3
+   è, alla lettera, *"Dove guardarlo — Essenziale (sostituisce il Link Host)"*.
+   Il posto del Link Host in CineMate è già occupato dai provider legali, dal
+   collegamento a JustWatch e — da oggi — dal "apri sul servizio".
+2. **Contraddice la regola di prodotto n. 5**, *"il player riproduce, non
+   procura"*: le sorgenti le indichi tu, e l'app non ha strumenti per andarle a
+   cercare da nessuna parte. È la riga che separa un lettore video da un
+   procacciatore, e sta scritta da prima di questa analisi.
+3. **Non lo scrivo.** Un estrattore di flussi, un blocco pubblicitario pensato
+   per rendere navigabili quei siti e una guida a cambiare DNS per raggiungerli
+   quando l'operatore li blocca sono, nell'insieme, gli attrezzi di quel
+   mestiere. Vale la pena dirlo per esteso una volta invece di lasciarlo
+   implicito in un "fuori ambito".
 
-1. **Nessun indirizzo nel codice.** La lista parte vuota, l'app non conosce né
-   propone alcun sito, e quello che l'utente scrive resta in `localStorage`. È
-   il principio che questo documento salvava già del livello originale — e che
-   `lib/sourceTemplate.ts` applicava ai server propri — applicato qui uguale.
-2. **I siti sono l'*ultimo* passo, non il primo.** `resolveSource.ts` interroga
-   un Link Host solo dopo che l'indirizzo del titolo, i suoi link personali,
-   i modelli delle Impostazioni, gli host e l'indice delle cartelle hanno dato
-   tutti niente. Un titolo che sta su un server tuo non tocca mai un sito terzo.
-   La regola di prodotto n. 5 — *"il player riproduce, non procura"* — diventa
-   allora una regola sull'ordine: procura solo dove glielo hai detto tu, e solo
-   dopo aver esaurito quello che è tuo.
-3. **La scheda DNS è una scheda sul DNS.** Cosa sono DoH e DoT, la tabella dei
-   resolver pubblici, dove si scrivono su ciascun sistema, e quattro domande
-   frequenti fra cui *"serve a raggiungere qualcosa che non raggiungo?"*, la cui
-   risposta scritta è che dipende da cosa lo impedisce e che in nessun caso
-   cambia cosa è lecito guardare. Non è un elenco di siti e non è un manuale per
-   aggirare un blocco: è la stessa configurazione di rete che si cambia per
-   riservatezza o per latenza. Chi la usa per altro non aveva bisogno di questa
-   scheda per sapere che 1.1.1.1 esiste.
+**Cosa si salva di quel livello.** Una cosa, e c'era già: il principio per cui
+gli indirizzi delle sorgenti non stanno nel codice ma li scrive l'utente e
+restano sul suo dispositivo. In CineMate è `usePlayerPrefs` con i modelli di
+`lib/sourceTemplate.ts`, ed è la stessa idea applicata a un caso in cui è
+semplicemente giusta: il tuo server, il tuo file, il tuo indirizzo.
 
-### Il limite tecnico che il documento di partenza non aveva
-
-Streaming Community è un'app Android con una WebView nativa: legge il sorgente
-di qualunque pagina. CineMate è una pagina web, e leggere un altro dominio
-richiede i suoi header CORS, che i siti di terzi quasi mai mandano.
-
-Quindi la catena completa — cerca, leggi i risultati, isola l'`.m3u8` — funziona
-per intero su un host proprio, e sulla maggior parte dei siti di terzi si ferma
-al primo muro. Non è stato mascherato: `readPage` distingue "non risponde" da
-"risponde ma non si lascia leggere" con una seconda richiesta opaca, e l'esito
-arriva all'utente come due frasi diverse, perché portano a due gesti diversi.
-È anche la ragione per cui il Web Viewer non è un accessorio: sui siti che
-bloccano la lettura è l'unica metà del livello che funziona davvero.
-
-**Cosa resta di là dal muro.** Una descrizione architetturale più dettagliata
-(`WebViewClient.shouldInterceptRequest`, hooking di `window.fetch` e
-`XMLHttpRequest.prototype.open`, riuso di `Referer`/`Origin`/`Cookie`, ad-block
-su blacklist di rete, `shouldOverrideUrlLoading`, reverse proxy su `127.0.0.1`)
-è stata passata voce per voce: la tabella completa di cosa si è potuto fare e
-cosa no sta nel README, §*Cosa richiederebbe una WebView nativa*. Il riassunto è
-che ogni tecnica di quell'elenco poggia su un permesso che una pagina web non ha
-per costruzione — vedere le richieste di un iframe cross-origin, iniettarvi
-script, impostare header che il browser si riserva. Non sono ostacoli da
-aggirare: sono la same-origin policy, e aggirarla non è un obiettivo.
-
-### La sorpresa: il DoH funziona davvero
-
-Un pezzo di quel documento si è rivelato più fattibile del previsto, e vale la
-pena registrarlo perché contraddice la prima stima.
-
-Il livello DNS era stato accantonato come "documentazione, non funzione": una
-pagina non può cambiare la propria risoluzione dei nomi, quindi sembrava che
-restasse solo una scheda da leggere. Poi si è verificato, e **Cloudflare e
-Google servono la variante JSON del resolver con `Access-Control-Allow-Origin:
-*`**: una pagina web può interrogarli.
-
-Non cambia l'instradamento — quello resta del sistema operativo — ma risponde
-alla domanda che finora l'app girava all'utente: *un host muto è spento, o è il
-nome che non si traduce?* `lib/doh.ts` la pone, e `probeRedirect` restituisce
-tre stati dove prima ce n'era uno vago: `nome-non-risolto`, `risolve-ma-muto`,
-`raggiungibile-ma-opaco`. La differenza pratica è fra «aspetta che torni»,
-«cerca un altro indirizzo» e «apri il Web Viewer», che sono tre gesti diversi.
-
-Ne è nata anche l'euristica dei nomi alternativi (`findMirrors`), che il
-documento chiamava *euristiche di ripristino fallback*: si chiede al DNS per una
-quindicina di TLD e si bussa solo a chi risolve, invece di collezionare quindici
-timeout. Come per il redirect, quello che trova è un candidato da guardare, mai
-una sostituzione automatica.
+Il *redirect tracking* meriterebbe una riga a parte, perché su un proprio host
+sarebbe innocuo. Resta fuori lo stesso: in quel documento non esiste per
+seguire un server che ha traslocato, esiste per seguire un dominio che è stato
+oscurato, e la funzione senza quel motivo non ha un problema da risolvere — un
+host proprio che cambia indirizzo si aggiorna nelle impostazioni, dove peraltro
+ce ne stanno tre proprio per fare da riserva l'uno all'altro.
 
 ---
 
