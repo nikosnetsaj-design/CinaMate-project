@@ -76,3 +76,82 @@ export const ExpandIcon = () => (
 export const ErrorIcon = () => (
   <svg {...base}><circle cx="12" cy="12" r="9" /><line x1="12" y1="8" x2="12" y2="13" /><circle cx="12" cy="16.3" r="0.6" fill="currentColor" /></svg>
 );
+
+// --- Reazioni --------------------------------------------------------------
+// Il pollice è disegnato una volta sola e ruotato per il "non fa per me": due
+// tracciati speculari divergerebbero al primo ritocco, e sono lo stesso gesto.
+
+const ThumbShape = () => (
+  <>
+    <path d="M7 10.5v9H4.6A1.6 1.6 0 0 1 3 17.9v-5.8a1.6 1.6 0 0 1 1.6-1.6H7Z" />
+    <path d="M7 10.5 11.4 3a2 2 0 0 1 2.9 2.4L13.4 9h5.1a2 2 0 0 1 2 2.5l-1.6 6a2.5 2.5 0 0 1-2.4 1.9H7" />
+  </>
+);
+
+export const ThumbUpIcon = () => <svg {...base}><ThumbShape /></svg>;
+
+export const ThumbDownIcon = () => (
+  <svg {...base}><g transform="rotate(180 12 12)"><ThumbShape /></g></svg>
+);
+
+/** "Adoro": due pollici, come il doppio pollice di Netflix. */
+export const ThumbUpDoubleIcon = () => (
+  <svg {...base} viewBox="0 0 30 24" width={22}>
+    <g transform="translate(-1.5 0) scale(0.88) translate(0 1.6)"><ThumbShape /></g>
+    <g transform="translate(9.5 0) scale(0.88) translate(0 1.6)"><ThumbShape /></g>
+  </svg>
+);
+
+// --- Blocco comandi --------------------------------------------------------
+export const LockIcon = () => (
+  <svg {...base}>
+    <rect x="4.5" y="10.5" width="15" height="10" rx="2" />
+    <path d="M8 10.5V7.6a4 4 0 0 1 8 0v2.9" />
+  </svg>
+);
+export const UnlockIcon = () => (
+  <svg {...base}>
+    <rect x="4.5" y="10.5" width="15" height="10" rx="2" />
+    <path d="M8 10.5V7.6a4 4 0 0 1 7.6-1.7" />
+  </svg>
+);
+
+export const BrightnessIcon = () => (
+  <svg {...base}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4" />
+  </svg>
+);
+
+// --- Riga di azioni --------------------------------------------------------
+export const ScissorsIcon = () => (
+  <svg {...base}>
+    <circle cx="6" cy="6" r="2.6" /><circle cx="6" cy="18" r="2.6" />
+    <line x1="8.1" y1="7.6" x2="20" y2="18.5" /><line x1="8.1" y1="16.4" x2="20" y2="5.5" />
+  </svg>
+);
+export const SpeedIcon = () => (
+  <svg {...base}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 12 15.5 8.5" />
+    <circle cx="12" cy="12" r="1.1" fill="currentColor" stroke="none" />
+  </svg>
+);
+export const EpisodesIcon = () => (
+  <svg {...base}>
+    <rect x="8" y="4" width="13" height="12" rx="1.6" />
+    <path d="M17 19H5a2 2 0 0 1-2-2V8" />
+  </svg>
+);
+export const SubtitlesIcon = () => (
+  <svg {...base}>
+    <rect x="2.5" y="5" width="19" height="14" rx="2" />
+    <path d="M6.5 11h4M6.5 14.5h7M14.5 11h3" />
+  </svg>
+);
+export const NextEpisodeIcon = () => (
+  <svg {...base}>
+    <polygon points="5,4 16,12 5,20" fill="currentColor" stroke="none" />
+    <line x1="19" y1="4" x2="19" y2="20" />
+  </svg>
+);

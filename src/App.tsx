@@ -26,6 +26,7 @@ import { Home } from "./pages/Home";
 import { Library } from "./pages/Library";
 import { Sagas } from "./pages/Sagas";
 import { Discover } from "./pages/Discover";
+import { Search } from "./pages/Search";
 import { Stats } from "./pages/Stats";
 import { Profile } from "./pages/Profile";
 import { Critic } from "./pages/Critic";
@@ -138,6 +139,7 @@ export default function App() {
             <Route path="/libreria" element={<Library />} />
             <Route path="/saghe" element={<Sagas />} />
             <Route path="/scopri" element={<Discover />} />
+            <Route path="/cerca" element={<Search />} />
             <Route path="/dati" element={<Stats />} />
             <Route path="/profilo" element={<Profile />} />
             <Route path="/critico" element={<Critic />} />

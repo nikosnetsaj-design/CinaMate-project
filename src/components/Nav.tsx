@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { to: "/", label: "Home", icon: HomeIcon, end: true },
   { to: "/libreria", label: "Libreria", icon: LibraryIcon, end: false },
   { to: "/saghe", label: "Saghe", icon: StackIcon, end: false },
+  { to: "/cerca", label: "Cerca", icon: SearchIcon, end: false },
   { to: "/scopri", label: "Scopri", icon: CompassIcon, end: false },
   { to: "/dati", label: "Dati", icon: ChartIcon, end: false },
   { to: "/profilo", label: "Profilo", icon: PersonIcon, end: false },
@@ -34,8 +35,12 @@ const NAV_ITEMS = [
 // the top bar instead, which is where a profile is looked for anyway. A seventh
 // tab would have shrunk every other one to win a destination that already has a
 // better place to live.
+//
+// Scopri cede il posto a Cerca, che sul telefono è la destinazione che si cerca
+// per prima e che dentro contiene già il catalogo TMDB: Scopri resta nella
+// barra laterale e dalla pagina Cerca non manca niente di ciò che offriva.
 const MOBILE_ITEMS = NAV_ITEMS.filter(
-  (i) => i.to !== "/critico" && i.to !== "/diagnostica" && i.to !== "/profilo",
+  (i) => i.to !== "/critico" && i.to !== "/diagnostica" && i.to !== "/profilo" && i.to !== "/scopri",
 );
 
 function linkClasses(isActive: boolean) {
@@ -135,14 +140,18 @@ export function Nav() {
           <span className="font-display text-base font-semibold text-text">CineMate</span>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={openPalette}
+          <NavLink
+            to="/cerca"
+            {...prefetchHandlers("/cerca")}
             aria-label="Cerca"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border-strong text-text-muted"
+            className={({ isActive }) =>
+              `flex h-9 w-9 items-center justify-center rounded-full border ${
+                isActive ? "border-accent text-accent-text" : "border-border-strong text-text-muted"
+              }`
+            }
           >
             <SearchIcon size={17} />
-          </button>
+          </NavLink>
           <NavLink
             to="/profilo"
             {...prefetchHandlers("/profilo")}

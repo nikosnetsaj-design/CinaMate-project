@@ -1,5 +1,6 @@
 import type { Item } from "../types";
 import { candidatesFor } from "../lib/sourceTemplate";
+import type { EpisodePick } from "../lib/sourceTemplate";
 import { discoverOnHosts } from "./discoverOnHost";
 import { isHlsUrl } from "./fromLibrary";
 import type { SourceLookup } from "./fromLibrary";
@@ -60,6 +61,13 @@ export function candidateSources(
   item: Item,
   lookup: SourceLookup,
   addresses: string[],
+  /**
+   * La puntata scelta, quando qualcuno l'ha scelta: l'elenco degli episodi
+   * nella scheda del titolo la conosce, e senza passarla di qui gli indirizzi
+   * costruiti punterebbero comunque a `S01E{visti+1}` — cioè all'episodio
+   * sbagliato ogni volta che ne apri uno a mano.
+   */
+  pick: EpisodePick = {},
 ): ResolvedSource[] {
   const out: ResolvedSource[] = [];
 
@@ -71,7 +79,7 @@ export function candidateSources(
 
   const applicable = addresses.map((a, i) => ({ a, i })).filter(({ a }) => a.trim());
   for (const { a, i } of applicable) {
-    for (const url of candidatesFor(item, [a])) {
+    for (const url of candidatesFor(item, [a], pick)) {
       if (out.some((c) => c.url === url)) continue;
       out.push({ url, via: "modello", templateIndex: i });
     }
@@ -100,7 +108,10 @@ export async function resolvePlayable(
   } = {},
 ): Promise<Resolution> {
   const { signal, linkHosts = [], position } = options;
-  const candidates = candidateSources(item, lookup, addresses);
+  const candidates = candidateSources(item, lookup, addresses, {
+    season: position?.season,
+    episode: position?.episode,
+  });
   const pinned = candidates.find((c) => c.via !== "modello");
   if (pinned) return { source: pinned };
 

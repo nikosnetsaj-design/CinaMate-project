@@ -12,6 +12,7 @@ const KEY = "cinemate:home-layout:v1";
  * cap stays, and this decides *which* six are worth the space.
  */
 export type HomeSectionId =
+  | "vetrina"
   | "nastro"
   | "maratona"
   | "statistiche"
@@ -19,12 +20,14 @@ export type HomeSectionId =
   | "saga"
   | "arrivo"
   | "perTe"
+  | "perche"
   | "preferiti"
   | "piuVisti"
   | "ultimiAggiunti"
   | "watchlist";
 
 export const HOME_SECTIONS: { id: HomeSectionId; label: string; description: string }[] = [
+  { id: "vetrina", label: "In vetrina", description: "Un titolo solo, grande, con il perché" },
   { id: "nastro", label: "Il Nastro", description: "La tua visione come oggetto visivo" },
   { id: "maratona", label: "Maratona in corso", description: "La saga che stai attraversando" },
   { id: "statistiche", label: "Statistiche", description: "Titoli, voto medio, ore, preferiti" },
@@ -35,6 +38,7 @@ export const HOME_SECTIONS: { id: HomeSectionId; label: string; description: str
   { id: "saga", label: "Continua la saga", description: "Il prossimo capitolo, già scelto" },
   { id: "arrivo", label: "In arrivo", description: "Nuovi episodi e uscite che segui" },
   { id: "perTe", label: "Per te", description: "Consigli dal tuo scaffale, con il perché" },
+  { id: "perche", label: "Perché hai guardato…", description: "Somiglianze con l'ultimo titolo finito" },
   { id: "preferiti", label: "I tuoi preferiti", description: "Quelli che hai segnato col cuore" },
   { id: "piuVisti", label: "Più visti", description: "Dove sono finite le tue ore" },
   { id: "ultimiAggiunti", label: "Ultimi aggiunti", description: "Le ultime cose entrate in libreria" },

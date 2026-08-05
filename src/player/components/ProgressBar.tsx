@@ -68,6 +68,7 @@ export default function ProgressBar({ currentTime, duration, bufferedEnd, skipMa
       <div
         ref={trackRef}
         className="pv-progress-track"
+        aria-describedby="pv-remaining"
         role="slider"
         tabIndex={0}
         aria-label="Avanzamento"
@@ -90,6 +91,13 @@ export default function ProgressBar({ currentTime, duration, bufferedEnd, skipMa
         ))}
         <div className="pv-progress-handle" style={{ left: `${pct(currentTime)}%` }} />
       </div>
+
+      {/* Quanto manca alla fine, non quanto è passato. È la domanda che ci si
+          fa davvero guardando l'orologio a metà film — "faccio in tempo?" — e
+          il tempo trascorso resta comunque leggibile nell'anteprima di scorrimento. */}
+      <span id="pv-remaining" className="pv-remaining pv-mono">
+        {duration ? formatTime(Math.max(0, duration - currentTime)) : '--:--'}
+      </span>
     </div>
   );
 }

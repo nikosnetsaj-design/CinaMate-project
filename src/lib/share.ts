@@ -106,6 +106,27 @@ export function itemShareUrl(item: Item): string {
   return url.toString();
 }
 
+/**
+ * Un momento dentro un titolo: il collegamento apre il player esattamente a
+ * quel secondo.
+ *
+ * Vale per te su un altro dispositivo e per chi ha lo stesso titolo sullo
+ * scaffale — nessun video viaggia nel link, perché nessun video è nostro da
+ * spedire. La durata viaggia con lui solo per essere scritta accanto: il player
+ * parte da `t` e prosegue, non si ferma dopo trenta secondi.
+ */
+export function momentShareUrl(itemId: string, startSec: number, lengthSec: number): string {
+  const url = appUrl();
+  const base = url.pathname.endsWith("/") ? url.pathname : `${url.pathname}/`;
+  url.pathname = `${base}player`;
+  url.search = new URLSearchParams({
+    titolo: itemId,
+    t: String(Math.max(0, Math.round(startSec))),
+    d: String(Math.round(lengthSec)),
+  }).toString();
+  return url.toString();
+}
+
 export interface SharedTitle {
   title: string;
   year: number | null;

@@ -250,6 +250,34 @@ export function TimelineIcon({ size = 18 }: IconProps) {
   );
 }
 
+export function CheckIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M4.5 10.4 8.2 14l7.3-8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function InfoIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <circle cx="10" cy="10" r="7.4" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M10 9.2v4.4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <circle cx="10" cy="6.6" r="0.95" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function DotsIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <circle cx="10" cy="4.6" r="1.35" fill="currentColor" />
+      <circle cx="10" cy="10" r="1.35" fill="currentColor" />
+      <circle cx="10" cy="15.4" r="1.35" fill="currentColor" />
+    </svg>
+  );
+}
+
 export function ListIcon({ size = 18 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">

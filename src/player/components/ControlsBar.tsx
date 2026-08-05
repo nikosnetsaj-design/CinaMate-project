@@ -1,121 +1,112 @@
-import { useState } from 'react';
+import type { ReactNode } from 'react';
 import type { useVideoPlayer } from '../hooks/useVideoPlayer';
-import type { useCast } from '../hooks/useCast';
+import type { SettingsTab } from './SettingsMenu';
 import {
-  PlayIcon, PauseIcon, RewindIcon, ForwardIcon, VolumeIcon, MuteIcon,
-  SettingsIcon, PipIcon, CastIcon, FullscreenIcon, ExitFullscreenIcon, MiniPlayerIcon,
+  EpisodesIcon, ExitFullscreenIcon, FullscreenIcon, MiniPlayerIcon, MuteIcon, NextEpisodeIcon,
+  PipIcon, ScissorsIcon, SettingsIcon, SpeedIcon, SubtitlesIcon, VolumeIcon,
 } from './Icons';
+
+/**
+ * La fascia in fondo: l'avanzamento, e sotto le cose che si fanno *a* ciò che
+ * si sta guardando.
+ *
+ * Le cinque azioni hanno un'etichetta scritta e non solo un'icona. È la
+ * differenza fra un player che si impara e uno che si indovina: "sottotitoli"
+ * dietro un fumetto lo trova chi già sa che è lì. I comandi di finestra —
+ * volume, PiP, mini, schermo intero — restano a destra come icone sole, perché
+ * quelli sì che hanno una forma universale, e perché su un telefono non
+ * servono quasi mai.
+ */
 
 type Props = {
   player: ReturnType<typeof useVideoPlayer>;
-  title: string;
-  seriesTitle?: string;
-  cast: ReturnType<typeof useCast>;
-  onOpenSettings: () => void;
+  /** La barra di avanzamento, costruita da chi possiede il tempo del video. */
+  progress: ReactNode;
+  onOpenSettings: (tab: SettingsTab) => void;
+  onOpenEpisodes: () => void;
+  /** Assente quando c'è un titolo solo da riprodurre. */
+  hasEpisodes: boolean;
+  onOpenClip: () => void;
+  /** Assente in coda alla libreria: niente da mandare dopo. */
+  onNext: (() => void) | null;
   onToggleMini: () => void;
   onToggleFullscreen: () => void;
 };
 
-const RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
-
-export default function ControlsBar({ player, title, seriesTitle, cast, onOpenSettings, onToggleMini, onToggleFullscreen }: Props) {
-  const [rateMenuOpen, setRateMenuOpen] = useState(false);
-  // Support is asked of the player, not of `document`: on iOS the standard
-  // flags are false while the WebKit equivalents work, so testing only the
-  // standard ones hid both buttons on exactly the device that needed them.
-
+export default function ControlsBar({
+  player, progress, onOpenSettings, onOpenEpisodes, hasEpisodes, onOpenClip, onNext,
+  onToggleMini, onToggleFullscreen,
+}: Props) {
   return (
     <div className="pv-controls-bar">
-      <div className="pv-controls-titles">
-        {seriesTitle && <span className="pv-controls-series">{seriesTitle}</span>}
-        <span className="pv-controls-title">{title}</span>
-      </div>
+      {progress}
 
-      <div className="pv-controls-row">
-        <button className="pv-icon-btn" aria-label="Indietro di 10 secondi" onClick={() => player.seekBy(-10)}>
-          <RewindIcon /><span className="pv-seek-label">10</span>
+      <div className="pv-actions">
+        <button type="button" className="pv-action" onClick={onOpenClip}>
+          <ScissorsIcon />
+          <span>Ritaglia</span>
         </button>
-        <button className="pv-icon-btn pv-btn-play" aria-label={player.isPlaying ? 'Pausa' : 'Play'} onClick={player.togglePlay}>
-          {player.isPlaying ? <PauseIcon /> : <PlayIcon />}
+        <button type="button" className="pv-action" onClick={() => onOpenSettings('speed')}>
+          <SpeedIcon />
+          <span>Velocità ({player.playbackRate}x)</span>
         </button>
-        <button className="pv-icon-btn" aria-label="Avanti di 10 secondi" onClick={() => player.seekBy(10)}>
-          <span className="pv-seek-label">10</span><ForwardIcon />
+        {hasEpisodes && (
+          <button type="button" className="pv-action" onClick={onOpenEpisodes}>
+            <EpisodesIcon />
+            <span>Episodi</span>
+          </button>
+        )}
+        <button type="button" className="pv-action" onClick={() => onOpenSettings('audio')}>
+          <SubtitlesIcon />
+          <span>Audio e sottotitoli</span>
         </button>
-
-        <span className="pv-time pv-mono">{formatTime(player.currentTime)} / {formatTime(player.duration)}</span>
+        {onNext && (
+          <button type="button" className="pv-action" onClick={onNext}>
+            <NextEpisodeIcon />
+            <span>Pross. ep.</span>
+          </button>
+        )}
 
         <div className="pv-controls-spacer" />
 
-        <div className="pv-volume">
-          <button className="pv-icon-btn" aria-label="Muto" onClick={player.toggleMute}>
-            {player.muted || player.volume === 0 ? <MuteIcon /> : <VolumeIcon />}
-          </button>
-          <input
-            type="range" min={0} max={1} step={0.05}
-            value={player.muted ? 0 : player.volume}
-            onChange={e => player.setVolume(Number(e.target.value))}
-          />
-        </div>
+        {/* Volume, PiP, mini, impostazioni e schermo intero stanno in un
+            gruppo solo: quando lo spazio finisce vanno a capo assieme, invece
+            di lasciare un pulsante orfano su una riga tutta sua. */}
+        <div className="pv-actions-tools">
+          <div className="pv-volume">
+            <button className="pv-icon-btn" aria-label={player.muted ? 'Riattiva l’audio' : 'Muto'} onClick={player.toggleMute}>
+              {player.muted || player.volume === 0 ? <MuteIcon /> : <VolumeIcon />}
+            </button>
+            <input
+              type="range" min={0} max={1} step={0.05}
+              aria-label="Volume"
+              value={player.muted ? 0 : player.volume}
+              onChange={e => player.setVolume(Number(e.target.value))}
+            />
+          </div>
 
-        <div className="pv-rate-menu">
-          <button className="pv-icon-btn pv-mono" onClick={() => setRateMenuOpen(v => !v)}>{player.playbackRate}x</button>
-          {rateMenuOpen && (
-            <div className="pv-dropdown">
-              {RATES.map(r => (
-                <button
-                  key={r}
-                  className={r === player.playbackRate ? 'active' : ''}
-                  onClick={() => { player.setPlaybackRate(r); setRateMenuOpen(false); }}
-                >
-                  {r}x
-                </button>
-              ))}
-            </div>
+          {player.pipSupported && (
+            <button className="pv-icon-btn" aria-label="Picture in Picture" onClick={player.togglePiP}>
+              <PipIcon />
+            </button>
+          )}
+          <button className="pv-icon-btn" aria-label="Mini player" onClick={onToggleMini}>
+            <MiniPlayerIcon />
+          </button>
+          <button className="pv-icon-btn" aria-label="Impostazioni" onClick={() => onOpenSettings('quality')}>
+            <SettingsIcon />
+          </button>
+          {player.fullscreenSupported && (
+            <button
+              className="pv-icon-btn"
+              aria-label={player.isFullscreen ? 'Esci da schermo intero' : 'Schermo intero'}
+              onClick={onToggleFullscreen}
+            >
+              {player.isFullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
+            </button>
           )}
         </div>
-
-        {(cast.castAvailable || cast.airPlayAvailable) && (
-          <button
-            className={`pv-icon-btn ${cast.castConnected ? 'active' : ''}`}
-            aria-label="Trasmetti"
-            onClick={cast.airPlayAvailable ? cast.openAirPlayPicker : cast.openCastPicker}
-          >
-            <CastIcon />
-          </button>
-        )}
-
-        {player.pipSupported && (
-          <button className="pv-icon-btn" aria-label="Picture in Picture" onClick={player.togglePiP}>
-            <PipIcon />
-          </button>
-        )}
-
-        <button className="pv-icon-btn" aria-label="Mini player" onClick={onToggleMini}>
-          <MiniPlayerIcon />
-        </button>
-        <button className="pv-icon-btn" aria-label="Impostazioni" onClick={onOpenSettings}>
-          <SettingsIcon />
-        </button>
-        {player.fullscreenSupported && (
-          <button
-            className="pv-icon-btn"
-            aria-label={player.isFullscreen ? 'Esci da schermo intero' : 'Schermo intero'}
-            onClick={onToggleFullscreen}
-          >
-            {player.isFullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
-          </button>
-        )}
       </div>
     </div>
   );
-}
-
-function formatTime(sec: number): string {
-  if (!isFinite(sec)) return '0:00';
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = Math.floor(sec % 60);
-  const mm = String(m).padStart(h > 0 ? 2 : 1, '0');
-  const ss = String(s).padStart(2, '0');
-  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
 }

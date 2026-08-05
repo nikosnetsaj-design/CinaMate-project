@@ -54,8 +54,8 @@ npm run lint      # oxlint
 ```
 src/
   components/   componenti UI (poster, sheet, saghe, maratona, timeline, nav…)
-  pages/        Home, Libreria, Saghe, Scopri, Dati, Profilo, Critico, Player,
-                Diagnostica
+  pages/        Home, Libreria, Saghe, Cerca, Scopri, Dati, Profilo, Critico,
+                Player, Diagnostica
   store/        stato Zustand (libreria, saghe, maratona, promemoria,
                 obiettivi, layout della Home, punto di ripresa, controllo
                 genitori, tema, UI)
@@ -63,6 +63,14 @@ src/
                 activity, continueWatching, achievements, search, filters,
                 recommend, goals, parental, accents, share, deepLinks,
                 spatialNav, anthropic, backup, errorLog, selfTest)
+                  featured.ts       chi finisce in vetrina, e la riga che dice
+                                    perché: una gerarchia dichiarata, non un
+                                    sorteggio
+                  homeBadges.ts     la pastiglia sulla copertina, al massimo una
+                                    e solo con un fatto dietro
+                  reactions.ts      i tre pollici del player ↔ il voto da 1 a 10
+                  useUpcoming.ts    le uscite in arrivo, condivise fra vetrina,
+                                    riga «In arrivo» e pastiglie
                   linkHost.ts       i siti su cui cercare: concatenazione dei
                                     metadati e costruzione della ricerca
                   streamExtract.ts  lettura di una pagina, isolamento dell'.m3u8
@@ -79,8 +87,12 @@ src/
                   services/   download su IndexedDB, lettura delle playlist HLS,
                               cronologia e statistiche, trasporto realtime,
                               salute, velocità e storico degli host
-                  components/ shell del player, controlli, timeline, overlay,
-                              impostazioni, pannelli download/party/host
+                  components/ shell del player, barra del titolo con i tre
+                              pollici, comandi al centro, colonna della
+                              luminosità, riga di azioni, cartello della
+                              classificazione, foglio Episodi, Ritaglia,
+                              schermata di fine, impostazioni, pannelli
+                              download/party/host
                   styles/     player.css — palette propria, tutta sotto .pv-app
                   ── strato di collegamento con CineMate ──
                   fromLibrary.ts        da titolo della libreria a contenuto
@@ -128,6 +140,48 @@ rete che non è la tua.
   salvato fra sessioni e riavvii, e ogni capitolo completato fa avanzare la coda.
 - **Continua la storia**: appena finisci un capitolo, l'app propone il
   successivo della stessa saga.
+- **Scheda del titolo**: si apre con la copertina larga e il play al centro,
+  la riga dei fatti (anno · classificazione · stagioni · durata · qualità), un
+  solo pulsante pieno — **Guarda** — e cinque azioni tonde: Trailer, Preferito,
+  Voto, Guardato, Condividi. Sotto, quattro schede: **Episodi**, Dettagli, Saga,
+  Simili.
+- **Cast con le facce**: foto tonde, nome e personaggio, con «mostra tutti».
+  Un attore si ricorda per la faccia e per il ruolo prima che per il nome; senza
+  TMDB restano le pastiglie con i nomi, che la libreria ha comunque.
+- **Voto TMDB**: sotto la trama, accanto al cast — non in cima vicino al tuo.
+  Sono due giudizi diversi e affiancarli suggerirebbe un confronto che non
+  interessa a nessuno.
+- **Scarica dalla scheda**: i download non vivono più solo dentro il player.
+  L'indirizzo viene risolto *prima* di partire, perché un download che comincia
+  da un indirizzo indovinato fallisce a metà senza dire perché.
+- **Episodi per stagione**: per una serie collegata a TMDB l'elenco delle
+  puntate con miniatura, durata, voto e trama, con la tendina delle stagioni
+  (sette stagioni in fila orizzontale costringono a scorrere per arrivare
+  all'ultima, che è quella che si cerca). Il segno di spunta segna «visto
+  fino a qui» — traducendo la puntata nel totale che la libreria tiene — e il
+  play su una riga apre *quella* puntata: stagione ed episodio finiscono nelle
+  sorgenti del titolo, quindi l'indirizzo costruito diventa `…/s02e07.m3u8`
+  invece del solito `S01E{visti+1}`.
+- **Il logo del titolo**: in vetrina e in cima alla scheda, quando TMDB ha il
+  lettering disegnato della serie o del film. È metà dell'effetto — «Cent'anni
+  di solitudine» nel suo lettering *è* la locandina, lo stesso nome nel font
+  dell'app è una didascalia — e quando non c'è resta il titolo scritto.
+- **Cerca**: una pagina con la casella appesa in alto, due schede — **Film & TV**
+  e **Persone** — e la griglia dei risultati, tenendo separato quello che hai
+  (si apre) da quello che non hai (si aggiunge). A casella vuota propone cosa
+  riprendere invece di una pagina bianca.
+- **In vetrina**: la Home si apre con un titolo solo, grande, e due pulsanti —
+  **Riproduci** e **La mia lista**. Sotto al titolo c'è sempre un fatto
+  verificabile e mai uno slogan: la data del prossimo episodio, i minuti che
+  restano, o il giorno in cui l'hai aggiunto. Chi ci finisce lo decide una
+  gerarchia dichiarata (prima una data in arrivo, poi ciò che hai lasciato a
+  metà, poi un preferito mai visto) e non un sorteggio a ogni apertura.
+- **Pastiglie sulle copertine**: «Nuova stagione — tra 3 giorni», «Aggiunto di
+  recente». Al massimo una per copertina e solo quando dietro c'è un fatto, così
+  la riga mantiene una gerarchia invece di essere tutta marchiata.
+- **Perché hai guardato…**: una riga di consigli che parte dall'ultimo titolo che
+  hai finito davvero. Il motivo è il titolo stesso della riga, e se dallo
+  scaffale non emerge niente che gli somigli la riga non compare.
 - **Continua a guardare**: la riga in cima alla Home tiene da parte tutto quello
   che hai lasciato a metà, dal più recente. Ogni scheda dice a che percentuale
   sei, quale stagione ed episodio ti aspetta e quanti minuti mancano alla fine;
@@ -231,6 +285,78 @@ rete che non è la tua.
   tua libreria, Chromecast/AirPlay, Watch Party con chat e reazioni, download
   offline riproducibile senza rete, e failover fra host mirror — con test di
   velocità, priorità automatica a punteggio e bilanciamento del carico.
+
+## Impostazioni, e il Link Host
+
+Le impostazioni sono un indice: righe raggruppate — icona, titolo, sottotitolo,
+freccia — e una schermata per volta. Le sezioni sono le stesse di prima
+(chiavi e modello, indirizzi delle sorgenti, Link Host, aspetto, Home su
+misura, televisore, controllo genitori, dati e backup, diagnostica); quello che
+cambia è che per cambiare il colore d'accento non si passa più davanti a due
+chiavi API. In fondo c'è **Informazioni**: di cosa è fatta l'app, con chi parla
+il tuo browser e cosa promette sui tuoi dati — comprese le attribuzioni a TMDB
+e JustWatch, che stanno lì perché è lì che si cercano.
+
+**Gestisci Link Host** ha la sua schermata, con due schede in fondo che restano
+leggibili anche dopo il primo giorno:
+
+- **Come funziona?** — CineMate non ospita né fornisce alcun contenuto. Un Link
+  Host è l'indirizzo di un *sito* che indichi tu, usato come punto di partenza
+  tecnico per la ricerca: l'app concatena i metadati del titolo, li trasforma
+  nella ricerca di quel sito, legge la pagina che risponde e, se ci trova un
+  `.m3u8`, lo manda al lettore. L'app non conosce nessun sito e non ne propone:
+  la lista è vuota finché non ci scrivi qualcosa tu.
+- **Attenzione** — accedere a materiale protetto da copyright senza
+  autorizzazione viola i termini di servizio dei siti e le leggi vigenti.
+  CineMate non è affiliata a nessun Link Host e non verifica cosa ci sia dietro
+  l'indirizzo che scrivi: quello che ci metti, e cosa ne fai, è una tua
+  responsabilità.
+
+## Il player: com'è fatta la scena
+
+I comandi stanno in tre fasce, e ognuna risponde a una domanda diversa.
+
+**In alto: cosa sto guardando.** L'etichetta dice `S1:E10 «Titolo»` per una
+serie e il solo titolo per un film. Accanto ci sono i tre pollici — *non fa per
+me*, *mi piace*, *adoro* — che **scrivono il voto della libreria** (4, 8, 10):
+non è un giudizio parallelo, è lo stesso campo che poi leggi nella scheda, e da
+lì puoi sempre aggiustare la sfumatura. A destra: trasmetti, lucchetto, chiudi.
+
+**Il lucchetto blocca i comandi, non lo schermo.** Un telefono tenuto in mano
+durante un film riceve decine di tocchi involontari; da bloccato la scena non
+risponde più né al dito né alla tastiera, e resta solo il pulsante per
+sbloccare.
+
+**Al centro: il tempo.** Indietro di 10, play/pausa, avanti di 10, grandi e
+lontani fra loro — tre bersagli premibili al buio invece di undici icone in
+fila. Sul bordo sinistro c'è la colonna della luminosità, che fa la stessa cosa
+dello scorrimento col dito ma si vede: e come sempre scurisce *l'immagine*, non
+la retroilluminazione dello schermo, che nessuna pagina web può toccare.
+
+**In fondo: l'avanzamento e le azioni.** A destra della barra c'è quanto manca
+alla fine, non quanto è passato. Sotto, cinque azioni con l'etichetta scritta:
+
+- **Ritaglia** — segna un momento e lo condivide. Il collegamento apre il player
+  a quel secondo: il video non viene copiato né caricato da nessuna parte, e il
+  foglio lo dice invece di far credere che parta uno spezzone.
+- **Velocità** e **Audio e sottotitoli** — aprono le impostazioni già sulla
+  scheda giusta.
+- **Episodi** — l'elenco di cosa altro c'è da riprodurre, in un foglio laterale
+  con copertina e posizione. Prima era una fila di pastiglie fuori dal player,
+  quindi invisibile a schermo intero.
+- **Pross. ep.** — manda avanti subito.
+
+Volume, PiP, mini player e schermo intero restano a destra come icone sole.
+
+**All'avvio, il cartello della classificazione.** Sigla dell'ente (`TV-14`,
+`VM14`) e, sotto, le avvertenze che hai scritto tu nella scheda del titolo alla
+voce **Avvertenze** — «linguaggio forte, consumo di tabacco». Sono scritte a
+mano perché nessun catalogo pubblico le espone in modo affidabile e dedurle dal
+genere significherebbe inventarle. Senza classificazione il cartello non compare
+affatto.
+
+**A fine episodio**, «Guarda i titoli di coda» oppure «Prossimo episodio», con
+il conto alla rovescia che riempie il pulsante mentre scorre.
 
 ## Player: come dargli qualcosa da riprodurre
 

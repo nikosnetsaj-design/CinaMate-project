@@ -47,11 +47,21 @@ export function slugify(title: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-// The library records episodes seen as one running total, not per season, so
-// there is no honest way to derive a current season from it. `{s}` is a fixed 1
-// — enough for the common "one long season" layout, and documented as such
-// rather than guessed at.
-const SEASON = "1";
+/**
+ * Quale puntata cercare, quando qualcuno l'ha scelta davvero — l'elenco degli
+ * episodi nella scheda del titolo, o le due caselle del pannello Siti.
+ */
+export interface EpisodePick {
+  season?: number;
+  episode?: number;
+}
+
+// Senza una scelta esplicita la stagione resta 1: la libreria conta gli episodi
+// visti come un totale unico, non per stagione, quindi da lì una stagione non si
+// ricava in modo onesto. È un valore dichiarato, non indovinato — ed è
+// esattamente il motivo per cui l'elenco degli episodi, che la stagione la sa,
+// può ora passarla di qui.
+const DEFAULT_SEASON = "1";
 
 function nextEpisodeOf(item: Item): string {
   // The episode you would watch next, which is the one after those already
@@ -63,8 +73,9 @@ function pad(value: string): string {
   return value.padStart(2, "0");
 }
 
-export function fillTemplate(template: string, item: Item): string {
-  const episode = nextEpisodeOf(item);
+export function fillTemplate(template: string, item: Item, pick: EpisodePick = {}): string {
+  const episode = pick.episode != null ? String(pick.episode) : nextEpisodeOf(item);
+  const SEASON = pick.season != null ? String(pick.season) : DEFAULT_SEASON;
   return template
     .replace(/\{titolo\}/gi, encodeURIComponent(item.title))
     .replace(/\{slug\}/gi, slugify(item.title))
@@ -175,7 +186,7 @@ export function templateApplies(template: string, item: Item): boolean {
 }
 
 /** Every address to try under a bare server address, for this one title. */
-export function expandBase(base: string, item: Item): string[] {
+export function expandBase(base: string, item: Item, pick: EpisodePick = {}): string[] {
   const root = normalizeBase(base);
   if (!root) return [];
   // Something with episodes gets the episode layouts first: a series stored as
@@ -184,7 +195,7 @@ export function expandBase(base: string, item: Item): string[] {
   const layouts = item.kind === "film" ? FILM_LAYOUTS : [...EPISODE_LAYOUTS, ...FILM_LAYOUTS];
   return layouts
     .filter((layout) => templateApplies(layout, item))
-    .map((layout) => `${root}/${fillTemplate(layout, item)}`);
+    .map((layout) => `${root}/${fillTemplate(layout, item, pick)}`);
 }
 
 /**
@@ -192,7 +203,7 @@ export function expandBase(base: string, item: Item): string[] {
  * bare server address gives the layouts under it. Malformed results are dropped
  * rather than attempted.
  */
-export function candidatesFor(item: Item, addresses: string[]): string[] {
+export function candidatesFor(item: Item, addresses: string[], pick: EpisodePick = {}): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
   for (const address of addresses) {
@@ -200,11 +211,11 @@ export function candidatesFor(item: Item, addresses: string[]): string[] {
     if (!raw) continue;
     const urls = hasPlaceholder(raw)
       ? templateApplies(raw, item)
-        ? [fillTemplate(withProtocol(raw), item)]
+        ? [fillTemplate(withProtocol(raw), item, pick)]
         : []
       : looksLikeFile(raw)
         ? [withProtocol(raw)]
-        : expandBase(raw, item);
+        : expandBase(raw, item, pick);
     for (const url of urls) {
       try {
         // http(s) only: this list is fed to `fetch` and to hls.js, and a

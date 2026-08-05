@@ -42,7 +42,10 @@ resta tua e non ti vende niente.
 
 | Sezione | Problema che risolve | Beneficio | Priorità |
 |---|---|---|---|
-| **Continua a guardare** | "A che punto ero?" | Un tocco e riparte dal secondo esatto: percentuale, S·E e minuti che restano | Essenziale ✅ |
+| **In vetrina** | Si apre l'app e si guarda una griglia, non una proposta | Un titolo solo, grande, con Riproduci e La mia lista — e sotto sempre un fatto: una data, i minuti che restano | Essenziale ✅ |
+| **Continua a guardare** | "A che punto ero?" | Un tocco e riparte dal secondo esatto: percentuale, S·E e minuti che restano; play sempre visibile, scheda e altre azioni sotto la copertina | Essenziale ✅ |
+| **Perché hai guardato X** | Un consiglio senza radice è pubblicità | Somiglianze con l'ultimo titolo finito: il perché è il titolo stesso della riga | Utile ✅ |
+| **Pastiglie sulle copertine** | "Nuova stagione" lo scopri per caso | Al massimo una per copertina, e solo con un fatto dietro: una data in arrivo, o un titolo entrato da pochi giorni | Utile ✅ |
 | **Il Nastro** | I dati personali sono tabelle morte | La tua visione come oggetto visivo | Essenziale ✅ |
 | **Cosa guardo stasera** | Paralisi da scelta davanti a 200 titoli | Una proposta sola, rilanciabile | Essenziale ✅ |
 | **In arrivo** | Perdi le uscite delle serie che segui | Conto alla rovescia per episodio | Essenziale ✅ |
@@ -58,6 +61,26 @@ resta tua e non ti vende niente.
 
 > **Regola anti‑Netflix:** massimo 6 righe in Home. Ogni riga deve dichiarare
 > *perché* è lì ("Perché hai messo 9 a Dark"). Niente caroselli senza motivo.
+> La vetrina non è un'eccezione ma il caso limite: è la riga che occupa più
+> spazio di tutte, quindi è quella che deve dire il perché nel modo più
+> verificabile — e non ruota a caso a ogni apertura, perché una vetrina che
+> cambia da sola insegna a ignorarla.
+
+### 3.1-bis Scheda del titolo — Essenziale
+
+| Funzione | Problema | Beneficio | Priorità |
+|---|---|---|---|
+| **Intestazione larga con Riproduci** | La scheda si apriva su una fascia di dati e il "guarda" stava sotto le note | Copertina orizzontale con il play al centro, riga dei fatti (anno · classificazione · stagioni · durata · qualità) e un solo pulsante pieno | Essenziale ✅ |
+| **Cinque azioni tonde** | Le stesse cose erano sparse fra pastiglie di stato e pulsanti in fondo | Trailer, Preferito, Voto, Guardato, Condividi: tutte reversibili e tutte con un effetto visibile | Utile ✅ |
+| **Schede invece di una colonna** | La scheda era lunga quanto tre schermate | Episodi · Dettagli · Saga · Simili: si apre su ciò che serve, e per una serie è l'elenco delle puntate | Utile ✅ |
+| **Episodi per stagione** | La libreria sapeva *quanti* episodi avevi visto, non quali | Titolo, durata, voto, trama e miniatura di ogni puntata (TMDB, in cache sei ore); il segno di spunta segna "visto fino a qui" | Utile ✅ |
+| **Riproduci quella puntata** | La stagione era fissa a 1 e l'episodio era «visti + 1» | Il play su una riga scrive stagione ed episodio nelle sorgenti del titolo: gli indirizzi costruiti diventano `…/s02e07.m3u8` e la ricerca sui siti chiede quella puntata | Utile ✅ |
+| **Cast con foto e personaggio** | Un attore si riconosce in faccia, non dal nome anagrafico | Cerchi con foto, nome e ruolo, «mostra tutti»; senza TMDB restano le pastiglie con i nomi | Utile ✅ |
+| **Voto TMDB** | Il voto del pubblico non si vedeva da nessuna parte | Sotto la trama, lontano dal tuo voto: sono due giudizi diversi e affiancarli suggerirebbe un confronto che non interessa | Utile ✅ |
+| **Scarica dalla scheda** | I download vivevano solo dentro il player, cioè dove arrivi quando hai già deciso di guardare *adesso* | Scelta della qualità e download avviato dalla scheda, con l'indirizzo risolto prima di partire | Utile ✅ |
+| **Logo del titolo** | Il nome nel font dell'app è una didascalia, non una locandina | Il lettering disegnato da TMDB in vetrina e in cima alla scheda, con il titolo scritto come ripiego | Utile ✅ |
+
+---
 
 ### 3.2 Ricerca — Essenziale
 
@@ -67,6 +90,8 @@ resta tua e non ti vende niente.
 | **Errori di battitura perdonati anche su TMDB** | Una lettera sbagliata dava «nessun titolo trovato» | TMDB cerca per sottostringa e non ha nulla di tollerante: quando la parola esatta fallisce la si accorcia — una lettera sbagliata in fondo smette di contare — e i risultati si riordinano per somiglianza, dichiarati come «forse cercavi» | Essenziale ✅ |
 | **Dettagli senza salvare** | Per leggere una trama bisognava prima aggiungere il titolo | Trama, regia, cast, durata, voto TMDB e dove guardarlo prima di decidere: chi cerca per curiosità non si ritrova la libreria da riordinare | Essenziale ✅ |
 | **«Ce l'hai già»** | Si ri-aggiungeva quello che si possedeva | I titoli della libreria che somigliano a ciò che scrivi compaiono per primi, senza chiave API e senza rete | Utile ✅ |
+| **Cerca come destinazione** | La ricerca viveva nella palette dei comandi: ottima da tastiera, introvabile su un telefono | Una pagina con la casella appesa in alto, due schede (Film & TV, Persone) e la griglia dei risultati; a casella vuota propone cosa riprendere invece di una pagina bianca | Essenziale ✅ |
+| **Persone come risultato** | Un attore si cercava solo dai crediti di un titolo che avevi già | La scheda Persone interroga TMDB per nome e apre la scheda della persona | Utile ✅ |
 
 | Funzione | Problema | Beneficio | Priorità |
 |---|---|---|---|
@@ -204,6 +229,14 @@ il resto al servizio che ha la licenza.
 | **Autoplay nell'ordine della saga** | Il "prossimo" contraddice l'ordine che hai scelto | Stessa coda della pagina Saghe, §3.4 | Utile ✅ |
 | **Consigli di fine visione** | Finisce un film e la scelta ricomincia da zero | Presi dal *tuo* scaffale, ognuno con il suo perché (regola 2) | Utile ✅ |
 | **Gesture** | Sul telefono i controlli sono più piccoli del dito | Scorri per avanzare, alza e abbassa volume e luminosità, doppio tocco per ±10s | Utile ✅ |
+| **Scena in tre fasce** | Undici comandi in fila sono undici bersagli da sbagliare | Titolo e voto in alto, ±10s e play grandi al centro, avanzamento e azioni in fondo; la luminosità ha la sua colonna a sinistra | Essenziale ✅ |
+| **Voto in tre gesti** | A metà film non si sceglie fra 7 e 8 | Pollice giù / su / doppio: scrive il voto della libreria, non un giudizio parallelo (`lib/reactions.ts`) | Utile ✅ |
+| **Blocco comandi** | Il telefono in mano riceve tocchi che nessuno voleva | Un lucchetto e la scena smette di rispondere — tocco e tastiera assieme — finché non si sblocca | Utile ✅ |
+| **Azioni con l'etichetta scritta** | Un fumetto lo riconosce solo chi già sa cos'è | Ritaglia · Velocità · Episodi · Audio e sottotitoli · Pross. ep., a parole; solo sul telefono restano le sole icone | Utile ✅ |
+| **Episodi dentro la scena** | La scelta del titolo stava in una fila di pastiglie fuori dal player, invisibile a schermo intero | Foglio laterale con copertina, posizione e "in riproduzione" | Utile ✅ |
+| **Ritaglia** | Condividere un momento significa oggi girare un video allo schermo | Un collegamento che apre quel secondo: il video non viene copiato né caricato, e il foglio lo dice | Utile ✅ |
+| **Cartello della classificazione** | Non sai per chi è ciò che hai appena avviato | Nei primi secondi, sigla e avvertenze scritte da te nella scheda; se la sigla manca, il cartello non compare | Utile ✅ |
+| **Schermata di fine** | Il prossimo episodio parte da solo e non sai come fermarlo | «Guarda i titoli di coda» e «Prossimo episodio», con il conto alla rovescia dentro il pulsante | Utile ✅ |
 | **Buffer intelligente** | Un buffer fisso è sbagliato in entrambe le direzioni | Si dimensiona sulla rete misurata: rete debole, buffer *più* grande | Utile ✅ |
 | **Chromecast / AirPlay** | Guardare dal telefono su un televisore | Passaggio di dispositivo dal secondo esatto | Utile ✅ |
 | **Watch Party** | Guardare assieme a distanza | Stanza, play/pausa sincronizzati, chat, reazioni | Utile ✅ (fra dispositivi serve un relay tuo) |
@@ -374,6 +407,11 @@ micro‑animazioni ovunque: rispetto di `prefers-reduced-motion` sempre.
 
 **Vetro e sfocatura:** solo dove separano davvero due piani (barre fisse,
 fogli modali). Mai come decorazione.
+
+**Impostazioni a due livelli:** un indice di righe raggruppate (icona, titolo,
+sottotitolo, freccia) e una schermata per volta. Le sezioni sono le stesse di
+prima; quello che cambia è che per cambiare accento non si passa più davanti a
+due chiavi API e al controllo genitori.
 
 **Accessibilità:** ogni coppia testo/sfondo ≥ WCAG AA, verificata da script —
 oggi 168 coppie, zero fallimenti. Focus ring visibile, navigazione da tastiera,

@@ -200,6 +200,12 @@ export async function searchTitles(
   query: string,
   apiKey: string,
   signal?: AbortSignal,
+  /**
+   * Quanti risultati tenere. Otto bastano a un elenco a discesa e non bastano a
+   * una griglia a tutta pagina, che è il motivo per cui questo parametro esiste
+   * invece di un numero fisso.
+   */
+  limit = 8,
 ): Promise<TmdbSearchResult[]> {
   const data = await tmdbGet<{ results: RawMultiSearchResult[] }>(
     "/search/multi",
@@ -209,7 +215,7 @@ export async function searchTitles(
   );
   return data.results
     .filter((r): r is RawMultiSearchResult & { media_type: "movie" | "tv" } => r.media_type === "movie" || r.media_type === "tv")
-    .slice(0, 8)
+    .slice(0, limit)
     .map((r) => {
       const genreNames = (r.genre_ids ?? []).map((id) => GENRE_NAMES[id]).filter((n): n is string => !!n);
       const dateStr = r.release_date || r.first_air_date;
@@ -593,6 +599,241 @@ export async function getNextEpisode(tmdbId: number, apiKey: string): Promise<Tm
   return next
     ? { airDate: next.air_date, seasonNumber: next.season_number, episodeNumber: next.episode_number }
     : { airDate: null, seasonNumber: null, episodeNumber: null };
+}
+
+export interface TmdbPersonHit {
+  id: number;
+  name: string;
+  profilePath: string | null;
+  /** "Recitazione", "Regia" — il mestiere per cui TMDB la conosce. */
+  department: string;
+  /** I due o tre titoli per cui è conosciuta: è così che si riconosce un nome. */
+  knownFor: string[];
+}
+
+interface RawPersonHit {
+  id: number;
+  name?: string;
+  profile_path?: string | null;
+  known_for_department?: string;
+  known_for?: { title?: string; name?: string }[];
+}
+
+const DEPARTMENTS: Record<string, string> = {
+  Acting: "Recitazione",
+  Directing: "Regia",
+  Writing: "Sceneggiatura",
+  Production: "Produzione",
+  Sound: "Musica e suono",
+  Camera: "Fotografia",
+};
+
+/** Le persone che corrispondono a un nome, per la scheda Persone della ricerca. */
+export async function searchPeople(
+  query: string,
+  apiKey: string,
+  signal?: AbortSignal,
+  limit = 18,
+): Promise<TmdbPersonHit[]> {
+  const data = await tmdbGet<{ results?: RawPersonHit[] }>(
+    "/search/person",
+    apiKey,
+    { query, include_adult: "false" },
+    signal,
+  );
+  return (data.results ?? []).slice(0, limit).map((r) => ({
+    id: r.id,
+    name: r.name?.trim() ?? "",
+    profilePath: r.profile_path ?? null,
+    department: DEPARTMENTS[r.known_for_department ?? ""] ?? r.known_for_department ?? "",
+    knownFor: (r.known_for ?? []).map((k) => k.title || k.name || "").filter(Boolean).slice(0, 3),
+  }));
+}
+
+/* ------------------------------------------------------------------ */
+/* Cast con foto e personaggio                                         */
+/* ------------------------------------------------------------------ */
+
+export interface TmdbCastMember {
+  id: number;
+  name: string;
+  /** Chi interpreta. Vuoto per chi compare come sé stesso o nei documentari. */
+  character: string;
+  profilePath: string | null;
+}
+
+interface RawCastMember {
+  id: number;
+  name?: string;
+  character?: string;
+  profile_path?: string | null;
+  order?: number;
+}
+
+/**
+ * Il cast con le facce, non solo con i nomi.
+ *
+ * La libreria salva `cast` come cinque stringhe, che bastano per cercare e non
+ * bastano per riconoscere: metà delle volte un attore lo si ricorda in faccia e
+ * per il personaggio, non per il nome anagrafico. Sta a parte da `getDetails`
+ * perché serve solo alla scheda aperta, e tenerlo lì avrebbe appesantito ogni
+ * collegamento automatico fatto in sottofondo.
+ */
+const creditsCache = new Map<string, TmdbCastMember[]>();
+
+export async function getCast(
+  tmdbId: number,
+  mediaType: "movie" | "tv",
+  apiKey: string,
+  limit = 12,
+): Promise<TmdbCastMember[]> {
+  const key = `${mediaType}:${tmdbId}`;
+  const hit = creditsCache.get(key);
+  if (hit) return hit.slice(0, limit);
+
+  const path = mediaType === "movie" ? `/movie/${tmdbId}/credits` : `/tv/${tmdbId}/aggregate_credits`;
+  const data = await tmdbGet<{ cast?: (RawCastMember & { roles?: { character?: string }[] })[] }>(path, apiKey);
+  const cast = (data.cast ?? [])
+    .slice(0, 24)
+    .map((c) => ({
+      id: c.id,
+      name: c.name?.trim() ?? "",
+      // Le serie rispondono con `roles[]` (un attore può avere più personaggi
+      // nell'arco di sette stagioni); i film con `character`. Prendo il primo,
+      // che è quello per cui la persona è conosciuta in quel titolo.
+      character: (c.roles?.[0]?.character || c.character || "").trim(),
+      profilePath: c.profile_path ?? null,
+    }))
+    .filter((c) => c.name);
+
+  creditsCache.set(key, cast);
+  return cast.slice(0, limit);
+}
+
+/* ------------------------------------------------------------------ */
+/* Logo del titolo                                                     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Il "title treatment": il logo del titolo disegnato, quello che sulle app di
+ * streaming sta al posto del nome scritto in cima alla vetrina.
+ *
+ * Vale la pena andarlo a prendere perché è metà dell'effetto: «Cent'anni di
+ * solitudine» composto nel lettering della serie *è* la locandina, mentre lo
+ * stesso testo nel font dell'app è una didascalia. Quando non c'è — e per molti
+ * titoli non c'è — resta il titolo scritto, che è sempre stata la resa
+ * predefinita.
+ *
+ * Italiano prima, inglese poi, senza lingua per ultimo: un logo inglese su un
+ * titolo italiano è comunque il logo giusto, un logo giapponese quasi mai.
+ */
+const logoCache = new Map<string, string | null>();
+
+export async function getTitleLogo(
+  tmdbId: number,
+  mediaType: "movie" | "tv",
+  apiKey: string,
+): Promise<string | null> {
+  const key = `${mediaType}:${tmdbId}`;
+  const hit = logoCache.get(key);
+  if (hit !== undefined) return hit;
+
+  try {
+    const data = await tmdbGet<{ logos?: { file_path: string; iso_639_1: string | null }[] }>(
+      `/${mediaType}/${tmdbId}/images`,
+      apiKey,
+      { include_image_language: "it,en,null" },
+    );
+    const logos = data.logos ?? [];
+    const pick =
+      logos.find((l) => l.iso_639_1 === "it") ??
+      logos.find((l) => l.iso_639_1 === "en") ??
+      logos.find((l) => l.iso_639_1 === null) ??
+      null;
+    // I `.svg` di TMDB non hanno dimensioni intrinseche e il ridimensionatore
+    // non li serve nelle larghezze `w…`: si prende il PNG, che c'è quasi sempre.
+    const path = pick && !pick.file_path.endsWith(".svg") ? `${IMG_BASE}/w500${pick.file_path}` : null;
+    logoCache.set(key, path);
+    return path;
+  } catch {
+    logoCache.set(key, null);
+    return null;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Stagioni ed episodi                                                 */
+/* ------------------------------------------------------------------ */
+
+export interface TmdbEpisode {
+  seasonNumber: number;
+  episodeNumber: number;
+  title: string;
+  overview: string;
+  /** Il fotogramma dell'episodio, 16:9. Assente per gli episodi non ancora usciti. */
+  stillPath: string | null;
+  runtime: number | null;
+  /** La media di TMDB, 0–10. Null quando nessuno l'ha ancora votato. */
+  rating: number | null;
+  airDate: string | null;
+}
+
+interface RawEpisode {
+  season_number?: number;
+  episode_number?: number;
+  name?: string;
+  overview?: string;
+  still_path?: string | null;
+  runtime?: number | null;
+  vote_average?: number;
+  air_date?: string | null;
+}
+
+/**
+ * Le miniature degli episodi. Due larghezze sole: la scheda le mostra alte
+ * poco più di sessanta pixel su un telefono, e oltre `w300` si paga peso che
+ * nessuno vede.
+ */
+export type StillSize = "w185" | "w300";
+
+export function stillUrl(path: string | null | undefined, size: StillSize = "w300"): string | null {
+  return path ? `${IMG_BASE}/${size}${path}` : null;
+}
+
+/**
+ * Una stagione cambia di rado — un episodio a settimana nel caso più veloce —
+ * mentre la scheda si riapre di continuo. Sei ore è la stessa finestra usata
+ * per le date di uscita, e vale la pena tenerla: senza, ogni passaggio fra le
+ * pastiglie delle stagioni sarebbe una chiamata in rete.
+ */
+const seasonCache = new Map<string, { at: number; episodes: TmdbEpisode[] }>();
+const SEASON_TTL_MS = 6 * 60 * 60 * 1000;
+
+export async function getSeason(
+  tvId: number,
+  seasonNumber: number,
+  apiKey: string,
+): Promise<TmdbEpisode[]> {
+  const key = `${tvId}:${seasonNumber}`;
+  const hit = seasonCache.get(key);
+  if (hit && Date.now() - hit.at < SEASON_TTL_MS) return hit.episodes;
+
+  const data = await tmdbGet<{ episodes?: RawEpisode[] }>(`/tv/${tvId}/season/${seasonNumber}`, apiKey);
+  const episodes = (data.episodes ?? []).map((e, i) => ({
+    seasonNumber: e.season_number ?? seasonNumber,
+    episodeNumber: e.episode_number ?? i + 1,
+    title: e.name?.trim() || `Episodio ${e.episode_number ?? i + 1}`,
+    overview: e.overview?.trim() ?? "",
+    stillPath: e.still_path ?? null,
+    runtime: e.runtime && e.runtime > 0 ? e.runtime : null,
+    // Zero su TMDB vuol dire "nessuno ha votato", non "voto zero": mostrarlo
+    // come 0.0 direbbe una cosa falsa di ogni episodio appena uscito.
+    rating: e.vote_average && e.vote_average > 0 ? e.vote_average : null,
+    airDate: e.air_date || null,
+  }));
+
+  seasonCache.set(key, { at: Date.now(), episodes });
+  return episodes;
 }
 
 /* ------------------------------------------------------------------ */

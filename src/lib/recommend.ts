@@ -191,6 +191,34 @@ export function mostWatched(items: Item[], limit = 8): Suggestion[] {
     }));
 }
 
+/**
+ * "Perché hai guardato X": la riga che parte da un titolo preciso invece che
+ * da un profilo di gusti.
+ *
+ * È la forma più onesta di consiglio che esista — il motivo è nel titolo della
+ * riga, prima ancora di guardare le copertine — e per questo il seme non è il
+ * titolo con il voto più alto ma l'ultimo finito davvero: è quello che hai in
+ * testa adesso. Se dallo scaffale non emerge niente che gli somigli la riga non
+ * esiste, invece di riempirsi col primo titolo dello stesso genere.
+ */
+export function becauseYouWatched(
+  items: Item[],
+  lastSeenByItem: Record<string, string>,
+  limit = 8,
+): { seed: Item; entries: Suggestion[] } | null {
+  const finished = items
+    .filter((i) => i.status === "Visto" && lastSeenByItem[i.id])
+    .sort((a, b) => (lastSeenByItem[b.id] ?? "").localeCompare(lastSeenByItem[a.id] ?? ""));
+
+  for (const seed of finished.slice(0, 5)) {
+    // Solo roba che non hai già visto: "perché hai guardato" che ti riporta a
+    // ciò che hai guardato è un cerchio, non un consiglio.
+    const entries = similarInLibrary(seed, items, limit).filter((s) => s.item.status !== "Visto");
+    if (entries.length >= 2) return { seed, entries };
+  }
+  return null;
+}
+
 /** Newest arrivals, by the date the record was written. */
 export function recentlyAdded(items: Item[], limit = 8): Item[] {
   return [...items].sort((a, b) => b.added.localeCompare(a.added)).slice(0, limit);

@@ -10,7 +10,7 @@ import { SLEEP_PRESETS, type SleepChoice } from '../hooks/useSleepTimer';
 import type { PlaybackPrefs } from '../services/playbackPrefs';
 import { CloseIcon } from './Icons';
 
-type Tab = 'quality' | 'audio' | 'subtitles' | 'speed' | 'general';
+export type SettingsTab = 'quality' | 'audio' | 'subtitles' | 'speed' | 'general';
 
 type Props = {
   levels: QualityLevel[];
@@ -39,6 +39,12 @@ type Props = {
   onSelectMaxHeight: (height: number | null) => void;
   sleep: { choice: SleepChoice | null; remainingSec: number | null; arm: (c: SleepChoice) => void; cancel: () => void };
   wakeLockSupported: boolean;
+  /**
+   * Su quale scheda aprirsi. La riga di azioni entra qui da due porte diverse
+   * — "Velocità" e "Audio e sottotitoli" — e atterrare ogni volta su Qualità
+   * significherebbe far cercare due volte la stessa cosa.
+   */
+  initialTab?: SettingsTab;
   onClose: () => void;
 };
 
@@ -50,7 +56,7 @@ const SIZE_LABELS: Record<SubtitleStyle['fontSize'], string> = {
 const COLORS = ['#F5F1E8', '#F2C879', '#7FD8C6', '#E36F6F'];
 
 export default function SettingsMenu(props: Props) {
-  const [tab, setTab] = useState<Tab>('quality');
+  const [tab, setTab] = useState<SettingsTab>(props.initialTab ?? 'quality');
   const panelRef = useFocusTrap(props.onClose);
 
   return (
