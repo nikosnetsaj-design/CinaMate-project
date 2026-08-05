@@ -9,7 +9,10 @@ import { DiceIcon } from "./icons";
 import type { Item } from "../types";
 
 function pickRandom(items: Item[], exclude?: Item | null): Item | null {
-  const pool = items.filter((i) => i.status === "Da vedere");
+  // Watchlist *e* scaffale: la domanda è "cosa guardo stasera", e un titolo che
+  // hai in casa senza averlo promesso a te stesso è un candidato buono quanto
+  // uno pianificato.
+  const pool = items.filter((i) => i.status === "Da vedere" || i.status === "Sullo scaffale");
   const source = pool.length > 0 ? pool : items;
   if (source.length === 0) return null;
   // "Un altro" should always move on — unless there is genuinely nothing else.

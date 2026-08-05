@@ -75,7 +75,11 @@ function buildTaste(items: Item[]): Taste {
  */
 export function forYou(items: Item[], limit = 6): Suggestion[] {
   const taste = buildTaste(items);
-  const candidates = items.filter((i) => i.status === "Da vedere" || i.status === "In pausa");
+  // Anche *Sullo scaffale*: sono titoli non visti e non pianificati, cioè
+  // esattamente il materiale della domanda «cosa guardo stasera».
+  const candidates = items.filter(
+    (i) => i.status === "Da vedere" || i.status === "In pausa" || i.status === "Sullo scaffale",
+  );
 
   const scored = candidates.map((item) => {
     // Each contribution is kept with its own label so the strongest one can

@@ -42,6 +42,7 @@ export function computeStats(items: Item[]): LibraryStats {
     "Da vedere": 0,
     Abbandonato: 0,
     "In pausa": 0,
+    "Sullo scaffale": 0,
   };
   for (const i of items) byStatus[i.status]++;
 

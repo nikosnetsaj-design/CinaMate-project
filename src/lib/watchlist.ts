@@ -20,14 +20,19 @@ export function isInWatchlist(item: Item): boolean {
   return item.status === "Da vedere";
 }
 
-/** Dove finisce un titolo tolto dalla lista, e come si chiama quel posto. */
-export function removedStatus(item: Item): Status {
-  const started = (item.seen || 0) > 0 || item.status === "In visione" || item.status === "In pausa";
-  return started ? "In pausa" : "Abbandonato";
+/**
+ * Dove finisce un titolo tolto dalla lista: esattamente dov'era prima di
+ * finirci, cioè *Sullo scaffale*.
+ *
+ * La prima versione lo segnava *Abbandonato*, che è un'altra cosa: dice «ci ho
+ * rinunciato» di un titolo che magari non hai nemmeno aperto. Togliere dalla
+ * lista non è una rinuncia, è annullare una promessa — e dopo deve essere come
+ * se non l'avessi mai fatta.
+ */
+export function removedStatus(_item: Item): Status {
+  return "Sullo scaffale";
 }
 
 export function removalMessage(item: Item): string {
-  return removedStatus(item) === "In pausa"
-    ? `«${item.title}» è fuori dalla lista: lo trovi fra quelli in pausa.`
-    : `«${item.title}» è fuori dalla lista: lo trovi fra quelli abbandonati. Non è stato eliminato.`;
+  return `«${item.title}» è fuori dalla lista: resta in libreria, sullo scaffale. Non è stato eliminato.`;
 }

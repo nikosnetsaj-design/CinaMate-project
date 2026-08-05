@@ -1,6 +1,14 @@
 export type Kind = "film" | "serie" | "anime" | "doc";
 
-export type Status = "In visione" | "Visto" | "Da vedere" | "Abbandonato" | "In pausa";
+/**
+ * Lo stato di un titolo. Sei valori, e il sesto è arrivato per ultimo con una
+ * ragione precisa: togliere qualcosa dalla watchlist non aveva un posto dove
+ * farlo atterrare. *Abbandonato* dice «ci ho rinunciato» e *In pausa* dice «lo
+ * riprendo», mentre quello che serviva è «sta sullo scaffale, non l'ho visto e
+ * non l'ho promesso a nessuno» — cioè lo stato in cui un titolo si trova prima
+ * che tu decida qualcosa.
+ */
+export type Status = "In visione" | "Visto" | "Da vedere" | "Abbandonato" | "In pausa" | "Sullo scaffale";
 
 export const PLATFORMS = [
   "Netflix",

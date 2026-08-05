@@ -41,6 +41,9 @@
   --status-planned: #ff6fb0;
   --status-dropped: #ff8a7a;
   --status-hold: #b09bb8;
+  /* Il neutro: volutamente il meno acceso dei sei, perché «nessuna decisione»
+     non deve gridare quanto «visto» o «abbandonato». */
+  --status-shelf: #a99fb0;
 
   /* Cold indifference -> hot obsession, along the dye axis. */
   --vote-1: #7fa8c9;
@@ -90,6 +93,7 @@
   --status-planned: #a80060;
   --status-dropped: #9c2a21;
   --status-hold: #5f4f66;
+  --status-shelf: #5c525f;
 
   --vote-1: #2f6d91;
   --vote-2: #266f8c;

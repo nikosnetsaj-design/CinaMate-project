@@ -423,10 +423,20 @@ function ItemDetail({ item }: { item: Item }) {
                 >
                   Modifica
                 </button>
+                {/* "Elimina" faceva pensare che sparisse tutto, video
+                    compreso. Fa esattamente quello che faceva prima — toglie
+                    il titolo dalla libreria — ma detto per quello che è: la
+                    libreria è un elenco, e questo è un titolo che ne esce.
+                    CineMate non ha mai toccato un file: i video stanno sul tuo
+                    server e restano lì, e adesso la conferma lo scrive. */}
                 <button
                   type="button"
                   onClick={() => {
-                    if (window.confirm(`Eliminare "${item.title}"?`)) {
+                    if (
+                      window.confirm(
+                        `Togliere "${item.title}" dalla libreria?\n\nEscono la scheda, il voto e le note. I tuoi file video non vengono toccati.`,
+                      )
+                    ) {
                       removeItem(item.id);
                       close();
                     }
@@ -434,7 +444,7 @@ function ItemDetail({ item }: { item: Item }) {
                   className="flex-1 rounded-md border py-2.5 text-sm"
                   style={{ borderColor: "color-mix(in srgb, var(--danger) 35%, transparent)", background: "color-mix(in srgb, var(--danger) 10%, transparent)", color: "var(--danger)" }}
                 >
-                  Elimina
+                  Togli dalla libreria
                 </button>
               </div>
             </div>
