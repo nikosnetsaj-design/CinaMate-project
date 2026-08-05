@@ -439,6 +439,26 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
               {LAYOUT_FAMILIES.find((l) => l.id === (host.layout ?? "entrambi"))?.hint}
             </p>
           </fieldset>
+          <label className="flex items-start gap-2 text-xs text-text-faint">
+            <input
+              type="checkbox"
+              checked={host.sendCookies ?? false}
+              onChange={(e) => update(host.id, { sendCookies: e.target.checked })}
+              className="mt-0.5"
+            />
+            <span>
+              Manda i cookie di sessione
+              <span className="mt-0.5 block text-[11px]">
+                Per i siti che legano il flusso a una sessione. È l'unico dei quattro header di
+                sessione riusabile da qui: <span className="font-mono">Referer</span>,{" "}
+                <span className="font-mono">Origin</span> e{" "}
+                <span className="font-mono">User-Agent</span> il browser se li riserva e non si
+                possono impostare. Da lasciare spento se non serve: richiede che il sito risponda
+                con <span className="font-mono">Allow-Credentials</span>, e senza fallisce dove
+                prima funzionava.
+              </span>
+            </span>
+          </label>
           <fieldset className="flex flex-col gap-1">
             <legend className="mb-1 text-xs text-text-faint">Cosa finisce nella domanda</legend>
             <div className="flex flex-wrap gap-1.5">

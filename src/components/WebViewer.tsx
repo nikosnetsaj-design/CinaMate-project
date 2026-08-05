@@ -7,6 +7,7 @@ import { usePlayerSources } from "../store/usePlayerSources";
 import { useLibrary } from "../store/useLibrary";
 import { withProtocol } from "../lib/linkHost";
 import { bestStreamIn, readPage } from "../lib/streamExtract";
+import { buildHookedDocument, isFrameMessage } from "../lib/hookedFrame";
 
 /**
  * Il **Web Viewer**: una finestra su una pagina, con tutto quello che una
@@ -39,7 +40,7 @@ import { bestStreamIn, readPage } from "../lib/streamExtract";
  *     mandato io; se ci hai cliccato dentro, il riquadro è più avanti di lei.
  */
 
-type BlockLevel = "rigido" | "normale" | "minimo";
+type BlockLevel = "rigido" | "normale" | "minimo" | "hookata";
 
 const LEVELS: { id: BlockLevel; label: string; hint: string }[] = [
   {
@@ -57,6 +58,11 @@ const LEVELS: { id: BlockLevel; label: string; hint: string }[] = [
     label: "Minimo",
     hint: "Gli script girano. È il livello in cui un player che si carica da JavaScript parte davvero — e anche quello in cui torna tutto il resto. Pop-up e cambi di pagina restano bloccati comunque.",
   },
+  {
+    id: "hookata",
+    label: "Lettura hookata",
+    hint: "La pagina viene letta e rimessa in un riquadro nostro, con uno script iniettato prima del suo: gli script del sito girano e ogni indirizzo che chiedono viene registrato, compreso il manifest che nel sorgente non c'era. Il sito gira in un'origine opaca, separata dalla nostra. Richiede che il sito mandi gli header CORS.",
+  },
 ];
 
 /**
@@ -67,6 +73,11 @@ const SANDBOX: Record<BlockLevel, string[]> = {
   rigido: [],
   normale: ["allow-forms", "allow-same-origin"],
   minimo: ["allow-scripts", "allow-forms", "allow-same-origin"],
+  // Gli script sì, `allow-same-origin` no: il documento è `srcdoc`, quindi
+  // erediterebbe la *nostra* origine, e il JavaScript del sito si troverebbe
+  // davanti il localStorage con dentro le chiavi API. Senza quel permesso
+  // l'origine è opaca e non coincide con niente. Vedi lib/hookedFrame.ts.
+  hookata: ["allow-scripts"],
 };
 
 /**
@@ -125,10 +136,72 @@ function ViewerFrame({
   const [extractError, setExtractError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  // --- lettura hookata ------------------------------------------------------
+  const frameRef = useRef<HTMLIFrameElement | null>(null);
+  const [hookedDoc, setHookedDoc] = useState<string | null>(null);
+  const [hookedError, setHookedError] = useState<string | null>(null);
+  const [seen, setSeen] = useState<string[]>([]);
+  const [blocked, setBlocked] = useState(0);
+  const [cleaned, setCleaned] = useState(0);
+
   const current = history[history.length - 1];
   const sandbox = useMemo(() => sandboxFor(level, current), [level, current]);
 
   useEffect(() => setDraft(current), [current]);
+
+  // Legge la pagina e la rimette nel riquadro con lo script davanti. Solo in
+  // lettura hookata: negli altri livelli il riquadro punta direttamente al
+  // sito, e leggerlo non servirebbe a niente.
+  useEffect(() => {
+    if (level !== "hookata") {
+      setHookedDoc(null);
+      setHookedError(null);
+      return;
+    }
+    const controller = new AbortController();
+    setHookedDoc(null);
+    setHookedError(null);
+    setSeen([]);
+    setBlocked(0);
+    setCleaned(0);
+    readPage(current, controller.signal).then((page) => {
+      if (controller.signal.aborted) return;
+      if (!page.ok) {
+        setHookedError(
+          page.reason === "bloccato-cors"
+            ? "Questo sito non lascia che la pagina venga letta (CORS), quindi non si può rimettere in un riquadro nostro e lo script non si può iniettare. Usa «Minimo»: il sito gira, ma senza hook non si vede cosa chiede."
+            : "Non sono riuscito a leggere questa pagina.",
+        );
+        return;
+      }
+      setHookedDoc(buildHookedDocument(page.html, page.finalUrl));
+    });
+    return () => controller.abort();
+  }, [level, current, reloadKey]);
+
+  // I messaggi dello script iniettato. L'origine è opaca — un documento
+  // sandbox senza `allow-same-origin` si presenta come "null" — quindi non si
+  // può filtrare su `event.origin`: si confronta la sorgente con la finestra
+  // del nostro riquadro, che è il controllo giusto e non aggirabile.
+  useEffect(() => {
+    if (level !== "hookata") return;
+    const onMessage = (event: MessageEvent) => {
+      if (!frameRef.current || event.source !== frameRef.current.contentWindow) return;
+      if (!isFrameMessage(event.data)) return;
+      const msg = event.data;
+      if (msg.kind === "media") setSeen((s) => (s.includes(msg.url) ? s : [...s, msg.url]));
+      else if (msg.kind === "blocked" || msg.kind === "popup") setBlocked((n) => n + 1);
+      else if (msg.kind === "cleaned") setCleaned(msg.count);
+      else if (msg.kind === "navigation" && msg.allowed) go(msg.url);
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+    // `go` è stabile per come è definita nel corpo del componente rimontato a
+    // ogni indirizzo: vedi il `key` su ViewerFrame.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [level]);
+
+  const hookedManifests = useMemo(() => seen.filter((u) => /\.m3u8?(\?|#|$)/i.test(u)), [seen]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -191,12 +264,17 @@ function ViewerFrame({
     setFound(stream.url);
   }
 
-  function useForTitle() {
-    if (!found || !context) return;
-    patchSource(context.itemId, { manifestUrl: found });
+  function attachStream(url: string) {
+    if (!context) return;
+    patchSource(context.itemId, { manifestUrl: url });
     pushToast("success", `Flusso collegato a «${context.title}».`);
     onClose();
     navigate(`/player?titolo=${encodeURIComponent(context.itemId)}`);
+  }
+
+  function useForTitle() {
+    if (!found) return;
+    attachStream(found);
   }
 
   async function copyFound() {
@@ -332,20 +410,85 @@ function ViewerFrame({
             {extractError}
           </p>
         )}
+
+        {/*
+          Cosa l'hook ha visto passare. È il risultato che questa modalità
+          esiste per produrre: un manifest chiesto dal player del sito a
+          runtime non sta nel sorgente, quindi l'estrazione statica non lo
+          troverebbe mai — qui compare appena la pagina lo chiede.
+        */}
+        {level === "hookata" && (hookedManifests.length > 0 || blocked > 0 || cleaned > 0) && (
+          <div className="rounded-sm border border-border-strong bg-surface p-2.5">
+            <p className="mb-1.5 text-[11px] text-text-faint">
+              {hookedManifests.length > 0
+                ? `${hookedManifests.length} ${hookedManifests.length === 1 ? "flusso chiesto" : "flussi chiesti"} dalla pagina`
+                : "Nessun flusso ancora"}
+              {blocked > 0 && ` · ${blocked} richieste bloccate`}
+              {cleaned > 0 && ` · ${cleaned} sovrapposizioni rimosse`}
+            </p>
+            <div className="flex flex-col gap-1">
+              {hookedManifests.map((url) => (
+                <div key={url} className="flex flex-wrap items-center gap-1.5">
+                  <span className="min-w-0 flex-1 truncate font-mono text-[10px] text-text-muted" title={url}>
+                    {url}
+                  </span>
+                  {context && (
+                    <button
+                      type="button"
+                      onClick={() => attachStream(url)}
+                      className="rounded-sm px-2 py-0.5 text-[10px] font-semibold"
+                      style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+                    >
+                      Usa
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setFound(url)}
+                    className="rounded-sm border border-border-strong px-2 py-0.5 text-[10px] text-text-muted hover:bg-surface-hover"
+                  >
+                    Mostra
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </motion.div>
 
       <div className="relative flex-1 bg-black">
-        <iframe
-          key={`${current}#${reloadKey}`}
-          src={current}
-          sandbox={sandbox}
-          referrerPolicy="no-referrer"
-          // Nessuna funzionalità del dispositivo: né fotocamera, né microfono,
-          // né posizione, né riproduzione automatica.
-          allow=""
-          title="Web Viewer"
-          className="h-full w-full border-0 bg-white"
-        />
+        {level === "hookata" ? (
+          hookedDoc ? (
+            <iframe
+              ref={frameRef}
+              key={`hook#${current}#${reloadKey}`}
+              srcDoc={hookedDoc}
+              sandbox={sandbox}
+              referrerPolicy="no-referrer"
+              allow=""
+              title="Web Viewer — lettura hookata"
+              className="h-full w-full border-0 bg-white"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center p-6 text-center">
+              <p className="max-w-md text-xs leading-relaxed text-text-faint">
+                {hookedError ?? "Leggo la pagina e ci metto lo script davanti…"}
+              </p>
+            </div>
+          )
+        ) : (
+          <iframe
+            key={`${current}#${reloadKey}`}
+            src={current}
+            sandbox={sandbox}
+            referrerPolicy="no-referrer"
+            // Nessuna funzionalità del dispositivo: né fotocamera, né microfono,
+            // né posizione, né riproduzione automatica.
+            allow=""
+            title="Web Viewer"
+            className="h-full w-full border-0 bg-white"
+          />
+        )}
       </div>
 
       <p className="border-t border-border bg-surface-2 px-3 py-2 text-[11px] leading-relaxed text-text-faint">

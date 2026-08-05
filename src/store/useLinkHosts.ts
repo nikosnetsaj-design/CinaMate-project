@@ -60,6 +60,7 @@ function normalize(value: LinkHost): LinkHost {
     searchPattern: typeof value.searchPattern === "string" ? value.searchPattern : "",
     recipe: isRecipe(value.recipe) ? value.recipe : "titolo-anno",
     layout: isLayout(value.layout) ? value.layout : "entrambi",
+    sendCookies: value.sendCookies === true,
     enabled: typeof value.enabled === "boolean" ? value.enabled : true,
     addedAt: typeof value.addedAt === "number" ? value.addedAt : Date.now(),
   };

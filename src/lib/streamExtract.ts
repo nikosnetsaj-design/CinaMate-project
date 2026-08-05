@@ -1,5 +1,6 @@
 import type { Item } from "../types";
 import { slugify } from "./sourceTemplate";
+import { isBlockedUrl } from "./netBlocklist";
 
 /**
  * Isolare il flusso da una pagina: leggerne il sorgente e tirarne fuori
@@ -42,7 +43,11 @@ export type PageResult =
  * comunque se qualcosa dall'altra parte c'è. Risposta opaca = il sito è vivo e
  * ci ha detto di no; niente = il sito non c'è.
  */
-export async function readPage(url: string, signal?: AbortSignal): Promise<PageResult> {
+export async function readPage(
+  url: string,
+  signal?: AbortSignal,
+  options: { sendCookies?: boolean } = {},
+): Promise<PageResult> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), PAGE_TIMEOUT_MS);
   const onAbort = () => controller.abort();
@@ -52,6 +57,9 @@ export async function readPage(url: string, signal?: AbortSignal): Promise<PageR
       signal: controller.signal,
       cache: "no-store",
       redirect: "follow",
+      // Vedi LinkHost.sendCookies: l'unico dei quattro header di sessione che
+      // un browser lascia riusare, e solo se il sito lo consente esplicitamente.
+      credentials: options.sendCookies ? "include" : "same-origin",
       // Molti siti servono una pagina diversa a chi arriva da fuori. Non
       // mandare il referrer è anche la scelta più discreta.
       referrerPolicy: "no-referrer",
@@ -125,32 +133,14 @@ export function looksLikeManifest(body: string): boolean {
 }
 
 /**
- * I domini da cui un manifest non è mai il film.
+ * Se un indirizzo appartiene a una rete pubblicitaria nota.
  *
- * Non è un ad-blocker — quello è la sandbox del Web Viewer, che agisce sulla
- * pagina. Questa lista agisce sull'*estrazione*: fra i manifest che una pagina
- * nomina ce ne sono di pubblicitari, e prenderne uno significa mandare nel
- * lettore trenta secondi di pre-roll invece del titolo. Sono nomi di rete
- * pubblicitaria, non di siti.
+ * La lista sta in `lib/netBlocklist.ts`, perché la usano in tre: qui per
+ * scartare i manifest pubblicitari, il service worker per fermare le
+ * richieste, e lo script iniettato della lettura hookata.
  */
-const AD_HOSTS = [
-  "doubleclick.net", "googlesyndication.com", "googleadservices.com", "google-analytics.com",
-  "adservice.google.com", "adnxs.com", "adsrvr.org", "rubiconproject.com", "pubmatic.com",
-  "openx.net", "criteo.com", "taboola.com", "outbrain.com", "scorecardresearch.com",
-  "moatads.com", "serving-sys.com", "smartadserver.com", "spotxchange.com", "springserve.com",
-  "imasdk.googleapis.com", "amazon-adsystem.com", "casalemedia.com", "onetag-sys.com",
-  "propellerads.com", "popads.net", "poweredby.jads.co", "exoclick.com", "juicyads.com",
-];
-
-/** Se un indirizzo appartiene a una rete pubblicitaria nota. */
 export function isAdHost(url: string): boolean {
-  let hostname: string;
-  try {
-    hostname = new URL(url).hostname.toLowerCase();
-  } catch {
-    return false;
-  }
-  return AD_HOSTS.some((ad) => hostname === ad || hostname.endsWith(`.${ad}`));
+  return isBlockedUrl(url);
 }
 
 export interface FoundStream {
@@ -251,7 +241,11 @@ export function streamsIn(html: string, pageUrl: string): FoundStream[] {
  * le playlist come `text/plain` o `application/octet-stream`. La riga `#EXTM3U`
  * invece è obbligatoria e non ammette equivoci.
  */
-export async function confirmManifest(url: string, signal?: AbortSignal): Promise<boolean> {
+export async function confirmManifest(
+  url: string,
+  signal?: AbortSignal,
+  options: { sendCookies?: boolean } = {},
+): Promise<boolean> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), PAGE_TIMEOUT_MS);
   const onAbort = () => controller.abort();
@@ -261,6 +255,7 @@ export async function confirmManifest(url: string, signal?: AbortSignal): Promis
       signal: controller.signal,
       cache: "no-store",
       referrerPolicy: "no-referrer",
+      credentials: options.sendCookies ? "include" : "same-origin",
       // Una playlist è testo e sta in pochi kB: il range evita di tirare giù un
       // video intero se il candidato si rivela essere il file e non la lista.
       headers: { Range: "bytes=0-2047" },
@@ -294,6 +289,7 @@ export async function bestStreamConfirmed(
   html: string,
   pageUrl: string,
   signal?: AbortSignal,
+  options: { sendCookies?: boolean } = {},
 ): Promise<FoundStream | null> {
   const all = streamsIn(html, pageUrl);
   const certain = all.find((s) => !s.unconfirmed);
@@ -301,7 +297,7 @@ export async function bestStreamConfirmed(
 
   for (const candidate of all.filter((s) => s.unconfirmed)) {
     if (signal?.aborted) return null;
-    if (await confirmManifest(candidate.url, signal)) {
+    if (await confirmManifest(candidate.url, signal, options)) {
       return { url: candidate.url, kind: "hls" };
     }
   }

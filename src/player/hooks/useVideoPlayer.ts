@@ -17,6 +17,12 @@ export type VideoPlayerOptions = {
   // manifest origin, every hls.js request gets transparently redirected
   // there — see the xhrSetup hook below for how this stays seamless.
   activeHostOrigin?: string | null;
+  /**
+   * Manda i cookie di sessione con le richieste dei segmenti. Serve ai flussi
+   * che vengono da un sito che lega il manifest a una sessione — vedi
+   * `LinkHost.sendCookies`, che è dove si accende.
+   */
+  sendCookies?: boolean;
   onProgress?: (currentTime: number, duration: number) => void;
   onEnded?: () => void;
   onError?: (message: string) => void;
@@ -171,6 +177,15 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
           xhrSetup: (xhr, url) => {
             const origin = activeOriginRef.current;
             if (origin) xhr.open('GET', rewriteOrigin(url, origin), true);
+            // I cookie di sessione sui segmenti, quando il titolo viene da un
+            // sito che li richiede. È l'unico dei quattro header di sessione
+            // che un browser lascia riusare: `Referer`, `Origin` e
+            // `User-Agent` sono forbidden headers e nessun `setRequestHeader`
+            // li imposta — il browser li scarta in silenzio. Un manifest
+            // protetto da un controllo sul referrer, da una pagina web, non si
+            // riproduce, e fingere il contrario avrebbe solo spostato più
+            // avanti la scoperta.
+            if (optionsRef.current.sendCookies) xhr.withCredentials = true;
           },
         });
         hlsRef.current = hls;

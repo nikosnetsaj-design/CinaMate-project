@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { BLOCKED_HOSTS } from "./netBlocklist";
+import { installRequestTap } from "./requestTap";
 
 /**
  * Registration for the offline shell, plus the one piece of state the page
@@ -77,7 +79,51 @@ async function primeAssetCache() {
   }
 }
 
+/**
+ * Manda al worker la lista nera dei domini.
+ *
+ * Il worker non passa dal bundler e non può importare `lib/netBlocklist.ts`,
+ * quindi la lista gli arriva così, a ogni avvio. Una copia incollata dentro
+ * `sw.js` sarebbe andata fuori sincrono al primo aggiornamento — e per giunta
+ * in silenzio, perché nessuno va a rileggere un file che «funziona».
+ */
+async function sendBlocklist() {
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    registration.active?.postMessage({ type: "blocklist", hosts: BLOCKED_HOSTS });
+  } catch {
+    // Senza worker il blocco resta quello dell'hook nella pagina, che c'è
+    // comunque — vedi lib/requestTap.ts.
+  }
+}
+
+/** Quante richieste il worker ha fermato in questa sessione. */
+export async function blockedByWorker(): Promise<number> {
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const worker = registration.active;
+    if (!worker) return 0;
+    return await new Promise<number>((resolve) => {
+      const channel = new MessageChannel();
+      const timer = setTimeout(() => resolve(0), 1000);
+      channel.port1.onmessage = (event) => {
+        clearTimeout(timer);
+        resolve(typeof event.data === "number" ? event.data : 0);
+      };
+      worker.postMessage({ type: "blocked-count" }, [channel.port2]);
+    });
+  } catch {
+    return 0;
+  }
+}
+
 export function registerServiceWorker() {
+  // L'hook su fetch e XHR si mette sempre, anche in sviluppo e anche dove i
+  // service worker non esistono: è la rete di sicurezza che non dipende da
+  // niente, e senza di lui il blocco avrebbe un buco proprio dove è più facile
+  // non accorgersene.
+  installRequestTap();
+
   if (!("serviceWorker" in navigator)) return;
   // A worker registered from the dev server would cache a shell that Vite is
   // about to rebuild, and then serve it back over the live one.
@@ -114,6 +160,7 @@ export function registerServiceWorker() {
       });
 
     void primeAssetCache();
+    void sendBlocklist();
 
     let reloading = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {

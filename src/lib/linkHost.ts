@@ -60,6 +60,24 @@ export interface LinkHost {
   recipe: QueryRecipe;
   /** Quali famiglie di percorsi provare. Assente sui record più vecchi. */
   layout?: LayoutFamily;
+  /**
+   * Manda i cookie di sessione alle richieste verso questo sito
+   * (`credentials: "include"`).
+   *
+   * È l'unico dei quattro header di sessione che un'app nativa riusa —
+   * `Cookie`, `Referer`, `Origin`, `User-Agent` — ad avere un equivalente qui.
+   * Gli altri tre sono *forbidden headers*: il browser se li riserva e `fetch`
+   * rifiuta di impostarli, quindi un sito che controlla il `Referer` per
+   * bloccare l'hotlinking non si serve da una pagina web, punto. I cookie
+   * invece il browser li ha già — se il sito l'hai aperto nel Web Viewer, la
+   * sessione sta nel suo barattolo — e chiederglieli è legittimo.
+   *
+   * Spento di default: `credentials: "include"` richiede che il sito risponda
+   * con `Access-Control-Allow-Credentials` e con un `Allow-Origin` esatto
+   * invece di `*`, e senza quelli la richiesta **fallisce dove prima
+   * funzionava**. Va acceso quando serve, non per scaramanzia.
+   */
+  sendCookies?: boolean;
   enabled: boolean;
   addedAt: number;
   /**

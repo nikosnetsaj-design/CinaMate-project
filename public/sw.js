@@ -25,10 +25,59 @@
  *    instead of a list of gradients.
  */
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL_CACHE = `cinemate-shell-${VERSION}`;
 const ASSET_CACHE = `cinemate-assets-${VERSION}`;
 const IMAGE_CACHE = `cinemate-images-${VERSION}`;
+
+/* ---------------------------------------------------------------------------
+ * Livello di rete: il worker come `shouldInterceptRequest`.
+ *
+ * Un'app nativa filtra le richieste sovrascrivendo quel callback della
+ * WebView. In un browser il posto equivalente è qui: il service worker sta fra
+ * la pagina e la rete, vede *ogni* richiesta che l'app fa — comprese quelle che
+ * hls.js emette per i segmenti, che nessun hook nel documento intercetta — e
+ * può rispondere al posto della rete. È anche, architetturalmente, lo stesso
+ * ruolo del reverse proxy su 127.0.0.1: non c'è un socket in ascolto, ma il
+ * punto in cui una richiesta si riscrive prima di partire è questo.
+ *
+ * Due cose che fa e che prima non faceva nessuno:
+ *
+ *  - **blocco**: una richiesta verso un dominio della lista nera non parte, e
+ *    riceve una risposta vuota. È l'equivalente esatto del
+ *    `WebResourceResponse` senza dati restituito dall'app nativa;
+ *  - **conteggio**: quante ne ha bloccate, così l'interfaccia può dirlo invece
+ *    di far finta di niente.
+ *
+ * La lista arriva dalla pagina con un messaggio: questo file non passa dal
+ * bundler e non può importare `lib/netBlocklist.ts`, e una copia incollata qui
+ * sarebbe andata fuori sincrono al primo aggiornamento.
+ * ------------------------------------------------------------------------- */
+
+let blockedHosts = [];
+let blockedCount = 0;
+
+function isBlockedHost(hostname) {
+  const host = hostname.toLowerCase();
+  return blockedHosts.some((blocked) => host === blocked || host.endsWith('.' + blocked));
+}
+
+/** La risposta data a una richiesta bloccata: vuota, ma non un errore. */
+function emptyResponse(request) {
+  // 200 con corpo vuoto invece di un errore di rete, di proposito: uno script
+  // pubblicitario che riceve un errore spesso riprova in ciclo, mentre uno che
+  // riceve una risposta vuota si limita a non fare niente. Le immagini
+  // ottengono un GIF trasparente, così un banner bloccato lascia un buco
+  // invece dell'icona di immagine rotta.
+  if (request.destination === 'image') {
+    const gif = Uint8Array.from(
+      atob('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'),
+      (c) => c.charCodeAt(0),
+    );
+    return new Response(gif, { headers: { 'Content-Type': 'image/gif' } });
+  }
+  return new Response('', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+}
 
 /** Roughly a full library's worth of posters; oldest are dropped past this. */
 const MAX_IMAGES = 400;
@@ -77,6 +126,18 @@ self.addEventListener('message', (event) => {
     return;
   }
 
+  // La lista nera, mandata dalla pagina a ogni avvio — vedi il blocco in cima.
+  if (event.data && event.data.type === 'blocklist' && Array.isArray(event.data.hosts)) {
+    blockedHosts = event.data.hosts;
+    return;
+  }
+
+  // Quante richieste sono state fermate, per l'interfaccia.
+  if (event.data && event.data.type === 'blocked-count') {
+    if (event.ports && event.ports[0]) event.ports[0].postMessage(blockedCount);
+    return;
+  }
+
   /*
    * The page telling us which files it is actually made of.
    *
@@ -109,9 +170,26 @@ self.addEventListener('message', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const request = event.request;
+
+  // Il blocco viene prima di ogni altra regola, e prima anche del filtro sul
+  // metodo: una beacon di tracciamento è quasi sempre una POST, ed era
+  // esattamente il tipo di richiesta che il resto di questo handler lasciava
+  // passare senza guardarla.
+  let target;
+  try {
+    target = new URL(request.url);
+  } catch {
+    return;
+  }
+  if (blockedHosts.length && isBlockedHost(target.hostname)) {
+    blockedCount += 1;
+    event.respondWith(emptyResponse(request));
+    return;
+  }
+
   if (request.method !== 'GET') return;
 
-  const url = new URL(request.url);
+  const url = target;
 
   // Never touched: TMDB's JSON and Anthropic's API are answers to questions
   // asked now, and a cached one would be worse than an honest failure.

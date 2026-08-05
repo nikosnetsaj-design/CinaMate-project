@@ -79,7 +79,7 @@ async function searchOneHost(
 
   for (const searchUrl of urls) {
     if (signal?.aborted) return null;
-    const page = await readPage(searchUrl, signal);
+    const page = await readPage(searchUrl, signal, { sendCookies: host.sendCookies });
 
     if (!page.ok) {
       // Un blocco CORS si ricorda ma non ferma il giro: gli altri percorsi di
@@ -104,7 +104,7 @@ async function searchOneHost(
 
     for (const candidate of candidates.slice(0, MAX_PAGES_TRIED)) {
       if (signal?.aborted) return null;
-      const titlePage = await readPage(candidate.url, signal);
+      const titlePage = await readPage(candidate.url, signal, { sendCookies: host.sendCookies });
       if (!titlePage.ok) {
         if (titlePage.reason === "bloccato-cors" && !blocked) {
           blocked = { kind: "bloccato", searchUrl: candidate.url, hostId: host.id };
@@ -114,7 +114,9 @@ async function searchOneHost(
       // Qui si paga la conferma dei candidati senza estensione: è la pagina
       // del titolo, l'ultima in cui il manifest può essere, e arrendersi
       // perché l'indirizzo non finisce in `.m3u8` sarebbe arrendersi presto.
-      const stream = await bestStreamConfirmed(titlePage.html, titlePage.finalUrl, signal);
+      const stream = await bestStreamConfirmed(titlePage.html, titlePage.finalUrl, signal, {
+        sendCookies: host.sendCookies,
+      });
       if (stream && stream.kind === "hls") return found(stream.url, titlePage.finalUrl);
     }
 
