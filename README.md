@@ -145,12 +145,27 @@ rete che non è la tua.
   solo pulsante pieno — **Guarda** — e cinque azioni tonde: Trailer, Preferito,
   Voto, Guardato, Condividi. Sotto, quattro schede: **Episodi**, Dettagli, Saga,
   Simili.
+- **Cast con le facce**: foto tonde, nome e personaggio, con «mostra tutti».
+  Un attore si ricorda per la faccia e per il ruolo prima che per il nome; senza
+  TMDB restano le pastiglie con i nomi, che la libreria ha comunque.
+- **Voto TMDB**: sotto la trama, accanto al cast — non in cima vicino al tuo.
+  Sono due giudizi diversi e affiancarli suggerirebbe un confronto che non
+  interessa a nessuno.
+- **Scarica dalla scheda**: i download non vivono più solo dentro il player.
+  L'indirizzo viene risolto *prima* di partire, perché un download che comincia
+  da un indirizzo indovinato fallisce a metà senza dire perché.
 - **Episodi per stagione**: per una serie collegata a TMDB l'elenco delle
-  puntate con miniatura, durata, voto e trama. Il segno di spunta segna «visto
+  puntate con miniatura, durata, voto e trama, con la tendina delle stagioni
+  (sette stagioni in fila orizzontale costringono a scorrere per arrivare
+  all'ultima, che è quella che si cerca). Il segno di spunta segna «visto
   fino a qui» — traducendo la puntata nel totale che la libreria tiene — e il
   play su una riga apre *quella* puntata: stagione ed episodio finiscono nelle
   sorgenti del titolo, quindi l'indirizzo costruito diventa `…/s02e07.m3u8`
   invece del solito `S01E{visti+1}`.
+- **Il logo del titolo**: in vetrina e in cima alla scheda, quando TMDB ha il
+  lettering disegnato della serie o del film. È metà dell'effetto — «Cent'anni
+  di solitudine» nel suo lettering *è* la locandina, lo stesso nome nel font
+  dell'app è una didascalia — e quando non c'è resta il titolo scritto.
 - **Cerca**: una pagina con la casella appesa in alto, due schede — **Film & TV**
   e **Persone** — e la griglia dei risultati, tenendo separato quello che hai
   (si apre) da quello che non hai (si aggiunge). A casella vuota propone cosa
@@ -278,7 +293,9 @@ freccia — e una schermata per volta. Le sezioni sono le stesse di prima
 (chiavi e modello, indirizzi delle sorgenti, Link Host, aspetto, Home su
 misura, televisore, controllo genitori, dati e backup, diagnostica); quello che
 cambia è che per cambiare il colore d'accento non si passa più davanti a due
-chiavi API.
+chiavi API. In fondo c'è **Informazioni**: di cosa è fatta l'app, con chi parla
+il tuo browser e cosa promette sui tuoi dati — comprese le attribuzioni a TMDB
+e JustWatch, che stanno lì perché è lì che si cercano.
 
 **Gestisci Link Host** ha la sua schermata, con due schede in fondo che restano
 leggibili anche dopo il primo giorno:

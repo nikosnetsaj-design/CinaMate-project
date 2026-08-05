@@ -26,7 +26,7 @@ import { getDailySeconds, restoreDailySeconds } from "../player/services/statsAn
 import { useWatchProgress } from "../store/useWatchProgress";
 import { buildBackup, parseBackup, BackupParseError } from "../lib/backup";
 import { resetAutoLinkAttempts } from "../lib/useAutoLinkTmdb";
-import { BookIcon, CompassIcon, HomeIcon, PersonIcon, PlayIcon, PulseIcon, SparkleIcon, StackIcon, SunIcon } from "./icons";
+import { BookIcon, CompassIcon, HomeIcon, PersonIcon, PlayIcon, PulseIcon, ReelMark, SparkleIcon, StackIcon, SunIcon } from "./icons";
 
 /**
  * Where your own sources live, written once instead of pasted per title.
@@ -344,7 +344,7 @@ function SourceTemplates() {
  * che sono cose diverse, e fa entrare ognuna in una schermata che si legge
  * tutta senza scorrere.
  */
-type PanelId = "chiavi" | "sorgenti" | "linkhost" | "aspetto" | "home" | "tv" | "genitori" | "dati";
+type PanelId = "chiavi" | "sorgenti" | "linkhost" | "aspetto" | "home" | "tv" | "genitori" | "dati" | "info";
 
 const PANEL_TITLES: Record<PanelId, string> = {
   chiavi: "Chiavi e modello",
@@ -355,6 +355,7 @@ const PANEL_TITLES: Record<PanelId, string> = {
   tv: "Televisore",
   genitori: "Controllo genitori",
   dati: "Dati e backup",
+  info: "Informazioni",
 };
 
 function SettingsRow({
@@ -405,6 +406,52 @@ function SettingsGroup({ label, children }: { label: string; children: ReactNode
         {children}
       </div>
     </section>
+  );
+}
+
+/**
+ * Cosa c'è dentro l'app, e le promesse che vale la pena scrivere una volta.
+ *
+ * Le attribuzioni non sono un adempimento nascosto in fondo a un file di
+ * licenza: TMDB chiede di dichiarare che il prodotto usa la sua API senza
+ * esserne approvato, e chi guarda ha diritto di sapere con chi parla il suo
+ * browser. Stanno qui perché qui le si cerca.
+ */
+function AboutPanel() {
+  const rows: { label: string; value: string }[] = [
+    { label: "Catalogo", value: "TMDB — copertine, trama, cast, episodi, date di uscita" },
+    { label: "Dove guardarlo", value: "Dati di disponibilità streaming forniti da JustWatch tramite TMDB" },
+    { label: "Critico", value: "API di Anthropic, chiamata dal tuo browser con la tua chiave" },
+    { label: "Player", value: "hls.js per lo streaming adattivo, riproduzione nel browser" },
+  ];
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="rounded-md border border-border bg-surface-2 p-4">
+        <h4 className="mb-2 text-sm font-semibold text-text">I tuoi dati</h4>
+        <p className="text-xs leading-relaxed text-text-faint">
+          Libreria, diario, voti, sorgenti e chiavi vivono solo in questo browser: non c'è nessun
+          account e nessun server di CineMate a cui mandarli. Le uniche cose che escono dal
+          dispositivo sono le richieste a TMDB e ad Anthropic, fatte con le chiavi che hai scritto
+          tu, e le richieste ai server dei video che hai indicato tu. Il backup è un file leggibile
+          che resta in mano tua.
+        </p>
+      </div>
+
+      <div className="overflow-hidden rounded-md border border-border">
+        {rows.map((row) => (
+          <div key={row.label} className="border-b border-border px-3.5 py-3 last:border-b-0">
+            <span className="block text-xs font-medium uppercase tracking-wide text-text-faint">{row.label}</span>
+            <span className="mt-0.5 block text-sm text-text">{row.value}</span>
+          </div>
+        ))}
+      </div>
+
+      <p className="text-[11px] leading-relaxed text-text-faint">
+        Questo prodotto usa l'API TMDB ma non è approvato né certificato da TMDB. CineMate non
+        ospita né fornisce contenuti: riproduce le sorgenti che indichi tu.
+      </p>
+    </div>
   );
 }
 
@@ -604,6 +651,15 @@ function SettingsForm() {
                 onNavigate={close}
               />
             </SettingsGroup>
+
+            <SettingsGroup label="Info">
+              <SettingsRow
+                icon={<ReelMark size={17} />}
+                title="Informazioni sull'app"
+                subtitle="Di cosa è fatta CineMate, con cosa parla e cosa promette sui tuoi dati."
+                onClick={() => setPanel("info")}
+              />
+            </SettingsGroup>
           </div>
         )}
 
@@ -769,6 +825,7 @@ function SettingsForm() {
         )}
 
         {panel === "linkhost" && <LinkHostSettings />}
+        {panel === "info" && <AboutPanel />}
         {panel === "aspetto" && <AppearanceSettings />}
         {panel === "tv" && <TvSettings />}
         {panel === "home" && <HomeLayoutSettings />}

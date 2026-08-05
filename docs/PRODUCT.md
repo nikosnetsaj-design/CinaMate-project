@@ -75,6 +75,10 @@ resta tua e non ti vende niente.
 | **Schede invece di una colonna** | La scheda era lunga quanto tre schermate | Episodi · Dettagli · Saga · Simili: si apre su ciò che serve, e per una serie è l'elenco delle puntate | Utile ✅ |
 | **Episodi per stagione** | La libreria sapeva *quanti* episodi avevi visto, non quali | Titolo, durata, voto, trama e miniatura di ogni puntata (TMDB, in cache sei ore); il segno di spunta segna "visto fino a qui" | Utile ✅ |
 | **Riproduci quella puntata** | La stagione era fissa a 1 e l'episodio era «visti + 1» | Il play su una riga scrive stagione ed episodio nelle sorgenti del titolo: gli indirizzi costruiti diventano `…/s02e07.m3u8` e la ricerca sui siti chiede quella puntata | Utile ✅ |
+| **Cast con foto e personaggio** | Un attore si riconosce in faccia, non dal nome anagrafico | Cerchi con foto, nome e ruolo, «mostra tutti»; senza TMDB restano le pastiglie con i nomi | Utile ✅ |
+| **Voto TMDB** | Il voto del pubblico non si vedeva da nessuna parte | Sotto la trama, lontano dal tuo voto: sono due giudizi diversi e affiancarli suggerirebbe un confronto che non interessa | Utile ✅ |
+| **Scarica dalla scheda** | I download vivevano solo dentro il player, cioè dove arrivi quando hai già deciso di guardare *adesso* | Scelta della qualità e download avviato dalla scheda, con l'indirizzo risolto prima di partire | Utile ✅ |
+| **Logo del titolo** | Il nome nel font dell'app è una didascalia, non una locandina | Il lettering disegnato da TMDB in vetrina e in cima alla scheda, con il titolo scritto come ripiego | Utile ✅ |
 
 ---
 

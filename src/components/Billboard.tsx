@@ -9,7 +9,9 @@ import { continueWatching, lastSeenDates } from "../lib/continueWatching";
 import { pickFeaturedList } from "../lib/featured";
 import { backdropSrcSet, backdropUrl, posterUrl } from "../lib/tmdb";
 import { paletteFor } from "../lib/palette";
+import { useTitleLogo } from "../lib/useTitleLogo";
 import { CheckIcon, InfoIcon, PlayIcon, PlusIcon } from "./icons";
+import type { Item } from "../types";
 
 /**
  * La vetrina: un titolo solo, grande, con la ragione per cui è lì e due modi
@@ -22,6 +24,9 @@ import { CheckIcon, InfoIcon, PlayIcon, PlusIcon } from "./icons";
  * data, i minuti che restano, il giorno in cui l'hai aggiunto), e la scelta
  * segue la gerarchia dichiarata in lib/featured.
  */
+
+/** Segnaposto per l'hook del logo quando la vetrina è ancora vuota. */
+const EMPTY_ITEM = { id: "", tmdbId: null, tmdbMediaType: null } as unknown as Item;
 
 export function Billboard() {
   const items = useVisibleItems();
@@ -44,6 +49,9 @@ export function Billboard() {
   const [index, setIndex] = useState(0);
   const touchX = useRef<number | null>(null);
   const current = featured[Math.min(index, featured.length - 1)];
+  // Sempre chiamato, anche quando non c'è ancora nulla in vetrina: gli hook non
+  // possono stare dietro a un ritorno anticipato.
+  const logo = useTitleLogo(current?.item ?? EMPTY_ITEM);
 
   if (!current) return null;
   const { item, line } = current;
@@ -101,11 +109,22 @@ export function Billboard() {
         />
 
         <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-3 p-4 text-center sm:p-6">
+          {/* Il logo disegnato del titolo quando TMDB ce l'ha: è metà
+              dell'effetto di una vetrina, perché il lettering *è* la locandina
+              mentre lo stesso nome nel font dell'app è una didascalia. */}
           <h2
             className="font-display text-3xl font-semibold leading-[1.05] text-white sm:text-4xl"
             style={{ textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}
           >
-            {item.title}
+            {logo ? (
+              <img
+                src={logo}
+                alt={item.title}
+                className="mx-auto max-h-28 w-auto max-w-[85%] object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)]"
+              />
+            ) : (
+              item.title
+            )}
           </h2>
           <p className="text-sm font-medium text-white/85">{line}</p>
 

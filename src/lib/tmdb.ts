@@ -651,6 +651,117 @@ export async function searchPeople(
 }
 
 /* ------------------------------------------------------------------ */
+/* Cast con foto e personaggio                                         */
+/* ------------------------------------------------------------------ */
+
+export interface TmdbCastMember {
+  id: number;
+  name: string;
+  /** Chi interpreta. Vuoto per chi compare come sé stesso o nei documentari. */
+  character: string;
+  profilePath: string | null;
+}
+
+interface RawCastMember {
+  id: number;
+  name?: string;
+  character?: string;
+  profile_path?: string | null;
+  order?: number;
+}
+
+/**
+ * Il cast con le facce, non solo con i nomi.
+ *
+ * La libreria salva `cast` come cinque stringhe, che bastano per cercare e non
+ * bastano per riconoscere: metà delle volte un attore lo si ricorda in faccia e
+ * per il personaggio, non per il nome anagrafico. Sta a parte da `getDetails`
+ * perché serve solo alla scheda aperta, e tenerlo lì avrebbe appesantito ogni
+ * collegamento automatico fatto in sottofondo.
+ */
+const creditsCache = new Map<string, TmdbCastMember[]>();
+
+export async function getCast(
+  tmdbId: number,
+  mediaType: "movie" | "tv",
+  apiKey: string,
+  limit = 12,
+): Promise<TmdbCastMember[]> {
+  const key = `${mediaType}:${tmdbId}`;
+  const hit = creditsCache.get(key);
+  if (hit) return hit.slice(0, limit);
+
+  const path = mediaType === "movie" ? `/movie/${tmdbId}/credits` : `/tv/${tmdbId}/aggregate_credits`;
+  const data = await tmdbGet<{ cast?: (RawCastMember & { roles?: { character?: string }[] })[] }>(path, apiKey);
+  const cast = (data.cast ?? [])
+    .slice(0, 24)
+    .map((c) => ({
+      id: c.id,
+      name: c.name?.trim() ?? "",
+      // Le serie rispondono con `roles[]` (un attore può avere più personaggi
+      // nell'arco di sette stagioni); i film con `character`. Prendo il primo,
+      // che è quello per cui la persona è conosciuta in quel titolo.
+      character: (c.roles?.[0]?.character || c.character || "").trim(),
+      profilePath: c.profile_path ?? null,
+    }))
+    .filter((c) => c.name);
+
+  creditsCache.set(key, cast);
+  return cast.slice(0, limit);
+}
+
+/* ------------------------------------------------------------------ */
+/* Logo del titolo                                                     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Il "title treatment": il logo del titolo disegnato, quello che sulle app di
+ * streaming sta al posto del nome scritto in cima alla vetrina.
+ *
+ * Vale la pena andarlo a prendere perché è metà dell'effetto: «Cent'anni di
+ * solitudine» composto nel lettering della serie *è* la locandina, mentre lo
+ * stesso testo nel font dell'app è una didascalia. Quando non c'è — e per molti
+ * titoli non c'è — resta il titolo scritto, che è sempre stata la resa
+ * predefinita.
+ *
+ * Italiano prima, inglese poi, senza lingua per ultimo: un logo inglese su un
+ * titolo italiano è comunque il logo giusto, un logo giapponese quasi mai.
+ */
+const logoCache = new Map<string, string | null>();
+
+export async function getTitleLogo(
+  tmdbId: number,
+  mediaType: "movie" | "tv",
+  apiKey: string,
+): Promise<string | null> {
+  const key = `${mediaType}:${tmdbId}`;
+  const hit = logoCache.get(key);
+  if (hit !== undefined) return hit;
+
+  try {
+    const data = await tmdbGet<{ logos?: { file_path: string; iso_639_1: string | null }[] }>(
+      `/${mediaType}/${tmdbId}/images`,
+      apiKey,
+      { include_image_language: "it,en,null" },
+    );
+    const logos = data.logos ?? [];
+    const pick =
+      logos.find((l) => l.iso_639_1 === "it") ??
+      logos.find((l) => l.iso_639_1 === "en") ??
+      logos.find((l) => l.iso_639_1 === null) ??
+      null;
+    // I `.svg` di TMDB non hanno dimensioni intrinseche e il ridimensionatore
+    // non li serve nelle larghezze `w…`: si prende il PNG, che c'è quasi sempre.
+    const path = pick && !pick.file_path.endsWith(".svg") ? `${IMG_BASE}/w500${pick.file_path}` : null;
+    logoCache.set(key, path);
+    return path;
+  } catch {
+    logoCache.set(key, null);
+    return null;
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* Stagioni ed episodi                                                 */
 /* ------------------------------------------------------------------ */
 

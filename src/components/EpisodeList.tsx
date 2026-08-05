@@ -119,6 +119,7 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
     [item.seasons],
   );
   const [season, setSeason] = useState(seasons[0]);
+  const [seasonMenu, setSeasonMenu] = useState(false);
   const [episodes, setEpisodes] = useState<TmdbEpisode[] | null>(null);
   const [failed, setFailed] = useState(false);
   /** Quanti episodi stanno prima di questa stagione, per il contatore della libreria. */
@@ -186,23 +187,59 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
 
   return (
     <div className="flex flex-col gap-3">
+      {/* Una tendina e non una fila di pastiglie: sette stagioni in orizzontale
+          costringono a scorrere per arrivare all'ultima, e la settima è
+          esattamente quella che si cerca in una serie che stai finendo. */}
       {seasons.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Stagioni">
-          {seasons.map((s) => (
-            <button
-              key={s}
-              type="button"
-              role="tab"
-              aria-selected={s === season}
-              onClick={() => setSeason(s)}
-              className={`shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
-                s === season ? "border-transparent" : "border-border-strong text-text-muted hover:bg-surface-hover"
-              }`}
-              style={s === season ? { background: "var(--accent)", color: "var(--accent-contrast)" } : undefined}
-            >
-              Stagione {s}
-            </button>
-          ))}
+        <div className="relative self-start">
+          <button
+            type="button"
+            onClick={() => setSeasonMenu((v) => !v)}
+            aria-expanded={seasonMenu}
+            aria-haspopup="listbox"
+            className="flex items-center gap-2 rounded-sm border border-border-strong bg-surface-2 px-3.5 py-2 text-sm font-medium text-text"
+          >
+            Stagione {season}
+            <span aria-hidden="true" className="text-text-faint">
+              ⌄
+            </span>
+          </button>
+
+          {seasonMenu && (
+            <>
+              <button
+                type="button"
+                aria-label="Chiudi l'elenco delle stagioni"
+                className="fixed inset-0 z-30 cursor-default"
+                onClick={() => setSeasonMenu(false)}
+              />
+              <ul
+                role="listbox"
+                aria-label="Stagioni"
+                className="absolute left-0 top-full z-40 mt-1 max-h-64 min-w-44 overflow-y-auto rounded-md border border-border-strong bg-surface py-1 shadow-[var(--shadow-md)]"
+              >
+                {seasons.map((s) => (
+                  <li key={s}>
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={s === season}
+                      onClick={() => {
+                        setSeason(s);
+                        setSeasonMenu(false);
+                      }}
+                      className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-sm text-text hover:bg-surface-hover"
+                    >
+                      <span className="w-4 shrink-0" style={{ color: "var(--accent-text)" }}>
+                        {s === season ? "✓" : ""}
+                      </span>
+                      Stagione {s}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </div>
       )}
 

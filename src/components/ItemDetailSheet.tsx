@@ -14,9 +14,10 @@ import { WatchAndLinks } from "./WatchAndLinks";
 import { WatchButton } from "./WatchButton";
 import { LinkToTmdb } from "./LinkToTmdb";
 import { ItemSagaStrip } from "./ItemSagaStrip";
-import { PeopleLinks } from "./PeopleLinks";
+import { CastRow } from "./CastRow";
 import { ShareSheet } from "./ShareSheet";
 import { EpisodeList } from "./EpisodeList";
+import { DownloadButton } from "./DownloadButton";
 import { SpoilerFreeRecap, TranslateOverview } from "./AiItemExtras";
 import { HeartIcon, PlayIcon } from "./icons";
 import { useSelectedItem } from "../store/useSelectedItem";
@@ -24,6 +25,7 @@ import { useLibrary } from "../store/useLibrary";
 import { useEditSheet } from "../store/useEditSheet";
 import { useAddSheet } from "../store/useAddSheet";
 import { useCriticDraft } from "../store/useCriticDraft";
+import { useTitleLogo } from "../lib/useTitleLogo";
 import type { Item, Status } from "../types";
 
 /**
@@ -86,6 +88,7 @@ function ItemDetail({ item }: { item: Item }) {
 
   const containerRef = useFocusTrap(close);
   const titleId = `item-detail-${item.id}`;
+  const logo = useTitleLogo(item);
   const shelfMates = useMemo(() => similarInLibrary(item, items), [item, items]);
   const [sharing, setSharing] = useState(false);
   const [a, b] = paletteFor(item.title);
@@ -168,8 +171,16 @@ function ItemDetail({ item }: { item: Item }) {
           {item.platform}
         </span>
         <div className="mt-0.5 flex items-start justify-between gap-3">
+          {/* Il logo disegnato quando TMDB ce l'ha, il titolo scritto quando
+              non c'è. L'`h1` resta in entrambi i casi: l'immagine porta il
+              testo nell'`alt`, così l'intestazione della pagina esiste anche
+              per chi non la vede. */}
           <h1 id={titleId} className="font-display text-2xl font-semibold leading-tight text-text">
-            {item.title}
+            {logo ? (
+              <img src={logo} alt={item.title} className="max-h-16 w-auto max-w-[min(100%,20rem)] object-contain" />
+            ) : (
+              item.title
+            )}
           </h1>
         </div>
 
@@ -201,6 +212,7 @@ function ItemDetail({ item }: { item: Item }) {
         {/* Alto di proposito: "guardalo adesso" è il motivo per cui la scheda si
             apre dopo una ricerca, e stava sotto le note. */}
         <WatchButton item={item} onNavigate={close} />
+        <DownloadButton item={item} />
 
         {/* Cinque azioni, tutte reversibili e tutte con un effetto visibile.
             "La mia lista" non c'è: in CineMate la lista *è* lo stato, che ha
@@ -233,7 +245,21 @@ function ItemDetail({ item }: { item: Item }) {
         </div>
 
         {item.overview && <p className="mt-4 text-sm leading-relaxed text-text-muted">{item.overview}</p>}
-        <PeopleLinks item={item} />
+
+        {/* Il voto di TMDB sta qui e non accanto al tuo, in cima: sono due
+            giudizi diversi e affiancarli suggerirebbe un confronto che non
+            interessa a nessuno. Qui è un dato del titolo fra gli altri. */}
+        {item.tmdbRating != null && (
+          <p className="mt-2.5 flex items-center gap-2 text-sm text-text-muted">
+            <span className="text-base leading-none" style={{ color: "var(--accent-text)" }}>
+              ★
+            </span>
+            <span className="font-mono tabular font-semibold text-text">{item.tmdbRating.toFixed(1)}</span>
+            <span className="text-text-faint">/10 · media di TMDB</span>
+          </p>
+        )}
+
+        <CastRow item={item} />
 
         <div className="mt-5 flex gap-1 border-b border-border" role="tablist" aria-label="Sezioni del titolo">
           {TABS.map((t) => (
