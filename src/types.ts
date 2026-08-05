@@ -43,6 +43,13 @@ export interface Item {
   tmdbId: number | null;
   tmdbMediaType: "movie" | "tv" | null;
   posterPath: string | null;
+  /**
+   * L'immagine orizzontale, usata come intestazione della scheda. Opzionale
+   * come i campi qui sotto: arriva ai titoli aggiunti o ricollegati dopo che
+   * questa esisteva, e quando manca l'intestazione resta la sfumatura generata
+   * dal titolo, che è sempre stata la resa predefinita.
+   */
+  backdropPath?: string | null;
   trailerUrl: string | null;
   links: string[];
   /**

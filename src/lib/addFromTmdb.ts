@@ -38,6 +38,7 @@ export async function draftFromTmdb(
     tmdbId: d.tmdbId,
     tmdbMediaType: mediaType,
     posterPath: d.posterPath ?? fallbacks.posterPath ?? null,
+    backdropPath: d.backdropPath,
     trailerUrl: d.trailerUrl,
     collectionId: d.collectionId,
     collectionName: d.collectionName,

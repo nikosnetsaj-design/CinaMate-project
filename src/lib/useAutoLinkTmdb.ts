@@ -18,6 +18,7 @@ function fillGaps(item: Item, d: Awaited<ReturnType<typeof getDetails>>, mediaTy
     tmdbId: d.tmdbId,
     tmdbMediaType: mediaType,
     posterPath: d.posterPath,
+    backdropPath: d.backdropPath,
     trailerUrl: d.trailerUrl,
     // Only ever fill what is still empty: anything already curated wins.
     genre: item.genre || d.genre,

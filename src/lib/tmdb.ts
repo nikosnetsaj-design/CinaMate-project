@@ -48,6 +48,8 @@ export interface TmdbDetails {
   cast: string[];
   similar: string[];
   posterPath: string | null;
+  /** L'immagine orizzontale del titolo, quella che sta bene dietro a un testo. */
+  backdropPath: string | null;
   trailerUrl: string | null;
   watchProviders: TmdbWatchProvider[];
   /** Saga the title belongs to, `null` when it is standalone. */
@@ -142,6 +144,29 @@ export function posterSrcSet(path: string | null | undefined, sizes: PosterSize[
   return sizes.map((size) => `${IMG_BASE}/${size}${path} ${POSTER_WIDTHS[size]}w`).join(", ");
 }
 
+/**
+ * L'immagine orizzontale del titolo, in due larghezze.
+ *
+ * Serve dietro all'intestazione della scheda, dove una locandina verticale non
+ * ci sta: ritagliata per riempire una fascia bassa e larga mostrerebbe un
+ * primo piano di mento. Le larghezze sono due sole perché la fascia è alta
+ * poche centinaia di pixel e sopra `w780` non si vedrebbe la differenza, mentre
+ * su una connessione lenta si sentirebbe.
+ */
+const BACKDROP_WIDTHS = { w780: 780, w1280: 1280 } as const;
+export type BackdropSize = keyof typeof BACKDROP_WIDTHS;
+
+export function backdropUrl(path: string | null | undefined, size: BackdropSize = "w780"): string | null {
+  return path ? `${IMG_BASE}/${size}${path}` : null;
+}
+
+export function backdropSrcSet(path: string | null | undefined): string | undefined {
+  if (!path) return undefined;
+  return (Object.keys(BACKDROP_WIDTHS) as BackdropSize[])
+    .map((size) => `${IMG_BASE}/${size}${path} ${BACKDROP_WIDTHS[size]}w`)
+    .join(", ");
+}
+
 function guessKind(mediaType: "movie" | "tv", genreNames: string[], originCountry: string[] = []): Kind {
   if (mediaType === "movie") return genreNames.includes("Documentario") || genreNames.includes("Documentary") ? "doc" : "film";
   const isAnimation = genreNames.includes("Animazione") || genreNames.includes("Animation");
@@ -224,6 +249,7 @@ interface RawDetails {
   first_air_date?: string;
   overview?: string;
   poster_path?: string | null;
+  backdrop_path?: string | null;
   belongs_to_collection?: { id: number; name: string; poster_path?: string | null } | null;
   genres?: { name: string }[];
   runtime?: number;
@@ -324,6 +350,7 @@ export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiK
       .map((r) => r.title || r.name || "")
       .filter(Boolean),
     posterPath: details.poster_path ?? null,
+    backdropPath: details.backdrop_path ?? null,
     trailerUrl: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null,
     watchProviders: watch.providers,
     // TV shows have no collection on TMDB, so `null` there is a real answer
