@@ -72,7 +72,8 @@ resta tua e non ti vende niente.
 | Funzione | Problema | Beneficio | Priorità |
 |---|---|---|---|
 | **Intestazione larga con Riproduci** | La scheda si apriva su una fascia di dati e il "guarda" stava sotto le note | Copertina orizzontale con il play al centro, riga dei fatti (anno · classificazione · stagioni · durata · qualità) e un solo pulsante pieno | Essenziale ✅ |
-| **Cinque azioni tonde** | Le stesse cose erano sparse fra pastiglie di stato e pulsanti in fondo | Trailer, Preferito, Voto, Guardato, Condividi: tutte reversibili e tutte con un effetto visibile | Utile ✅ |
+| **Azioni tonde** | Le stesse cose erano sparse fra pastiglie di stato e pulsanti in fondo | Trailer, La mia lista, Preferito, Voto, Guardato, Condividi: tutte reversibili e tutte con un effetto visibile | Utile ✅ |
+| **Togliere dalla lista senza eliminare** | L'unico pulsante che faceva sparire un titolo dalla watchlist era *Elimina*, che cancella anche voto e note | «La mia lista» toglie oltre che mettere: lo stato diventa *Abbandonato* (non iniziato) o *In pausa* (già cominciato), e il messaggio dice quale — nessuno stato inventato, niente perso | Essenziale ✅ |
 | **Schede invece di una colonna** | La scheda era lunga quanto tre schermate | Episodi · Dettagli · Saga · Simili: si apre su ciò che serve, e per una serie è l'elenco delle puntate | Utile ✅ |
 | **Episodi per stagione** | La libreria sapeva *quanti* episodi avevi visto, non quali | Titolo, durata, voto, trama e miniatura di ogni puntata (TMDB, in cache sei ore); il segno di spunta segna "visto fino a qui" | Utile ✅ |
 | **Riproduci quella puntata** | La stagione era fissa a 1 e l'episodio era «visti + 1» | Il play su una riga scrive stagione ed episodio nelle sorgenti del titolo: gli indirizzi costruiti diventano `…/s02e07.m3u8` e la ricerca sui siti chiede quella puntata | Utile ✅ |
@@ -93,6 +94,7 @@ resta tua e non ti vende niente.
 | **«Ce l'hai già»** | Si ri-aggiungeva quello che si possedeva | I titoli della libreria che somigliano a ciò che scrivi compaiono per primi, senza chiave API e senza rete | Utile ✅ |
 | **Cerca come destinazione** | La ricerca viveva nella palette dei comandi: ottima da tastiera, introvabile su un telefono | Una pagina con la casella appesa in alto, due schede (Film & TV, Persone) e la griglia dei risultati; a casella vuota propone cosa riprendere invece di una pagina bianca | Essenziale ✅ |
 | **Un risultato si guarda, non si salva** | Toccare un titolo apriva il modulo di inserimento: per leggere una trama bisognava prima decidere di tenerlo | L'anteprima si apre sopra i risultati, e «Aggiungi alla libreria» è un pulsante dentro, non il prezzo del biglietto | Essenziale ✅ |
+| **Ordine per somiglianza** | TMDB ordina per popolarità: «squi» metteva *Squid Game* dietro a *Scaredy Squirrel* | I risultati si riordinano per quanto il titolo somiglia a ciò che hai digitato; a parità resta l'ordine di TMDB | Utile ✅ |
 | **Persone come risultato** | Un attore si cercava solo dai crediti di un titolo che avevi già | La scheda Persone interroga TMDB per nome e apre la scheda della persona | Utile ✅ |
 
 | Funzione | Problema | Beneficio | Priorità |

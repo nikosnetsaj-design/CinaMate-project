@@ -19,6 +19,7 @@ import { Billboard } from "../components/Billboard";
 import { becauseYouWatched, forYou, mostWatched, recentlyAdded } from "../lib/recommend";
 import { lastSeenDates } from "../lib/continueWatching";
 import { badgeFor } from "../lib/homeBadges";
+import { removalMessage, removedStatus } from "../lib/watchlist";
 import { badgesFor, useUpcoming } from "../lib/useUpcoming";
 import { useLibrary } from "../store/useLibrary";
 import { computeStats } from "../lib/stats";
@@ -49,6 +50,8 @@ export function Home() {
   const latest = useMemo(() => recentlyAdded(items), [items]);
 
   const history = useLibrary((s) => s.history);
+  const setStatus = useLibrary((s) => s.setStatus);
+  const pushToast = useLibrary((s) => s.pushToast);
   const because = useMemo(() => becauseYouWatched(items, lastSeenDates(history)), [items, history]);
 
   // Le pastiglie sulle copertine si calcolano una volta per tutta la pagina:
@@ -134,7 +137,23 @@ export function Home() {
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {planned.map((item) => (
-              <PosterCard key={item.id} item={item} onOpen={openItem} badge={badges[item.id]} />
+              <div key={item.id} className="flex flex-col gap-1">
+                <PosterCard item={item} onOpen={openItem} badge={badges[item.id]} />
+                {/* Togliere dalla lista è un'azione della lista, quindi sta
+                    qui e non solo dentro la scheda. Non cancella niente: il
+                    titolo resta in libreria, e il messaggio dice dov'è finito. */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStatus(item.id, removedStatus(item));
+                    pushToast("info", removalMessage(item));
+                  }}
+                  aria-label={`Togli ${item.title} dalla lista`}
+                  className="self-start text-[11px] text-text-faint underline-offset-2 hover:text-text-muted hover:underline"
+                >
+                  togli dalla lista
+                </button>
+              </div>
             ))}
           </div>
         </section>

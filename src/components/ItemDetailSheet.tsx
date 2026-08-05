@@ -19,12 +19,13 @@ import { SimilarTitles } from "./SimilarTitles";
 import { EpisodeList } from "./EpisodeList";
 import { DownloadButton } from "./DownloadButton";
 import { SpoilerFreeRecap, TranslateOverview } from "./AiItemExtras";
-import { HeartIcon, PlayIcon } from "./icons";
+import { CheckIcon, HeartIcon, PlayIcon, PlusIcon } from "./icons";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useLibrary } from "../store/useLibrary";
 import { useEditSheet } from "../store/useEditSheet";
 import { useCriticDraft } from "../store/useCriticDraft";
 import { useTitleLogo } from "../lib/useTitleLogo";
+import { isInWatchlist, removalMessage, removedStatus } from "../lib/watchlist";
 import type { Item, Status } from "../types";
 
 /**
@@ -72,6 +73,7 @@ type Tab = "episodi" | "dettagli" | "saga" | "simili";
 function ItemDetail({ item }: { item: Item }) {
   const close = useSelectedItem((s) => s.close);
   const setStatus = useLibrary((s) => s.setStatus);
+  const pushToast = useLibrary((s) => s.pushToast);
   const toggleFav = useLibrary((s) => s.toggleFav);
   const incrementEpisode = useLibrary((s) => s.incrementEpisode);
   const decrementEpisode = useLibrary((s) => s.decrementEpisode);
@@ -88,6 +90,7 @@ function ItemDetail({ item }: { item: Item }) {
   const [sharing, setSharing] = useState(false);
   const [a, b] = paletteFor(item.title);
   const isSeries = item.kind !== "film" && item.kind !== "doc";
+  const inList = isInWatchlist(item);
   const [tab, setTab] = useState<Tab>(isSeries ? "episodi" : "dettagli");
   const pct = isSeries && item.episodes ? Math.round(((item.seen || 0) / item.episodes) * 100) : null;
   const watchedMinutes = item.kind === "film" ? (item.status === "Visto" ? item.runtime : 0) : (item.seen || 0) * item.runtime;
@@ -209,16 +212,32 @@ function ItemDetail({ item }: { item: Item }) {
         <WatchButton item={item} onNavigate={close} />
         <DownloadButton item={item} />
 
-        {/* Cinque azioni, tutte reversibili e tutte con un effetto visibile.
-            "La mia lista" non c'è: in CineMate la lista *è* lo stato, che ha
-            la sua riga di pastiglie in Dettagli, e un interruttore a due valori
-            avrebbe dovuto inventare uno stato "non in lista" che non esiste. */}
+        {/* Azioni tutte reversibili e tutte con un effetto visibile. "La mia
+            lista" toglie oltre che mettere: prima l'unico modo per far sparire
+            un titolo dalla watchlist era *Elimina*, che però cancella voto e
+            note — una cosa diversa da "non lo guardo più". Dove finisce, e con
+            che nome, lo decide lib/watchlist e lo dice il messaggio. */}
         <div className="mt-4 flex flex-wrap justify-around gap-2 border-y border-border py-3">
           {item.trailerUrl && (
             <RoundAction label="Trailer" onClick={() => window.open(item.trailerUrl!, "_blank", "noopener")}>
               <PlayIcon size={17} />
             </RoundAction>
           )}
+          <RoundAction
+            label={inList ? "Nella lista" : "La mia lista"}
+            active={inList}
+            onClick={() => {
+              if (inList) {
+                setStatus(item.id, removedStatus(item));
+                pushToast("info", removalMessage(item));
+              } else {
+                setStatus(item.id, "Da vedere");
+                pushToast("success", `«${item.title}» è nella tua lista.`);
+              }
+            }}
+          >
+            {inList ? <CheckIcon size={17} /> : <PlusIcon size={17} />}
+          </RoundAction>
           <RoundAction label="Preferito" active={item.fav} onClick={() => toggleFav(item.id)}>
             <HeartIcon size={17} filled={item.fav} />
           </RoundAction>

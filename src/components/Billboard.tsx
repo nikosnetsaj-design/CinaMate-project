@@ -10,6 +10,7 @@ import { pickFeaturedList } from "../lib/featured";
 import { backdropSrcSet, backdropUrl, posterUrl } from "../lib/tmdb";
 import { paletteFor } from "../lib/palette";
 import { useTitleLogo } from "../lib/useTitleLogo";
+import { isInWatchlist, removalMessage, removedStatus } from "../lib/watchlist";
 import { CheckIcon, InfoIcon, PlayIcon, PlusIcon } from "./icons";
 import type { Item } from "../types";
 
@@ -61,7 +62,7 @@ export function Billboard() {
   const wide = backdropUrl(item.backdropPath, "w1280");
   const tall = posterUrl(item.posterPath, "w500");
   const [a, b] = paletteFor(item.title);
-  const inList = item.status === "Da vedere";
+  const inList = isInWatchlist(item);
 
   return (
     <section
@@ -138,14 +139,17 @@ export function Billboard() {
               Riproduci
             </button>
 
-            {/* Un titolo qui dentro è già in libreria: "La mia lista" può
-                solo significare "mettilo fra quelli da vedere". Quando ci è
-                già, il pulsante smette di fingere di essere un interruttore e
-                porta dove lo stato si cambia davvero — la scheda. */}
+            {/* Un interruttore vero: mette e toglie. Toglierlo non cancella
+                niente — il titolo resta in libreria con voto e note, e il
+                messaggio dice dove è finito (vedi lib/watchlist). */}
             {inList ? (
               <button
                 type="button"
-                onClick={() => openItem(item)}
+                onClick={() => {
+                  setStatus(item.id, removedStatus(item));
+                  pushToast("info", removalMessage(item));
+                }}
+                aria-label={`Togli ${item.title} dalla tua lista`}
                 className="flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-sm bg-white/20 px-3 py-3 text-[13px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/30 sm:text-sm"
               >
                 <CheckIcon size={17} />

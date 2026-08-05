@@ -74,6 +74,27 @@ function closeness(title: string, term: string): number {
  * what was actually typed, so the title being reached for comes first even
  * though TMDB ranked the list by its own popularity.
  */
+/**
+ * Rimette in ordine i risultati per quanto il titolo somiglia a ciò che hai
+ * scritto, non per quanto è popolare.
+ *
+ * TMDB ordina per popolarità, e su una parola parziale è la cosa sbagliata:
+ * scrivendo «squi», *Squid Game* arrivava terzo dietro a *Scaredy Squirrel*,
+ * perché «squirrel» contiene comunque le lettere giuste e il resto lo decideva
+ * un punteggio che non ha niente a che vedere con te. Chi somiglia di più a
+ * quello che hai digitato viene prima; a parità di somiglianza resta l'ordine
+ * di TMDB, che a quel punto è un criterio buono come un altro.
+ *
+ * L'ordinamento è stabile per costruzione (`sort` in JS lo è), quindi non
+ * rimescola niente dentro lo stesso gruppo.
+ */
+function rank(results: TmdbSearchResult[], query: string): TmdbSearchResult[] {
+  return results
+    .map((r, i) => ({ r, i, score: closeness(r.title, query) }))
+    .sort((a, b) => a.score - b.score || a.i - b.i)
+    .map((entry) => entry.r);
+}
+
 export async function searchTitlesForgiving(
   term: string,
   apiKey: string,
@@ -83,17 +104,13 @@ export async function searchTitlesForgiving(
 ): Promise<ForgivingSearch> {
   const query = term.trim();
   const direct = await searchTitles(query, apiKey, signal, limit);
-  if (direct.length > 0) return { results: direct, corrected: false, usedTerm: query };
+  if (direct.length > 0) return { results: rank(direct, query), corrected: false, usedTerm: query };
 
   for (const attempt of relaxations(query)) {
     if (signal?.aborted) break;
     const results = await searchTitles(attempt, apiKey, signal, limit);
     if (results.length === 0) continue;
-    const ranked = results
-      .map((r) => ({ r, score: closeness(r.title, query) }))
-      .sort((a, b) => a.score - b.score)
-      .map((entry) => entry.r);
-    return { results: ranked, corrected: true, usedTerm: attempt };
+    return { results: rank(results, query), corrected: true, usedTerm: attempt };
   }
 
   return { results: [], corrected: false, usedTerm: query };

@@ -170,8 +170,17 @@ rete che non è la tua.
   e **Persone** — e la griglia dei risultati. Toccare un titolo che non hai
   **lo mostra**, non lo salva: trama, cast, durata, voto TMDB e dove guardarlo
   legalmente, con «Aggiungi alla libreria» come pulsante dentro l'anteprima e
-  non come prezzo per vederla. A casella vuota propone cosa riprendere invece
+  non come prezzo per vederla. I risultati sono riordinati per quanto somigliano
+  a ciò che hai scritto e non per popolarità: digitando «squi», *Squid Game*
+  arrivava terzo dietro a *Scaredy Squirrel*. A casella vuota propone cosa riprendere invece
   di una pagina bianca. Vale anche per Scopri.
+- **Togli dalla lista**: un titolo esce dalla watchlist senza essere eliminato.
+  Prima l'unico pulsante che lo faceva sparire era *Elimina*, che però cancella
+  voto e note — una cosa diversa da «non lo guardo più». Ogni titolo in
+  CineMate ha uno stato, quindi «togli» ne sceglie il più vicino alla verità e
+  lo dice: *Abbandonato* se non l'avevi iniziato, *In pausa* se l'avevi già
+  cominciato. Sta nella scheda («La mia lista»), in vetrina e sotto ogni
+  copertina della riga Watchlist.
 - **Simili**: una sezione sola, non due. I tuoi vengono per primi col segno di
   spunta e il motivo scritto («Anche questo è di X», «Stessa saga: Y»), gli
   altri seguono col «＋» e si aprono in anteprima. Il genere in comune non basta
