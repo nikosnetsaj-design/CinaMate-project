@@ -236,7 +236,10 @@ interface RawCrew {
   name: string;
 }
 interface RawCast {
+  id?: number;
   name: string;
+  character?: string;
+  profile_path?: string | null;
 }
 interface RawProvidersResponse {
   results?: Record<string, { link?: string; flatrate?: { provider_name: string; logo_path: string }[] }>;
@@ -821,6 +824,86 @@ export async function getPerson(personId: number, apiKey: string): Promise<TmdbP
   };
   personCache.set(personId, person);
   return person;
+}
+
+/** Un episodio, con quel poco che serve a riconoscerlo in un elenco. */
+export interface TmdbEpisode {
+  episodeNumber: number;
+  name: string;
+  /** Data di messa in onda in ISO, `null` per un episodio non ancora datato. */
+  airDate: string | null;
+  runtime: number | null;
+}
+
+const seasonCache = new Map<string, TmdbEpisode[]>();
+
+/**
+ * Gli episodi di una stagione.
+ *
+ * Una stagione alla volta, e non tutte insieme: una serie lunga sono venti
+ * richieste, e chi apre la scheda quasi sempre guarda la stagione a cui è
+ * arrivato. La cache è per sessione perché un elenco di episodi già andati in
+ * onda non cambia, e quando cambia — una stagione in corso — basta riaprire.
+ */
+export async function getSeason(
+  tmdbId: number,
+  seasonNumber: number,
+  apiKey: string,
+): Promise<TmdbEpisode[]> {
+  const key = `${tmdbId}:${seasonNumber}`;
+  const hit = seasonCache.get(key);
+  if (hit) return hit;
+
+  const raw = await tmdbGet<{ episodes?: { episode_number: number; name?: string; air_date?: string | null; runtime?: number | null }[] }>(
+    `/tv/${tmdbId}/season/${seasonNumber}`,
+    apiKey,
+  );
+  const episodes = (raw.episodes ?? []).map((e) => ({
+    episodeNumber: e.episode_number,
+    name: e.name || `Episodio ${e.episode_number}`,
+    airDate: e.air_date || null,
+    runtime: e.runtime ?? null,
+  }));
+  seasonCache.set(key, episodes);
+  return episodes;
+}
+
+/** Un interprete con quello che serve per mostrarne il volto. */
+export interface TmdbCastMember {
+  name: string;
+  /** Il ruolo. Vuoto quando TMDB non lo sa, e in quel caso non si inventa. */
+  character: string;
+  profilePath: string | null;
+}
+
+const creditsCache = new Map<string, TmdbCastMember[]>();
+
+/**
+ * Il cast con i volti.
+ *
+ * Sta in una chiamata sua invece che nei dati salvati del titolo per una
+ * ragione di forma: in libreria il cast è un elenco di nomi — cinque stringhe —
+ * e trasformarlo in oggetti vorrebbe dire migrare ogni scheda mai salvata per
+ * una cosa che si vede solo a foglio aperto. Meglio chiederlo quando serve e
+ * tenerlo in cache per la sessione: la richiesta è una sola per titolo.
+ */
+export async function getCredits(
+  tmdbId: number,
+  mediaType: "movie" | "tv",
+  apiKey: string,
+): Promise<TmdbCastMember[]> {
+  const key = `${mediaType}:${tmdbId}`;
+  const hit = creditsCache.get(key);
+  if (hit) return hit;
+
+  const raw = await tmdbGet<{ cast?: RawCast[] }>(`/${mediaType}/${tmdbId}/credits`, apiKey);
+  const cast = (raw.cast ?? []).slice(0, 12).map((c) => ({
+    name: c.name,
+    character: c.character ?? "",
+    profilePath: c.profile_path ?? null,
+  }));
+  creditsCache.set(key, cast);
+  return cast;
 }
 
 export function profileUrl(path: string | null | undefined, size: "w185" | "h632" = "w185"): string | null {

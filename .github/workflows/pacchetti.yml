@@ -1,0 +1,106 @@
+name: Pacchetti nativi
+
+# Si avvia a mano, non a ogni push: costruire quattro binari e un APK per una
+# modifica al README sarebbe mezz'ora di CI per niente. Il sito continua a
+# pubblicarsi da solo con deploy.yml — questi sono le confezioni, non l'app.
+on:
+  workflow_dispatch:
+    inputs:
+      desktop:
+        description: "Costruisci i binari desktop (Windows, macOS, Linux)"
+        type: boolean
+        default: true
+      android:
+        description: "Costruisci l'APK Android (richiede i segreti della firma)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  desktop:
+    if: inputs.desktop
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            nome: linux
+          - os: windows-latest
+            nome: windows
+          - os: macos-latest
+            nome: macos
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      # Le librerie di sistema che servono alla webview su Linux. Su Windows e
+      # macOS la webview è già nel sistema operativo, quindi questo passo vale
+      # solo qui.
+      - name: Dipendenze di sistema (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - run: npm ci
+      - name: Costruisci
+        run: npx --yes @tauri-apps/cli@2 build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cinemate-${{ matrix.nome }}
+          path: |
+            src-tauri/target/release/bundle/**/*.AppImage
+            src-tauri/target/release/bundle/**/*.deb
+            src-tauri/target/release/bundle/**/*.dmg
+            src-tauri/target/release/bundle/**/*.msi
+          if-no-files-found: error
+
+  android:
+    if: inputs.android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      # La chiave di firma non sta nel repository: un APK firmato con una chiave
+      # pubblica lo può rifare chiunque. Va messa nei segreti del progetto come
+      # base64, insieme alle sue due password.
+      - name: Ricostruisci il portachiavi dai segreti
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "Manca il segreto ANDROID_KEYSTORE_B64: senza chiave non si firma niente." >&2
+            exit 1
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > packaging/android.keystore
+      - name: Costruisci la TWA
+        working-directory: packaging
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          npx --yes @bubblewrap/cli@latest build \
+            --skipPwaValidation \
+            --manifest ./twa-manifest.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cinemate-android
+          path: |
+            packaging/*.apk
+            packaging/*.aab
+          if-no-files-found: error

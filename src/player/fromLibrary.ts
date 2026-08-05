@@ -18,17 +18,12 @@ import type { MediaContent, SagaEntry, SubtitleTrack, SkipMarker } from "./types
  */
 
 // A link is treated as a stream source only when its path ends in .m3u8 /
-// .m3u — the manifest extension is unambiguous, so a normal bookmark
+// .m3u / .mpd — the manifest extension is unambiguous, so a normal bookmark
 // (Letterboxd, a review, a trailer) is never mistaken for a video source.
 // Query strings and fragments are ignored: signed CDN URLs almost always
 // carry a token after the extension.
-export function isHlsUrl(raw: string): boolean {
-  try {
-    return /\.m3u8?$/i.test(new URL(raw).pathname);
-  } catch {
-    return false;
-  }
-}
+export { isHlsUrl, isDashUrl, isStreamUrl } from "./services/manifestKind";
+import { isStreamUrl } from "./services/manifestKind";
 
 /** Protocol + host of a URL, or null when it doesn't parse. */
 export function originOf(raw: string): string | null {
@@ -49,7 +44,7 @@ export type SourceLookup = (itemId: string) => PlayerSource;
 export function streamUrlOf(item: Item, lookup: SourceLookup): string | null {
   const configured = lookup(item.id).manifestUrl?.trim();
   if (configured) return configured;
-  return item.links.find(isHlsUrl) ?? null;
+  return item.links.find(isStreamUrl) ?? null;
 }
 
 export function hasStream(item: Item, lookup: SourceLookup): boolean {

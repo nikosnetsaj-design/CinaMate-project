@@ -1,7 +1,7 @@
 import type { Item } from "../types";
 import { candidatesFor } from "../lib/sourceTemplate";
 import { discoverOnHosts } from "./discoverOnHost";
-import { isHlsUrl } from "./fromLibrary";
+import { isStreamUrl } from "./services/manifestKind";
 import type { SourceLookup } from "./fromLibrary";
 
 /**
@@ -41,7 +41,7 @@ export function candidateSources(
   const configured = lookup(item.id).manifestUrl?.trim();
   if (configured) out.push({ url: configured, via: "titolo" });
 
-  const link = item.links.find(isHlsUrl);
+  const link = item.links.find(isStreamUrl);
   if (link && link !== configured) out.push({ url: link, via: "link" });
 
   const applicable = addresses.map((a, i) => ({ a, i })).filter(({ a }) => a.trim());

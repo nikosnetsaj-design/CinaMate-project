@@ -319,7 +319,7 @@ export function Player() {
       <header className="flex flex-col gap-1.5">
         <h1 className="font-display text-3xl font-semibold text-text">Player</h1>
         <p className="text-sm text-text-muted">
-          Riproduce le sorgenti HLS che indichi tu. Scrivi l'indirizzo del tuo server una volta
+          Riproduce le sorgenti HLS e DASH che indichi tu. Scrivi l'indirizzo del tuo server una volta
           sola in Impostazioni, oppure incollane uno per il singolo titolo.
         </p>
       </header>

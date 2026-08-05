@@ -23,8 +23,9 @@ utile fra sei mesi, quando l'idea tornerà in una discussione e la domanda sarà
 | ⛔️ | **Fuori ambito** | Escluso da una decisione di prodotto **già presa e scritta**, con il riferimento. Non si ridiscute qui. |
 | ✂️ | **Non preso** | Nessuna decisione precedente lo copriva, quindi si decide qui: o è un no motivato, o è un candidato aperto che finisce in Parte 6. La riga dice quale dei due. |
 
-**Conteggio finale:** 33 voci — 18 c'erano già, 2 prese, 8 fuori ambito, 5 non
-prese (3 restano candidate, 2 sono no motivati). Il livello 2 dell'architettura
+**Conteggio finale:** 33 voci — 18 c'erano già, **6 prese**, 8 fuori ambito, 1
+non presa (MKV, che il browser non sa aprire). L'unica riga bocciata per merito e
+non per impossibilità è E5, il divieto di usare un ad-blocker. Il livello 2 dell'architettura
 non è conteggiato qui come voce singola: è un blocco solo e ha una parte sua.
 
 ---
@@ -59,13 +60,20 @@ presentato: sta scritto per esteso più sotto.
 | A5 | Ricerca con completamento in tempo reale | ✅ | risultati mentre si scrive, più correzione degli errori di battitura |
 | A6 | Filtri per genere, anno, voto | ✅ | filtri avanzati: anche studio, paese, audio, qualità, durata |
 | A7 | Ricerca per attore o regista | ✅ | pagine persone con filmografia |
-| A8 | Griglia del cast **con le foto** nella scheda | ✂️ candidato | oggi il cast è un elenco di nomi cliccabili; le foto stanno nella pagina della persona |
-| A9 | Menu a cascata stagioni → episodi | ✂️ candidato | oggi le serie hanno un contatore `visti / totali`, non una griglia per episodio |
+| A8 | Griglia del cast **con le foto** nella scheda | ★ **preso** | `CastGrid.tsx`, con i nomi come ripiego senza chiave TMDB |
+| A9 | Menu a cascata stagioni → episodi | ★ **preso** | `SeasonEpisodes.tsx` + `watchedEpisodes` sul titolo |
 
-Le due voci ✂️ di questa sezione non sono rifiuti: sono lavoro non fatto, di
-dimensione diversa fra loro. La griglia del cast è mezz'ora; il tracciamento per
-singolo episodio cambia il modello dei dati di ogni serie in libreria e merita
-una decisione sua, non una riga di coda in un'analisi.
+**Il costo vero di A9.** La griglia del cast era mezz'ora; il tracciamento per
+singolo episodio tocca il modello dei dati di ogni serie in libreria, ed è il
+motivo per cui vale la pena dire come è stato risolto invece di dichiararlo
+fatto: `seen` — il numero che leggono statistiche, diario, percentuali e
+"continua a guardare" — **resta la fonte**, e la nuova lista `watchedEpisodes` è
+ciò che gli dà un dettaglio. Si toccano in un punto solo, `setWatchedEpisodes`,
+che ricalcola il contatore dalla lista invece di tenerne aggiornati due. Chi
+arriva dal vecchio contatore trova le spunte dedotte dai suoi episodi visti,
+contati di seguito dal primo — l'unica lettura sensata di "ne ho visti cinque" —
+e l'interfaccia lo dichiara, così chi li aveva visti in disordine sa di dover
+correggere invece di scoprirlo dopo.
 
 ### B. Interfaccia e navigazione
 
@@ -83,23 +91,21 @@ una decisione sua, non una riga di coda in un'analisi.
 | # | Idea | Verdetto | Nota |
 |---|---|---|---|
 | C1 | HLS (`.m3u8`) | ✅ | `hls.js`, a caricamento differito |
-| C2 | DASH (`.mpd`), MKV | ✂️ | vedi sotto |
+| C2 | DASH (`.mpd`) | ★ **preso** | `dash.js` caricato solo per i `.mpd`. MKV resta impossibile: vedi sotto |
 | C3 | Gesture volume / luminosità | ✅ | e senza chiederle come funzione a pagamento |
 | C4 | Picture-in-Picture | ✅ | idem |
 | C5 | Download offline | ✅ | su IndexedDB, riproducibile senza rete |
 | C6 | Tracce audio e sottotitoli, stile e sincronizzazione | ✅ | ricordati *per lingua*, non per numero di traccia |
 | C7 | Ripresa dal secondo esatto | ✅ | |
-| C8 | Cartella di destinazione scelta dall'utente (SAF) | ✂️ candidato | l'equivalente web è `showDirectoryPicker()`, oggi solo su browser Chromium |
+| C8 | Cartella di destinazione scelta dall'utente (SAF) | ★ **preso** | `exportDownloadToDirectory()`: scrive segmenti + playlist dove dici tu, dove il browser lo permette |
 
-**Perché DASH e MKV no.** MKV nel browser non si riproduce: è un contenitore che
+**DASH sì, MKV no.** MKV nel browser non si riproduce: è un contenitore che
 nessun motore HTML5 apre, e "supportarlo" vorrebbe dire transcodificare, cioè
-un'altra applicazione. DASH invece si potrebbe, con `dash.js` — ma la nota
-architetturale in `PRODUCT.md` §5 vale ancora: `hls.js` da solo pesa più di tutto
-il resto dell'app messo insieme, e una seconda libreria dello stesso ordine di
-grandezza per un formato che quasi nessuno usa sulle proprie sorgenti è un costo
-che pagherebbero tutti, compreso chi il player non lo apre mai. Se un giorno
-servisse, la strada pulita c'è ed è quella già usata per il player: caricarla
-solo quando l'indirizzo finisce per `.mpd`.
+scrivere un'altra applicazione. DASH invece è stato aggiunto, con la strada che
+il costo la rendeva obbligatoria: `dash.js` pesa 819 KB, quanto `hls.js`, quindi
+si carica **solo** quando l'indirizzo finisce per `.mpd`. Chi riproduce HLS —
+quasi tutti — non lo scarica mai, ed è lo stesso ragionamento per cui il player
+intero è una rotta a caricamento differito (`PRODUCT.md` §5).
 
 ### D. Account, sincronizzazione, notifiche
 
@@ -226,6 +232,26 @@ certo, e per questo la preferenza ha tre stati invece di due: automatica, sempre
 mai. Le impostazioni dicono anche cosa ha riconosciuto, perché quando un'app si
 comporta in modo strano la prima cosa utile è sapere cosa crede di essere.
 
+### 2bis. Le altre quattro, in breve
+
+- **Cast con i volti** (`CastGrid.tsx`): i crediti arrivano da una chiamata a
+  parte fatta a foglio aperto e tenuta in cache, invece che dai dati salvati del
+  titolo. In libreria il cast sono cinque stringhe: trasformarlo in oggetti
+  avrebbe voluto dire migrare ogni scheda mai scritta per una cosa che si vede
+  solo qui. Senza chiave, offline o mentre la richiesta è in volo restano i nomi.
+- **Episodi uno per uno** (`SeasonEpisodes.tsx`): una stagione per volta, non
+  tutte insieme — su una serie lunga sarebbero venti richieste, e chi apre la
+  scheda guarda quasi sempre la stagione a cui è arrivato.
+- **DASH** (`useVideoPlayer.ts`): il riconoscimento del formato è passato in
+  `services/manifestKind.ts`, letto sia dal motore sia dai pannelli che validano
+  quello che scrivi. Sta lì e non in `fromLibrary.ts` perché quel file conosce
+  gli store di CineMate e gli hook del player non devono conoscerli.
+- **Cartella per i download** (`exportDownloadToDirectory`): scrive una cartella
+  con i segmenti e una `playlist.m3u8` che li elenca, invece di un unico file.
+  Concatenare segmenti dà un file valido solo per certi formati; una playlist
+  accanto ai suoi pezzi la apre qualunque lettore. La copia in IndexedDB resta:
+  è quella che rende il download riproducibile dentro l'app.
+
 ### 2. Copertina orizzontale nella scheda titolo
 
 Presa così com'è descritta: l'immagine larga di TMDB dietro all'intestazione,
@@ -262,17 +288,17 @@ il telecomando e la copertina larga.
 
 ---
 
-## PARTE 6 — Cosa resta candidato
+## PARTE 6 — Cosa resta
 
-In ordine di rapporto fra valore e costo. Nessuno di questi è promesso.
+Delle quattro voci che questa parte elencava come candidate, tre sono state
+fatte (cast con le foto, cartella per i download, griglia degli episodi). Restano
+queste, e nessuna è promessa:
 
-1. **Griglia del cast con le foto** nella scheda titolo — piccola, le foto già
-   arrivano da TMDB per le pagine persona.
-2. **Copertina larga anche nel foglio della saga** — `getSaga()` scarica già
+1. **Copertina larga anche nel foglio della saga** — `getSaga()` scarica già
    `backdropPath` e nessuno lo usa: dato morto in attesa di due righe di JSX e di
    un campo nello store delle saghe.
-3. **Cartella di destinazione per i download**, con `showDirectoryPicker()` dove
-   il browser lo espone.
-4. **Stagioni ed episodi come griglia** invece che come contatore — la più utile
-   delle quattro e la più invasiva: tocca il modello dei dati di ogni serie in
-   libreria, quindi vuole una decisione sua.
+2. **Involucro nativo per Fire TV** — la Trusted Web Activity non funziona su
+   Fire OS, che non ha Chrome. Servirebbe una WebView scritta apposta: un secondo
+   progetto Android da mantenere, non una configurazione. Vedi `PACCHETTI.md`.
+3. **MKV**, se un giorno esistesse un modo di aprirlo nel browser che non sia
+   transcodificare.

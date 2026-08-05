@@ -81,6 +81,15 @@ export interface Item {
    */
   certification?: string;
   /**
+   * Gli episodi segnati come visti, uno per uno, nella forma `"1x3"` —
+   * stagione, per, episodio. Assente in chi ha sempre usato il contatore, e
+   * assente resta finché non si tocca la griglia: `seen` continua a essere il
+   * numero che tutto il resto dell'app legge, e questa lista è ciò che gli dà
+   * un dettaglio quando c'è. Le due cose si tengono in sincronia in un punto
+   * solo, `setWatchedEpisodes`.
+   */
+  watchedEpisodes?: string[];
+  /**
    * The quality of the copy *you* have. Set by hand rather than detected: no
    * catalogue knows what is on your server, and a manifest only reveals its
    * renditions once something plays it.

@@ -85,7 +85,7 @@ export function accentById(id: string): Accent {
  * stylesheet's own values stay in charge — that way the light theme's accent
  * still switches with the theme for anyone who never touched this setting.
  */
-export function applyAccent(accentId: string, theme: "dark" | "light") {
+export function applyAccent(accentId: string, theme: "dark" | "light" | "slate") {
   const root = document.documentElement;
   if (accentId === DEFAULT_ACCENT) {
     root.style.removeProperty("--accent");
@@ -93,7 +93,9 @@ export function applyAccent(accentId: string, theme: "dark" | "light") {
     root.style.removeProperty("--accent-contrast");
     return;
   }
-  const variant = accentById(accentId)[theme];
+  // "Ardesia" è una base scura: prende le varianti scure, che è l'unica scelta
+  // leggibile su di essa.
+  const variant = accentById(accentId)[theme === "light" ? "light" : "dark"];
   root.style.setProperty("--accent", variant.accent);
   root.style.setProperty("--accent-text", variant.accentText);
   root.style.setProperty("--accent-contrast", variant.accentContrast);

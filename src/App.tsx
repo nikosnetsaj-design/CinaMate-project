@@ -109,6 +109,7 @@ export default function App() {
   useEffect(() => {
     // Dark is the base theme, so the light variant is the one that opts in.
     document.documentElement.classList.toggle("light", theme === "light");
+    document.documentElement.classList.toggle("slate", theme === "slate");
   }, [theme]);
 
   // Keyed on the theme too: each accent carries a dark and a light variant,

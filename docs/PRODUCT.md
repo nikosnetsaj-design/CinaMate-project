@@ -423,8 +423,9 @@ senza spoiler**, **traduzione della sinossi**, righe **Per te / Più visti /
 Ultimi aggiunti / Simili sul tuo scaffale**, **obiettivi personali**, **tinte
 d'accento e Home riordinabile**, **condivisione di liste e codice QR**,
 **controllo genitori**, **diagnostica con test e log errori**, **apri sul
-servizio**, **navigazione da telecomando** e **copertina larga nella scheda**, e
-nel player **gesture**, **buffer adattivo** e **host con test
+servizio**, **navigazione da telecomando**, **copertina larga nella scheda**,
+**cast con i volti**, **episodi uno per uno**, **tema ardesia**, e nel player
+**DASH** e **salvataggio dei download in una cartella**, oltre a **gesture**, **buffer adattivo** e **host con test
 velocità, priorità automatica e bilanciamento**.
 
 **Prossimo (Essenziale)** — niente. Con "apri sul servizio" l'ultima voce
@@ -436,6 +437,10 @@ nessuna delle tre è un buco che si sente usando l'app.
    oggi una lista si condivide ma non si conserva
 2. Trailer in‑app con PiP
 3. Universi costruiti a mano dall'utente, oltre a quelli da keyword
+4. Copertina larga anche nel foglio della saga: `getSaga()` scarica già
+   `backdropPath` e nessuno lo usa
+5. Involucro nativo per Fire TV — la TWA non basta, serve una WebView scritta
+   apposta (vedi `PACCHETTI.md`)
 
 **Futuro**
 5. Sync cloud con account

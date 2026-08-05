@@ -15,6 +15,8 @@ import { WatchButton } from "./WatchButton";
 import { LinkToTmdb } from "./LinkToTmdb";
 import { ItemSagaStrip } from "./ItemSagaStrip";
 import { PeopleLinks } from "./PeopleLinks";
+import { CastGrid } from "./CastGrid";
+import { SeasonEpisodes } from "./SeasonEpisodes";
 import { ShareSheet } from "./ShareSheet";
 import { SpoilerFreeRecap, TranslateOverview } from "./AiItemExtras";
 import { HeartIcon } from "./icons";
@@ -135,6 +137,7 @@ function ItemDetail({ item }: { item: Item }) {
 
         {item.overview && <p className="mt-3.5 text-sm leading-relaxed text-text-muted">{item.overview}</p>}
         <PeopleLinks item={item} />
+        <CastGrid item={item} />
 
         <ItemSagaStrip item={item} />
 
@@ -204,6 +207,8 @@ function ItemDetail({ item }: { item: Item }) {
             </div>
           </div>
         ) : null}
+
+        {item.kind !== "film" ? <SeasonEpisodes item={item} /> : null}
 
         <div className="mt-4 flex gap-3">
           <div className="flex-1 rounded-md border border-border bg-surface-2 p-3.5">

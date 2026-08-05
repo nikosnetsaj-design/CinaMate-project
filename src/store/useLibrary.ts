@@ -118,6 +118,7 @@ interface LibraryState {
   incrementEpisode: (id: string) => void;
   decrementEpisode: (id: string) => void;
   setEpisodesSeen: (id: string, seen: number) => void;
+  setWatchedEpisodes: (id: string, codes: string[]) => void;
   setRewatch: (id: string, rewatch: number) => void;
 
   pushToast: (kind: ToastKind, text: string) => void;
@@ -244,6 +245,38 @@ export const useLibrary = create<LibraryState>((set, get) => ({
     const clamped = Math.max(0, Math.min(prev.episodes, seen));
     const delta = clamped - (prev.seen || 0);
     if (delta > 0) logHistory(get, set, [makeHistoryEntry(prev, today(), "episode", delta)]);
+  },
+
+  /**
+   * La griglia degli episodi scrive qui, e questo è l'unico punto in cui la
+   * lista dei codici e il contatore `seen` si toccano: `seen` resta il numero
+   * che leggono statistiche, diario, "continua a guardare" e percentuali, e
+   * ricalcolarlo dalla lista invece di tenerne due aggiornati a mano è ciò che
+   * impedisce ai due di divergere.
+   */
+  setWatchedEpisodes: (id, codes) => {
+    const prev = get().items.find((i) => i.id === id);
+    if (!prev) return;
+    const unique = Array.from(new Set(codes));
+    // Il totale di TMDB può essere più basso di quello che hai segnato — una
+    // stagione appena uscita, un conteggio che cambia. Vince il più alto: non
+    // si cancella progresso già registrato per un dato di catalogo.
+    const total = Math.max(prev.episodes ?? 0, unique.length);
+    let becameWatched = false;
+    const next = get().items.map((i) => {
+      if (i.id !== id) return i;
+      const seen = unique.length;
+      const status: Status = total > 0 && seen >= total ? "Visto" : seen > 0 ? "In visione" : i.status;
+      if (status === "Visto" && i.status !== "Visto") becameWatched = true;
+      return { ...i, watchedEpisodes: unique, seen, status };
+    });
+    persistOrToast(get, set, next);
+
+    const delta = unique.length - (prev.seen || 0);
+    const entries = delta > 0 ? [makeHistoryEntry(prev, today(), "episode", delta)] : [];
+    if (becameWatched) entries.push(makeHistoryEntry(prev, today(), "watched"));
+    if (entries.length) logHistory(get, set, entries);
+    if (becameWatched) set({ justCompleted: { itemId: id, at: Date.now() } });
   },
 
   setRewatch: (id, rewatch) => {

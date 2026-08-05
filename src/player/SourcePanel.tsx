@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { usePlayerSources, EMPTY_SOURCE } from "../store/usePlayerSources";
 import type { MarkerType, PlayerSprite } from "../store/usePlayerSources";
-import { isHlsUrl } from "./fromLibrary";
+import { isStreamUrl } from "./services/manifestKind";
 import { formatClock, parseClock } from "./clock";
 import { CloseIcon } from "./components/Icons";
 
@@ -128,7 +128,7 @@ export function SourcePanel({
 }: {
   itemId: string;
   title: string;
-  /** The `.m3u8` personal link, when the title has one. */
+  /** Il link personale del titolo, quando è un manifest `.m3u8` o `.mpd`. */
   linkManifest: string | null;
   getCurrentTime: () => number;
 }) {
@@ -145,7 +145,7 @@ export function SourcePanel({
   const [subUrl, setSubUrl] = useState("");
 
   const manifestValue = manifestDraft ?? source.manifestUrl ?? "";
-  const manifestInvalid = manifestValue.trim() !== "" && !isHlsUrl(manifestValue.trim());
+  const manifestInvalid = manifestValue.trim() !== "" && !isStreamUrl(manifestValue.trim());
 
   const commitManifest = () => {
     if (manifestDraft === null) return;
@@ -177,14 +177,15 @@ export function SourcePanel({
           <h5>Stream</h5>
         </div>
         <input
-          placeholder="https://…/master.m3u8"
+          placeholder="https://…/master.m3u8 oppure .mpd"
           value={manifestValue}
           onChange={(e) => setManifestDraft(e.target.value)}
           onBlur={commitManifest}
         />
         {manifestInvalid && (
           <p className="pv-download-error">
-            Non sembra un manifest HLS: l'indirizzo deve finire in <code>.m3u8</code>.
+            Non sembra un manifest: l'indirizzo deve finire in <code>.m3u8</code> (HLS) o{" "}
+            <code>.mpd</code> (DASH).
           </p>
         )}
         {!source.manifestUrl && linkManifest && (

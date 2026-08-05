@@ -3,11 +3,14 @@ import { useSelectedItem } from "../store/useSelectedItem";
 import type { Item } from "../types";
 
 /**
- * Cast and director as destinations rather than as trivia. Every name opens the
- * person's page — their filmography, and which of it you already own — which is
- * how "I liked her in this" turns into the next thing to watch.
+ * Le persone come destinazioni, non come curiosità: ogni nome apre la sua
+ * scheda — filmografia, e quanto di quella hai già — che è il modo in cui "mi
+ * piaceva in quell'altro" diventa la prossima cosa da vedere.
+ *
+ * Qui restano regia e creatori. Il cast è passato a `CastGrid`, che ne mostra i
+ * volti quando TMDB li ha e ricade su queste stesse pastiglie quando non li ha.
  */
-function PersonChip({ name, prefix }: { name: string; prefix?: string }) {
+export function PersonChip({ name, prefix }: { name: string; prefix?: string }) {
   const openPerson = useSelectedPerson((s) => s.open);
   const closeItem = useSelectedItem((s) => s.close);
 
@@ -33,17 +36,13 @@ export function PeopleLinks({ item }: { item: Item }) {
     .split(",")
     .map((d) => d.trim())
     .filter(Boolean);
-  const cast = item.cast.filter(Boolean).slice(0, 5);
 
-  if (directors.length === 0 && cast.length === 0) return null;
+  if (directors.length === 0) return null;
 
   return (
     <div className="mt-3 flex flex-wrap gap-1.5">
       {directors.map((name) => (
         <PersonChip key={`dir-${name}`} name={name} prefix="Regia ·" />
-      ))}
-      {cast.map((name) => (
-        <PersonChip key={`cast-${name}`} name={name} />
       ))}
     </div>
   );

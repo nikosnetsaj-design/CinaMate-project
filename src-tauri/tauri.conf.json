@@ -1,0 +1,34 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "CineMate",
+  "version": "1.0.0",
+  "identifier": "app.cinemate.desktop",
+  "build": {
+    "frontendDist": "../dist",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "CineMate",
+        "width": 1280,
+        "height": 820,
+        "minWidth": 420,
+        "minHeight": 560,
+        "resizable": true,
+        "backgroundColor": "#1B1221"
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["deb", "appimage", "msi", "dmg"],
+    "icon": ["icons/icon.png"],
+    "category": "Entertainment",
+    "shortDescription": "La tua collezione di film, serie, anime e documentari.",
+    "longDescription": "CineMate tiene il diario di cosa hai visto, dice cosa guardare stasera e dove guardarlo. Tutto sul tuo dispositivo."
+  }
+}

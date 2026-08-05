@@ -31,6 +31,9 @@ tuo server, scritto una volta sola nelle Impostazioni.
 - **hls.js** per il player (streaming adattivo), caricato solo quando apri la
   pagina Player e non all'avvio dell'app — e precaricato appena il puntatore
   arriva sul link, così di solito è già lì quando premi
+- **dash.js** per le sorgenti `.mpd`, caricato solo quando ne apri una: pesa
+  quanto hls.js e i manifest DASH sono la minoranza, quindi chi non li usa non
+  lo scarica mai
 - **qrcode-generator** per i codici QR, anch'esso caricato solo con il foglio
   che lo usa
 - **API Anthropic (Claude)** chiamata direttamente dal browser con la tua chiave
@@ -63,7 +66,7 @@ src/
                 activity, continueWatching, achievements, search, filters,
                 recommend, goals, parental, accents, share, deepLinks,
                 spatialNav, anthropic, backup, errorLog, selfTest)
-  player/       il player, autonomo dal resto dell'app:
+  player/       il player, autonomo dal resto dell'app (HLS e DASH):
                   hooks/      motore video (hls.js), gesture, sottotitoli,
                               maratona, download, watch party, cast,
                               host monitor
@@ -165,6 +168,16 @@ rete che non è la tua.
   all'intestazione, sfumata verso il fondo. Quando manca — o mentre arriva —
   resta la sfumatura generata dal titolo, che è sempre stata l'intestazione
   predefinita.
+- **Cast con i volti**: nella scheda, gli interpreti con la foto e il ruolo, e
+  un tocco apre la loro pagina. Senza chiave TMDB restano i nomi di prima.
+- **Episodi uno per uno**: per le serie, la stagione si apre e ogni episodio ha
+  la sua spunta — con «fin qui» per segnarne una fila in un colpo. Il contatore
+  resta il numero che leggono statistiche e diario; la griglia è ciò che gli dà
+  il dettaglio. Chi arriva dal contatore trova le spunte dedotte dai suoi
+  episodi visti, contati dal primo, e l'app lo dichiara.
+- **Tre temi**: velluto (aubergine), ardesia (grigio-blu) e chiaro. Le sei tinte
+  d'accento valgono per tutti; l'interruttore rapido nella barra torna all'ultimo
+  scuro che avevi scelto, non sempre allo stesso.
 - **Filtri avanzati**: tipo, stato, genere, studio, paese, lingua audio,
   qualità della tua copia, durata, anno, il tuo voto e quello di TMDB, e
   "solo con sottotitoli". Le opzioni sono prese dal tuo scaffale, quindi ogni

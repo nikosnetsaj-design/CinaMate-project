@@ -63,6 +63,30 @@
   color-scheme: dark;
 }
 
+/*
+ * "Ardesia": la seconda base scura, grigio-blu invece che aubergine.
+ *
+ * Sovrascrive solo le superfici e i testi: accenti, stati e voti restano quelli
+ * di :root, perché sono l'identità dell'app e non della stanza. È il motivo per
+ * cui il blocco è corto — un tema che ridichiara tutto è un tema che si stacca
+ * dal resto alla prima modifica.
+ */
+.slate {
+  --bg: #0f172a;
+  --surface: #172033;
+  --surface-2: #1e293b;
+  --surface-hover: #293548;
+  --text: #f1f5f9;
+  --text-muted: #cbd5e1;
+  --text-faint: #94a3b8;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.18);
+
+  --shadow-color: 217 45% 3%;
+  --grain-opacity: 0.035;
+  color-scheme: dark;
+}
+
 /* Light is the daylight counterpart: pale mauve-grey, never cream. */
 .light {
   --bg: #f3eef4;

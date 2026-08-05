@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDownloadManager } from '../hooks/useDownloadManager';
 import { getWatchStatus, getWatchUpdatedAt } from '../services/statsAndHistory';
+import { canExportToDirectory, exportDownloadToDirectory } from '../services/downloadService';
 import type { MediaContent, DownloadQuality } from '../types';
 
 const QUALITIES: { id: DownloadQuality; label: string }[] = [
@@ -22,6 +23,27 @@ export default function DownloadManagerUI({ library, onPlayOffline, offlineConte
   const { downloads, storage, error, download, downloadSeason, pause, resume, remove } = useDownloadManager();
   const [autoDelete, setAutoDelete] = useState(false);
   const [pickerFor, setPickerFor] = useState<MediaContent | null>(null);
+  // Esportazione su cartella: una alla volta, con il conto dei file scritti.
+  // Su un film sono migliaia, e senza un numero che sale sembra bloccato.
+  const [exporting, setExporting] = useState<{ id: string; done: number; total: number } | null>(null);
+  const [exportNote, setExportNote] = useState<string | null>(null);
+  const canExport = canExportToDirectory();
+
+  async function saveToFolder(id: string, title: string) {
+    setExportNote(null);
+    setExporting({ id, done: 0, total: 0 });
+    try {
+      const res = await exportDownloadToDirectory(id, title, (done, total) => setExporting({ id, done, total }));
+      setExportNote(`Salvato in "${res.folder}": ${res.segments} file più playlist.m3u8. Apri la playlist con VLC.`);
+    } catch (e) {
+      // Annullare la scelta della cartella non è un errore da mostrare in rosso:
+      // è una persona che ha cambiato idea.
+      const aborted = e instanceof DOMException && e.name === 'AbortError';
+      if (!aborted) setExportNote(e instanceof Error ? e.message : 'Non sono riuscito a salvare.');
+    } finally {
+      setExporting(null);
+    }
+  }
 
   const usedPct = storage.quota ? (storage.usage / storage.quota) * 100 : 0;
 
@@ -127,11 +149,30 @@ export default function DownloadManagerUI({ library, onPlayOffline, offlineConte
                 Riprendi
               </button>
             )}
+            {d.status === 'completed' && canExport && (
+              <button
+                className="pv-btn-tiny"
+                disabled={exporting !== null}
+                onClick={() => saveToFolder(d.id, d.title)}
+                title="Scrive una copia in una cartella scelta da te, oltre a quella che resta nell'app"
+              >
+                {exporting?.id === d.id
+                  ? `Salvo… ${exporting.done}${exporting.total ? `/${exporting.total}` : ''}`
+                  : 'Salva in una cartella'}
+              </button>
+            )}
             <button className="pv-btn-tiny" onClick={() => remove(d.id)}>Elimina</button>
           </li>
         ))}
         {downloads.length === 0 && <li className="pv-dim">Nessun download in corso.</li>}
       </ul>
+      {exportNote && <p className="pv-dim">{exportNote}</p>}
+      {downloads.some((d) => d.status === 'completed') && !canExport && (
+        <p className="pv-dim">
+          Salvare in una cartella richiede un browser che sappia aprirla — oggi quelli su base
+          Chromium. I download restano comunque nell'app e si guardano offline da qui.
+        </p>
+      )}
     </div>
   );
 }

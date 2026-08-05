@@ -11,7 +11,7 @@ import { useReminders } from "../store/useReminders";
 import { usePlayerSources } from "../store/usePlayerSources";
 import { usePlayerPrefs } from "../store/usePlayerPrefs";
 import { useGoals } from "../store/useGoals";
-import { useTheme } from "../store/useTheme";
+import { useTheme, THEMES } from "../store/useTheme";
 import { useTvMode, type TvPreference } from "../store/useTvMode";
 import { useHomeLayout, HOME_SECTIONS } from "../store/useHomeLayout";
 import { ACCENTS } from "../lib/accents";
@@ -43,24 +43,25 @@ import { resetAutoLinkAttempts } from "../lib/useAutoLinkTmdb";
  */
 function AppearanceSettings() {
   const theme = useTheme((s) => s.theme);
-  const toggleTheme = useTheme((s) => s.toggle);
+  const setTheme = useTheme((s) => s.setTheme);
   const accent = useTheme((s) => s.accent);
   const setAccent = useTheme((s) => s.setAccent);
+  // Le pastiglie del colore mostrano la variante del tema corrente; "ardesia" è
+  // scuro, quindi mostra le scure.
+  const swatchVariant = theme === "light" ? "light" : "dark";
 
   return (
     <div>
       <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Aspetto</span>
 
       <div className="mb-3 flex gap-2" role="radiogroup" aria-label="Tema">
-        {(["dark", "light"] as const).map((value) => (
+        {THEMES.map(({ id: value, label }) => (
           <button
             key={value}
             type="button"
             role="radio"
             aria-checked={theme === value}
-            onClick={() => {
-              if (theme !== value) toggleTheme();
-            }}
+            onClick={() => setTheme(value)}
             className="flex-1 rounded-sm border px-3 py-2.5 text-sm transition-colors"
             style={
               theme === value
@@ -72,14 +73,14 @@ function AppearanceSettings() {
                 : { borderColor: "var(--border-strong)", color: "var(--text-muted)" }
             }
           >
-            {value === "dark" ? "Scuro" : "Chiaro"}
+            {label}
           </button>
         ))}
       </div>
 
       <div className="flex flex-wrap gap-2.5" role="radiogroup" aria-label="Colore d'accento">
         {ACCENTS.map((option) => {
-          const swatch = option[theme].accent;
+          const swatch = option[swatchVariant].accent;
           const active = accent === option.id;
           return (
             <button

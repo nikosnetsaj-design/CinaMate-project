@@ -51,10 +51,10 @@ function ThemeToggle({ compact = false }: { compact?: boolean }) {
     <button
       type="button"
       onClick={toggle}
-      aria-label={theme === "dark" ? "Attiva tema chiaro" : "Attiva tema scuro"}
+      aria-label={theme === "light" ? "Attiva tema scuro" : "Attiva tema chiaro"}
       className={`flex items-center justify-center rounded-full border border-border-strong text-text-muted transition-colors hover:text-text ${compact ? "h-9 w-9" : "h-9 w-9"}`}
     >
-      {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+      {theme === "light" ? <MoonIcon /> : <SunIcon />}
     </button>
   );
 }

@@ -276,3 +276,96 @@ export async function getOfflineSourceUrl(id: string): Promise<OfflineSource | n
     },
   };
 }
+
+// ---------------------------------------------------------------------------
+// Esportazione su una cartella scelta.
+//
+// L'app Android da cui viene l'idea usa lo Storage Access Framework: scegli una
+// cartella, i download finiscono lì. Nel browser l'equivalente è la File System
+// Access API, e la differenza va detta invece che nascosta: un download resta
+// comunque in IndexedDB, che è ciò che lo rende riproducibile offline dentro
+// CineMate. Questa funzione ne scrive *anche* una copia dove dici tu, che serve
+// a un'altra cosa — aprirlo con VLC, metterlo su una chiavetta, tenerlo dopo
+// aver svuotato il browser.
+//
+// Si scrive una cartella con i segmenti e una playlist che li elenca, invece di
+// un unico file: concatenare segmenti dà un file valido solo per certi formati,
+// mentre una playlist accanto ai suoi pezzi la apre qualunque lettore, sempre.
+// ---------------------------------------------------------------------------
+
+/** Se il browser espone la scelta di una cartella. Oggi: i browser Chromium. */
+export function canExportToDirectory(): boolean {
+  return typeof window !== 'undefined' && 'showDirectoryPicker' in window;
+}
+
+/** Un nome di cartella che nessun sistema operativo rifiuta. */
+function safeName(raw: string): string {
+  const cleaned = raw.replace(/[\\/:*?"<>|]/g, '-').replace(/\s+/g, ' ').trim();
+  return cleaned.slice(0, 60) || 'download';
+}
+
+export interface DirectoryExportResult {
+  /** Nome della cartella creata dentro quella scelta. */
+  folder: string;
+  segments: number;
+}
+
+/**
+ * Scrive un download in una cartella scelta dall'utente.
+ *
+ * `onProgress` riceve quanti segmenti sono stati scritti: su un film sono
+ * migliaia di file e senza un segno di vita sembra bloccato.
+ */
+export async function exportDownloadToDirectory(
+  id: string,
+  title: string,
+  onProgress?: (written: number, total: number) => void,
+): Promise<DirectoryExportResult> {
+  if (!canExportToDirectory()) throw new Error('Questo browser non sa aprire una cartella.');
+  const meta = await getMeta(id);
+  if (!meta || !meta.segments.length) throw new Error('Di questo download non risulta nessun segmento.');
+
+  const picker = (window as unknown as {
+    showDirectoryPicker: (opts?: { mode?: 'read' | 'readwrite' }) => Promise<FileSystemDirectoryHandle>;
+  }).showDirectoryPicker;
+  const root = await picker({ mode: 'readwrite' });
+
+  const folder = safeName(title);
+  const dir = await root.getDirectoryHandle(folder, { create: true });
+
+  const entries: string[] = [];
+  let written = 0;
+  for (let i = 0; i < meta.segments.length; i++) {
+    const blob = await getSegment(id, i);
+    if (!blob) continue;
+    // Il numero è imbottito di zeri perché una cartella ordinata per nome deve
+    // restare in ordine di riproduzione anche guardandola dal sistema.
+    const name = `seg-${String(i).padStart(5, '0')}.ts`;
+    const file = await dir.getFileHandle(name, { create: true });
+    const stream = await file.createWritable();
+    await stream.write(blob);
+    await stream.close();
+    entries.push(`#EXTINF:${(meta.durations[i] || 6).toFixed(3)},`, name);
+    written += 1;
+    onProgress?.(written, meta.segments.length);
+  }
+  if (written === 0) throw new Error('Nessun segmento salvato: il download sembra vuoto.');
+
+  const targetDuration = Math.ceil(Math.max(6, ...meta.durations.filter(Number.isFinite)));
+  const playlist = [
+    '#EXTM3U',
+    '#EXT-X-VERSION:3',
+    `#EXT-X-TARGETDURATION:${targetDuration}`,
+    '#EXT-X-MEDIA-SEQUENCE:0',
+    '#EXT-X-PLAYLIST-TYPE:VOD',
+    ...entries,
+    '#EXT-X-ENDLIST',
+    '',
+  ].join('\n');
+  const playlistHandle = await dir.getFileHandle('playlist.m3u8', { create: true });
+  const playlistStream = await playlistHandle.createWritable();
+  await playlistStream.write(playlist);
+  await playlistStream.close();
+
+  return { folder, segments: written };
+}

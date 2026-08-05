@@ -1,8 +1,10 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import Hls from 'hls.js';
+import type { MediaPlayerClass } from 'dashjs';
 import type { QualityLevel, AudioTrack, MediaContent, NetworkQuality } from '../types';
 import { getPlaybackPrefs, normaliseLang, setPlaybackPrefs } from '../services/playbackPrefs';
 import { describeFailure, type PlayerFailure } from '../services/playerErrors';
+import { isDashUrl } from '../services/manifestKind';
 
 export type VideoPlayerOptions = {
   dataSaverMode?: boolean;
@@ -23,6 +25,7 @@ export type VideoPlayerOptions = {
 };
 
 const MAX_RETRIES = 5;
+
 
 // ---------------------------------------------------------------------------
 // Adaptive buffering.
@@ -100,6 +103,16 @@ function rewriteOrigin(originalUrl: string, newOrigin: string): string {
 export function useVideoPlayer(content: MediaContent | null, options: VideoPlayerOptions = {}) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
+  // Il motore DASH vive accanto a quello HLS, mai insieme: `attach()` ne
+  // distrugge sempre uno prima di costruire l'altro. L'elenco degli id delle
+  // rappresentazioni serve a tradurre l'indice che usa l'interfaccia — pensata
+  // su hls.js, dove i livelli sono numerati — nell'identificatore con cui
+  // dash.js le chiama.
+  const dashRef = useRef<MediaPlayerClass | null>(null);
+  const dashLevelsRef = useRef<QualityLevel[]>([]);
+  // Cresce a ogni attacco: il caricamento di dash.js è asincrono, e questo è
+  // ciò che permette di riconoscere un modulo arrivato dopo un cambio di titolo.
+  const attachTokenRef = useRef(0);
   const retryCountRef = useRef(0);
   const attachRef = useRef<() => void>(() => {});
   // Read inside the xhrSetup callback below — kept in a ref (rather than a
@@ -154,6 +167,83 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
       if (hlsRef.current) {
         hlsRef.current.destroy();
         hlsRef.current = null;
+      }
+      if (dashRef.current) {
+        dashRef.current.destroy();
+        dashRef.current = null;
+        dashLevelsRef.current = [];
+      }
+
+      if (isDashUrl(c.manifestUrl)) {
+        // dash.js pesa quanto hls.js, e i manifest `.mpd` sono la minoranza:
+        // caricarlo solo qui significa che chi riproduce HLS — quasi tutti —
+        // non lo scarica mai. Stesso motivo per cui il player intero è una
+        // rotta a caricamento differito.
+        isNativeRef.current = false;
+        const token = ++attachTokenRef.current;
+        const origin = activeOriginRef.current;
+        const url = origin ? rewriteOrigin(c.manifestUrl, origin) : c.manifestUrl;
+
+        import('dashjs')
+          .then(({ MediaPlayer }) => {
+            // Arrivato tardi: nel frattempo si è cambiato titolo o si è usciti
+            // dal player. Senza questo controllo il modulo appena caricato si
+            // attaccherebbe a un elemento che non è più quello giusto.
+            if (token !== attachTokenRef.current) return;
+            const player = MediaPlayer().create();
+            dashRef.current = player;
+            player.initialize(v, url, false, options.startAtSec ?? 0);
+
+            player.on('streamInitialized', () => {
+              const reps = player.getRepresentationsByType('video').map((r) => ({
+                id: r.id,
+                height: r.height,
+                bitrate: r.bandwidth,
+                label: labelForHeight(r.height, r.bandwidth),
+              }));
+              dashLevelsRef.current = reps;
+              setLevels(reps);
+              // Come nel ramo HLS: il tetto si applica qui, quando la scala è
+              // finalmente nota, non prima che esista.
+              applyDashCap(player, reps, getPlaybackPrefs().maxHeight, optionsRef.current.dataSaverMode);
+
+              const audio = player.getTracksFor('audio');
+              if (audio.length > 1) {
+                setAudioTracks(
+                  audio.map((t, i) => ({
+                    id: String(i),
+                    language: t.lang || 'und',
+                    label: t.labels?.[0]?.text || t.lang || `Traccia ${i + 1}`,
+                  }))
+                );
+                // Stessa regola del ramo HLS: la lingua che scegli sempre,
+                // scelta per te, invece del primo doppiaggio del manifest.
+                const wanted = normaliseLang(getPlaybackPrefs().audioLang);
+                const match = audio.find((t) => normaliseLang(t.lang ?? '') === wanted);
+                if (wanted && match) player.setCurrentTrack(match);
+              }
+            });
+
+            player.on('error', (e) => {
+              setFailure({
+                message: 'Questo flusso DASH non parte.',
+                hint:
+                  (e as { error?: { message?: string } }).error?.message ||
+                  'Controlla che l\'indirizzo del manifest .mpd sia raggiungibile e che il server permetta le richieste da questa pagina (CORS).',
+                transient: false,
+              });
+              optionsRef.current.onError?.('dash_error');
+            });
+          })
+          .catch(() => {
+            if (token !== attachTokenRef.current) return;
+            setFailure({
+              message: 'Non riesco a caricare il lettore DASH.',
+              hint: 'Serve la rete al primo flusso .mpd che apri: il modulo si scarica in quel momento. Riprova quando torna la connessione.',
+              transient: true,
+            });
+          });
+        return;
       }
 
       if (Hls.isSupported()) {
@@ -272,8 +362,12 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
     attach();
 
     return () => {
+      attachTokenRef.current += 1;
       hlsRef.current?.destroy();
       hlsRef.current = null;
+      dashRef.current?.destroy();
+      dashRef.current = null;
+      dashLevelsRef.current = [];
     };
     // Keyed on the address as well as the id: the same title can change source
     // — a pattern resolving to a different host, or switching to a download —
@@ -382,7 +476,9 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
       if (hls) {
         setFailure(null);
         hls.startLoad();
-      } else if (isNativeRef.current) {
+      } else if (dashRef.current || isNativeRef.current) {
+        // dash.js non ha un `startLoad()` equivalente: si riattacca, e il punto
+        // di ripresa lo rimette `startAtSec`.
         attachRef.current();
       }
     };
@@ -474,8 +570,28 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
   // Quality change is seamless: hls.js swaps the level without reloading the video.
   const setQualityLevel = useCallback((levelId: number) => {
     if (hlsRef.current) hlsRef.current.currentLevel = levelId;
+    const dash = dashRef.current;
+    if (!dash) return;
+    // −1 è "automatica" in entrambi i mondi, ma si dice in due modi diversi:
+    // hls.js ha un livello speciale, dash.js ha un interruttore dell'ABR.
+    if (levelId < 0) {
+      dash.updateSettings({ streaming: { abr: { autoSwitchBitrate: { video: true } } } });
+      return;
+    }
+    const id = dashLevelsRef.current[levelId]?.id;
+    if (!id) return;
+    dash.updateSettings({ streaming: { abr: { autoSwitchBitrate: { video: false } } } });
+    dash.setRepresentationForTypeById('video', id);
   }, []);
   const setAudioTrack = useCallback((id: number) => {
+    const dash = dashRef.current;
+    if (dash) {
+      const track = dash.getTracksFor('audio')[id];
+      if (!track) return;
+      dash.setCurrentTrack(track);
+      if (track.lang) setPlaybackPrefs({ audioLang: normaliseLang(track.lang) });
+      return;
+    }
     const hls = hlsRef.current;
     if (!hls) return;
     hls.audioTrack = id;
@@ -486,12 +602,14 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
   }, []);
   const setDataSaver = useCallback((enabled: boolean) => {
     if (hlsRef.current) applyLevelCap(hlsRef.current, getPlaybackPrefs().maxHeight, enabled);
+    applyDashCap(dashRef.current, dashLevelsRef.current, getPlaybackPrefs().maxHeight, enabled);
   }, []);
 
   /** Ceiling on automatic quality, kept for every title until changed. */
   const setMaxHeight = useCallback((height: number | null) => {
     setPlaybackPrefs({ maxHeight: height });
     if (hlsRef.current) applyLevelCap(hlsRef.current, height, optionsRef.current.dataSaverMode);
+    applyDashCap(dashRef.current, dashLevelsRef.current, height, optionsRef.current.dataSaverMode);
   }, []);
 
   // ---------------------------------------------------------------------
@@ -597,6 +715,44 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
  * the two are resolved here together — otherwise turning data saver off would
  * silently discard a 720p ceiling the user had also set.
  */
+/**
+ * Lo stesso tetto del ramo HLS, detto nella lingua di dash.js.
+ *
+ * Là si cappa l'indice della scala; qui si dichiara un'altezza massima e la
+ * scelta della rappresentazione resta all'ABR. Il risultato per chi guarda è
+ * identico — "mai sopra i 720p" — e il risparmio dati è la stessa cosa con il
+ * tetto messo al minimo che il formato conosce.
+ */
+function applyDashCap(
+  dash: MediaPlayerClass | null,
+  levels: QualityLevel[],
+  maxHeight: number | null,
+  dataSaver: boolean | undefined,
+) {
+  if (!dash) return;
+  const setCap = (kbit: number) => dash.updateSettings({ streaming: { abr: { maxBitrate: { video: kbit } } } });
+
+  // Nessun tetto: -1 è come dash.js dice "prendi pure la migliore".
+  if (!dataSaver && !maxHeight) {
+    setCap(-1);
+    return;
+  }
+  if (levels.length === 0) return;
+
+  const lowest = levels.reduce((min, l) => (l.bitrate < min.bitrate ? l : min), levels[0]);
+  if (dataSaver) {
+    setCap(Math.ceil(lowest.bitrate / 1000));
+    return;
+  }
+
+  // Il gradino più alto che sta ancora sotto il tetto; se sono tutte sopra, la
+  // più piccola è la risposta onesta — la stessa regola del ramo HLS, detta in
+  // bitrate perché è l'unica manopola che dash.js espone.
+  const under = levels.filter((l) => l.height <= (maxHeight ?? 0));
+  const chosen = under.length > 0 ? under.reduce((best, l) => (l.height > best.height ? l : best), under[0]) : lowest;
+  setCap(Math.ceil(chosen.bitrate / 1000));
+}
+
 function applyLevelCap(hls: Hls, maxHeight: number | null, dataSaver: boolean | undefined) {
   if (dataSaver) {
     hls.autoLevelCapping = 1;
