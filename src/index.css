@@ -215,6 +215,27 @@ h1, h2, h3, .font-display {
   border-radius: var(--radius-xs);
 }
 
+/*
+ * Modalità televisore: si guarda da tre metri, non da cinquanta centimetri.
+ *
+ * Due sole regole, perché bastano. La prima ingrandisce la radice: tutta
+ * l'interfaccia è dimensionata in rem, quindi un ritocco qui allarga testi,
+ * schede e spaziature insieme, senza toccare un layout che già si adatta.
+ * La seconda rende il fuoco impossibile da perdere — e lo lega a `:focus` e non
+ * al solo `:focus-visible`, perché la regola che nasconde l'anello a chi usa il
+ * mouse, su un apparecchio dove il mouse non esiste, nasconde l'unica cosa che
+ * dice dove sei.
+ */
+html.tv {
+  font-size: 18px;
+}
+html.tv :focus {
+  outline: 3px solid var(--accent);
+  outline-color: var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-xs);
+}
+
 ::selection {
   background: var(--accent);
   color: var(--accent-contrast);

@@ -287,6 +287,37 @@ vale la pena tenere.
   e ripartono al ritorno. Su un telefono l'app è quasi sempre nascosta e quasi
   mai chiusa, quindi "nessuno sta guardando" è lo stato normale.
 
+### 3.11 Televisore e telecomando — Utile ✅
+
+CineMate è una pagina installabile, quindi il browser di una smart TV, di un
+Fire TV o di un Chromecast la apre già. Quello che non sapeva fare era *usarla*
+senza puntatore.
+
+| Funzione | Problema | Beneficio | Priorità |
+|---|---|---|---|
+| **Frecce che spostano il fuoco** | Col telecomando le frecce scorrevano la pagina, e Tab in una griglia di copertine segue una serpentina | Navigazione direzionale geometrica: → va alla copertina a destra, ↓ a quella sotto | Utile ✅ |
+| **Bordo di selezione da lontano** | Il fuoco si perdeva a tre metri | Anello spesso, e su `:focus` invece che solo `:focus-visible` | Utile ✅ |
+| **Scala da salotto** | Testo pensato per cinquanta centimetri | La radice passa a 18px: tutto è in rem, quindi cresce insieme senza toccare i layout | Utile ✅ |
+| **Interruttore a tre stati** | Riconoscere un televisore non è mai certo | Automatica / sempre / mai, con scritto cosa ha riconosciuto | Utile ✅ |
+
+**Perché la riga si deve sentire al bordo.** Premendo → sull'ultima copertina di
+un carosello non succede niente, invece di saltare a una scheda di un'altra riga
+che in linea d'aria è la più vicina. In verticale, al contrario, il salto
+disallineato è permesso: sotto una griglia c'è spesso un pulsante che non è
+incolonnato con nulla, e ↓ deve arrivarci. Sono due regole diverse perché sono
+due aspettative diverse, non per simmetria.
+
+**Perché il player resta fuori.** Là dentro le frecce sono già avanti, indietro e
+volume — il primo comando che si cerca col telecomando in mano. Sovrascriverle
+avrebbe rotto l'unico punto dell'app in cui la croce direzionale funzionava già.
+
+**Come si riconosce un televisore.** Due indizi, nessuno dei due certo: i nomi
+che le TV si danno (`Tizen`, `webOS`, gli `AFT…` dei Fire TV, `CrKey`) e la
+dichiarazione `pointer: none`, cioè nessun dispositivo di puntamento, né mouse né
+dito. Per questo la preferenza ha tre stati e le impostazioni dicono cosa ha
+riconosciuto: quando un'app si comporta in modo strano, la prima cosa utile è
+sapere cosa crede di essere.
+
 ---
 
 ## 4. Design system
@@ -392,7 +423,8 @@ senza spoiler**, **traduzione della sinossi**, righe **Per te / Più visti /
 Ultimi aggiunti / Simili sul tuo scaffale**, **obiettivi personali**, **tinte
 d'accento e Home riordinabile**, **condivisione di liste e codice QR**,
 **controllo genitori**, **diagnostica con test e log errori**, **apri sul
-servizio**, e nel player **gesture**, **buffer adattivo** e **host con test
+servizio**, **navigazione da telecomando** e **copertina larga nella scheda**, e
+nel player **gesture**, **buffer adattivo** e **host con test
 velocità, priorità automatica e bilanciamento**.
 
 **Prossimo (Essenziale)** — niente. Con "apri sul servizio" l'ultima voce

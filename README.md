@@ -62,7 +62,7 @@ src/
   lib/          dominio e utility (tmdb, sagas, universes, upcoming, stats,
                 activity, continueWatching, achievements, search, filters,
                 recommend, goals, parental, accents, share, deepLinks,
-                anthropic, backup, errorLog, selfTest)
+                spatialNav, anthropic, backup, errorLog, selfTest)
   player/       il player, autonomo dal resto dell'app:
                   hooks/      motore video (hls.js), gesture, sottotitoli,
                               maratona, download, watch party, cast,
@@ -153,6 +153,18 @@ rete che non è la tua.
   esatto che non può fare. I servizi senza una rotta di ricerca stabile — Sky /
   NOW, HBO Max, Mediaset Infinity — restano etichette, con il collegamento a
   JustWatch accanto.
+- **Sul televisore, col telecomando**: le frecce spostano il fuoco fra le
+  copertine invece di scorrere la pagina, il bordo di selezione diventa spesso e
+  tutto si ingrandisce per essere letto da lontano. → sull'ultima copertina di
+  una riga non fa niente, perché il bordo di una lista si deve sentire; ↓ invece
+  arriva anche a quello che non è incolonnato con nulla. Nel player le frecce
+  restano avanti, indietro e volume. Si accende da sola su una TV, un Fire TV o
+  un Chromecast, e nelle impostazioni c'è l'interruttore a tre stati con scritto
+  cosa ha riconosciuto.
+- **Copertina larga nella scheda**: l'immagine orizzontale del titolo dietro
+  all'intestazione, sfumata verso il fondo. Quando manca — o mentre arriva —
+  resta la sfumatura generata dal titolo, che è sempre stata l'intestazione
+  predefinita.
 - **Filtri avanzati**: tipo, stato, genere, studio, paese, lingua audio,
   qualità della tua copia, durata, anno, il tuo voto e quello di TMDB, e
   "solo con sottotitoli". Le opzioni sono prese dal tuo scaffale, quindi ogni

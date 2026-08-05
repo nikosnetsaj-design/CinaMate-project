@@ -12,6 +12,7 @@ import { usePlayerSources } from "../store/usePlayerSources";
 import { usePlayerPrefs } from "../store/usePlayerPrefs";
 import { useGoals } from "../store/useGoals";
 import { useTheme } from "../store/useTheme";
+import { useTvMode, type TvPreference } from "../store/useTvMode";
 import { useHomeLayout, HOME_SECTIONS } from "../store/useHomeLayout";
 import { ACCENTS } from "../lib/accents";
 import { ParentalSettings } from "./ParentalSettings";
@@ -101,6 +102,66 @@ function AppearanceSettings() {
       <p className="mt-2 text-xs leading-relaxed text-text-faint">
         Sei tinte, ognuna con la sua variante chiara e scura: sono scelte perché restino leggibili
         su entrambi i temi, cosa che un colore qualsiasi preso da una ruota non garantisce.
+      </p>
+    </div>
+  );
+}
+
+/**
+ * L'interruttore della modalità televisore.
+ *
+ * Sta accanto all'aspetto e non fra le funzioni avanzate perché è esattamente
+ * quello: un modo di mostrare l'app. Il riconoscimento automatico si dichiara
+ * invece di restare nascosto — sapere che l'app *crede* di essere su un
+ * televisore è la prima cosa utile quando si comporta in modo inatteso.
+ */
+function TvSettings() {
+  const preference = useTvMode((s) => s.preference);
+  const detected = useTvMode((s) => s.detected);
+  const setPreference = useTvMode((s) => s.setPreference);
+  const active = useTvMode((s) => s.active);
+
+  const options: { id: TvPreference; label: string }[] = [
+    { id: "auto", label: "Automatica" },
+    { id: "on", label: "Sempre" },
+    { id: "off", label: "Mai" },
+  ];
+
+  return (
+    <div>
+      <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Televisore</span>
+      <div className="mb-2 flex gap-2" role="radiogroup" aria-label="Modalità televisore">
+        {options.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            role="radio"
+            aria-checked={preference === option.id}
+            onClick={() => setPreference(option.id)}
+            className="flex-1 rounded-sm border px-3 py-2.5 text-sm transition-colors"
+            style={
+              preference === option.id
+                ? {
+                    borderColor: "color-mix(in srgb, var(--accent) 50%, transparent)",
+                    background: "color-mix(in srgb, var(--accent) 12%, transparent)",
+                    color: "var(--text)",
+                  }
+                : { borderColor: "var(--border-strong)", color: "var(--text-muted)" }
+            }
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+      <p className="text-xs leading-relaxed text-text-faint">
+        Con la modalità attiva le frecce spostano il fuoco fra le copertine invece di scorrere la
+        pagina, il bordo di selezione diventa spesso e tutto si ingrandisce per essere letto da
+        lontano — quello che serve per usare l'app col telecomando su una TV, un Fire TV o un
+        Chromecast. Nel player le frecce restano quelle di sempre: avanti, indietro e volume.{" "}
+        {detected
+          ? "Su questo apparecchio il riconoscimento dice: televisore."
+          : "Su questo apparecchio il riconoscimento non vede un televisore."}{" "}
+        {active ? "Ora è attiva." : "Ora è spenta."}
       </p>
     </div>
   );
@@ -522,6 +583,8 @@ function SettingsForm() {
         <SourceTemplates />
 
         <AppearanceSettings />
+
+        <TvSettings />
 
         <HomeLayoutSettings />
 

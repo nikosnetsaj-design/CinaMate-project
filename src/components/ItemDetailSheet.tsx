@@ -7,6 +7,7 @@ import { paletteFor } from "../lib/palette";
 import { formatRuntime } from "../lib/format";
 import { STATUSES } from "../lib/status";
 import { voteColor } from "../lib/vote";
+import { backdropSrcSet, backdropUrl } from "../lib/tmdb";
 import { PosterArt } from "./PosterArt";
 import { StatusChip } from "./StatusChip";
 import { WatchAndLinks } from "./WatchAndLinks";
@@ -51,7 +52,23 @@ function ItemDetail({ item }: { item: Item }) {
   return createPortal(
     <div className="fixed inset-0 z-70 overflow-y-auto bg-bg" ref={containerRef} role="dialog" aria-modal="true" aria-labelledby={titleId}>
       <div className="relative h-56 overflow-hidden">
+        {/*
+          La sfumatura generata dal titolo resta sotto e fa due lavori: è
+          l'intestazione dei titoli senza immagine, ed è ciò che si vede mentre
+          la fotografia arriva — invece di un rettangolo vuoto che poi salta.
+        */}
         <div className="absolute inset-0" style={{ background: `linear-gradient(150deg, ${b}, ${a})` }} />
+        {item.backdropPath && (
+          <img
+            src={backdropUrl(item.backdropPath) ?? undefined}
+            srcSet={backdropSrcSet(item.backdropPath)}
+            sizes="100vw"
+            alt=""
+            aria-hidden="true"
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 opacity-30 mix-blend-overlay"

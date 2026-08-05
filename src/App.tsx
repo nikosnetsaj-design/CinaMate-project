@@ -20,6 +20,7 @@ import { useLibrary } from "./store/useLibrary";
 import { useAutoLinkTmdb } from "./lib/useAutoLinkTmdb";
 import { useAutoLinkSagas } from "./lib/useAutoLinkSagas";
 import { useReleaseAlerts } from "./lib/useReleaseAlerts";
+import { useSpatialNav } from "./lib/useSpatialNav";
 import { Home } from "./pages/Home";
 import { Library } from "./pages/Library";
 import { Sagas } from "./pages/Sagas";
@@ -98,6 +99,9 @@ export default function App() {
   useAutoLinkTmdb();
   useAutoLinkSagas();
   useReleaseAlerts();
+  // Le frecce muovono il fuoco quando si è su un televisore: un ascoltatore
+  // solo, spento del tutto altrove.
+  useSpatialNav();
   // Mounted once here rather than per row: the playhead is written every few
   // seconds while something plays, and each listener costs a re-read.
   useWatchProgressSync();
