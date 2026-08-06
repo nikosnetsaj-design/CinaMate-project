@@ -79,6 +79,13 @@ resta tua e non ti vende niente.
 | **Voto TMDB** | Il voto del pubblico non si vedeva da nessuna parte | Sotto la trama, lontano dal tuo voto: sono due giudizi diversi e affiancarli suggerirebbe un confronto che non interessa | Utile ✅ |
 | **Scarica dalla scheda** | I download vivevano solo dentro il player, cioè dove arrivi quando hai già deciso di guardare *adesso* | Scelta della qualità e download avviato dalla scheda, con l'indirizzo risolto prima di partire | Utile ✅ |
 | **Logo del titolo** | Il nome nel font dell'app è una didascalia, non una locandina | Il lettering disegnato da TMDB in vetrina e in cima alla scheda, con il titolo scritto come ripiego | Utile ✅ |
+| **Play sempre visibile sulla puntata** | Il play compariva passando il puntatore sulla miniatura: su un telefono, dove la lista si usa, era invisibile | Pulsante in fondo alla riga, grande da premere col dito; le puntate viste hanno la miniatura spenta e il segno verde | Utile ✅ |
+| **Regia e troupe** | Un solo nome scritto in una pastiglia, senza faccia e senza mestiere | Le carte di regia, sceneggiatura, musiche, fotografia e produzione (chi l'ha ideata per le serie), che aprono la scheda della persona | Utile ✅ |
+| **Dati finanziari** | Budget e incassi non c'erano, e affiancati sarebbero una divisione da fare a mente | Le due cifre a confronto e il verdetto scritto — «ha incassato 2,6× il budget» — in dollari come li pubblica TMDB. Solo film | Utile ✅ |
+| **Studi di produzione** | La libreria teneva il nome del primo studio e basta | I marchi, su fondo chiaro perché i loghi di TMDB sono inchiostro nero su trasparente e sul velluto sparirebbero | Utile ✅ |
+| **Media (Video · Poster · Sfondi)** | Del titolo si vedeva una sola locandina e un solo trailer, che portava fuori dal sito | Trailer, scene e speciali dentro l'app (`youtube-nocookie`), locandine e sfondi alternativi ingranditi a schermo intero | Utile ✅ |
+| **Prequel & Sequel** | La striscia diceva *quanto* della saga avevi visto, non *dove eri* | La fila dei capitoli in ordine con anno, numero grande dietro e «SEI QUI» sotto quello aperto; si porta da sola sul corrente e i capitoli mancanti si aggiungono da lì | Utile ✅ |
+| **Film correlati** | Tre titoli come stringhe, salvati all'aggiunta e mai più aggiornati | Venti locandine da TMDB al momento dell'apertura; i posseduti portano il segno e si aprono, gli altri si aggiungono | Utile ✅ |
 
 ---
 
@@ -109,7 +116,8 @@ resta tua e non ti vende niente.
 | Funzione | Problema | Beneficio | Priorità |
 |---|---|---|---|
 | Provider legali per l'Italia | "Ce l'ho su Netflix o devo noleggiarlo?" | Risposta immediata, dati JustWatch | Essenziale ✅ |
-| **Apri sul servizio** | Cercare di nuovo dentro l'app del servizio | La pastiglia del provider è un collegamento: apre il servizio con la ricerca già scritta, e su telefono apre l'app | Essenziale ✅ |
+| **Abbonamento, gratis, noleggio, acquisto** | Un elenco unico faceva sembrare compreso ciò che va pagato a parte | Quattro file separate con le icone dei servizi: si vede in un colpo d'occhio se ce l'hai già o se costa | Essenziale ✅ |
+| **Apri sul servizio** | Cercare di nuovo dentro l'app del servizio | L'icona del provider è un collegamento: apre il servizio con la ricerca già scritta, e su telefono apre l'app | Essenziale ✅ |
 | **I miei abbonamenti** | Ti propongono cose che non puoi vedere | Filtro "solo ciò che ho già" | Utile |
 | Avviso "in scadenza" | I titoli lasciano i cataloghi in silenzio | "Esce da Netflix il 30" | Utile |
 | Link personali (2 per titolo) | Vuoi salvare un tuo riferimento | Segnalibri liberi | Essenziale ✅ |

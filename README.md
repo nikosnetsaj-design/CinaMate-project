@@ -63,6 +63,11 @@ src/
                 activity, continueWatching, achievements, search, filters,
                 recommend, goals, parental, accents, share, deepLinks,
                 spatialNav, anthropic, backup, errorLog, selfTest)
+                  useTitleExtras.ts il resto della scheda in una richiesta sola:
+                                    troupe, budget, studi, video, immagini,
+                                    correlati — fuori dal record della libreria
+                  useAddFromCatalog.ts  da una locandina del catalogo al foglio
+                                    di aggiunta già compilato, uguale ovunque
                   featured.ts       chi finisce in vetrina, e la riga che dice
                                     perché: una gerarchia dichiarata, non un
                                     sorteggio
@@ -148,6 +153,42 @@ rete che non è la tua.
 - **Cast con le facce**: foto tonde, nome e personaggio, con «mostra tutti».
   Un attore si ricorda per la faccia e per il ruolo prima che per il nome; senza
   TMDB restano le pastiglie con i nomi, che la libreria ha comunque.
+- **Dove guardarlo, diviso per come ci arrivi**: **Streaming** (compreso
+  nell'abbonamento), **Gratis**, **Noleggia** e **Acquista** in file separate,
+  ognuna con le icone quadrate dei servizi invece dei nomi scritti. Erano un
+  elenco unico di pastiglie: appiattite insieme facevano sembrare compreso
+  qualcosa che va pagato a parte, e «Disney+» in mezzo ad altre cinque scritte
+  si legge, mentre il quadratino col castello si *vede*. Il nome resta
+  nell'`alt`, quindi con un lettore di schermo l'elenco è identico a prima.
+- **Regia e troupe**: le carte con la faccia di chi l'ha fatto — regia,
+  sceneggiatura, musiche, fotografia, produzione — e per le serie chi l'ha
+  ideata. Un tocco apre la scheda della persona con la sua filmografia. TMDB
+  elenca duecento nomi fino al secondo assistente al catering: qui ci sono i
+  sei che uno cerca davvero.
+- **Dati finanziari**: budget e incassi a confronto, con la sola cosa che
+  interessa leggendoli detta a parole — «ha incassato 2,6× il budget: un
+  successo pieno» — invece di lasciare una divisione da fare a mente. Solo per i
+  film, perché delle serie TMDB i bilanci non li tiene, e in dollari come li
+  pubblica: convertirli al cambio di oggi sarebbe una stima inventata per un
+  film del 1994.
+- **Studi di produzione**: i marchi, su fondo chiaro. Non è gusto: i loghi di
+  TMDB sono inchiostro nero su trasparente, e messi sul velluto scuro
+  sparirebbero.
+- **Media**: tre schede — **Video**, **Poster**, **Sfondi**. I trailer si aprono
+  dentro l'app, in un pannello sopra la scheda (`youtube-nocookie`, quindi
+  nessun cookie di profilazione finché non premi play); locandine e sfondi si
+  ingrandiscono a tutto schermo. Uscire dal sito per novanta secondi di trailer
+  vuol dire perdere il posto in cui eri, e al ritorno l'app riparte da capo.
+- **Prequel & Sequel**: la saga come una linea da percorrere — le locandine in
+  ordine, l'anno sulla copertina, il numero del capitolo grande dietro, e
+  **SEI QUI** sotto quello aperto. La fila si porta da sola sul capitolo
+  corrente, perché in una saga da dieci film «sei qui» sarebbe fuori schermo. I
+  capitoli che non hai sono spenti e aprono il foglio di aggiunta: un buco nella
+  saga è esattamente il momento in cui uno vuole tapparlo.
+- **Film correlati**: venti titoli con la locandina, presi da TMDB nel momento
+  in cui apri la scheda — quindi non invecchiano mai. Quelli che hai già portano
+  il segno e aprono la loro scheda; gli altri si aggiungono da lì. Le tre
+  stringhe salvate all'aggiunta restano solo per i titoli non collegati a TMDB.
 - **Voto TMDB**: sotto la trama, accanto al cast — non in cima vicino al tuo.
   Sono due giudizi diversi e affiancarli suggerirebbe un confronto che non
   interessa a nessuno.
@@ -161,7 +202,10 @@ rete che non è la tua.
   fino a qui» — traducendo la puntata nel totale che la libreria tiene — e il
   play su una riga apre *quella* puntata: stagione ed episodio finiscono nelle
   sorgenti del titolo, quindi l'indirizzo costruito diventa `…/s02e07.m3u8`
-  invece del solito `S01E{visti+1}`.
+  invece del solito `S01E{visti+1}`. Il play sta in fondo alla riga, sempre
+  visibile: prima compariva passando il puntatore sulla miniatura, un gesto che
+  su un telefono — dove questa lista si usa — non esiste. Le puntate già viste
+  restano riconoscibili senza leggerle: miniatura spenta e segno verde sopra.
 - **Il logo del titolo**: in vetrina e in cima alla scheda, quando TMDB ha il
   lettering disegnato della serie o del film. È metà dell'effetto — «Cent'anni
   di solitudine» nel suo lettering *è* la locandina, lo stesso nome nel font
@@ -209,7 +253,7 @@ rete che non è la tua.
 - **Dettagli prima di salvare**: tocca un risultato e vedi trama, regia, cast,
   durata, voto TMDB e dove guardarlo — senza doverlo prima aggiungere alla
   libreria. Aggiungerlo resta un secondo passo, se lo vuoi.
-- **Apri sul servizio**: la pastiglia del provider è un collegamento. Un tocco e
+- **Apri sul servizio**: l'icona del provider è un collegamento. Un tocco e
   si apre Netflix, Prime Video, Disney+, Apple TV+, Paramount+, Crunchyroll,
   RaiPlay o MUBI con la ricerca del titolo già scritta — e sul telefono si apre
   l'app, non il sito, se ce l'hai installata. Vale anche per la piattaforma che
