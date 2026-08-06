@@ -75,7 +75,16 @@ function Overview({ items, openItem }: { items: Item[]; openItem: (item: Item) =
     <div className="flex flex-col gap-4">
       <Card>
         <Label>Il nastro</Label>
-        <Nastro days={365} height={72} caption={`Un filo per ogni sessione del ${new Date().getFullYear()}`} />
+        {/* La finestra è l'anno scelto qui sotto, non "gli ultimi 365 giorni":
+            la didascalia diceva «del 2026» sopra un nastro che a febbraio era
+            per tre quarti 2025, e il riquadro accanto contava l'anno solare.
+            Due numeri diversi con la stessa etichetta. */}
+        <Nastro
+          from={`${year}-01-01`}
+          to={`${year}-12-31`}
+          height={72}
+          caption={`Un filo per ogni sessione del ${year}`}
+        />
       </Card>
 
       <Card>

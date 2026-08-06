@@ -130,7 +130,7 @@ export function Critic() {
           </p>
           <button
             type="button"
-            onClick={openSettingsSheet}
+            onClick={() => openSettingsSheet()}
             className="rounded-sm border border-border-strong px-4 py-2 text-sm font-medium text-text hover:bg-surface-hover"
           >
             Aggiungi la tua chiave nelle Impostazioni

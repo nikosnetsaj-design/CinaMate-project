@@ -101,7 +101,7 @@ export function Sagas() {
           action={
             <button
               type="button"
-              onClick={openSettings}
+              onClick={() => openSettings()}
               className="rounded-sm px-4 py-2 text-sm font-semibold"
               style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
             >
@@ -168,7 +168,7 @@ export function Sagas() {
           {!tmdbApiKey && (
             <p className="text-xs text-text-faint">
               Senza chiave TMDB vedi solo le saghe già scaricate.{" "}
-              <button type="button" onClick={openSettings} className="font-medium text-accent-text underline-offset-2 hover:underline">
+              <button type="button" onClick={() => openSettings()} className="font-medium text-accent-text underline-offset-2 hover:underline">
                 Aggiungi la chiave
               </button>{" "}
               per scoprirne di nuove.

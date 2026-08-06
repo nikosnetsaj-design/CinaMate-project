@@ -14,7 +14,10 @@ import { WatchAndLinks } from "./WatchAndLinks";
 import { WatchButton } from "./WatchButton";
 import { LinkToTmdb } from "./LinkToTmdb";
 import { ItemSagaStrip } from "./ItemSagaStrip";
+import { SagaLine } from "./SagaLine";
 import { CastRow } from "./CastRow";
+import { TitleFacts } from "./TitleFacts";
+import { RelatedRow } from "./RelatedRow";
 import { ShareSheet } from "./ShareSheet";
 import { EpisodeList } from "./EpisodeList";
 import { DownloadButton } from "./DownloadButton";
@@ -399,6 +402,12 @@ function ItemDetail({ item }: { item: Item }) {
               )}
 
               <WatchAndLinks item={item} />
+
+              {/* Chi l'ha fatto, quanto è costato, chi l'ha prodotto, cosa c'è
+                  da vedere. Sotto "dove guardarlo" perché è la scheda del film
+                  in sé: si legge dopo aver deciso *se* guardarlo. */}
+              <TitleFacts item={item} />
+
               <LinkToTmdb item={item} />
 
               <div className="mt-4 flex gap-2.5">
@@ -426,10 +435,20 @@ function ItemDetail({ item }: { item: Item }) {
             </div>
           )}
 
-          {tab === "saga" && <ItemSagaStrip item={item} />}
+          {tab === "saga" && (
+            <div className="flex flex-col gap-1">
+              <SagaLine item={item} />
+              <ItemSagaStrip item={item} />
+            </div>
+          )}
 
           {tab === "simili" && (
-            <div className="flex flex-col">
+            <div className="flex flex-col gap-4">
+              {/* Le locandine di TMDB per prime: sono la risposta piena alla
+                  domanda "e adesso cosa guardo", e i titoli che hai già
+                  portano il segno invece di sparire. */}
+              <RelatedRow item={item} />
+
               {/* Due domande diverse, quindi due sezioni. Questa è "questi ce
                   li hai già"; quella sotto è la lista TMDB di ciò che non hai,
                   ed è per questo che una apre un titolo e l'altra il foglio di
@@ -457,8 +476,12 @@ function ItemDetail({ item }: { item: Item }) {
                 </div>
               )}
 
-              {item.similar.length > 0 && (
-                <div className="mt-4">
+              {/* Le tre stringhe salvate al momento dell'aggiunta restano solo
+                  per i titoli non collegati a TMDB: per gli altri la fila di
+                  locandine qui sopra dice la stessa cosa, meglio e con venti
+                  titoli invece di tre. */}
+              {item.similar.length > 0 && item.tmdbId == null && (
+                <div>
                   <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">
                     Se ti è piaciuto — da aggiungere
                   </span>
@@ -487,7 +510,7 @@ function ItemDetail({ item }: { item: Item }) {
                   close();
                   navigate("/critico");
                 }}
-                className="mt-4 w-full rounded-md border py-3 text-sm font-semibold"
+                className="w-full rounded-md border py-3 text-sm font-semibold"
                 style={{ borderColor: "color-mix(in srgb, var(--cyan) 35%, transparent)", background: "color-mix(in srgb, var(--cyan) 12%, transparent)", color: "var(--cyan)" }}
               >
                 Chiedi al critico IA

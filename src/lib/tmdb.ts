@@ -28,9 +28,13 @@ export interface TmdbSearchResult {
   overview: string;
   posterPath: string | null;
   kind: Kind;
+  /** Quanto TMDB lo vede cercato in questo momento. Serve a ordinare, non a giudicare. */
+  popularity: number;
 }
 
 export interface TmdbWatchProvider {
+  /** L'id TMDB del servizio: chiave stabile, il nome cambia coi piani ("… with Ads"). */
+  id: number;
   name: string;
   logoPath: string | null;
 }
@@ -186,6 +190,7 @@ interface RawMultiSearchResult {
   poster_path?: string | null;
   genre_ids?: number[];
   origin_country?: string[];
+  popularity?: number;
 }
 
 // Minimal genre-id -> Italian name map for the multi-search result list (full
@@ -195,6 +200,33 @@ const GENRE_NAMES: Record<number, string> = {
   16: "Animazione",
   99: "Documentario",
 };
+
+function foldTitle(value: string): string {
+  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+}
+
+/**
+ * Quanto un titolo risponde davvero a quello che è stato scritto: 0 è "è
+ * esattamente quello", 4 è "contiene quelle lettere da qualche parte".
+ *
+ * `/search/multi` fa corrispondenza per sottostringa, quindi cercando «Ns»
+ * torna *Ded@ns*, *Käpt'ns Dinner* e una serie olandese del 1981 — tutti
+ * legittimi per TMDB e nessuno di questi è la risposta. Ordinare prima per
+ * corrispondenza e poi per popolarità rimette in cima ciò che si stava
+ * cercando senza buttare via niente.
+ */
+function titleRank(title: string, query: string): number {
+  const t = foldTitle(title);
+  const q = foldTitle(query);
+  if (!q) return 4;
+  if (t === q) return 0;
+  if (t.startsWith(q)) return 1;
+  // Una parola che comincia così: «guerre» trova «Guerre stellari», e non solo
+  // i titoli che cominciano con quella parola.
+  if (t.split(/[\s:—–-]+/).some((word) => word.startsWith(q))) return 2;
+  if (t.includes(q)) return 3;
+  return 4;
+}
 
 export async function searchTitles(
   query: string,
@@ -213,9 +245,8 @@ export async function searchTitles(
     { query, include_adult: "false" },
     signal,
   );
-  return data.results
+  const mapped = data.results
     .filter((r): r is RawMultiSearchResult & { media_type: "movie" | "tv" } => r.media_type === "movie" || r.media_type === "tv")
-    .slice(0, limit)
     .map((r) => {
       const genreNames = (r.genre_ids ?? []).map((id) => GENRE_NAMES[id]).filter((n): n is string => !!n);
       const dateStr = r.release_date || r.first_air_date;
@@ -227,8 +258,25 @@ export async function searchTitles(
         overview: r.overview || "",
         posterPath: r.poster_path ?? null,
         kind: guessKind(r.media_type, genreNames, r.origin_country),
+        popularity: r.popularity ?? 0,
       };
-    });
+    })
+    .filter((r) => r.title);
+
+  /*
+   * Un titolo senza locandina è quasi sempre una scheda abbozzata che nessuno
+   * ha mai completato, e in una griglia occupa il posto di qualcosa di vero.
+   * Sparisce solo se resta abbastanza da mostrare: per un film oscuro davvero
+   * cercato, la scheda spoglia è comunque la risposta giusta.
+   */
+  const withPoster = mapped.filter((r) => r.posterPath);
+  const pool = withPoster.length >= Math.min(6, limit) ? withPoster : mapped;
+
+  return pool
+    .map((r) => ({ r, rank: titleRank(r.title, query) }))
+    .sort((a, b) => a.rank - b.rank || b.r.popularity - a.r.popularity)
+    .slice(0, limit)
+    .map((entry) => entry.r);
 }
 
 interface RawVideo {
@@ -244,8 +292,24 @@ interface RawCrew {
 interface RawCast {
   name: string;
 }
+interface RawProviderEntry {
+  provider_id: number;
+  provider_name: string;
+  logo_path?: string | null;
+  display_priority?: number;
+}
 interface RawProvidersResponse {
-  results?: Record<string, { link?: string; flatrate?: { provider_name: string; logo_path: string }[] }>;
+  results?: Record<
+    string,
+    {
+      link?: string;
+      flatrate?: RawProviderEntry[];
+      free?: RawProviderEntry[];
+      ads?: RawProviderEntry[];
+      rent?: RawProviderEntry[];
+      buy?: RawProviderEntry[];
+    }
+  >;
 }
 interface RawDetails {
   id: number;
@@ -263,11 +327,11 @@ interface RawDetails {
   number_of_episodes?: number;
   number_of_seasons?: number;
   origin_country?: string[];
-  created_by?: { name: string }[];
+  created_by?: { id?: number; name: string; profile_path?: string | null }[];
   credits?: { cast?: RawCast[]; crew?: RawCrew[] };
   videos?: { results?: RawVideo[] };
   recommendations?: { results?: { title?: string; name?: string }[] };
-  production_companies?: { name: string }[];
+  production_companies?: { id?: number; name: string; logo_path?: string | null; origin_country?: string }[];
   production_countries?: { iso_3166_1: string }[];
   spoken_languages?: { iso_639_1: string }[];
   vote_average?: number;
@@ -304,20 +368,67 @@ function readCertification(details: RawDetails, mediaType: "movie" | "tv"): stri
   return "";
 }
 
+/**
+ * Dove si guarda un titolo in Italia, diviso per come ci si arriva.
+ *
+ * Le tre file sono separate perché rispondono a domande diverse: «ce l'ho già
+ * nell'abbonamento» non è «costa 4,99 a noleggio», e appiattirle in un unico
+ * elenco — com'era prima — faceva sembrare compreso qualcosa che va pagato a
+ * parte. `free` sta a sé e non dentro `streaming` per lo stesso motivo:
+ * RaiPlay senza abbonamento è un'informazione, non un dettaglio.
+ */
 export interface TmdbWatchInfo {
-  providers: TmdbWatchProvider[];
+  /** In abbonamento (`flatrate`). */
+  streaming: TmdbWatchProvider[];
+  /** Gratis, con o senza pubblicità. */
+  free: TmdbWatchProvider[];
+  rent: TmdbWatchProvider[];
+  buy: TmdbWatchProvider[];
+  /** La pagina JustWatch del titolo, quando c'è. */
   link: string | null;
 }
 
+/** L'icona quadrata del servizio, quella che si riconosce senza leggere. */
+export function providerLogoUrl(path: string | null | undefined, size: "w45" | "w92" | "w154" = "w92"): string | null {
+  return path ? `${IMG_BASE}/${size}${path}` : null;
+}
+
+function toProviders(raw: RawProviderEntry[] | undefined): TmdbWatchProvider[] {
+  return (raw ?? [])
+    // `display_priority` è l'ordine in cui JustWatch mette i servizi per il
+    // paese: rispettarlo vuol dire mostrare per primo quello che quasi tutti
+    // hanno, invece dell'ordine casuale in cui arriva il JSON.
+    .slice()
+    .sort((a, b) => (a.display_priority ?? 99) - (b.display_priority ?? 99))
+    .map((p) => ({ id: p.provider_id, name: p.provider_name, logoPath: p.logo_path ?? null }));
+}
+
+/**
+ * La disponibilità cambia al massimo una volta al giorno, mentre la scheda si
+ * riapre di continuo: senza cache ogni apertura era una chiamata in rete per
+ * riavere la stessa risposta.
+ */
+const watchCache = new Map<string, { at: number; info: TmdbWatchInfo }>();
+const WATCH_TTL_MS = 6 * 60 * 60 * 1000;
+
 export async function getWatchProviders(tmdbId: number, mediaType: "movie" | "tv", apiKey: string): Promise<TmdbWatchInfo> {
+  const key = `${mediaType}:${tmdbId}`;
+  const hit = watchCache.get(key);
+  if (hit && Date.now() - hit.at < WATCH_TTL_MS) return hit.info;
+
   const providers = await tmdbGet<RawProvidersResponse>(`/${mediaType}/${tmdbId}/watch/providers`, apiKey).catch(
     () => ({ results: {} }) as RawProvidersResponse,
   );
-  const itProviders = providers.results?.IT;
-  return {
-    providers: (itProviders?.flatrate ?? []).map((p) => ({ name: p.provider_name, logoPath: p.logo_path })),
-    link: itProviders?.link ?? null,
+  const it = providers.results?.IT;
+  const info: TmdbWatchInfo = {
+    streaming: toProviders(it?.flatrate),
+    free: toProviders([...(it?.free ?? []), ...(it?.ads ?? [])]),
+    rent: toProviders(it?.rent),
+    buy: toProviders(it?.buy),
+    link: it?.link ?? null,
   };
+  watchCache.set(key, { at: Date.now(), info });
+  return info;
 }
 
 export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiKey: string): Promise<TmdbDetails> {
@@ -358,7 +469,9 @@ export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiK
     posterPath: details.poster_path ?? null,
     backdropPath: details.backdrop_path ?? null,
     trailerUrl: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null,
-    watchProviders: watch.providers,
+    // Solo l'abbonamento: questo campo finisce nella piattaforma del titolo in
+    // libreria, e "l'ho noleggiato una volta" non è la piattaforma su cui sta.
+    watchProviders: watch.streaming,
     // TV shows have no collection on TMDB, so `null` there is a real answer
     // ("standalone"), not a gap waiting to be filled.
     collectionId: details.belongs_to_collection?.id ?? null,
@@ -516,6 +629,7 @@ export async function discoverTitles(query: DiscoverQuery, apiKey: string): Prom
       overview: r.overview || "",
       posterPath: r.poster_path ?? null,
       kind: guessKind(query.mediaType, genreNames, r.origin_country),
+      popularity: r.popularity ?? 0,
     };
   });
 }
@@ -575,6 +689,7 @@ export async function getFeed(feed: DiscoverFeed, apiKey: string): Promise<TmdbS
         overview: r.overview || "",
         posterPath: r.poster_path ?? null,
         kind: guessKind(mediaType, genreNames, r.origin_country),
+        popularity: r.popularity ?? 0,
       };
     })
     .filter((r) => r.title);
@@ -1119,6 +1234,254 @@ export async function getKeywordMovies(keywordId: number, apiKey: string): Promi
     })
     .filter((p) => p.title && p.releaseDate)
     .sort((a, b) => (a.releaseDate ?? "9999").localeCompare(b.releaseDate ?? "9999"));
+}
+
+/* ------------------------------------------------------------------ */
+/* Il resto della scheda — troupe, soldi, studi, immagini, correlati    */
+/* ------------------------------------------------------------------ */
+
+/** Una persona della troupe: il mestiere in italiano, la faccia quando c'è. */
+export interface TmdbCrewCredit {
+  id: number;
+  name: string;
+  /** "Regia", "Sceneggiatura", "Musiche" — già tradotto. */
+  job: string;
+  profilePath: string | null;
+}
+
+export interface TmdbCompany {
+  id: number;
+  name: string;
+  logoPath: string | null;
+  /** Codice ISO del paese della casa di produzione, quando TMDB lo sa. */
+  country: string;
+}
+
+export interface TmdbVideo {
+  key: string;
+  name: string;
+  /** "Trailer", "Teaser", "Dietro le quinte"… già in italiano. */
+  kind: string;
+  language: string;
+}
+
+export interface TmdbTitleExtras {
+  /** La frase della locandina. Vuota per la maggior parte dei titoli. */
+  tagline: string;
+  homepage: string | null;
+  /** Il titolo originale, mostrato solo quando è diverso da quello italiano. */
+  originalTitle: string;
+  /** In dollari. `0` vuol dire "TMDB non lo sa", non "è costato zero". */
+  budget: number;
+  revenue: number;
+  /** Quante persone hanno votato su TMDB: dà il peso alla media. */
+  voteCount: number;
+  crew: TmdbCrewCredit[];
+  companies: TmdbCompany[];
+  videos: TmdbVideo[];
+  /** Percorsi delle locandine alternative, italiane per prime. */
+  posters: string[];
+  backdrops: string[];
+  related: TmdbSearchResult[];
+}
+
+interface RawImage {
+  file_path: string;
+  iso_639_1?: string | null;
+  vote_average?: number;
+}
+
+interface RawExtras extends RawDetails {
+  tagline?: string;
+  homepage?: string | null;
+  original_title?: string;
+  original_name?: string;
+  budget?: number;
+  revenue?: number;
+  vote_count?: number;
+  images?: { posters?: RawImage[]; backdrops?: RawImage[] };
+  credits?: { cast?: RawCast[]; crew?: (RawCrew & { id: number; profile_path?: string | null; department?: string })[] };
+  videos?: { results?: (RawVideo & { name?: string; iso_639_1?: string })[] };
+  recommendations?: { results?: RawMultiSearchResult[] };
+}
+
+/**
+ * I mestieri che vale la pena nominare, nell'ordine in cui contano.
+ *
+ * TMDB elenca duecento persone per un film, dal regista al secondo assistente
+ * al catering: mostrarle tutte non è generosità, è nascondere le quattro che
+ * uno cerca davvero. Le altre restano su TMDB, che è il posto giusto per loro.
+ */
+const KEY_JOBS: Record<string, string> = {
+  Director: "Regia",
+  Screenplay: "Sceneggiatura",
+  Writer: "Sceneggiatura",
+  Story: "Soggetto",
+  "Original Music Composer": "Musiche",
+  "Director of Photography": "Fotografia",
+  Producer: "Produzione",
+  "Executive Producer": "Produzione esecutiva",
+};
+const JOB_ORDER = Object.keys(KEY_JOBS);
+
+const VIDEO_KINDS: Record<string, string> = {
+  Trailer: "Trailer",
+  Teaser: "Teaser",
+  Clip: "Scena",
+  Featurette: "Speciale",
+  "Behind the Scenes": "Dietro le quinte",
+  Bloopers: "Papere",
+};
+
+/** L'anteprima di un video YouTube, senza chiamare YouTube. */
+export function youtubeThumb(key: string): string {
+  return `https://i.ytimg.com/vi/${key}/mqdefault.jpg`;
+}
+
+export function youtubeWatchUrl(key: string): string {
+  return `https://www.youtube.com/watch?v=${key}`;
+}
+
+/** Italiano, poi inglese, poi le immagini senza scritte. */
+function sortImages(images: RawImage[] | undefined, limit: number): string[] {
+  const rank = (lang: string | null | undefined) => (lang === "it" ? 0 : lang === "en" ? 1 : 2);
+  return (images ?? [])
+    .slice()
+    .sort((a, b) => rank(a.iso_639_1) - rank(b.iso_639_1) || (b.vote_average ?? 0) - (a.vote_average ?? 0))
+    .slice(0, limit)
+    .map((i) => i.file_path);
+}
+
+/**
+ * Tutto quello che serve alla scheda aperta e a nient'altro.
+ *
+ * Sta fuori da `getDetails` di proposito: quella la chiama anche il collegatore
+ * automatico in sottofondo, per ogni titolo della libreria, e appendergli
+ * immagini e correlati avrebbe fatto pagare a ogni avvio dei dati che si
+ * guardano solo aprendo una scheda. Una sola richiesta, però: `append_to_response`
+ * fa fare a TMDB il lavoro di cinque chiamate.
+ */
+const extrasCache = new Map<string, Promise<TmdbTitleExtras>>();
+
+export function getTitleExtras(tmdbId: number, mediaType: "movie" | "tv", apiKey: string): Promise<TmdbTitleExtras> {
+  const key = `${mediaType}:${tmdbId}`;
+  const hit = extrasCache.get(key);
+  if (hit) return hit;
+
+  // La promessa va in cache prima di essere attesa: la scheda monta quattro
+  // riquadri che chiedono la stessa cosa nello stesso istante, e senza questo
+  // partirebbero quattro richieste identiche.
+  const promise = (async (): Promise<TmdbTitleExtras> => {
+    const raw = await tmdbGet<RawExtras>(`/${mediaType}/${tmdbId}`, apiKey, {
+      append_to_response: "credits,images,videos,recommendations",
+      // Senza questi due, `language=it-IT` restituisce solo il materiale
+      // italiano — che per tre titoli su quattro vuol dire niente.
+      include_image_language: "it,en,null",
+      include_video_language: "it,en",
+    });
+
+    const crewRaw = raw.credits?.crew ?? [];
+    const seenPeople = new Set<number>();
+    const crew: TmdbCrewCredit[] = crewRaw
+      .filter((c) => c.job in KEY_JOBS)
+      .sort((a, b) => JOB_ORDER.indexOf(a.job) - JOB_ORDER.indexOf(b.job))
+      .filter((c) => !seenPeople.has(c.id) && seenPeople.add(c.id))
+      .slice(0, 6)
+      .map((c) => ({ id: c.id, name: c.name, job: KEY_JOBS[c.job], profilePath: c.profile_path ?? null }));
+
+    // Le serie non hanno un regista: hanno chi le ha ideate, e TMDB lo tiene
+    // in un campo tutto suo. Va in testa, perché è il nome che si cerca.
+    const creators: TmdbCrewCredit[] = (raw.created_by ?? []).map((c, i) => ({
+      id: c.id ?? -1 - i,
+      name: c.name,
+      job: "Ideata da",
+      profilePath: c.profile_path ?? null,
+    }));
+
+    const relatedSeen = new Set<number>();
+    const related = (raw.recommendations?.results ?? [])
+      .filter((r) => !relatedSeen.has(r.id) && relatedSeen.add(r.id))
+      .map((r) => {
+        const type: "movie" | "tv" = r.media_type === "tv" || r.media_type === "movie" ? r.media_type : mediaType;
+        const genreNames = (r.genre_ids ?? []).map((id) => GENRE_NAMES[id]).filter((n): n is string => !!n);
+        const dateStr = r.release_date || r.first_air_date;
+        return {
+          tmdbId: r.id,
+          mediaType: type,
+          title: r.title || r.name || "",
+          year: dateStr && dateStr.length >= 4 ? Number(dateStr.slice(0, 4)) : null,
+          overview: r.overview || "",
+          posterPath: r.poster_path ?? null,
+          kind: guessKind(type, genreNames, r.origin_country),
+          popularity: r.popularity ?? 0,
+        };
+      })
+      .filter((r) => r.title && r.posterPath)
+      .slice(0, 20);
+
+    const videos = (raw.videos?.results ?? [])
+      .filter((v) => v.site === "YouTube" && v.key)
+      // I trailer per primi, poi il resto: chi apre "Video" cerca quello.
+      .sort((a, b) => (a.type === "Trailer" ? -1 : 0) - (b.type === "Trailer" ? -1 : 0))
+      .slice(0, 12)
+      .map((v) => ({
+        key: v.key,
+        name: v.name?.trim() || VIDEO_KINDS[v.type] || "Video",
+        kind: VIDEO_KINDS[v.type] ?? v.type,
+        language: v.iso_639_1 ?? "",
+      }));
+
+    return {
+      tagline: raw.tagline?.trim() ?? "",
+      homepage: raw.homepage?.trim() || null,
+      originalTitle: (raw.original_title || raw.original_name || "").trim(),
+      budget: raw.budget ?? 0,
+      revenue: raw.revenue ?? 0,
+      voteCount: raw.vote_count ?? 0,
+      crew: [...creators, ...crew],
+      companies: (raw.production_companies ?? []).map((c) => ({
+        id: c.id ?? 0,
+        name: c.name,
+        logoPath: c.logo_path ?? null,
+        country: c.origin_country ?? "",
+      })),
+      videos,
+      posters: sortImages(raw.images?.posters, 16),
+      backdrops: sortImages(raw.images?.backdrops, 16),
+      related,
+    };
+  })();
+
+  extrasCache.set(key, promise);
+  // Una richiesta fallita non deve restare in cache come fallimento eterno: la
+  // scheda riaperta fra un minuto deve poter riprovare.
+  promise.catch(() => extrasCache.delete(key));
+  return promise;
+}
+
+/**
+ * Butta via tutto quello che è stato tenuto da parte da TMDB.
+ *
+ * Le cache di questo file valgono da sei ore a tutta la sessione, e questo è
+ * giusto per una locandina e sbagliato per un episodio uscito stamattina.
+ * «Aggiorna contenuti» è il modo di dire "quello che hai in mano è vecchio,
+ * richiedilo": senza, l'unica via era chiudere e riaprire l'app — e con una
+ * app installata sul telefono nemmeno quella basta sempre.
+ *
+ * Non tocca la libreria: quella è tua e non si ricarica da nessuna parte.
+ */
+export function clearTmdbCaches(): void {
+  feedCache.clear();
+  seasonCache.clear();
+  watchCache.clear();
+  extrasCache.clear();
+  creditsCache.clear();
+  logoCache.clear();
+  collectionCache.clear();
+  personCache.clear();
+  personIdCache.clear();
+  keywordIdCache.clear();
+  releaseDateCache.clear();
 }
 
 /* ------------------------------------------------------------------ */

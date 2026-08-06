@@ -4,6 +4,7 @@ import { useCommandPalette } from "../store/useCommandPalette";
 import { useAddSheet } from "../store/useAddSheet";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { prefetchHandlers } from "../lib/prefetch";
+import { AlertsBell, GenreMenu, QuickMenu } from "./TopBar";
 import { ChartIcon, CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, PersonIcon, PlayIcon, PlusIcon, PulseIcon, ReelMark, SearchIcon, SparkleIcon, StackIcon, SunIcon } from "./icons";
 
 const NAV_ITEMS = [
@@ -123,56 +124,35 @@ export function Nav() {
         <div className="flex items-center justify-between px-1 pt-4">
           <button
             type="button"
-            onClick={openSettings}
+            onClick={() => openSettings()}
             aria-label="Impostazioni"
             className="flex h-9 w-9 items-center justify-center rounded-full border border-border-strong text-text-muted transition-colors hover:text-text"
           >
             <GearIcon size={16} />
           </button>
+          {/* Anche sul desktop: le novità e le scorciatoie all'app stanno dove
+              stanno sul telefono, così non si impara due interfacce. */}
+          <AlertsBell />
+          <QuickMenu />
           <ThemeToggle />
         </div>
       </aside>
 
-      {/* Mobile top bar */}
+      {/* Mobile top bar.
+          Due controlli a destra invece di quattro: Profilo, Impostazioni e il
+          tema sono finiti dentro i tre puntini, dove stanno le cose che si
+          fanno all'app. Quello che guadagna spazio è ciò che si usa ogni
+          giorno — i generi e le novità — e i bersagli restano grandi. */}
       <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-surface/95 px-4 backdrop-blur-sm md:hidden">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <ReelMark size={22} />
           <span className="font-display text-base font-semibold text-text">CineMate</span>
+          <span aria-hidden="true" className="mx-0.5 h-4 w-px bg-border-strong" />
+          <GenreMenu />
         </div>
         <div className="flex items-center gap-2">
-          <NavLink
-            to="/cerca"
-            {...prefetchHandlers("/cerca")}
-            aria-label="Cerca"
-            className={({ isActive }) =>
-              `flex h-9 w-9 items-center justify-center rounded-full border ${
-                isActive ? "border-accent text-accent-text" : "border-border-strong text-text-muted"
-              }`
-            }
-          >
-            <SearchIcon size={17} />
-          </NavLink>
-          <NavLink
-            to="/profilo"
-            {...prefetchHandlers("/profilo")}
-            aria-label="Profilo"
-            className={({ isActive }) =>
-              `flex h-9 w-9 items-center justify-center rounded-full border ${
-                isActive ? "border-accent text-accent-text" : "border-border-strong text-text-muted"
-              }`
-            }
-          >
-            <PersonIcon size={17} />
-          </NavLink>
-          <button
-            type="button"
-            onClick={openSettings}
-            aria-label="Impostazioni"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border-strong text-text-muted"
-          >
-            <GearIcon size={16} />
-          </button>
-          <ThemeToggle compact />
+          <AlertsBell />
+          <QuickMenu />
         </div>
       </header>
 

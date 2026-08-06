@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSettings } from "../store/useSettings";
 import { useWatchSession } from "../store/useWatchSession";
-import { getWatchProviders, type TmdbWatchProvider } from "../lib/tmdb";
+import { getWatchProviders, providerLogoUrl, type TmdbWatchInfo, type TmdbWatchProvider } from "../lib/tmdb";
 import { serviceLinkFor } from "../lib/deepLinks";
 import { useLinkHosts } from "../store/useLinkHosts";
 import { useWebViewer } from "../store/useWebViewer";
@@ -18,12 +18,82 @@ function linkLabel(url: string): string {
 
 const CHIP = "rounded-full px-2.5 py-1 text-xs";
 
+/**
+ * L'icona del servizio, grande abbastanza da riconoscerla senza leggerla.
+ *
+ * Le pastiglie col nome scritto erano corrette e lente: «Disney+» in mezzo ad
+ * altre cinque scritte si legge, il quadratino azzurro con il castello lo si
+ * *vede*. Il nome resta nell'`alt` e nel `title`, quindi chi usa un lettore di
+ * schermo sente lo stesso identico elenco di prima.
+ */
+function ProviderTile({ provider, title, onOpen }: { provider: TmdbWatchProvider; title: string; onOpen: () => void }) {
+  const logo = providerLogoUrl(provider.logoPath, "w154");
+  const link = serviceLinkFor(provider.name, title);
+
+  const face = logo ? (
+    <img src={logo} alt={provider.name} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+  ) : (
+    <span className="flex h-full w-full items-center justify-center px-1 text-center text-[9px] font-semibold leading-tight text-text">
+      {provider.name}
+    </span>
+  );
+
+  const shell =
+    "block h-14 w-14 shrink-0 overflow-hidden rounded-[14px] border border-border-strong bg-surface-2 transition-transform";
+
+  return link ? (
+    <a
+      href={link.url}
+      onClick={onOpen}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={`Apri ${title} su ${link.service}`}
+      className={`${shell} hover:scale-105`}
+    >
+      {face}
+    </a>
+  ) : (
+    <span className={shell} title={`${provider.name} — cercalo dal servizio`}>
+      {face}
+    </span>
+  );
+}
+
+/** Una fila di servizi sotto la sua etichetta: abbonamento, gratis, noleggio, acquisto. */
+function ProviderGroup({
+  label,
+  providers,
+  title,
+  onOpen,
+}: {
+  label: string;
+  providers: TmdbWatchProvider[];
+  title: string;
+  onOpen: () => void;
+}) {
+  if (providers.length === 0) return null;
+  return (
+    <div>
+      <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--accent-text)" }}>
+        {label}
+      </span>
+      <div className="flex flex-wrap gap-2">
+        {providers.map((p) => (
+          <ProviderTile key={`${label}-${p.id}`} provider={p} title={title} onOpen={onOpen} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const EMPTY_WATCH: TmdbWatchInfo = { streaming: [], free: [], rent: [], buy: [], link: null };
+
 function WatchProviders({ item }: { item: Item }) {
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
   const startWatching = useWatchSession((s) => s.start);
   const [state, setState] = useState<"idle" | "busy" | "error" | "done">("idle");
-  const [providers, setProviders] = useState<TmdbWatchProvider[]>([]);
-  const [link, setLink] = useState<string | null>(null);
+  const [watch, setWatch] = useState<TmdbWatchInfo>(EMPTY_WATCH);
+  const link = watch.link;
 
   useEffect(() => {
     if (!item.tmdbId || !item.tmdbMediaType || !tmdbApiKey) return;
@@ -32,8 +102,7 @@ function WatchProviders({ item }: { item: Item }) {
     getWatchProviders(item.tmdbId, item.tmdbMediaType, tmdbApiKey)
       .then((res) => {
         if (cancelled) return;
-        setProviders(res.providers);
-        setLink(res.link);
+        setWatch(res);
         setState("done");
       })
       .catch(() => {
@@ -45,6 +114,7 @@ function WatchProviders({ item }: { item: Item }) {
   }, [item.tmdbId, item.tmdbMediaType, tmdbApiKey]);
 
   const linked = Boolean(item.tmdbId && item.tmdbMediaType);
+  const providers = [...watch.streaming, ...watch.free, ...watch.rent, ...watch.buy];
   const openable = providers.map((p) => ({ name: p.name, link: serviceLinkFor(p.name, item.title) }));
 
   /**
@@ -76,30 +146,14 @@ function WatchProviders({ item }: { item: Item }) {
       )}
       {linked && tmdbApiKey && state === "error" && <p className="text-xs text-text-faint">Non disponibile al momento.</p>}
       {linked && tmdbApiKey && state === "done" && providers.length === 0 && (
-        <p className="text-xs text-text-faint">Non risulta in streaming in Italia al momento.</p>
+        <p className="text-xs text-text-faint">Non risulta disponibile in Italia al momento.</p>
       )}
       {linked && tmdbApiKey && state === "done" && providers.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {openable.map((p) =>
-            p.link ? (
-              <a
-                key={p.name}
-                href={p.link.url}
-                onClick={() => startWatching(item.id)}
-                target="_blank"
-                rel="noopener noreferrer"
-                title={`Apri ${item.title} su ${p.link.service}`}
-                className={`${CHIP} border border-border-strong font-medium hover:bg-surface-hover`}
-                style={{ color: "var(--accent-text)" }}
-              >
-                {p.name} ↗
-              </a>
-            ) : (
-              <span key={p.name} className={`${CHIP} bg-surface-hover text-text`}>
-                {p.name}
-              </span>
-            ),
-          )}
+        <div className="flex flex-col gap-3">
+          <ProviderGroup label="Streaming" providers={watch.streaming} title={item.title} onOpen={() => startWatching(item.id)} />
+          <ProviderGroup label="Gratis" providers={watch.free} title={item.title} onOpen={() => startWatching(item.id)} />
+          <ProviderGroup label="Noleggia" providers={watch.rent} title={item.title} onOpen={() => startWatching(item.id)} />
+          <ProviderGroup label="Acquista" providers={watch.buy} title={item.title} onOpen={() => startWatching(item.id)} />
         </div>
       )}
 

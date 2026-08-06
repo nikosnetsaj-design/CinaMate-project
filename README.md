@@ -63,6 +63,11 @@ src/
                 activity, continueWatching, achievements, search, filters,
                 recommend, goals, parental, accents, share, deepLinks,
                 spatialNav, anthropic, backup, errorLog, selfTest)
+                  useTitleExtras.ts il resto della scheda in una richiesta sola:
+                                    troupe, budget, studi, video, immagini,
+                                    correlati — fuori dal record della libreria
+                  useAddFromCatalog.ts  da una locandina del catalogo al foglio
+                                    di aggiunta già compilato, uguale ovunque
                   featured.ts       chi finisce in vetrina, e la riga che dice
                                     perché: una gerarchia dichiarata, non un
                                     sorteggio
@@ -148,6 +153,47 @@ rete che non è la tua.
 - **Cast con le facce**: foto tonde, nome e personaggio, con «mostra tutti».
   Un attore si ricorda per la faccia e per il ruolo prima che per il nome; senza
   TMDB restano le pastiglie con i nomi, che la libreria ha comunque.
+- **Dove guardarlo, diviso per come ci arrivi**: **Streaming** (compreso
+  nell'abbonamento), **Gratis**, **Noleggia** e **Acquista** in file separate,
+  ognuna con le icone quadrate dei servizi invece dei nomi scritti. Erano un
+  elenco unico di pastiglie: appiattite insieme facevano sembrare compreso
+  qualcosa che va pagato a parte, e «Disney+» in mezzo ad altre cinque scritte
+  si legge, mentre il quadratino col castello si *vede*. Il nome resta
+  nell'`alt`, quindi con un lettore di schermo l'elenco è identico a prima.
+- **Regia e troupe**: le carte con la faccia di chi l'ha fatto — regia,
+  sceneggiatura, musiche, fotografia, produzione — e per le serie chi l'ha
+  ideata. Un tocco apre la scheda della persona con la sua filmografia. TMDB
+  elenca duecento nomi fino al secondo assistente al catering: qui ci sono i
+  sei che uno cerca davvero.
+- **Dati finanziari**: budget e incassi a confronto, con la sola cosa che
+  interessa leggendoli detta a parole — «ha incassato 2,6× il budget: un
+  successo pieno» — invece di lasciare una divisione da fare a mente. Solo per i
+  film, perché delle serie TMDB i bilanci non li tiene, e in dollari come li
+  pubblica: convertirli al cambio di oggi sarebbe una stima inventata per un
+  film del 1994.
+- **Studi di produzione**: i marchi, su fondo chiaro. Non è gusto: i loghi di
+  TMDB sono inchiostro nero su trasparente, e messi sul velluto scuro
+  sparirebbero.
+- **Colonna sonora**: un tocco apre la ricerca di Spotify già scritta, col nome
+  del compositore quando lo conosciamo — «Dune Hans Zimmer» trova l'album, «Dune
+  soundtrack» trova venti raccolte di terzi. Si apre la ricerca e non l'album,
+  per la stessa ragione dei servizi di streaming: quell'indirizzo non sta in
+  nessun catalogo che l'app possa leggere.
+- **Media**: tre schede — **Video**, **Poster**, **Sfondi**. I trailer si aprono
+  dentro l'app, in un pannello sopra la scheda (`youtube-nocookie`, quindi
+  nessun cookie di profilazione finché non premi play); locandine e sfondi si
+  ingrandiscono a tutto schermo. Uscire dal sito per novanta secondi di trailer
+  vuol dire perdere il posto in cui eri, e al ritorno l'app riparte da capo.
+- **Prequel & Sequel**: la saga come una linea da percorrere — le locandine in
+  ordine, l'anno sulla copertina, il numero del capitolo grande dietro, e
+  **SEI QUI** sotto quello aperto. La fila si porta da sola sul capitolo
+  corrente, perché in una saga da dieci film «sei qui» sarebbe fuori schermo. I
+  capitoli che non hai sono spenti e aprono il foglio di aggiunta: un buco nella
+  saga è esattamente il momento in cui uno vuole tapparlo.
+- **Film correlati**: venti titoli con la locandina, presi da TMDB nel momento
+  in cui apri la scheda — quindi non invecchiano mai. Quelli che hai già portano
+  il segno e aprono la loro scheda; gli altri si aggiungono da lì. Le tre
+  stringhe salvate all'aggiunta restano solo per i titoli non collegati a TMDB.
 - **Voto TMDB**: sotto la trama, accanto al cast — non in cima vicino al tuo.
   Sono due giudizi diversi e affiancarli suggerirebbe un confronto che non
   interessa a nessuno.
@@ -161,7 +207,10 @@ rete che non è la tua.
   fino a qui» — traducendo la puntata nel totale che la libreria tiene — e il
   play su una riga apre *quella* puntata: stagione ed episodio finiscono nelle
   sorgenti del titolo, quindi l'indirizzo costruito diventa `…/s02e07.m3u8`
-  invece del solito `S01E{visti+1}`.
+  invece del solito `S01E{visti+1}`. Il play sta in fondo alla riga, sempre
+  visibile: prima compariva passando il puntatore sulla miniatura, un gesto che
+  su un telefono — dove questa lista si usa — non esiste. Le puntate già viste
+  restano riconoscibili senza leggerle: miniatura spenta e segno verde sopra.
 - **Il logo del titolo**: in vetrina e in cima alla scheda, quando TMDB ha il
   lettering disegnato della serie o del film. È metà dell'effetto — «Cent'anni
   di solitudine» nel suo lettering *è* la locandina, lo stesso nome nel font
@@ -169,7 +218,23 @@ rete che non è la tua.
 - **Cerca**: una pagina con la casella appesa in alto, due schede — **Film & TV**
   e **Persone** — e la griglia dei risultati, tenendo separato quello che hai
   (si apre) da quello che non hai (si aggiunge). A casella vuota propone cosa
-  riprendere invece di una pagina bianca.
+  riprendere invece di una pagina bianca. Tutta la pastiglia della casella è
+  toccabile, non solo la riga di testo: su un telefono il bersaglio è largo
+  quanto lo schermo, e la tastiera si apre da qualunque punto.
+- **Risultati che rispondono alla domanda**: TMDB cerca per sottostringa, quindi
+  «Ns» pescava *Ded@ns*, *Käpt'ns Dinner* e una serie olandese del 1981 — tutti
+  legittimi, nessuno la risposta. Ora i risultati sono ordinati prima per quanto
+  il titolo corrisponde a ciò che hai scritto e poi per popolarità, le schede
+  senza nemmeno una locandina restano fuori quando c'è di meglio, e sotto le tre
+  lettere l'app lo dice invece di riempire la griglia di rumore.
+- **In cima: i generi, le novità, il menu**: la tendina **Generi** elenca solo i
+  generi che hai davvero sullo scaffale e apre la Libreria col filtro già messo;
+  la **campanella** si accende solo quando una serie o un film che segui ha una
+  data entro un mese e mezzo; i **tre puntini** tengono Gestisci Link Host, Apri
+  Web Viewer, Aggiorna contenuti, Profilo, tema, Diagnostica e Impostazioni.
+- **Aggiorna contenuti**: butta via quello che TMDB ha lasciato in cache — fino a
+  sei ore per una stagione, tutta la sessione per una locandina — ed è la
+  risposta a «è uscito ieri e qui non lo vedo». La libreria non la tocca.
 - **In vetrina**: la Home si apre con un titolo solo, grande, e due pulsanti —
   **Riproduci** e **La mia lista**. Sotto al titolo c'è sempre un fatto
   verificabile e mai uno slogan: la data del prossimo episodio, i minuti che
@@ -183,7 +248,10 @@ rete che non è la tua.
   hai finito davvero. Il motivo è il titolo stesso della riga, e se dallo
   scaffale non emerge niente che gli somigli la riga non compare.
 - **Continua a guardare**: la riga in cima alla Home tiene da parte tutto quello
-  che hai lasciato a metà, dal più recente. Ogni scheda dice a che percentuale
+  che hai lasciato a metà, dal più recente. Le schede sono larghe come una scena
+  e non alte come una locandina — questa riga risponde a «dove ero rimasto», e
+  la risposta è il fotogramma, il punto in cui sei e quanto manca: tre cose che
+  in una copertina verticale non ci stanno. Ogni scheda dice a che percentuale
   sei, quale stagione ed episodio ti aspetta e quanti minuti mancano alla fine;
   un tocco e riparte dal secondo esatto in cui avevi smesso. Il punto lo salva il
   player da solo mentre guardi, ma la riga tiene conto anche di quello che segni
@@ -209,7 +277,7 @@ rete che non è la tua.
 - **Dettagli prima di salvare**: tocca un risultato e vedi trama, regia, cast,
   durata, voto TMDB e dove guardarlo — senza doverlo prima aggiungere alla
   libreria. Aggiungerlo resta un secondo passo, se lo vuoi.
-- **Apri sul servizio**: la pastiglia del provider è un collegamento. Un tocco e
+- **Apri sul servizio**: l'icona del provider è un collegamento. Un tocco e
   si apre Netflix, Prime Video, Disney+, Apple TV+, Paramount+, Crunchyroll,
   RaiPlay o MUBI con la ricerca del titolo già scritta — e sul telefono si apre
   l'app, non il sito, se ce l'hai installata. Vale anche per la piattaforma che

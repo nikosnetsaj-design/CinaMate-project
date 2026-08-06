@@ -17,10 +17,11 @@ function minutesFor(entry: HistoryEntry, item: Item): number {
   return 0;
 }
 
-function buildStripes(history: HistoryEntry[], items: Item[], since: string | null): Stripe[] {
+function buildStripes(history: HistoryEntry[], items: Item[], since: string | null, until?: string): Stripe[] {
   const byId = new Map(items.map((i) => [i.id, i]));
   return history
     .filter((h) => (since ? h.date >= since : true))
+    .filter((h) => (until ? h.date <= until : true))
     .sort((a, b) => a.date.localeCompare(b.date))
     .map((h) => {
       const item = byId.get(h.itemId);
@@ -51,27 +52,40 @@ function daysAgo(n: number): string {
  */
 export function Nastro({
   days = 30,
+  from,
+  to,
   height = 56,
   caption,
 }: {
   days?: number;
+  /**
+   * Data ISO da cui partire, quando la finestra è un periodo con un nome —
+   * "il 2026" — e non "gli ultimi N giorni".
+   *
+   * Esiste perché la didascalia e i dati devono dire la stessa cosa: la pagina
+   * Dati scriveva «un filo per ogni sessione del 2026» sopra un nastro lungo
+   * trecentosessantacinque giorni, che a febbraio è per tre quarti il 2025.
+   */
+  from?: string;
+  /** Data ISO finale, inclusa. Serve a chiudere un anno passato invece di tirarlo fino a oggi. */
+  to?: string;
   height?: number;
   caption?: string;
 }) {
   const history = useLibrary((s) => s.history);
   const items = useLibrary((s) => s.items);
   const reduceMotion = useReducedMotion();
-  const since = useMemo(() => daysAgo(days), [days]);
+  const since = useMemo(() => from ?? daysAgo(days), [from, days]);
 
   // An empty band is a bad first impression when the only history is older
   // than the window, so fall back to the most recent sessions and say so
   // rather than showing nothing.
   const { stripes, fellBack } = useMemo(() => {
-    const inWindow = buildStripes(history, items, since);
+    const inWindow = buildStripes(history, items, since, to);
     if (inWindow.length > 0) return { stripes: inWindow, fellBack: false };
     const all = buildStripes(history, items, null);
     return { stripes: all.slice(-60), fellBack: all.length > 0 };
-  }, [history, items, since]);
+  }, [history, items, since, to]);
 
   const totalMinutes = stripes.reduce((a, s) => a + s.minutes, 0);
   const hours = Math.round(totalMinutes / 60);

@@ -7,6 +7,7 @@ import { useVisibleItems } from "../lib/useVisibleItems";
 import { continueWatching, lastSeenDates, type ResumeEntry } from "../lib/continueWatching";
 import type { PosterBadge } from "../lib/homeBadges";
 import { formatRuntime } from "../lib/format";
+import { backdropUrl } from "../lib/tmdb";
 import { PosterArt } from "./PosterArt";
 import { DotsIcon, InfoIcon, PlayIcon } from "./icons";
 
@@ -21,6 +22,15 @@ function remainingText(entry: ResumeEntry): string | null {
   return formatRuntime(entry.remainingMin);
 }
 
+/**
+ * La scheda di ripresa: larga come una scena, non alta come una locandina.
+ *
+ * Erano copertine verticali, la stessa forma di ogni altra riga della Home. Ma
+ * questa riga risponde a una domanda diversa — «dove ero rimasto» — e la
+ * risposta è il fotogramma della scena, il punto in cui sei e quanto manca alla
+ * fine: tre cose che in una locandina non ci stanno e che in un sedici a nove
+ * si leggono tutte insieme, senza toccare niente.
+ */
 export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; badge?: PosterBadge }) {
   const navigate = useNavigate();
   const openItem = useSelectedItem((s) => s.open);
@@ -29,15 +39,12 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
   const [menuOpen, setMenuOpen] = useState(false);
   const { item, pct } = entry;
   const left = remainingText(entry);
-  // Quanto alzare avanzamento e sfumatura: una riga di pastiglia, due, o niente.
-  const lift = badge
-    ? badge.detail
-      ? { bar: "bottom-12", scrim: "bottom-11" }
-      : { bar: "bottom-8", scrim: "bottom-7" }
-    : { bar: "bottom-2", scrim: "bottom-0" };
+  // L'immagine larga quando c'è; la locandina riempita quando manca, che
+  // ritagliata al centro resta comunque riconoscibile.
+  const wide = backdropUrl(item.backdropPath, "w780");
 
   return (
-    <div className="group relative w-40 shrink-0 sm:w-44">
+    <div className="group relative w-64 shrink-0 sm:w-72">
       <button
         type="button"
         onClick={() => navigate(`/player?titolo=${encodeURIComponent(item.id)}`)}
@@ -48,62 +55,87 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
         }
         className="block w-full text-left"
       >
-        <div className="relative overflow-hidden rounded-t-sm">
-          <PosterArt item={item} size="sm" className="w-full" badge={badge} />
+        <div className="relative aspect-video w-full overflow-hidden rounded-md bg-surface-2">
+          {wide ? (
+            <img src={wide} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+          ) : (
+            <PosterArt item={item} size="sm" showTitle={false} className="h-full w-full [&>*]:h-full" />
+          )}
 
-          {/* Il play sta sulla copertina e si vede sempre, non solo al passaggio
-              del mouse: questa riga esiste per essere toccata, e un telefono il
-              passaggio del mouse non ce l'ha. */}
+          {/* La sfumatura tiene leggibile il testo su qualunque fotogramma:
+              un'immagine chiara sotto un titolo bianco è un titolo che sparisce. */}
           <span
             aria-hidden="true"
-            className="absolute inset-0 flex items-center justify-center transition-colors group-hover:bg-black/20"
-          >
-            <span className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-white/85 bg-black/45 text-white shadow-[var(--shadow-md)] backdrop-blur-[1px]">
+            className="absolute inset-x-0 bottom-0 h-3/5"
+            style={{ background: "linear-gradient(to top, rgba(0,0,0,0.88), rgba(0,0,0,0.35) 45%, transparent)" }}
+          />
+
+          {/* Il play si vede sempre, non solo al passaggio del mouse: questa
+              riga esiste per essere toccata, e un telefono il puntatore non
+              ce l'ha. */}
+          <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-white/85 bg-black/45 text-white shadow-[var(--shadow-md)] backdrop-blur-[1px] transition-transform group-hover:scale-105">
               <PlayIcon size={20} />
             </span>
           </span>
 
-          {/* L'avanzamento è disegnato sulla copertina e non sotto: così tutta
-              la riga si legge in una passata sola, "a che punto sono".
-              Quando c'è una pastiglia sale sopra di essa invece di finirci
-              addosso — la pastiglia occupa il fondo, una riga o due. */}
-          <span
-            aria-hidden="true"
-            className={`absolute inset-x-0 h-9 bg-gradient-to-t from-black/80 to-transparent ${lift.scrim}`}
-          />
-          <span className={`absolute inset-x-2 flex items-center gap-1.5 ${lift.bar}`}>
-            <span className="h-[3px] flex-1 overflow-hidden rounded-full bg-white/25">
-              <span
-                className="block h-full rounded-full"
-                style={{ width: `${Math.max(pct, 2)}%`, background: "var(--accent)" }}
-              />
+          {/* Dove sei nella serie, sul fotogramma: "S2 · E4" per una serie,
+              l'anno per un film — e la pastiglia della copertina se ce n'è una
+              ("Nuova stagione"), che qui vale più del titolo. */}
+          <span className="absolute left-2.5 top-2.5 flex flex-wrap items-center gap-1.5">
+            <span className="rounded-xs bg-black/65 px-1.5 py-0.5 font-mono tabular text-[10px] font-semibold text-white backdrop-blur-sm">
+              {entry.label}
             </span>
-            <span className="font-mono tabular text-[10px] font-semibold text-white/90">{pct}%</span>
+            {badge && (
+              <span
+                className="rounded-xs px-1.5 py-0.5 text-[10px] font-semibold"
+                style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+              >
+                {badge.label}
+                {badge.detail ? ` · ${badge.detail}` : ""}
+              </span>
+            )}
+          </span>
+
+          <span className="absolute inset-x-3 bottom-3">
+            <span className="block truncate text-sm font-semibold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+              {item.title}
+            </span>
+            {left && (
+              <span className="mt-0.5 block truncate text-[11px] font-medium text-white/80">{left}</span>
+            )}
+          </span>
+
+          {/* L'avanzamento è appoggiato al bordo inferiore, come sul lettore:
+              è la stessa informazione e conviene che abbia la stessa forma. */}
+          <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[3px] bg-white/25">
+            <span
+              className="block h-full"
+              style={{ width: `${Math.max(pct, 2)}%`, background: "var(--accent)" }}
+            />
           </span>
         </div>
       </button>
 
-      {/* La striscia sotto la copertina: la scheda a sinistra, tutto il resto
-          dietro i tre puntini. Due bersagli grandi al posto di due parole
-          minuscole, e la copertina resta un unico bersaglio: riprendere. */}
-      <div className="flex items-stretch rounded-b-sm bg-surface-2">
+      {/* Scheda e altre azioni sull'immagine, in alto a destra: due bersagli
+          tondi che non rubano larghezza al fotogramma. */}
+      <div className="absolute right-2 top-2 flex items-center gap-1.5">
         <button
           type="button"
           onClick={() => openItem(item)}
           aria-label={`Scheda di ${item.title}`}
-          className="flex flex-1 items-center justify-center py-2 text-text-muted transition-colors hover:text-text"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm transition-colors hover:bg-black/75"
         >
-          <InfoIcon size={17} />
+          <InfoIcon size={16} />
         </button>
-        <span aria-hidden="true" className="my-1.5 w-px bg-border" />
         <button
           type="button"
           onClick={() => setMenuOpen((v) => !v)}
           aria-label={`Altre azioni per ${item.title}`}
           aria-expanded={menuOpen}
-          className="flex flex-1 items-center justify-center py-2 text-text-muted transition-colors hover:text-text"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm transition-colors hover:bg-black/75"
         >
-          <DotsIcon size={17} />
+          <DotsIcon size={16} />
         </button>
       </div>
 
@@ -116,10 +148,7 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
             className="fixed inset-0 z-40 cursor-default"
             onClick={() => setMenuOpen(false)}
           />
-          {/* Sopra la copertina e non sotto la striscia: la riga scorre in
-              orizzontale, e un contenitore che scorre ritaglia tutto quello che
-              esce dai suoi bordi — menu compreso. */}
-          <div className="absolute inset-x-2 bottom-16 z-50 overflow-hidden rounded-sm border border-border-strong bg-surface shadow-[var(--shadow-md)]">
+          <div className="absolute right-2 top-11 z-50 w-56 overflow-hidden rounded-sm border border-border-strong bg-surface shadow-[var(--shadow-md)]">
             <button
               type="button"
               onClick={() => {
@@ -145,12 +174,6 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
           </div>
         </>
       )}
-
-      <p className="mt-1.5 line-clamp-1 text-xs font-semibold text-text">{item.title}</p>
-      <p className="line-clamp-1 text-[11px] text-text-faint">
-        {entry.label}
-        {left ? ` · ${left}` : ""}
-      </p>
     </div>
   );
 }

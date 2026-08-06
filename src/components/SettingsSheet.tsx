@@ -477,7 +477,12 @@ function SettingsForm() {
   const [revealTmdb, setRevealTmdb] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const titleId = "settings-sheet-title";
-  const [panel, setPanel] = useState<PanelId | null>(null);
+  // Il foglio si monta solo da aperto, quindi il pannello richiesto da chi ha
+  // aperto vale come valore iniziale e non serve tenerli sincronizzati dopo.
+  const requested = useSettingsSheet.getState().panel;
+  const [panel, setPanel] = useState<PanelId | null>(
+    requested && requested in PANEL_TITLES ? (requested as PanelId) : null,
+  );
 
   function exportData() {
     const sagas = useSagas.getState();

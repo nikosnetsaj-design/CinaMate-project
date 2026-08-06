@@ -5,7 +5,7 @@ import { useSettingsSheet } from "../store/useSettingsSheet";
 import { useLibrary } from "../store/useLibrary";
 import { usePlayerSources } from "../store/usePlayerSources";
 import { getSeason, stillUrl, type TmdbEpisode } from "../lib/tmdb";
-import { daysBetweenToday } from "../lib/format";
+import { countdown, daysBetweenToday } from "../lib/format";
 import { prefetchHandlers } from "../lib/prefetch";
 import { PlayIcon, CheckIcon } from "./icons";
 import type { Item } from "../types";
@@ -43,65 +43,99 @@ function EpisodeRow({
   const unreleased = episode.airDate != null && daysBetweenToday(episode.airDate) > 0;
 
   return (
-    <li className="flex gap-3 rounded-md p-2 transition-colors hover:bg-surface-hover">
-      <div className="relative aspect-video w-28 shrink-0 overflow-hidden rounded-sm bg-surface-2 sm:w-36">
+    <li className="flex items-center gap-3 rounded-md border border-border bg-surface-2 p-2 transition-colors hover:bg-surface-hover">
+      <div className="relative aspect-video w-28 shrink-0 overflow-hidden rounded-sm bg-surface sm:w-36">
         {still ? (
-          <img src={still} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+          <img
+            src={still}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover"
+            // Le puntate già viste restano riconoscibili senza doverle leggere:
+            // spente, con il segno sopra. È l'unico modo per capire a colpo
+            // d'occhio dove sei in una stagione da ventiquattro episodi.
+            style={watched ? { opacity: 0.45 } : undefined}
+          />
         ) : (
           <span className="flex h-full w-full items-center justify-center font-mono text-xs text-text-faint">
             {episode.episodeNumber}
           </span>
         )}
+        {watched && (
+          <span
+            className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded-full"
+            style={{ background: "var(--status-done)", color: "var(--accent-contrast)" }}
+          >
+            <CheckIcon size={12} />
+          </span>
+        )}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-text">
+          {episode.episodeNumber}. {episode.title}
+        </p>
+
+        {episode.overview && (
+          <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-text-muted">{episode.overview}</p>
+        )}
+
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[11px] text-text-faint">
+          {episode.rating != null && (
+            <span className="flex items-center gap-1">
+              <span style={{ color: "var(--yellow)" }}>★</span>
+              <span className="font-semibold text-text">{episode.rating.toFixed(1)}</span>
+            </span>
+          )}
+          {episode.runtime && <span>{episode.runtime} min</span>}
+          {unreleased && episode.airDate && (
+            <span style={{ color: "var(--accent-text)" }}>esce {countdown(episode.airDate)}</span>
+          )}
+        </p>
+      </div>
+
+      {/* I due gesti della riga, sempre visibili e grandi da premere col dito.
+          Il play stava nascosto sulla miniatura e compariva solo passandoci
+          sopra col puntatore: su un telefono, dove questa lista si usa, quel
+          passaggio non esiste e il pulsante era invisibile. */}
+      <div className="flex shrink-0 flex-col items-center gap-1.5">
         {!unreleased && (
           <button
             type="button"
             onClick={() => onPlay(episode)}
             {...prefetchHandlers("/player")}
             aria-label={`Riproduci episodio ${episode.episodeNumber}, ${episode.title}`}
-            className="absolute inset-0 flex items-center justify-center bg-black/30 text-white opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100"
+            title="Riproduci"
+            className="flex h-10 w-12 items-center justify-center rounded-sm border transition-transform hover:scale-105"
+            style={{
+              borderColor: "color-mix(in srgb, var(--accent) 45%, transparent)",
+              background: "color-mix(in srgb, var(--accent) 18%, transparent)",
+              color: "var(--accent-text)",
+            }}
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white/85 bg-black/45">
-              <PlayIcon size={15} />
-            </span>
+            <PlayIcon size={16} />
           </button>
         )}
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <p className="text-sm font-semibold text-text">
-            {episode.episodeNumber}. {episode.title}
-          </p>
-          <button
-            type="button"
-            onClick={() => onMarkUpTo(episode)}
-            aria-pressed={watched}
-            aria-label={
-              watched
-                ? `Segna la serie come vista fino all'episodio ${episode.episodeNumber - 1}`
-                : `Segna la serie come vista fino all'episodio ${episode.episodeNumber}`
-            }
-            title="Segna visto fino a qui"
-            className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors"
-            style={
-              watched
-                ? { borderColor: "var(--accent)", background: "var(--accent)", color: "var(--accent-contrast)" }
-                : { borderColor: "var(--border-strong)", color: "var(--text-faint)" }
-            }
-          >
-            <CheckIcon size={13} />
-          </button>
-        </div>
-
-        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[11px] text-text-faint">
-          {episode.runtime && <span>{episode.runtime} min</span>}
-          {episode.rating != null && <span>★ {episode.rating.toFixed(1)}</span>}
-          {unreleased && <span style={{ color: "var(--accent-text)" }}>in arrivo</span>}
-        </p>
-
-        {episode.overview && (
-          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-text-muted">{episode.overview}</p>
-        )}
+        <button
+          type="button"
+          onClick={() => onMarkUpTo(episode)}
+          aria-pressed={watched}
+          aria-label={
+            watched
+              ? `Segna la serie come vista fino all'episodio ${episode.episodeNumber - 1}`
+              : `Segna la serie come vista fino all'episodio ${episode.episodeNumber}`
+          }
+          title="Segna visto fino a qui"
+          className="flex h-6 w-6 items-center justify-center rounded-full border transition-colors"
+          style={
+            watched
+              ? { borderColor: "var(--accent)", background: "var(--accent)", color: "var(--accent-contrast)" }
+              : { borderColor: "var(--border-strong)", color: "var(--text-faint)" }
+          }
+        >
+          <CheckIcon size={13} />
+        </button>
       </div>
     </li>
   );
@@ -161,7 +195,7 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
           ? "Questo titolo non è collegato a TMDB, quindi non so quali episodi abbia. Collegalo dalla scheda e l'elenco compare da solo."
           : "Gli episodi arrivano da TMDB: serve la tua chiave."}
         {!tmdbApiKey && (
-          <button type="button" onClick={openSettings} className="ml-1.5 underline underline-offset-2">
+          <button type="button" onClick={() => openSettings()} className="ml-1.5 underline underline-offset-2">
             Aggiungila in Impostazioni
           </button>
         )}
