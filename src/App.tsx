@@ -3,6 +3,7 @@ import { Route, Routes } from "react-router-dom";
 import { Nav } from "./components/Nav";
 import { ToastStack } from "./components/ToastStack";
 import { CommandPalette } from "./components/CommandPalette";
+import { CatalogSheetPortal } from "./components/CatalogSheet";
 import { ItemDetailSheetPortal } from "./components/ItemDetailSheet";
 import { AddItemSheetPortal } from "./components/AddItemSheet";
 import { EditItemSheetPortal } from "./components/EditItemSheet";
@@ -177,6 +178,7 @@ export default function App() {
       <ToastStack />
       <CommandPalette />
       <ItemDetailSheetPortal />
+      <CatalogSheetPortal />
       <SagaSheetPortal />
       <PersonSheetPortal />
       <AddItemSheetPortal />

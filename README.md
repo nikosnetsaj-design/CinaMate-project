@@ -68,6 +68,8 @@ src/
                                     correlati — fuori dal record della libreria
                   useAddFromCatalog.ts  da una locandina del catalogo al foglio
                                     di aggiunta già compilato, uguale ovunque
+                                    (lo usa il pulsante dentro la scheda del
+                                    catalogo, non il tocco sulla locandina)
                   featured.ts       chi finisce in vetrina, e la riga che dice
                                     perché: una gerarchia dichiarata, non un
                                     sorteggio
@@ -274,9 +276,15 @@ rete che non è la tua.
   accorcia — così una lettera sbagliata in fondo smette di contare — e i
   risultati vengono riordinati per somiglianza a quello che avevi scritto, sotto
   la riga «forse cercavi». Intanto ti dice anche se quel titolo ce l'hai già.
-- **Dettagli prima di salvare**: tocca un risultato e vedi trama, regia, cast,
-  durata, voto TMDB e dove guardarlo — senza doverlo prima aggiungere alla
-  libreria. Aggiungerlo resta un secondo passo, se lo vuoi.
+- **La scheda di un titolo che non hai**: tocca un risultato della ricerca — o
+  un film correlato, un capitolo di saga che ti manca, un titolo nella
+  filmografia di un attore — e si apre la sua scheda intera: trama, cast con le
+  facce, dove guardarlo, regia e troupe, incassi, studi, media e correlati.
+  Prima quel tocco *aggiungeva*: per leggere una trama bisognava mettersi il
+  titolo in casa, cioè decidere prima di avere in mano le cose su cui si decide,
+  e chi guardava per curiosità si ritrovava lo scaffale da riordinare.
+  «Aggiungi alla libreria» è un pulsante dentro la scheda, e apre il foglio già
+  compilato. Se il titolo ce l'hai già, la scheda lo dice e porta alla tua.
 - **Apri sul servizio**: l'icona del provider è un collegamento. Un tocco e
   si apre Netflix, Prime Video, Disney+, Apple TV+, Paramount+, Crunchyroll,
   RaiPlay o MUBI con la ricerca del titolo già scritta — e sul telefono si apre
@@ -287,6 +295,11 @@ rete che non è la tua.
   esatto che non può fare. I servizi senza una rotta di ricerca stabile — Sky /
   NOW, HBO Max, Mediaset Infinity — restano etichette, con il collegamento a
   JustWatch accanto.
+- **Niente pulsante «+» che galleggia**: stava appeso in basso a destra su ogni
+  pagina e copriva stabilmente l'angolo di una copertina, di una riga di
+  episodi, di un grafico. Aggiungere un titolo a mano è una cosa che si fa di
+  rado — dalla ricerca si aggiunge dalla scheda — quindi è sceso nel menu dei
+  tre puntini, dove stanno le altre azioni sull'app.
 - **Sul televisore, col telecomando**: le frecce spostano il fuoco fra le
   copertine invece di scorrere la pagina, il bordo di selezione diventa spesso e
   tutto si ingrandisce per essere letto da lontano. → sull'ultima copertina di

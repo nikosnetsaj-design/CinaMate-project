@@ -3,7 +3,7 @@ import { useLibrary } from "../store/useLibrary";
 import { useSagas, sagaKey } from "../store/useSagas";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { buildEntries, orderParts, type SagaEntry } from "../lib/sagas";
-import { useAddFromCatalog } from "../lib/useAddFromCatalog";
+import { useCatalogPreview } from "../store/useCatalogPreview";
 import { posterUrl } from "../lib/tmdb";
 import { paletteFor } from "../lib/palette";
 import type { Item } from "../types";
@@ -16,19 +16,18 @@ import type { Item } from "../types";
  * fila in ordine, con il capitolo aperto in mezzo e il numero grande dietro a
  * ogni locandina, così la posizione si legge senza contare le copertine.
  *
- * I capitoli che non hai aprono il foglio di aggiunta già compilato: un buco
- * nella saga è esattamente il momento in cui uno vuole tapparlo.
+ * I capitoli che non hai aprono la loro scheda: un buco nella saga è
+ * esattamente il momento in cui uno vuole vedere di cosa si tratta — e da lì
+ * aggiungerlo, se lo vuole.
  */
 
 const POSTER_W = "w-32";
 
 function Chapter({ entry, current, onOpen }: { entry: SagaEntry; current: boolean; onOpen: (item: Item) => void }) {
-  const closeItem = useSelectedItem((s) => s.close);
-  const { add, adding } = useAddFromCatalog(closeItem);
+  const openPreview = useCatalogPreview((s) => s.open);
   const { part, item, number, state } = entry;
   const poster = posterUrl(part.posterPath, "w342");
   const [a, b] = paletteFor(part.title);
-  const busy = adding === part.tmdbId;
 
   return (
     <div className={`relative shrink-0 ${POSTER_W} text-center`}>
@@ -46,11 +45,10 @@ function Chapter({ entry, current, onOpen }: { entry: SagaEntry; current: boolea
 
       <button
         type="button"
-        disabled={busy}
         onClick={() =>
           item
             ? onOpen(item)
-            : void add({
+            : openPreview({
                 tmdbId: part.tmdbId,
                 mediaType: "movie",
                 kind: "film",
@@ -59,9 +57,9 @@ function Chapter({ entry, current, onOpen }: { entry: SagaEntry; current: boolea
                 posterPath: part.posterPath,
               })
         }
-        aria-label={item ? `Apri ${part.title}` : `Aggiungi ${part.title} alla libreria`}
+        aria-label={item ? `Apri ${part.title}` : `Apri la scheda di ${part.title}`}
         aria-current={current ? "true" : undefined}
-        className="relative block w-full disabled:opacity-60"
+        className="relative block w-full"
       >
         <span
           className="relative block aspect-[2/3] w-full overflow-hidden rounded-sm transition-transform"
@@ -98,7 +96,7 @@ function Chapter({ entry, current, onOpen }: { entry: SagaEntry; current: boolea
           )}
           {state === "assente" && (
             <span className="absolute inset-x-0 bottom-0 bg-black/60 py-1 text-[10px] font-semibold text-white">
-              {busy ? "…" : "＋ aggiungi"}
+              Vedi scheda
             </span>
           )}
         </span>

@@ -156,17 +156,11 @@ export function Nav() {
         </div>
       </header>
 
-      {/* Mobile bottom tab bar. The add button floats clear of it rather than
-          splitting it: with five destinations there is no middle left to take. */}
-      <button
-        type="button"
-        onClick={() => openAddSheet()}
-        aria-label="Aggiungi titolo"
-        className="fixed bottom-[calc(env(safe-area-inset-bottom)+4.6rem)] right-4 z-40 flex h-[52px] w-[52px] items-center justify-center rounded-full shadow-[var(--shadow-md)] md:hidden"
-        style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
-      >
-        <PlusIcon size={24} />
-      </button>
+      {/* Il pulsante tondo «+» stava qui sopra, appeso sulla destra: galleggiava
+          su ogni pagina e copriva stabilmente l'angolo di una copertina, di una
+          riga di episodi, di un grafico. Aggiungere un titolo a mano è una cosa
+          che si fa di rado — dalla ricerca si aggiunge dalla scheda — quindi è
+          sceso dove stanno le altre azioni sull'app: il menu in cima. */}
       <nav
         aria-label="Navigazione principale"
         className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm md:hidden"
