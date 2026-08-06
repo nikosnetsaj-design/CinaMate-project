@@ -77,7 +77,7 @@ export function DownloadButton({ item }: { item: Item }) {
     return (
       <button
         type="button"
-        onClick={openSettings}
+        onClick={() => openSettings()}
         className="mt-2.5 w-full rounded-md border border-dashed border-border-strong py-2.5 text-sm font-medium text-text-muted"
       >
         ↓ Scarica — prima dimmi dov'è il tuo server

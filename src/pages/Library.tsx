@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useAddSheet } from "../store/useAddSheet";
 import { usePlayerSources } from "../store/usePlayerSources";
@@ -27,6 +28,20 @@ export function Library() {
   const [q, setQ] = useState("");
   const [filters, setFilters] = useState<Filters>({});
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  /*
+   * Il genere può arrivare dall'indirizzo — è così che la tendina «Generi» in
+   * cima porta qui con il filtro già messo. Resta un filtro come gli altri:
+   * il pannello lo mostra acceso e lo può togliere, e l'indirizzo si pulisce
+   * subito dopo, così un aggiornamento della pagina non lo rimette da solo.
+   */
+  const [params, setParams] = useSearchParams();
+  const genreParam = params.get("genere");
+  useEffect(() => {
+    if (!genreParam) return;
+    setFilters((current) => ({ ...current, genre: genreParam }));
+    setParams({}, { replace: true });
+  }, [genreParam, setParams]);
   const [sharing, setSharing] = useState(false);
   const [sort, setSort] = useState<Sort>("recenti");
   const [grid, setGrid] = useState(true);

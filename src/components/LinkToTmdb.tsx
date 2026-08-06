@@ -64,7 +64,7 @@ export function LinkToTmdb({ item }: { item: Item }) {
         </p>
         <button
           type="button"
-          onClick={openSettings}
+          onClick={() => openSettings()}
           className="mt-2.5 rounded-sm border border-border-strong px-3.5 py-2 text-xs font-medium text-text hover:bg-surface-hover"
         >
           Apri Impostazioni

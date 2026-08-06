@@ -231,7 +231,7 @@ export function Diagnostics() {
         </p>
         <button
           type="button"
-          onClick={openSettings}
+          onClick={() => openSettings()}
           className="self-start rounded-sm border border-border-strong px-3.5 py-2.5 text-sm text-text hover:bg-surface-hover"
         >
           Apri Impostazioni

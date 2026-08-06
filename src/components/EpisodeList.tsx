@@ -195,7 +195,7 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
           ? "Questo titolo non è collegato a TMDB, quindi non so quali episodi abbia. Collegalo dalla scheda e l'elenco compare da solo."
           : "Gli episodi arrivano da TMDB: serve la tua chiave."}
         {!tmdbApiKey && (
-          <button type="button" onClick={openSettings} className="ml-1.5 underline underline-offset-2">
+          <button type="button" onClick={() => openSettings()} className="ml-1.5 underline underline-offset-2">
             Aggiungila in Impostazioni
           </button>
         )}

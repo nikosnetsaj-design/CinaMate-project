@@ -174,6 +174,11 @@ rete che non è la tua.
 - **Studi di produzione**: i marchi, su fondo chiaro. Non è gusto: i loghi di
   TMDB sono inchiostro nero su trasparente, e messi sul velluto scuro
   sparirebbero.
+- **Colonna sonora**: un tocco apre la ricerca di Spotify già scritta, col nome
+  del compositore quando lo conosciamo — «Dune Hans Zimmer» trova l'album, «Dune
+  soundtrack» trova venti raccolte di terzi. Si apre la ricerca e non l'album,
+  per la stessa ragione dei servizi di streaming: quell'indirizzo non sta in
+  nessun catalogo che l'app possa leggere.
 - **Media**: tre schede — **Video**, **Poster**, **Sfondi**. I trailer si aprono
   dentro l'app, in un pannello sopra la scheda (`youtube-nocookie`, quindi
   nessun cookie di profilazione finché non premi play); locandine e sfondi si
@@ -213,7 +218,23 @@ rete che non è la tua.
 - **Cerca**: una pagina con la casella appesa in alto, due schede — **Film & TV**
   e **Persone** — e la griglia dei risultati, tenendo separato quello che hai
   (si apre) da quello che non hai (si aggiunge). A casella vuota propone cosa
-  riprendere invece di una pagina bianca.
+  riprendere invece di una pagina bianca. Tutta la pastiglia della casella è
+  toccabile, non solo la riga di testo: su un telefono il bersaglio è largo
+  quanto lo schermo, e la tastiera si apre da qualunque punto.
+- **Risultati che rispondono alla domanda**: TMDB cerca per sottostringa, quindi
+  «Ns» pescava *Ded@ns*, *Käpt'ns Dinner* e una serie olandese del 1981 — tutti
+  legittimi, nessuno la risposta. Ora i risultati sono ordinati prima per quanto
+  il titolo corrisponde a ciò che hai scritto e poi per popolarità, le schede
+  senza nemmeno una locandina restano fuori quando c'è di meglio, e sotto le tre
+  lettere l'app lo dice invece di riempire la griglia di rumore.
+- **In cima: i generi, le novità, il menu**: la tendina **Generi** elenca solo i
+  generi che hai davvero sullo scaffale e apre la Libreria col filtro già messo;
+  la **campanella** si accende solo quando una serie o un film che segui ha una
+  data entro un mese e mezzo; i **tre puntini** tengono Gestisci Link Host, Apri
+  Web Viewer, Aggiorna contenuti, Profilo, tema, Diagnostica e Impostazioni.
+- **Aggiorna contenuti**: butta via quello che TMDB ha lasciato in cache — fino a
+  sei ore per una stagione, tutta la sessione per una locandina — ed è la
+  risposta a «è uscito ieri e qui non lo vedo». La libreria non la tocca.
 - **In vetrina**: la Home si apre con un titolo solo, grande, e due pulsanti —
   **Riproduci** e **La mia lista**. Sotto al titolo c'è sempre un fatto
   verificabile e mai uno slogan: la data del prossimo episodio, i minuti che
@@ -227,7 +248,10 @@ rete che non è la tua.
   hai finito davvero. Il motivo è il titolo stesso della riga, e se dallo
   scaffale non emerge niente che gli somigli la riga non compare.
 - **Continua a guardare**: la riga in cima alla Home tiene da parte tutto quello
-  che hai lasciato a metà, dal più recente. Ogni scheda dice a che percentuale
+  che hai lasciato a metà, dal più recente. Le schede sono larghe come una scena
+  e non alte come una locandina — questa riga risponde a «dove ero rimasto», e
+  la risposta è il fotogramma, il punto in cui sei e quanto manca: tre cose che
+  in una copertina verticale non ci stanno. Ogni scheda dice a che percentuale
   sei, quale stagione ed episodio ti aspetta e quanti minuti mancano alla fine;
   un tocco e riparte dal secondo esatto in cui avevi smesso. Il punto lo salva il
   player da solo mentre guardi, ma la riga tiene conto anche di quello che segni

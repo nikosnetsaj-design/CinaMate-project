@@ -43,10 +43,12 @@ resta tua e non ti vende niente.
 | Sezione | Problema che risolve | Beneficio | Priorità |
 |---|---|---|---|
 | **In vetrina** | Si apre l'app e si guarda una griglia, non una proposta | Un titolo solo, grande, con Riproduci e La mia lista — e sotto sempre un fatto: una data, i minuti che restano | Essenziale ✅ |
-| **Continua a guardare** | "A che punto ero?" | Un tocco e riparte dal secondo esatto: percentuale, S·E e minuti che restano; play sempre visibile, scheda e altre azioni sotto la copertina | Essenziale ✅ |
+| **Continua a guardare** | "A che punto ero?" | Schede larghe come una scena: fotogramma, S·E, minuti che restano e avanzamento sul bordo; un tocco riparte dal secondo esatto, scheda e altre azioni sull'immagine | Essenziale ✅ |
 | **Perché hai guardato X** | Un consiglio senza radice è pubblicità | Somiglianze con l'ultimo titolo finito: il perché è il titolo stesso della riga | Utile ✅ |
 | **Pastiglie sulle copertine** | "Nuova stagione" lo scopri per caso | Al massimo una per copertina, e solo con un fatto dietro: una data in arrivo, o un titolo entrato da pochi giorni | Utile ✅ |
 | **Il Nastro** | I dati personali sono tabelle morte | La tua visione come oggetto visivo | Essenziale ✅ |
+| **La finestra del Nastro è quella dichiarata** | La pagina Dati scriveva «un filo per ogni sessione del 2026» sopra un nastro lungo 365 giorni — a febbraio, per tre quarti il 2025 — accanto a un riquadro che contava l'anno solare | Il nastro segue l'anno scelto nella tendina: stessa finestra, stessi numeri, una sola etichetta | Essenziale ✅ |
+| **Generi, novità e menu in cima** | Filtrare per genere voleva dire aprire Libreria e poi i filtri; le uscite stavano in Scopri; il Link Host tre tocchi dentro le Impostazioni | Tendina dei generi che hai davvero, campanella che si accende solo con una data entro un mese e mezzo, e i tre puntini con Link Host, Web Viewer, Aggiorna contenuti | Utile ✅ |
 | **Cosa guardo stasera** | Paralisi da scelta davanti a 200 titoli | Una proposta sola, rilanciabile | Essenziale ✅ |
 | **In arrivo** | Perdi le uscite delle serie che segui | Conto alla rovescia per episodio | Essenziale ✅ |
 | **Continua la saga** | Ti fermi al capitolo tre e non riparti | Il prossimo capitolo, già scelto | Essenziale ✅ |
@@ -83,6 +85,7 @@ resta tua e non ti vende niente.
 | **Regia e troupe** | Un solo nome scritto in una pastiglia, senza faccia e senza mestiere | Le carte di regia, sceneggiatura, musiche, fotografia e produzione (chi l'ha ideata per le serie), che aprono la scheda della persona | Utile ✅ |
 | **Dati finanziari** | Budget e incassi non c'erano, e affiancati sarebbero una divisione da fare a mente | Le due cifre a confronto e il verdetto scritto — «ha incassato 2,6× il budget» — in dollari come li pubblica TMDB. Solo film | Utile ✅ |
 | **Studi di produzione** | La libreria teneva il nome del primo studio e basta | I marchi, su fondo chiaro perché i loghi di TMDB sono inchiostro nero su trasparente e sul velluto sparirebbero | Utile ✅ |
+| **Colonna sonora su Spotify** | Del film si vedeva tutto tranne la musica | La ricerca Spotify già scritta, col compositore quando lo conosciamo: «Dune Hans Zimmer» trova l'album, «Dune soundtrack» trova venti raccolte di terzi | Utile ✅ |
 | **Media (Video · Poster · Sfondi)** | Del titolo si vedeva una sola locandina e un solo trailer, che portava fuori dal sito | Trailer, scene e speciali dentro l'app (`youtube-nocookie`), locandine e sfondi alternativi ingranditi a schermo intero | Utile ✅ |
 | **Prequel & Sequel** | La striscia diceva *quanto* della saga avevi visto, non *dove eri* | La fila dei capitoli in ordine con anno, numero grande dietro e «SEI QUI» sotto quello aperto; si porta da sola sul corrente e i capitoli mancanti si aggiungono da lì | Utile ✅ |
 | **Film correlati** | Tre titoli come stringhe, salvati all'aggiunta e mai più aggiornati | Venti locandine da TMDB al momento dell'apertura; i posseduti portano il segno e si aprono, gli altri si aggiungono | Utile ✅ |
@@ -99,6 +102,8 @@ resta tua e non ti vende niente.
 | **«Ce l'hai già»** | Si ri-aggiungeva quello che si possedeva | I titoli della libreria che somigliano a ciò che scrivi compaiono per primi, senza chiave API e senza rete | Utile ✅ |
 | **Cerca come destinazione** | La ricerca viveva nella palette dei comandi: ottima da tastiera, introvabile su un telefono | Una pagina con la casella appesa in alto, due schede (Film & TV, Persone) e la griglia dei risultati; a casella vuota propone cosa riprendere invece di una pagina bianca | Essenziale ✅ |
 | **Persone come risultato** | Un attore si cercava solo dai crediti di un titolo che avevi già | La scheda Persone interroga TMDB per nome e apre la scheda della persona | Utile ✅ |
+| **Risultati ordinati per rilevanza** | `/search/multi` cerca per sottostringa: «Ns» tornava *Ded@ns*, *Käpt'ns Dinner* e una serie olandese del 1981 | Prima la corrispondenza col titolo scritto, poi la popolarità; le schede senza locandina restano fuori quando c'è di meglio, e sotto le tre lettere l'app lo dice invece di riempire la griglia | Essenziale ✅ |
+| **Casella tutta toccabile** | Il bersaglio era la sola riga di testo: un tocco sulla lente o sul bordo non apriva niente | La pastiglia intera dà il fuoco al campo; tastiera con tasto «cerca», niente maiuscole automatiche, e nessun fuoco finto su telefono | Essenziale ✅ |
 
 | Funzione | Problema | Beneficio | Priorità |
 |---|---|---|---|

@@ -87,7 +87,7 @@ export function LinkHostPanel({
     <div className="pv-panel">
       <div className="pv-panel-header">
         <h3>Siti</h3>
-        <button type="button" className="pv-btn-secondary" onClick={openSettings}>
+        <button type="button" className="pv-btn-secondary" onClick={() => openSettings()}>
           Gestisci in Impostazioni
         </button>
       </div>

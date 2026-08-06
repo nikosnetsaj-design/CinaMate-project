@@ -124,6 +124,17 @@ function PersonResults({ query }: { query: string }) {
   );
 }
 
+/**
+ * Sotto le tre lettere, TMDB non va interrogato.
+ *
+ * `/search/multi` fa corrispondenza per sottostringa: «Ns» pesca *Ded@ns*,
+ * *Käpt'ns Dinner* e una serie olandese del 1981 — tre risposte legittime a una
+ * domanda che nessuno ha fatto. Dirlo è meglio che riempire la griglia di
+ * qualcosa che sembra un risultato e non lo è. La tua libreria invece si filtra
+ * da subito: lì anche due lettere restringono qualcosa che conosci.
+ */
+const MIN_REMOTE_QUERY = 3;
+
 function TitleResults({ query }: { query: string }) {
   const items = useVisibleItems();
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
@@ -137,7 +148,7 @@ function TitleResults({ query }: { query: string }) {
   const suggestion = useMemo(() => (query && mine.length === 0 ? didYouMean(query, items) : null), [query, mine, items]);
 
   useEffect(() => {
-    if (!query || !tmdbApiKey) {
+    if (query.length < MIN_REMOTE_QUERY || !tmdbApiKey) {
       setRemote(null);
       return;
     }
@@ -217,7 +228,12 @@ function TitleResults({ query }: { query: string }) {
               Niente per «{query}»: questi sono i risultati per «{corrected}».
             </p>
           )}
-          {remote === null ? (
+          {query.length < MIN_REMOTE_QUERY ? (
+            <p className="text-sm text-text-faint">
+              Scrivi almeno {MIN_REMOTE_QUERY} lettere: con due, TMDB risponde con tutto quello che le contiene da
+              qualche parte — e non è quasi mai il titolo che cerchi.
+            </p>
+          ) : remote === null ? (
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="skeleton aspect-2/3 rounded-sm" aria-hidden="true" />
@@ -301,7 +317,14 @@ export function Search() {
       {/* La casella resta appesa in alto mentre la griglia scorre: su un
           telefono, correggere una parola non deve costare una risalita. */}
       <div className="sticky top-14 z-20 -mx-4 bg-bg px-4 py-2 md:top-0 sm:-mx-6 sm:px-6">
-        <div className="flex items-center gap-2.5 rounded-full border border-border-strong bg-surface-2 px-4 py-2.5">
+        {/*
+          Una `label` e non un `div`: prima il bersaglio era la sola riga di
+          testo, così un tocco sulla lente o sul bordo della pillola non apriva
+          niente — su un telefono, dove la pillola è larga tutto lo schermo,
+          la maggior parte di quell'area non faceva nulla. Ora tutta la
+          pastiglia dà il fuoco al campo, e con esso la tastiera.
+        */}
+        <label className="flex cursor-text items-center gap-2.5 rounded-full border border-border-strong bg-surface-2 px-4 py-2.5">
           <SearchIcon size={18} />
           <input
             ref={inputRef}
@@ -309,8 +332,23 @@ export function Search() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Cerca serie, film e persone…"
             aria-label="Cerca"
-            autoFocus
-            className="min-w-0 flex-1 bg-transparent text-sm text-text outline-none placeholder:text-text-faint"
+            // `search` porta il tasto «cerca» sulla tastiera del telefono al
+            // posto di «invio», e spegne le maiuscole automatiche: nessun
+            // titolo si scrive meglio con la prima lettera imposta.
+            type="search"
+            inputMode="search"
+            enterKeyHint="search"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+            /*
+             * Il fuoco automatico solo dove c'è una tastiera vera. Su iOS il
+             * fuoco dato dal codice non apre la tastiera: restava un campo con
+             * il bordo acceso, che sembra pronto a ricevere e non riceve
+             * niente finché non lo tocchi. Meglio nessuna promessa.
+             */
+            autoFocus={typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches}
+            className="min-w-0 flex-1 bg-transparent text-sm text-text outline-none placeholder:text-text-faint [&::-webkit-search-cancel-button]:hidden"
           />
           {query && (
             <button
@@ -325,7 +363,7 @@ export function Search() {
               ✕
             </button>
           )}
-        </div>
+        </label>
 
         <div className="mt-2 flex gap-2" role="tablist" aria-label="Cosa cercare">
           {([
@@ -362,7 +400,7 @@ export function Search() {
         ) : (
           <p className="text-sm text-text-faint">
             Scrivi un titolo. {!tmdbApiKey && (
-              <button type="button" onClick={openSettings} className="underline underline-offset-2">
+              <button type="button" onClick={() => openSettings()} className="underline underline-offset-2">
                 Con la chiave TMDB cerchi anche fuori dalla tua libreria.
               </button>
             )}

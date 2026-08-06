@@ -28,6 +28,8 @@ export interface TmdbSearchResult {
   overview: string;
   posterPath: string | null;
   kind: Kind;
+  /** Quanto TMDB lo vede cercato in questo momento. Serve a ordinare, non a giudicare. */
+  popularity: number;
 }
 
 export interface TmdbWatchProvider {
@@ -188,6 +190,7 @@ interface RawMultiSearchResult {
   poster_path?: string | null;
   genre_ids?: number[];
   origin_country?: string[];
+  popularity?: number;
 }
 
 // Minimal genre-id -> Italian name map for the multi-search result list (full
@@ -197,6 +200,33 @@ const GENRE_NAMES: Record<number, string> = {
   16: "Animazione",
   99: "Documentario",
 };
+
+function foldTitle(value: string): string {
+  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+}
+
+/**
+ * Quanto un titolo risponde davvero a quello che è stato scritto: 0 è "è
+ * esattamente quello", 4 è "contiene quelle lettere da qualche parte".
+ *
+ * `/search/multi` fa corrispondenza per sottostringa, quindi cercando «Ns»
+ * torna *Ded@ns*, *Käpt'ns Dinner* e una serie olandese del 1981 — tutti
+ * legittimi per TMDB e nessuno di questi è la risposta. Ordinare prima per
+ * corrispondenza e poi per popolarità rimette in cima ciò che si stava
+ * cercando senza buttare via niente.
+ */
+function titleRank(title: string, query: string): number {
+  const t = foldTitle(title);
+  const q = foldTitle(query);
+  if (!q) return 4;
+  if (t === q) return 0;
+  if (t.startsWith(q)) return 1;
+  // Una parola che comincia così: «guerre» trova «Guerre stellari», e non solo
+  // i titoli che cominciano con quella parola.
+  if (t.split(/[\s:—–-]+/).some((word) => word.startsWith(q))) return 2;
+  if (t.includes(q)) return 3;
+  return 4;
+}
 
 export async function searchTitles(
   query: string,
@@ -215,9 +245,8 @@ export async function searchTitles(
     { query, include_adult: "false" },
     signal,
   );
-  return data.results
+  const mapped = data.results
     .filter((r): r is RawMultiSearchResult & { media_type: "movie" | "tv" } => r.media_type === "movie" || r.media_type === "tv")
-    .slice(0, limit)
     .map((r) => {
       const genreNames = (r.genre_ids ?? []).map((id) => GENRE_NAMES[id]).filter((n): n is string => !!n);
       const dateStr = r.release_date || r.first_air_date;
@@ -229,8 +258,25 @@ export async function searchTitles(
         overview: r.overview || "",
         posterPath: r.poster_path ?? null,
         kind: guessKind(r.media_type, genreNames, r.origin_country),
+        popularity: r.popularity ?? 0,
       };
-    });
+    })
+    .filter((r) => r.title);
+
+  /*
+   * Un titolo senza locandina è quasi sempre una scheda abbozzata che nessuno
+   * ha mai completato, e in una griglia occupa il posto di qualcosa di vero.
+   * Sparisce solo se resta abbastanza da mostrare: per un film oscuro davvero
+   * cercato, la scheda spoglia è comunque la risposta giusta.
+   */
+  const withPoster = mapped.filter((r) => r.posterPath);
+  const pool = withPoster.length >= Math.min(6, limit) ? withPoster : mapped;
+
+  return pool
+    .map((r) => ({ r, rank: titleRank(r.title, query) }))
+    .sort((a, b) => a.rank - b.rank || b.r.popularity - a.r.popularity)
+    .slice(0, limit)
+    .map((entry) => entry.r);
 }
 
 interface RawVideo {
@@ -583,6 +629,7 @@ export async function discoverTitles(query: DiscoverQuery, apiKey: string): Prom
       overview: r.overview || "",
       posterPath: r.poster_path ?? null,
       kind: guessKind(query.mediaType, genreNames, r.origin_country),
+      popularity: r.popularity ?? 0,
     };
   });
 }
@@ -642,6 +689,7 @@ export async function getFeed(feed: DiscoverFeed, apiKey: string): Promise<TmdbS
         overview: r.overview || "",
         posterPath: r.poster_path ?? null,
         kind: guessKind(mediaType, genreNames, r.origin_country),
+        popularity: r.popularity ?? 0,
       };
     })
     .filter((r) => r.title);
@@ -1365,6 +1413,7 @@ export function getTitleExtras(tmdbId: number, mediaType: "movie" | "tv", apiKey
           overview: r.overview || "",
           posterPath: r.poster_path ?? null,
           kind: guessKind(type, genreNames, r.origin_country),
+          popularity: r.popularity ?? 0,
         };
       })
       .filter((r) => r.title && r.posterPath)
@@ -1408,6 +1457,31 @@ export function getTitleExtras(tmdbId: number, mediaType: "movie" | "tv", apiKey
   // scheda riaperta fra un minuto deve poter riprovare.
   promise.catch(() => extrasCache.delete(key));
   return promise;
+}
+
+/**
+ * Butta via tutto quello che è stato tenuto da parte da TMDB.
+ *
+ * Le cache di questo file valgono da sei ore a tutta la sessione, e questo è
+ * giusto per una locandina e sbagliato per un episodio uscito stamattina.
+ * «Aggiorna contenuti» è il modo di dire "quello che hai in mano è vecchio,
+ * richiedilo": senza, l'unica via era chiudere e riaprire l'app — e con una
+ * app installata sul telefono nemmeno quella basta sempre.
+ *
+ * Non tocca la libreria: quella è tua e non si ricarica da nessuna parte.
+ */
+export function clearTmdbCaches(): void {
+  feedCache.clear();
+  seasonCache.clear();
+  watchCache.clear();
+  extrasCache.clear();
+  creditsCache.clear();
+  logoCache.clear();
+  collectionCache.clear();
+  personCache.clear();
+  personIdCache.clear();
+  keywordIdCache.clear();
+  releaseDateCache.clear();
 }
 
 /* ------------------------------------------------------------------ */

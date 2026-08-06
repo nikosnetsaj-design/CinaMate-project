@@ -164,6 +164,42 @@ function StudioRow({ companies }: { companies: TmdbCompany[] }) {
   );
 }
 
+/**
+ * La colonna sonora, dove si ascolta.
+ *
+ * Apre la ricerca di Spotify, non l'album: l'identificativo Spotify di una
+ * colonna sonora non sta in nessun catalogo che l'app possa leggere, e
+ * promettere un salto esatto che non c'è è peggio che dire cosa si fa davvero
+ * — la stessa regola dei servizi di streaming in «Dove guardarlo». Il nome del
+ * compositore entra nella ricerca quando lo conosciamo: «Dune Hans Zimmer»
+ * trova l'album, «Dune soundtrack» trova venti raccolte di terzi.
+ */
+function SoundtrackLink({ title, composer }: { title: string; composer?: string }) {
+  const query = composer ? `${title} ${composer}` : `${title} soundtrack`;
+  const url = `https://open.spotify.com/search/${encodeURIComponent(query)}`;
+
+  return (
+    <div className="mt-4 flex items-center gap-3 rounded-md border border-border bg-surface-2 p-3.5">
+      <span aria-hidden="true" className="text-xl leading-none">
+        ♫
+      </span>
+      <p className="min-w-0 flex-1 text-sm leading-snug text-text-muted">
+        Trova la colonna sonora su Spotify
+        {composer && <span className="block truncate text-xs text-text-faint">Musiche di {composer}</span>}
+      </p>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="shrink-0 rounded-full px-4 py-2 text-sm font-semibold"
+        style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+      >
+        Apri
+      </a>
+    </div>
+  );
+}
+
 const VISIBLE_CREW = 4;
 
 export function TitleFacts({ item }: { item: Item }) {
@@ -223,6 +259,10 @@ export function TitleFacts({ item }: { item: Item }) {
       <MoneyPanel budget={extras.budget} revenue={extras.revenue} />
       <StudioRow companies={extras.companies} />
       <MediaGallery title={item.title} videos={extras.videos} posters={extras.posters} backdrops={extras.backdrops} />
+      <SoundtrackLink
+        title={item.title}
+        composer={extras.crew.find((c) => c.job === "Musiche")?.name}
+      />
     </>
   );
 }
