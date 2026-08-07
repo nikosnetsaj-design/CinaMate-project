@@ -16,6 +16,7 @@ import { ContinueSagaRow } from "../components/ContinueSagaRow";
 import { ContinueWatchingRow } from "../components/ContinueWatchingRow";
 import { PosterRow } from "../components/PosterRow";
 import { Billboard } from "../components/Billboard";
+import { BrowseChips } from "../components/TopBar";
 import { becauseYouWatched, forYou, mostWatched, recentlyAdded } from "../lib/recommend";
 import { lastSeenDates } from "../lib/continueWatching";
 import { badgeFor, type PosterBadge } from "../lib/homeBadges";
@@ -188,9 +189,17 @@ export function Home() {
           }
         />
       ) : (
-        order
-          .filter((id) => !hidden.includes(id))
-          .map((id) => <Fragment key={id}>{sections[id]}</Fragment>)
+        <>
+          {/* Sopra tutto, vetrina compresa: è il modo di guardare la libreria,
+              e sta dove ogni app di visione lo mette — una fila di pastiglie
+              che scorre, non una voce nella barra dell'app. */}
+          <BrowseChips />
+          {order
+            .filter((id) => !hidden.includes(id))
+            .map((id) => (
+              <Fragment key={id}>{sections[id]}</Fragment>
+            ))}
+        </>
       )}
     </div>
   );

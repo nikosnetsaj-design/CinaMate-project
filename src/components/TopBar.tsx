@@ -76,6 +76,10 @@ function MenuItem({
   );
 }
 
+/** La forma delle pastiglie della riga di scorciatoie: bordo sottile, testo pieno. */
+const CHIP =
+  "flex shrink-0 items-center gap-1.5 rounded-full border border-border-strong bg-surface-2 px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-surface-hover";
+
 /**
  * I generi che hai davvero.
  *
@@ -84,7 +88,7 @@ function MenuItem({
  * elegante. Porta in Libreria col filtro già messo, che è la pagina dove poi si
  * continua a restringere.
  */
-export function GenreMenu() {
+function GenreMenu() {
   const items = useVisibleItems();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -102,13 +106,7 @@ export function GenreMenu() {
 
   return (
     <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        className="flex items-center gap-1 rounded-full px-2 py-1 text-sm font-medium text-text transition-colors hover:bg-surface-hover"
-      >
+      <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-haspopup="menu" className={CHIP}>
         Generi
         <span aria-hidden="true" className="text-text-faint">
           ⌄
@@ -118,7 +116,7 @@ export function GenreMenu() {
       {open && (
         <>
           <Backdrop onClose={() => setOpen(false)} />
-          <div className={`${PANEL} left-0 right-auto max-h-80 overflow-y-auto`} role="menu">
+          <div className={`${PANEL} left-0 right-auto max-h-80 w-56 overflow-y-auto`} role="menu">
             {genres.map(([genre, count]) => (
               <button
                 key={genre}
@@ -357,6 +355,42 @@ export function QuickMenu() {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+/**
+ * La riga delle scorciatoie, in cima alla Home: tipo, stato, generi.
+ *
+ * Stava in barra, accanto al logo, e lì era la cosa sbagliata nel posto
+ * sbagliato: la barra è per ciò che riguarda *l'app* — le novità, le
+ * impostazioni — mentre questo è un modo di guardare la libreria, cioè
+ * contenuto. Sopra la vetrina, in una fila che scorre, è dove ogni app di
+ * visione lo mette e dove il pollice arriva senza attraversare lo schermo.
+ *
+ * Ogni pastiglia porta in Libreria con un filtro già acceso: sono i tre tagli
+ * che si fanno di continuo, e da lì il pannello dei filtri fa il resto.
+ */
+export function BrowseChips() {
+  const items = useVisibleItems();
+  const navigate = useNavigate();
+  if (items.length === 0) return null;
+
+  const has = (test: (i: (typeof items)[number]) => boolean) => items.some(test);
+  const shortcuts = [
+    { label: "Serie TV", to: "/libreria?tipo=serie", show: has((i) => i.kind === "serie" || i.kind === "anime") },
+    { label: "Film", to: "/libreria?tipo=film", show: has((i) => i.kind === "film") },
+    { label: "Da vedere", to: "/libreria?stato=Da+vedere", show: has((i) => i.status === "Da vedere") },
+  ].filter((s) => s.show);
+
+  return (
+    <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6">
+      {shortcuts.map((s) => (
+        <button key={s.to} type="button" onClick={() => navigate(s.to)} className={CHIP}>
+          {s.label}
+        </button>
+      ))}
+      <GenreMenu />
     </div>
   );
 }

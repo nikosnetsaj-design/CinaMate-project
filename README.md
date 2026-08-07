@@ -245,11 +245,15 @@ rete che non è la tua.
   il titolo corrisponde a ciò che hai scritto e poi per popolarità, le schede
   senza nemmeno una locandina restano fuori quando c'è di meglio, e sotto le tre
   lettere l'app lo dice invece di riempire la griglia di rumore.
-- **In cima: i generi, le novità, il menu**: la tendina **Generi** elenca solo i
-  generi che hai davvero sullo scaffale e apre la Libreria col filtro già messo;
-  la **campanella** si accende solo quando una serie o un film che segui ha una
-  data entro un mese e mezzo; i **tre puntini** tengono Gestisci Link Host, Apri
-  Web Viewer, Aggiorna contenuti, Profilo, tema, Diagnostica e Impostazioni.
+- **Le pastiglie di scorciatoia**, sopra la vetrina: **Serie TV · Film · Da
+  vedere · Generi ⌄**, una fila che scorre. Ognuna apre la Libreria col filtro
+  già acceso, e la tendina dei generi elenca solo quelli che hai davvero sullo
+  scaffale. Stanno lì e non nella barra dell'app perché sono un modo di guardare
+  la *libreria*, cioè contenuto: la barra è per ciò che riguarda l'app.
+- **In barra restano due cose**: la **campanella**, che si accende solo quando
+  una serie o un film che segui ha una data entro un mese e mezzo, e i **tre
+  puntini** con Aggiungi titolo, Gestisci Link Host, Apri Web Viewer, Aggiorna
+  contenuti, Profilo, tema, Diagnostica e Impostazioni.
 - **Aggiorna contenuti**: butta via quello che TMDB ha lasciato in cache — fino a
   sei ore per una stagione, tutta la sessione per una locandina — ed è la
   risposta a «è uscito ieri e qui non lo vedo». La libreria non la tocca.

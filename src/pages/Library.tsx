@@ -14,8 +14,13 @@ import { FilterSheet } from "../components/FilterSheet";
 import { ShareSheet } from "../components/ShareSheet";
 import { didYouMean, matchQuality } from "../lib/search";
 import { activeFilterCount, applyFilters, type Filters } from "../lib/filters";
+import { STATUSES } from "../lib/status";
 import { useAppReady } from "../lib/useAppReady";
 import { useVisibleItems } from "../lib/useVisibleItems";
+import type { Kind, Status } from "../types";
+
+/** I tipi che un indirizzo può nominare: di ciò che arriva scritto lì non ci si fida. */
+const KIND_IDS: Kind[] = ["film", "serie", "anime", "doc"];
 
 type Sort = "recenti" | "voto" | "titolo" | "anno";
 
@@ -30,18 +35,26 @@ export function Library() {
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   /*
-   * Il genere può arrivare dall'indirizzo — è così che la tendina «Generi» in
-   * cima porta qui con il filtro già messo. Resta un filtro come gli altri:
-   * il pannello lo mostra acceso e lo può togliere, e l'indirizzo si pulisce
-   * subito dopo, così un aggiornamento della pagina non lo rimette da solo.
+   * Genere, tipo e stato possono arrivare dall'indirizzo: è così che le
+   * pastiglie in cima alla Home portano qui con il filtro già acceso. Restano
+   * filtri come gli altri — il pannello li mostra e li toglie — e l'indirizzo
+   * si pulisce subito dopo, così un aggiornamento della pagina non li rimette
+   * da solo.
    */
   const [params, setParams] = useSearchParams();
   const genreParam = params.get("genere");
+  const kindParam = params.get("tipo");
+  const statusParam = params.get("stato");
   useEffect(() => {
-    if (!genreParam) return;
-    setFilters((current) => ({ ...current, genre: genreParam }));
+    if (!genreParam && !kindParam && !statusParam) return;
+    setFilters((current) => ({
+      ...current,
+      ...(genreParam ? { genre: genreParam } : {}),
+      ...(KIND_IDS.includes(kindParam as Kind) ? { kind: kindParam as Kind } : {}),
+      ...(STATUSES.includes(statusParam as Status) ? { status: statusParam as Status } : {}),
+    }));
     setParams({}, { replace: true });
-  }, [genreParam, setParams]);
+  }, [genreParam, kindParam, statusParam, setParams]);
   const [sharing, setSharing] = useState(false);
   const [sort, setSort] = useState<Sort>("recenti");
   const [grid, setGrid] = useState(true);
