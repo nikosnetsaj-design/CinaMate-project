@@ -321,7 +321,14 @@ export function Search() {
           la maggior parte di quell'area non faceva nulla. Ora tutta la
           pastiglia dà il fuoco al campo, e con esso la tastiera.
         */}
-        <label className="flex cursor-text items-center gap-2.5 rounded-full border border-border-strong bg-surface-2 px-4 py-2.5">
+        {/*
+          L'anello di fuoco sta sulla pillola, non sul campo dentro.
+          Con l'anello sull'`input` si vedevano due bordi uno dentro l'altro —
+          un rettangolo verde stretto dentro una pastiglia grigia — che non
+          somiglia a niente e sembra un errore di disegno. `focus-within`
+          sposta l'evidenza sul contenitore, che è la forma che si tocca.
+        */}
+        <label className="focus-shell flex cursor-text items-center gap-2.5 rounded-full border border-border-strong bg-surface-2 px-4 py-2.5 transition-colors">
           <SearchIcon size={18} />
           <input
             ref={inputRef}
@@ -345,7 +352,7 @@ export function Search() {
              * niente finché non lo tocchi. Meglio nessuna promessa.
              */
             autoFocus={typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches}
-            className="min-w-0 flex-1 bg-transparent text-sm text-text outline-none placeholder:text-text-faint [&::-webkit-search-cancel-button]:hidden"
+            className="no-focus-ring min-w-0 flex-1 bg-transparent text-sm text-text outline-none placeholder:text-text-faint [&::-webkit-search-cancel-button]:hidden"
           />
           {query && (
             <button

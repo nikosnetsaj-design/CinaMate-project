@@ -48,7 +48,14 @@ npm install
 npm run dev      # ambiente di sviluppo
 npm run build    # build di produzione (tsc + vite build)
 npm run lint      # oxlint
+npm run contrast  # WCAG AA su ogni coppia testo/sfondo dei due temi
 ```
+
+`npm run contrast` legge i colori veri da `src/index.css`, compone le
+trasparenze sul fondo su cui finiscono e calcola il rapporto secondo WCAG 2.1.
+Esce con codice 1 se una coppia scende sotto soglia (4.5:1 il testo, 3:1 il
+testo grande e i bordi dei controlli), così la promessa di leggibilità è
+verificata da una macchina invece che a occhio.
 
 ## Struttura
 

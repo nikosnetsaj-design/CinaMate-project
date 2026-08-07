@@ -86,6 +86,18 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
             <span className="rounded-xs bg-black/65 px-1.5 py-0.5 font-mono tabular text-[10px] font-semibold text-white backdrop-blur-sm">
               {entry.label}
             </span>
+            {/* «Da iniziare» invece di una barra dell'avanzamento a zero: una
+                puntata mai aperta e una lasciata al primo minuto sono due cose
+                diverse, e un trattino di colore largo due pixel non le
+                distingue. */}
+            {pct <= 0 && (
+              <span
+                className="rounded-xs px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em]"
+                style={{ background: "color-mix(in srgb, var(--accent) 22%, rgba(0,0,0,0.65))", color: "var(--accent-text)" }}
+              >
+                Da iniziare
+              </span>
+            )}
             {badge && (
               <span
                 className="rounded-xs px-1.5 py-0.5 text-[10px] font-semibold"
@@ -201,7 +213,7 @@ export function ContinueWatchingRow({ badges }: { badges?: Record<string, Poster
     <section className="flex flex-col gap-3">
       <div className="flex items-end justify-between gap-3">
         <div>
-          <h2 className="font-display text-xl font-semibold text-text">
+          <h2 className="section-mark font-display text-xl font-semibold text-text">
             Continua a guardare <span className="text-sm font-normal text-text-faint">· {entries.length}</span>
           </h2>
           <p className="mt-0.5 text-xs text-text-faint">Riparte dal punto esatto in cui hai smesso</p>

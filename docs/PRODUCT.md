@@ -439,8 +439,18 @@ prima; quello che cambia è che per cambiare accento non si passa più davanti a
 due chiavi API e al controllo genitori.
 
 **Accessibilità:** ogni coppia testo/sfondo ≥ WCAG AA, verificata da script —
-oggi 168 coppie, zero fallimenti. Focus ring visibile, navigazione da tastiera,
-`aria-label` su ogni controllo.
+oggi **136 coppie, zero fallimenti**, con `npm run contrast`. Lo script legge i
+valori veri da `src/index.css`, compone le trasparenze sul fondo giusto e
+fallisce con codice 1 se qualcosa scende sotto soglia: prima la riga qui sopra
+era una promessa sulla parola, ed è il tipo di promessa che si rompe per prima
+quando il tema cambia — è successo con i grigi lillà del vecchio fondo, che
+erano leggibili sulla carta e no sullo schermo. Alla prima esecuzione ha
+trovato sette coppie fuori norma, tutte corrette.
+
+Focus ring visibile, navigazione da tastiera, `aria-label` su ogni controllo.
+L'anello di fuoco sta sulla forma che si tocca: un campo dentro un contenitore
+che lo mostra per lui (la pillola della ricerca) non disegna anche il proprio,
+o si vedrebbero due bordi uno dentro l'altro.
 
 Il player ha una **palette propria** (§3.6) e quindi coppie proprie, tenute allo
 stesso standard: il rosso di errore è sdoppiato in `--pv-accent-2` per bordi e

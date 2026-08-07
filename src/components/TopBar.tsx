@@ -12,7 +12,7 @@ import { useUpcoming } from "../lib/useUpcoming";
 import { effectiveUrl, hostLabel, withProtocol } from "../lib/linkHost";
 import { clearTmdbCaches } from "../lib/tmdb";
 import { countdown, dayLabel } from "../lib/format";
-import { BellIcon, DotsIcon, GearIcon, MoonIcon, PersonIcon, PlusIcon, PulseIcon, SunIcon } from "./icons";
+import { BellIcon, DotsIcon, GearIcon, GlobeIcon, LinkIcon, MoonIcon, PersonIcon, PlusIcon, PulseIcon, RefreshIcon, SunIcon } from "./icons";
 
 /**
  * I tre controlli in cima: i generi, le novità, il menu.
@@ -291,6 +291,7 @@ export function QuickMenu() {
             />
             <div className="border-t border-border" />
             <MenuItem
+              icon={<LinkIcon size={16} />}
               label="Gestisci Link Host"
               hint={firstHost ? hostLabel(effectiveUrl(firstHost)) : "Nessun sito configurato"}
               onClick={() => {
@@ -299,6 +300,7 @@ export function QuickMenu() {
               }}
             />
             <MenuItem
+              icon={<GlobeIcon size={16} />}
               label="Apri Web Viewer"
               hint={firstHost ? "Sul tuo primo sito attivo" : "Prima serve un sito nel Link Host"}
               onClick={() => {
@@ -308,6 +310,7 @@ export function QuickMenu() {
               }}
             />
             <MenuItem
+              icon={<RefreshIcon size={16} />}
               label="Aggiorna contenuti"
               hint="Riscarica da TMDB, senza toccare la libreria"
               onClick={() => {

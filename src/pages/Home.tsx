@@ -130,7 +130,7 @@ export function Home() {
       planned.length > 0 ? (
         <section className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-xl font-semibold text-text">
+            <h2 className="section-mark font-display text-xl font-semibold text-text">
               Watchlist{" "}
               <span className="text-sm font-normal text-text-faint">
                 · {items.filter((i) => i.status === "Da vedere").length}

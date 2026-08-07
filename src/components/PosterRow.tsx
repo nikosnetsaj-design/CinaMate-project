@@ -36,7 +36,7 @@ export function PosterRow({
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="font-display text-xl font-semibold text-text">
+        <h2 className="section-mark font-display text-xl font-semibold text-text">
           {title}
           {count !== undefined && <span className="text-sm font-normal text-text-faint"> · {count}</span>}
         </h2>

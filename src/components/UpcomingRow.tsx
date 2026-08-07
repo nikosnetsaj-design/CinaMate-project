@@ -18,7 +18,7 @@ export function UpcomingRow() {
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <h2 className="font-display text-xl font-semibold text-text">In arrivo</h2>
+        <h2 className="section-mark font-display text-xl font-semibold text-text">In arrivo</h2>
         <Link to="/scopri" className="text-sm font-medium text-accent-text">
           calendario
         </Link>
