@@ -2,14 +2,13 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useFocusTrap } from "../lib/useFocusTrap";
 import { findPersonId, getPerson, profileUrl, type TmdbPerson, type TmdbPersonCredit } from "../lib/tmdb";
-import { draftFromTmdb } from "../lib/addFromTmdb";
 import { paletteFor } from "../lib/palette";
 import { useLibrary } from "../store/useLibrary";
 import { useSettings } from "../store/useSettings";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { useSelectedPerson } from "../store/useSelectedPerson";
 import { useSelectedItem } from "../store/useSelectedItem";
-import { useEditSheet } from "../store/useEditSheet";
+import { useCatalogPreview } from "../store/useCatalogPreview";
 import { useCriticDraft } from "../store/useCriticDraft";
 import { useNavigate } from "react-router-dom";
 import { PosterArt } from "./PosterArt";
@@ -63,32 +62,27 @@ function CreditCard({ credit, owned, onOpen, onAdd, adding }: {
 function CreditRow({ title, credits, hint }: { title: string; credits: TmdbPersonCredit[]; hint?: string }) {
   const items = useLibrary((s) => s.items);
   const openItem = useSelectedItem((s) => s.open);
-  const openNew = useEditSheet((s) => s.openNew);
+  const openPreview = useCatalogPreview((s) => s.open);
   const close = useSelectedPerson((s) => s.close);
-  const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
-  const pushToast = useLibrary((s) => s.pushToast);
   const [expanded, setExpanded] = useState(false);
-  const [adding, setAdding] = useState<number | null>(null);
 
   if (credits.length === 0) return null;
   const shown = expanded ? credits : credits.slice(0, VISIBLE_CREDITS);
 
-  async function add(credit: TmdbPersonCredit) {
-    if (!tmdbApiKey) return;
-    setAdding(credit.tmdbId);
-    try {
-      openNew(
-        await draftFromTmdb(credit.tmdbId, credit.mediaType, credit.kind, tmdbApiKey, {
-          title: credit.title,
-          year: credit.year,
-          posterPath: credit.posterPath,
-        }),
-      );
-      close();
-    } catch {
-      pushToast("error", "Non è stato possibile leggere questo titolo da TMDB.");
-    }
-    setAdding(null);
+  /**
+   * Un titolo della filmografia che non hai apre la sua scheda, non il modulo
+   * di aggiunta: di un film mai visto si vuole prima sapere di cosa parla.
+   */
+  function preview(credit: TmdbPersonCredit) {
+    close();
+    openPreview({
+      tmdbId: credit.tmdbId,
+      mediaType: credit.mediaType,
+      kind: credit.kind,
+      title: credit.title,
+      year: credit.year,
+      posterPath: credit.posterPath,
+    });
   }
 
   return (
@@ -120,8 +114,8 @@ function CreditRow({ title, credits, hint }: { title: string; credits: TmdbPerso
               close();
               openItem(item);
             }}
-            onAdd={add}
-            adding={adding === credit.tmdbId}
+            onAdd={preview}
+            adding={false}
           />
         ))}
       </div>

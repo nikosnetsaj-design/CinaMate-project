@@ -88,9 +88,29 @@ function ProviderGroup({
 
 const EMPTY_WATCH: TmdbWatchInfo = { streaming: [], free: [], rent: [], buy: [], link: null };
 
+/**
+ * «Dove guardarlo» da solo, per la scheda di un titolo che non hai.
+ *
+ * Il blocco intero porta con sé i tuoi siti e i tuoi link personali, che di un
+ * titolo mai aggiunto non esistono: qui serve la sola domanda che ha una
+ * risposta anche per uno sconosciuto — su quale servizio si guarda.
+ */
+export function WatchProvidersBlock({ item }: { item: Item }) {
+  return (
+    <div className="mt-4 rounded-md border border-border bg-surface-2 p-4">
+      <WatchProviders item={item} />
+    </div>
+  );
+}
+
 function WatchProviders({ item }: { item: Item }) {
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
-  const startWatching = useWatchSession((s) => s.start);
+  const start = useWatchSession((s) => s.start);
+  // Un titolo di anteprima non ha un posto in libreria dove segnare «l'ho
+  // aperto»: la sessione di visione si apre solo per ciò che possiedi.
+  const startWatching = (id: string) => {
+    if (id) start(id);
+  };
   const [state, setState] = useState<"idle" | "busy" | "error" | "done">("idle");
   const [watch, setWatch] = useState<TmdbWatchInfo>(EMPTY_WATCH);
   const link = watch.link;

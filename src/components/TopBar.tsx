@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLibrary } from "../store/useLibrary";
+import { useAddSheet } from "../store/useAddSheet";
 import { useLinkHosts } from "../store/useLinkHosts";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { useSelectedItem } from "../store/useSelectedItem";
@@ -11,7 +12,7 @@ import { useUpcoming } from "../lib/useUpcoming";
 import { effectiveUrl, hostLabel, withProtocol } from "../lib/linkHost";
 import { clearTmdbCaches } from "../lib/tmdb";
 import { countdown, dayLabel } from "../lib/format";
-import { BellIcon, DotsIcon, GearIcon, MoonIcon, PersonIcon, PulseIcon, SunIcon } from "./icons";
+import { BellIcon, DotsIcon, GearIcon, MoonIcon, PersonIcon, PlusIcon, PulseIcon, SunIcon } from "./icons";
 
 /**
  * I tre controlli in cima: i generi, le novità, il menu.
@@ -253,6 +254,7 @@ export function QuickMenu() {
   const [open, setOpen] = useState(false);
   const openSettings = useSettingsSheet((s) => s.open);
   const openViewer = useWebViewer((s) => s.open);
+  const openAddSheet = useAddSheet((s) => s.open);
   const pushToast = useLibrary((s) => s.pushToast);
   const hosts = useLinkHosts((s) => s.hosts);
   const theme = useTheme((s) => s.theme);
@@ -278,6 +280,16 @@ export function QuickMenu() {
         <>
           <Backdrop onClose={() => setOpen(false)} />
           <div className={PANEL} role="menu">
+            <MenuItem
+              icon={<PlusIcon size={16} />}
+              label="Aggiungi titolo"
+              hint="A mano, senza passare da TMDB"
+              onClick={() => {
+                setOpen(false);
+                openAddSheet();
+              }}
+            />
+            <div className="border-t border-border" />
             <MenuItem
               label="Gestisci Link Host"
               hint={firstHost ? hostLabel(effectiveUrl(firstHost)) : "Nessun sito configurato"}

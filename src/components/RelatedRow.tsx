@@ -1,7 +1,7 @@
 import { useLibrary } from "../store/useLibrary";
 import { useSelectedItem } from "../store/useSelectedItem";
+import { useCatalogPreview } from "../store/useCatalogPreview";
 import { useTitleExtras } from "../lib/useTitleExtras";
-import { useAddFromCatalog } from "../lib/useAddFromCatalog";
 import { PosterArt } from "./PosterArt";
 import type { Item } from "../types";
 
@@ -14,15 +14,15 @@ import type { Item } from "../types";
  * non dice niente. Qui sono venti, arrivano da TMDB nel momento in cui apri la
  * scheda (quindi non invecchiano mai) e ognuno mostra la copertina.
  *
- * Quelli che hai già in libreria portano il segno e aprono la loro scheda;
- * gli altri aprono il foglio di aggiunta compilato.
+ * Quelli che hai già in libreria portano il segno e aprono la loro scheda; gli
+ * altri aprono la scheda del catalogo, dove si legge tutto senza aggiungere
+ * niente — e da lì si aggiunge, se lo si vuole.
  */
 export function RelatedRow({ item }: { item: Item }) {
   const { extras, loading } = useTitleExtras(item);
   const items = useLibrary((s) => s.items);
   const openItem = useSelectedItem((s) => s.open);
-  const closeItem = useSelectedItem((s) => s.close);
-  const { add, adding } = useAddFromCatalog(closeItem);
+  const openPreview = useCatalogPreview((s) => s.open);
 
   if (loading) {
     return (
@@ -45,16 +45,14 @@ export function RelatedRow({ item }: { item: Item }) {
       <div className="flex gap-3 overflow-x-auto pb-1">
         {related.map((r) => {
           const owned = items.find((i) => i.tmdbId === r.tmdbId && i.tmdbMediaType === r.mediaType);
-          const busy = adding === r.tmdbId;
           return (
             <button
               key={`${r.mediaType}-${r.tmdbId}`}
               type="button"
-              disabled={busy}
               onClick={() =>
                 owned
                   ? openItem(owned)
-                  : void add({
+                  : openPreview({
                       tmdbId: r.tmdbId,
                       mediaType: r.mediaType,
                       kind: r.kind,
@@ -63,11 +61,11 @@ export function RelatedRow({ item }: { item: Item }) {
                       posterPath: r.posterPath,
                     })
               }
-              aria-label={owned ? `Apri dettagli di ${r.title}` : `Aggiungi ${r.title} alla libreria`}
+              aria-label={owned ? `Apri dettagli di ${r.title}` : `Apri la scheda di ${r.title}`}
               // `self-start`: un pulsante centra il proprio contenuto, e in una
               // fila dove un titolo va a capo e l'altro no le locandine
               // finirebbero su due altezze diverse.
-              className="w-24 shrink-0 self-start text-left disabled:opacity-60"
+              className="w-24 shrink-0 self-start text-left"
             >
               <span className="relative block">
                 <PosterArt
@@ -88,7 +86,7 @@ export function RelatedRow({ item }: { item: Item }) {
                   </span>
                 ) : (
                   <span className="absolute inset-x-0 bottom-0 bg-black/60 py-1 text-center text-[10px] font-semibold text-white">
-                    {busy ? "…" : "＋ aggiungi"}
+                    Vedi scheda
                   </span>
                 )}
               </span>
