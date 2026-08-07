@@ -23,7 +23,7 @@ export function UpcomingRow() {
           calendario
         </Link>
       </div>
-      <div className="flex gap-3.5 overflow-x-auto pb-1">
+      <div className="no-scrollbar flex gap-3.5 overflow-x-auto pb-1">
         {upcoming.slice(0, MAX_ON_HOME).map(({ item, date, season, episode }) => (
           <button
             key={item.id}

@@ -234,7 +234,7 @@ export function Profile() {
           {resume.length > 0 && (
             <Card>
               <Label>Continua a guardare</Label>
-              <div className="flex gap-3.5 overflow-x-auto pb-1">
+              <div className="no-scrollbar flex gap-3.5 overflow-x-auto pb-1">
                 {resume.map((entry) => (
                   <ContinueWatchingCard key={entry.item.id} entry={entry} />
                 ))}
@@ -292,7 +292,7 @@ export function Profile() {
             {finished.length === 0 ? (
               <p className="text-sm text-text-muted">Niente di completato, per ora.</p>
             ) : (
-              <div className="flex gap-2.5 overflow-x-auto pb-1">
+              <div className="no-scrollbar flex gap-2.5 overflow-x-auto pb-1">
                 {finished.map((item) => (
                   <button
                     key={item.id}

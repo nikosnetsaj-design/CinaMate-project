@@ -47,7 +47,7 @@ export function PosterRow({
         )}
       </div>
       {note && <p className="-mt-1 text-xs text-text-faint">{note}</p>}
-      <div className="flex gap-3.5 overflow-x-auto pb-1">
+      <div className="no-scrollbar flex gap-3.5 overflow-x-auto pb-1">
         {entries.map(({ item, reason }) => (
           <button
             key={item.id}

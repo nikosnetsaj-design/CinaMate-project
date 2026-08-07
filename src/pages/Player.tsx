@@ -505,6 +505,18 @@ export function Player() {
 
         <MarathonBar marathon={marathon} onJumpTo={(i) => selectContent(marathonPlaylist[i]?.id ?? null)} />
 
+        {/*
+         * Gli attrezzi compaiono solo quando c'è un titolo tuo aperto.
+         *
+         * Sorgenti, Siti, Download, Watch Party e Host sono cose che si fanno
+         * *a un titolo che stai guardando*: sullo stream di test, o su una
+         * pagina aperta senza aver scelto niente, erano cinque schede che non
+         * avevano un soggetto — l'attrezzatura del meccanico esposta in
+         * salotto. È il motivo per cui ogni lettore, dal cinema in poi, mostra
+         * i comandi sul contenuto e non accanto.
+         */}
+        {selectedItem && (
+        <>
         <div className="pv-app-toolbar">
           {TABS.map((t) => (
             <button
@@ -591,6 +603,8 @@ export function Player() {
           </>
         )}
         {panel === "hosts" && <HostManagerPanel hostMonitor={hostMonitor} />}
+        </>
+        )}
       </div>
     </div>
   );

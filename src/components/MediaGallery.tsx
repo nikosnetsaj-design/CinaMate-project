@@ -159,7 +159,7 @@ export function MediaGallery({
 
       <div className="mt-3">
         {active === "video" && (
-          <div className="flex gap-3 overflow-x-auto pb-1">
+          <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1">
             {videos.map((v) => (
               <button
                 key={v.key}
@@ -187,7 +187,7 @@ export function MediaGallery({
         )}
 
         {active === "poster" && (
-          <div className="flex gap-2.5 overflow-x-auto pb-1">
+          <div className="no-scrollbar flex gap-2.5 overflow-x-auto pb-1">
             {posters.map((path) => (
               <button
                 key={path}
@@ -209,7 +209,7 @@ export function MediaGallery({
         )}
 
         {active === "sfondi" && (
-          <div className="flex gap-2.5 overflow-x-auto pb-1">
+          <div className="no-scrollbar flex gap-2.5 overflow-x-auto pb-1">
             {backdrops.map((path) => (
               <button
                 key={path}

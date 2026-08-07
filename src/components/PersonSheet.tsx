@@ -104,7 +104,7 @@ function CreditRow({ title, credits, hint }: { title: string; credits: TmdbPerso
           </button>
         )}
       </div>
-      <div className="flex gap-3.5 overflow-x-auto pb-1">
+      <div className="no-scrollbar flex gap-3.5 overflow-x-auto pb-1">
         {shown.map((credit) => (
           <CreditCard
             key={`${credit.mediaType}-${credit.tmdbId}`}
@@ -232,7 +232,7 @@ function PersonDetail({ name }: { name: string }) {
                 </>
               )}
             </p>
-            <div className="mt-3 flex gap-3 overflow-x-auto pb-1">
+            <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto pb-1">
               {inLibrary.map((owned) => (
                 <button
                   key={owned.id}

@@ -362,9 +362,14 @@ rete che non è la tua.
   vengono fotografate e interpolate sulla GPU, fuori dal thread che disegna la
   pagina. Zero byte di libreria, e chi ha chiesto meno movimento nelle
   impostazioni di sistema non ne vede nessuno.
-- **Lo zoom resta**: `user-scalable=no` toglierebbe l'ingrandimento a chi ne ha
-  bisogno per leggere — è un requisito di accessibilità (WCAG 1.4.4), non un
-  dettaglio estetico. Un'app che si comporta da nativa non deve farlo anche qui.
+- **Lo zoom resta, tutto intero**: né `user-scalable=no` né `touch-action:
+  manipulation`. Il primo toglie l'ingrandimento a chi ne ha bisogno per leggere
+  (WCAG 1.4.4); il secondo si porta via il doppio tocco per ingrandire in cambio
+  di trecento millisecondi che sui browser moderni non esistono più — costo
+  reale, beneficio immaginario.
+- **Gli attrezzi del player si vedono solo quando stai guardando qualcosa**:
+  Sorgenti, Siti, Download, Watch Party e Host sono cose che si fanno *a un
+  titolo aperto*. Sulla pagina vuota erano cinque schede senza soggetto.
 - **Funziona offline**: dopo la prima apertura con la rete, l'app si avvia
   anche senza. Libreria, diario, statistiche, saghe e profilo sono già tutti sul
   dispositivo; le copertine già viste restano in cache. Un avviso dice cosa
