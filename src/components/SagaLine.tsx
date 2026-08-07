@@ -142,7 +142,7 @@ export function SagaLine({ item }: { item: Item }) {
             centro: è quella che rende la fila un percorso invece che una
             vetrina. */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-24 h-px bg-border-strong" />
-        <div className="flex gap-6 overflow-x-auto pb-1 pl-7">
+        <div className="no-scrollbar flex gap-6 overflow-x-auto pb-1 pl-7">
           {entries.map((entry) => {
             const current = entry.item?.id === item.id;
             return (

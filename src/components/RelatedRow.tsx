@@ -42,7 +42,7 @@ export function RelatedRow({ item }: { item: Item }) {
       <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">
         {item.kind === "film" || item.kind === "doc" ? "Film correlati" : "Serie correlate"}
       </span>
-      <div className="flex gap-3 overflow-x-auto pb-1">
+      <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1">
         {related.map((r) => {
           const owned = items.find((i) => i.tmdbId === r.tmdbId && i.tmdbMediaType === r.mediaType);
           return (

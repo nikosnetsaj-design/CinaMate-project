@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useLibrary } from "../store/useLibrary";
 import { useAddSheet } from "../store/useAddSheet";
@@ -92,6 +93,33 @@ function GenreMenu() {
   const items = useVisibleItems();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [at, setAt] = useState({ top: 0, left: 0 });
+
+  /*
+   * Il pannello esce dalla pagina invece di stare sotto al pulsante.
+   *
+   * La fila delle pastiglie scorre in orizzontale, e un contenitore che scorre
+   * *ritaglia* tutto quello che esce dai suoi bordi: il menu appariva mozzato
+   * — una striscia chiara sotto le pastiglie — e le voci sotto il taglio non
+   * si potevano toccare. Da qui il «non funziona». Portandolo in fondo alla
+   * pagina non c'è più niente che lo ritagli; la posizione la si prende dal
+   * pulsante, che è l'unica cosa che il portale non sa da sé.
+   */
+  useLayoutEffect(() => {
+    if (!open) return;
+    const place = () => {
+      const box = buttonRef.current?.getBoundingClientRect();
+      if (box) setAt({ top: box.bottom + 8, left: box.left });
+    };
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open]);
 
   const genres = useMemo(() => {
     const counts = new Map<string, number>();
@@ -106,17 +134,22 @@ function GenreMenu() {
 
   return (
     <div className="relative">
-      <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-haspopup="menu" className={CHIP}>
+      <button ref={buttonRef} type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-haspopup="menu" className={CHIP}>
         Generi
         <span aria-hidden="true" className="text-text-faint">
           ⌄
         </span>
       </button>
 
-      {open && (
-        <>
-          <Backdrop onClose={() => setOpen(false)} />
-          <div className={`${PANEL} left-0 right-auto max-h-80 w-56 overflow-y-auto`} role="menu">
+      {open &&
+        createPortal(
+          <>
+            <Backdrop onClose={() => setOpen(false)} />
+            <div
+              className="fixed z-50 max-h-80 w-56 overflow-y-auto rounded-md border border-border-strong bg-surface shadow-[var(--shadow-md)]"
+              style={{ top: at.top, left: at.left }}
+              role="menu"
+            >
             {genres.map(([genre, count]) => (
               <button
                 key={genre}
@@ -132,9 +165,10 @@ function GenreMenu() {
                 <span className="font-mono tabular text-[11px] text-text-faint">{count}</span>
               </button>
             ))}
-          </div>
-        </>
-      )}
+            </div>
+          </>,
+          document.body,
+        )}
     </div>
   );
 }
@@ -384,7 +418,7 @@ export function BrowseChips() {
   ].filter((s) => s.show);
 
   return (
-    <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6">
+    <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6">
       {shortcuts.map((s) => (
         <button key={s.to} type="button" onClick={() => navigate(s.to)} className={CHIP}>
           {s.label}

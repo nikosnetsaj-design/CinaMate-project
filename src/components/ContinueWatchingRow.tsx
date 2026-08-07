@@ -223,7 +223,7 @@ export function ContinueWatchingRow({ badges }: { badges?: Record<string, Poster
         </Link>
       </div>
 
-      <div className="flex gap-3.5 overflow-x-auto pb-1">
+      <div className="no-scrollbar flex gap-3.5 overflow-x-auto pb-1">
         {entries.map((entry) => (
           <ContinueWatchingCard key={entry.item.id} entry={entry} badge={badges?.[entry.item.id]} />
         ))}

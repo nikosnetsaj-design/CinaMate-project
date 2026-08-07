@@ -483,7 +483,7 @@ function ItemDetail({ item }: { item: Item }) {
                   <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">
                     {isSeries ? "Serie simili sul tuo scaffale" : "Film simili sul tuo scaffale"}
                   </span>
-                  <div className="flex gap-3 overflow-x-auto pb-1">
+                  <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1">
                     {shelfMates.map(({ item: other, reason }) => (
                       <button
                         key={other.id}

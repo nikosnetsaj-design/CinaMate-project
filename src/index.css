@@ -253,18 +253,34 @@ img {
 }
 
 /*
- * `manipulation` toglie il doppio tocco per lo zoom, e con esso il ritardo di
- * trecento millisecondi che il browser aspettava per capire se ne stesse
- * arrivando un secondo. È la differenza fra un'app che risponde e una che
- * «ci pensa su».
+ * `touch-action: manipulation` è stato tolto.
+ *
+ * Prometteva di azzerare i trecento millisecondi che i browser aspettavano per
+ * capire se stesse arrivando un secondo tocco — ma quel ritardo non esiste più
+ * da anni su una pagina che dichiara `width=device-width`, che è il caso di
+ * questa. In cambio si portava via il doppio tocco per ingrandire, che è un
+ * modo legittimo di leggere una trama scritta piccola: costo reale, beneficio
+ * immaginario. Restano il riscontro immediato alla pressione qui sotto e lo
+ * zoom, tutto intero.
+ *
+ * Fa eccezione la barra di scorrimento del lettore, dove il doppio tocco
+ * ingrandirebbe il video invece di spostare la riproduzione.
  */
-button,
-a,
-select,
-[role="tab"],
-[role="button"],
 input[type="range"] {
   touch-action: manipulation;
+}
+
+/*
+ * Le file che scorrono in orizzontale non mostrano la propria barra: su un
+ * telefono è una striscia chiara che compare sotto le copertine a ogni
+ * scorrimento e sembra un pezzo di interfaccia rotto.
+ */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 /*

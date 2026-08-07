@@ -50,7 +50,7 @@ export function ContinueSagaRow() {
         </Link>
       </div>
 
-      <div className="flex gap-3.5 overflow-x-auto pb-1">
+      <div className="no-scrollbar flex gap-3.5 overflow-x-auto pb-1">
         {started.map(({ saga, key, progress }) => {
           const next = progress.next!;
           return (

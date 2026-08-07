@@ -69,7 +69,7 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
         {/* Every row says why it is here — a suggestion without a reason is an advert. */}
         <p className="mt-0.5 text-xs text-text-faint">{why}</p>
       </div>
-      <div className="flex gap-3.5 overflow-x-auto pb-1">
+      <div className="no-scrollbar flex gap-3.5 overflow-x-auto pb-1">
         {rows === null
           ? Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="skeleton aspect-2/3 w-28 shrink-0 rounded-sm" aria-hidden="true" />
