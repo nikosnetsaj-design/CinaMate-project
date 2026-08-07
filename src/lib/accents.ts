@@ -50,8 +50,8 @@ export const ACCENTS: Accent[] = [
   {
     id: "verde",
     name: "Verde",
-    dark: { accent: "#7fd6a8", accentText: "#98e0ba", accentContrast: "#052616" },
-    light: { accent: "#1a6f45", accentText: "#16613d", accentContrast: "#ffffff" },
+    dark: { accent: "#22c55e", accentText: "#4ade80", accentContrast: "#04220f" },
+    light: { accent: "#157f3c", accentText: "#116632", accentContrast: "#ffffff" },
   },
   {
     id: "viola",
@@ -67,10 +67,15 @@ export const ACCENTS: Accent[] = [
   },
 ];
 
-export const DEFAULT_ACCENT = ACCENTS[0].id;
+/**
+ * Il verde è il predefinito: sul nero è il colore più leggibile della
+ * tavolozza, ed è quello che ogni app di visione usa per «vai». Chi ne ha
+ * scelto un altro se lo tiene — la scelta salvata vince sempre sul default.
+ */
+export const DEFAULT_ACCENT = "verde";
 
 export function accentById(id: string): Accent {
-  return ACCENTS.find((a) => a.id === id) ?? ACCENTS[0];
+  return ACCENTS.find((a) => a.id === id) ?? ACCENTS.find((a) => a.id === DEFAULT_ACCENT) ?? ACCENTS[0];
 }
 
 /**

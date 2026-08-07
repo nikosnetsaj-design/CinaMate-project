@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useFocusTrap } from "../lib/useFocusTrap";
@@ -22,7 +22,7 @@ import { ShareSheet } from "./ShareSheet";
 import { EpisodeList } from "./EpisodeList";
 import { DownloadButton } from "./DownloadButton";
 import { SpoilerFreeRecap, TranslateOverview } from "./AiItemExtras";
-import { HeartIcon, PlayIcon } from "./icons";
+import { HeartIcon, InfoIcon, PlayIcon } from "./icons";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useLibrary } from "../store/useLibrary";
 import { useEditSheet } from "../store/useEditSheet";
@@ -90,6 +90,7 @@ function ItemDetail({ item }: { item: Item }) {
   const navigate = useNavigate();
 
   const containerRef = useFocusTrap(close);
+  const tabsRef = useRef<HTMLDivElement>(null);
   const titleId = `item-detail-${item.id}`;
   const logo = useTitleLogo(item);
   const shelfMates = useMemo(() => similarInLibrary(item, items), [item, items]);
@@ -264,7 +265,31 @@ function ItemDetail({ item }: { item: Item }) {
 
         <CastRow item={item} />
 
-        <div className="mt-5 flex gap-1 border-b border-border" role="tablist" aria-label="Sezioni del titolo">
+        {/* «Maggiori informazioni»: la scorciatoia dal cast ai dati del film.
+            Le schede qui sotto ci sono già, ma dopo una fila di facce lo
+            sguardo è a metà pagina e la riga delle schede è appena passata —
+            un bersaglio grande che dice dove si va costa meno di una
+            risalita. Sparisce quando sei già nella scheda che aprirebbe. */}
+        <button
+          type="button"
+          onClick={() => {
+            setTab("dettagli");
+            // Sul frame successivo: se la scheda cambia, il blocco dei dati
+            // non è ancora nel documento e lo scorrimento non troverebbe nulla.
+            requestAnimationFrame(() => tabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+          }}
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-border-strong py-3 text-sm font-medium text-text transition-colors hover:bg-surface-hover"
+        >
+          <InfoIcon size={17} />
+          Maggiori informazioni
+        </button>
+
+        <div
+          ref={tabsRef}
+          className="mt-5 flex gap-1 border-b border-border scroll-mt-4"
+          role="tablist"
+          aria-label="Sezioni del titolo"
+        >
           {TABS.map((t) => (
             <button
               key={t.id}
