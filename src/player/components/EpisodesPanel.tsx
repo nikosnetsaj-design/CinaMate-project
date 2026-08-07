@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useFocusTrap } from '../../lib/useFocusTrap';
 import { CloseIcon, PlayIcon } from './Icons';
+import SeriesEpisodes, { type SeriesEpisodesProps } from './SeriesEpisodes';
 
 /**
  * La lista di cosa altro c'è da riprodurre, senza uscire dal player.
@@ -24,10 +26,21 @@ type Props = {
   currentId: string;
   onSelect: (id: string) => void;
   onClose: () => void;
+  /**
+   * Le puntate della serie in riproduzione, quando ce ne sono.
+   *
+   * Sono due domande diverse e adesso hanno due schede: «quale puntata di
+   * questa serie» e «cos'altro posso far partire». Prima c'era solo la
+   * seconda, che è la risposta che nessuno cerca mentre sta guardando una
+   * serie a metà stagione.
+   */
+  series?: SeriesEpisodesProps | null;
 };
 
-export default function EpisodesPanel({ entries, currentId, onSelect, onClose }: Props) {
+export default function EpisodesPanel({ entries, currentId, onSelect, onClose, series }: Props) {
   const panelRef = useFocusTrap(onClose);
+  const [tab, setTab] = useState<'serie' | 'altro'>(series ? 'serie' : 'altro');
+  const showSeries = Boolean(series) && tab === 'serie';
 
   return (
     <div className="pv-side-overlay" onClick={onClose}>
@@ -46,6 +59,32 @@ export default function EpisodesPanel({ entries, currentId, onSelect, onClose }:
           </button>
         </div>
 
+        {series && entries.length > 1 && (
+          <div className="pv-side-tabs" role="tablist">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'serie'}
+              className={tab === 'serie' ? 'active' : ''}
+              onClick={() => setTab('serie')}
+            >
+              Questa serie
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'altro'}
+              className={tab === 'altro' ? 'active' : ''}
+              onClick={() => setTab('altro')}
+            >
+              Da riprodurre
+            </button>
+          </div>
+        )}
+
+        {showSeries && series && <SeriesEpisodes {...series} />}
+
+        {!showSeries && (
         <ul className="pv-episode-list">
           {entries.map((entry) => {
             const current = entry.id === currentId;
@@ -78,6 +117,7 @@ export default function EpisodesPanel({ entries, currentId, onSelect, onClose }:
             );
           })}
         </ul>
+        )}
       </div>
     </div>
   );

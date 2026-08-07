@@ -42,26 +42,26 @@ export default function ControlsBar({
       {progress}
 
       <div className="pv-actions">
-        <button type="button" className="pv-action" onClick={onOpenClip}>
+        <button type="button" className="pv-action" aria-label="Ritaglia" onClick={onOpenClip}>
           <ScissorsIcon />
           <span>Ritaglia</span>
         </button>
-        <button type="button" className="pv-action" onClick={() => onOpenSettings('speed')}>
+        <button type="button" className="pv-action" aria-label="Velocità di riproduzione" onClick={() => onOpenSettings('speed')}>
           <SpeedIcon />
           <span>Velocità ({player.playbackRate}x)</span>
         </button>
         {hasEpisodes && (
-          <button type="button" className="pv-action" onClick={onOpenEpisodes}>
+          <button type="button" className="pv-action" aria-label="Episodi" onClick={onOpenEpisodes}>
             <EpisodesIcon />
             <span>Episodi</span>
           </button>
         )}
-        <button type="button" className="pv-action" onClick={() => onOpenSettings('audio')}>
+        <button type="button" className="pv-action" aria-label="Audio e sottotitoli" onClick={() => onOpenSettings('audio')}>
           <SubtitlesIcon />
           <span>Audio e sottotitoli</span>
         </button>
         {onNext && (
-          <button type="button" className="pv-action" onClick={onNext}>
+          <button type="button" className="pv-action" aria-label="Prossimo episodio" onClick={onNext}>
             <NextEpisodeIcon />
             <span>Pross. ep.</span>
           </button>

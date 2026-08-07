@@ -367,6 +367,14 @@ rete che non è la tua.
   (WCAG 1.4.4); il secondo si porta via il doppio tocco per ingrandire in cambio
   di trecento millisecondi che sui browser moderni non esistono più — costo
   reale, beneficio immaginario.
+- **«Episodi» dentro il lettore**: mentre guardi una serie, il pulsante Episodi
+  apre le puntate **di quella stagione** — fotogramma, numero, titolo, durata e
+  trama, con la tendina per cambiare stagione e quella in onda evidenziata.
+  Toccarne una riparte da lì: stagione ed episodio finiscono nelle sorgenti del
+  titolo e l'indirizzo viene ricercato per la puntata nuova. Prima quel pannello
+  elencava *gli altri titoli* dello scaffale, che è la risposta a un'altra
+  domanda; adesso ci sono entrambe, in due schede — «Questa serie» e «Da
+  riprodurre».
 - **Gli attrezzi del player si vedono solo quando stai guardando qualcosa**:
   Sorgenti, Siti, Download, Watch Party e Host sono cose che si fanno *a un
   titolo aperto*. Sulla pagina vuota erano cinque schede senza soggetto.
