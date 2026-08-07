@@ -9,7 +9,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="color-scheme" content="dark light" />
-    <meta name="theme-color" content="#1B1221" />
+    <meta name="theme-color" content="#0a0a0b" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
@@ -20,7 +20,7 @@
   <body>
     <div id="root"></div>
     <noscript>
-      <div style="padding:2rem;font-family:system-ui,sans-serif;color:#f6eff6;background:#1b1221">
+      <div style="padding:2rem;font-family:system-ui,sans-serif;color:#ffffff;background:#0a0a0b">
         CineMate ha bisogno di JavaScript per funzionare. Attivalo nelle impostazioni del browser e ricarica la pagina.
       </div>
     </noscript>
@@ -40,15 +40,15 @@
           if (shown || root.childElementCount > 0) return;
           shown = true;
           root.innerHTML =
-            '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;' +
-            'background:#1b1221;color:#f6eff6;font-family:system-ui,-apple-system,sans-serif;text-align:center">' +
+            '<div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:1.5rem;' +
+            'background:#0a0a0b;color:#ffffff;font-family:system-ui,-apple-system,sans-serif;text-align:center">' +
             '<div style="max-width:26rem">' +
             '<h1 style="font-size:1.25rem;margin:0 0 .75rem">CineMate non è riuscito ad avviarsi</h1>' +
-            '<p style="margin:0 0 1rem;color:#c5b3cb;line-height:1.5">Quasi sempre è una copia vecchia rimasta in memoria nel browser. ' +
+            '<p style="margin:0 0 1rem;color:#b6b6bd;line-height:1.5">Quasi sempre è una copia vecchia rimasta in memoria nel browser. ' +
             'Ricarica; se non basta, svuota i dati del sito e riapri.</p>' +
-            '<button id="cm-reload" style="background:#ff4d9e;color:#24071a;border:0;border-radius:5px;' +
+            '<button id="cm-reload" style="background:#22c55e;color:#04220f;border:0;border-radius:5px;' +
             'padding:.7rem 1.4rem;font-size:.95rem;font-weight:600">Ricarica</button>' +
-            '<p style="margin:1.25rem 0 0;color:#a494ac;font-size:.75rem;word-break:break-word">' +
+            '<p style="margin:1.25rem 0 0;color:#9a9aa4;font-size:.75rem;word-break:break-word">' +
             (detail || "") + "</p></div></div>";
           var button = document.getElementById("cm-reload");
           if (button) {

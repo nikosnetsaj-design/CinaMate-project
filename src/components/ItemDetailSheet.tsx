@@ -165,7 +165,7 @@ function ItemDetail({ item }: { item: Item }) {
         type="button"
         onClick={close}
         aria-label="Torna indietro"
-        className="fixed left-3.5 top-3.5 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-md"
+        className="tap-target fixed left-3.5 top-3.5 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-md"
       >
         ←
       </button>
@@ -390,14 +390,14 @@ function ItemDetail({ item }: { item: Item }) {
                       <button
                         type="button"
                         onClick={() => setRewatch(item.id, (item.rewatch || 0) - 1)}
-                        className="h-7 w-7 rounded-sm border border-border-strong text-text-muted"
+                        className="tap-target h-8 w-8 rounded-sm border border-border-strong text-text-muted"
                       >
                         −
                       </button>
                       <button
                         type="button"
                         onClick={() => setRewatch(item.id, (item.rewatch || 0) + 1)}
-                        className="h-7 w-7 rounded-sm border text-sm"
+                        className="tap-target h-8 w-8 rounded-sm border text-sm"
                         style={{ borderColor: "color-mix(in srgb, var(--accent) 40%, transparent)", background: "color-mix(in srgb, var(--accent) 16%, transparent)", color: "var(--accent-text)" }}
                       >
                         +

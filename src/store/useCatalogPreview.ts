@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { withViewTransition } from "../lib/viewTransition";
 import type { Kind } from "../types";
 
 /**
@@ -30,6 +31,6 @@ interface CatalogPreviewState {
 
 export const useCatalogPreview = create<CatalogPreviewState>((set) => ({
   target: null,
-  open: (target) => set({ target }),
-  close: () => set({ target: null }),
+  open: (target) => withViewTransition(() => set({ target })),
+  close: () => withViewTransition(() => set({ target: null })),
 }));

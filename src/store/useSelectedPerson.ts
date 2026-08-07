@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { withViewTransition } from "../lib/viewTransition";
 
 interface SelectedPersonState {
   /**
@@ -13,6 +14,6 @@ interface SelectedPersonState {
 
 export const useSelectedPerson = create<SelectedPersonState>((set) => ({
   name: null,
-  open: (name) => set({ name }),
-  close: () => set({ name: null }),
+  open: (name) => withViewTransition(() => set({ name })),
+  close: () => withViewTransition(() => set({ name: null })),
 }));
