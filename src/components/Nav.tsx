@@ -4,7 +4,7 @@ import { useCommandPalette } from "../store/useCommandPalette";
 import { useAddSheet } from "../store/useAddSheet";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { prefetchHandlers } from "../lib/prefetch";
-import { AlertsBell, GenreMenu, QuickMenu } from "./TopBar";
+import { AlertsBell, QuickMenu } from "./TopBar";
 import { ChartIcon, CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, PersonIcon, PlayIcon, PlusIcon, PulseIcon, ReelMark, SearchIcon, SparkleIcon, StackIcon, SunIcon } from "./icons";
 
 const NAV_ITEMS = [
@@ -141,14 +141,13 @@ export function Nav() {
       {/* Mobile top bar.
           Due controlli a destra invece di quattro: Profilo, Impostazioni e il
           tema sono finiti dentro i tre puntini, dove stanno le cose che si
-          fanno all'app. Quello che guadagna spazio è ciò che si usa ogni
-          giorno — i generi e le novità — e i bersagli restano grandi. */}
+          fanno all'app. Qui resta solo quello: il modo di *guardare la
+          libreria* — tipi, stati, generi — è sceso in cima alla Home, sopra la
+          vetrina, dove il pollice arriva senza attraversare lo schermo. */}
       <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-surface/95 px-4 backdrop-blur-sm md:hidden">
         <div className="flex min-w-0 items-center gap-2">
           <ReelMark size={22} />
           <span className="font-display text-base font-semibold text-text">CineMate</span>
-          <span aria-hidden="true" className="mx-0.5 h-4 w-px bg-border-strong" />
-          <GenreMenu />
         </div>
         <div className="flex items-center gap-2">
           <AlertsBell />
