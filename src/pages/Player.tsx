@@ -29,6 +29,9 @@ import { SourcePanel } from "../player/SourcePanel";
 import { EMPTY_SOURCE } from "../store/usePlayerSources";
 import type { MediaContent, Reaction } from "../player/types";
 import type { PlaylistEntry } from "../player/components/EpisodesPanel";
+import type { SeriesEpisode, SeriesEpisodesProps } from "../player/components/SeriesEpisodes";
+import { getSeason, stillUrl } from "../lib/tmdb";
+import { useSettings } from "../store/useSettings";
 import "../player/styles/player.css";
 import { useVisibleItems } from "../lib/useVisibleItems";
 import { useVisibleInterval } from "../lib/useVisibleInterval";
@@ -98,6 +101,7 @@ function useStableId(): string {
 export function Player() {
   const items = useVisibleItems();
   const sources = usePlayerSources((s) => s.sources);
+  const patchSource = usePlayerSources((s) => s.patch);
   const sagas = useSagas((s) => s.sagas);
   const orders = useSagas((s) => s.orders);
   const sagaPrefs = useSagas((s) => s.prefs);
@@ -377,6 +381,74 @@ export function Player() {
     [selectedItem, updateItem, pushToast],
   );
 
+  /*
+   * Le puntate della serie in riproduzione, per la scheda «Questa serie» del
+   * pannello Episodi.
+   *
+   * Arrivano da TMDB come nella scheda del titolo, e per la stessa ragione:
+   * mentre guardi la quinta puntata la domanda è «come si chiama la sesta e
+   * quanto dura», non «cos'altro ho sullo scaffale». Toccare una riga scrive
+   * stagione ed episodio nelle sorgenti del titolo — la stessa strada che usa
+   * l'elenco nella scheda — e butta via l'indirizzo già risolto, perché quello
+   * puntava alla puntata di prima.
+   */
+  const tmdbApiKey = useSettings((st) => st.tmdbApiKey);
+  const seriesId = selectedItem?.tmdbMediaType === "tv" ? selectedItem.tmdbId : null;
+  const seasonList = useMemo(
+    () => Array.from({ length: Math.max(1, selectedItem?.seasons || 1) }, (_, i) => i + 1),
+    [selectedItem?.seasons],
+  );
+  const chosen = selectedItem ? lookup(selectedItem.id) : EMPTY_SOURCE;
+  const [panelSeason, setPanelSeason] = useState<number | null>(null);
+  const season = panelSeason ?? chosen.searchSeason ?? 1;
+  const [seasonEpisodes, setSeasonEpisodes] = useState<SeriesEpisode[] | null>(null);
+
+  useEffect(() => {
+    setSeasonEpisodes(null);
+    if (!seriesId || !tmdbApiKey) return;
+    let cancelled = false;
+    getSeason(seriesId, season, tmdbApiKey)
+      .then((list) => {
+        if (cancelled) return;
+        setSeasonEpisodes(
+          list.map((e) => ({
+            number: e.episodeNumber,
+            title: e.title,
+            overview: e.overview,
+            stillUrl: stillUrl(e.stillPath),
+            runtime: e.runtime,
+          })),
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setSeasonEpisodes([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [seriesId, season, tmdbApiKey]);
+
+  const series = useMemo<SeriesEpisodesProps | null>(() => {
+    if (!seriesId || !selectedItem) return null;
+    return {
+      seasons: seasonList,
+      season,
+      onSeason: setPanelSeason,
+      episodes: seasonEpisodes,
+      current: chosen.searchEpisode ?? null,
+      onPlay: (episode) => {
+        patchSource(selectedItem.id, { searchSeason: season, searchEpisode: episode.number });
+        // L'indirizzo trovato valeva per la puntata precedente: si rimette in
+        // gioco, così il risolutore riparte e cerca quella nuova.
+        setResolved((r) => {
+          const next = { ...r };
+          delete next[selectedItem.id];
+          return next;
+        });
+      },
+    };
+  }, [seriesId, selectedItem, seasonList, season, seasonEpisodes, chosen.searchEpisode, patchSource]);
+
   // Cosa altro si può riprodurre, per il pannello "Episodi" dentro la scena.
   const playlist = useMemo<PlaylistEntry[]>(
     () =>
@@ -499,6 +571,7 @@ export function Player() {
           onReact={selectedItem ? react : undefined}
           onClose={() => navigate(-1)}
           playlist={playlist}
+          series={series}
           onShareMoment={selectedItem ? shareMoment : undefined}
           startAtSec={startAtSec}
         />

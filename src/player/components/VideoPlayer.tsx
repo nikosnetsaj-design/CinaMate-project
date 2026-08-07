@@ -28,6 +28,7 @@ import BrightnessRail from './BrightnessRail';
 import RatingCard from './RatingCard';
 import EpisodesPanel from './EpisodesPanel';
 import type { PlaylistEntry } from './EpisodesPanel';
+import type { SeriesEpisodesProps } from './SeriesEpisodes';
 import ClipSheet from './ClipSheet';
 import type { ClipResult } from './ClipSheet';
 import { SkipButton, PostPlayOverlay, ErrorOverlay, SubtitleOverlay, EndScreenRecommendations, GestureOverlay, AutoSkipNote } from './Overlays';
@@ -78,6 +79,8 @@ type Props = {
   onClose?: () => void;
   /** Cos'altro c'è da riprodurre, per il pannello "Episodi". */
   playlist?: PlaylistEntry[];
+  /** Le puntate della serie in corso, per la scheda «Questa serie» del pannello. */
+  series?: SeriesEpisodesProps | null;
   /** Come si condivide un momento — vedi ClipSheet. */
   onShareMoment?: (startSec: number, lengthSec: number) => Promise<ClipResult>;
   /**
@@ -105,6 +108,7 @@ export default function VideoPlayer({
   onReact,
   onClose,
   playlist,
+  series,
   onShareMoment,
   startAtSec = null,
 }: Props) {
@@ -525,7 +529,7 @@ export default function VideoPlayer({
             }
             onOpenSettings={setSettingsTab}
             onOpenEpisodes={() => setEpisodesOpen(true)}
-            hasEpisodes={(playlist?.length ?? 0) > 1}
+            hasEpisodes={(playlist?.length ?? 0) > 1 || Boolean(series)}
             onOpenClip={openClip}
             onNext={nextContentId ? goToNext : null}
             onToggleMini={() => setIsMini(true)}
@@ -538,6 +542,7 @@ export default function VideoPlayer({
               currentId={content.id}
               onSelect={onSelectContent}
               onClose={() => setEpisodesOpen(false)}
+              series={series}
             />
           )}
 

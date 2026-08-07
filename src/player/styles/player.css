@@ -1318,3 +1318,153 @@
   .pv-host-row-actions { flex-direction: row; flex-wrap: wrap; }
   .pv-host-toolbar { flex-direction: column; align-items: stretch; }
 }
+
+/* ------------------------------------------------------------------ */
+/* «Questa serie»: le puntate dentro il lettore                         */
+/*                                                                      */
+/* Schede alte e strette in colonna, con il fotogramma sopra il titolo: */
+/* la stessa forma dell'elenco nella scheda del titolo, perché è la     */
+/* stessa domanda — quale puntata è questa, e cosa viene dopo.          */
+/* ------------------------------------------------------------------ */
+
+.pv-side-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 12px;
+}
+.pv-side-tabs button {
+  border: 1px solid rgba(245, 241, 232, 0.22);
+  background: transparent;
+  color: rgba(245, 241, 232, 0.72);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pv-side-tabs button.active {
+  background: rgba(245, 241, 232, 0.95);
+  border-color: transparent;
+  color: #10151c;
+}
+
+.pv-series {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 16px 16px;
+  overflow-y: auto;
+}
+
+.pv-series-season {
+  position: relative;
+  align-self: flex-start;
+}
+.pv-season-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(245, 241, 232, 0.22);
+  background: rgba(245, 241, 232, 0.06);
+  color: #f5f1e8;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pv-season-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 5;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  min-width: 180px;
+  max-height: 280px;
+  overflow-y: auto;
+  border-radius: 8px;
+  border: 1px solid rgba(245, 241, 232, 0.18);
+  background: #14181f;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+.pv-season-menu button {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  color: #f5f1e8;
+  padding: 10px 14px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.pv-season-menu button:hover { background: rgba(245, 241, 232, 0.08); }
+
+.pv-series-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pv-series-card {
+  display: grid;
+  grid-template-columns: 132px 1fr;
+  grid-template-areas: "art head" "art plot";
+  gap: 4px 12px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 8px;
+  border-radius: 10px;
+  color: #f5f1e8;
+  cursor: pointer;
+}
+.pv-series-card:hover { background: rgba(245, 241, 232, 0.07); }
+.pv-series-card.active { background: rgba(227, 166, 78, 0.12); }
+
+.pv-series-art {
+  grid-area: art;
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(245, 241, 232, 0.08);
+}
+.pv-series-art img,
+.pv-series-art-empty {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.pv-series-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.28);
+  color: #fff;
+}
+.pv-series-head {
+  grid-area: head;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+}
+.pv-series-plot {
+  grid-area: plot;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(245, 241, 232, 0.68);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
