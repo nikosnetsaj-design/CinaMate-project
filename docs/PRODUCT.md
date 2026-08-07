@@ -84,7 +84,7 @@ resta tua e non ti vende niente.
 | **Play sempre visibile sulla puntata** | Il play compariva passando il puntatore sulla miniatura: su un telefono, dove la lista si usa, era invisibile | Pulsante in fondo alla riga, grande da premere col dito; le puntate viste hanno la miniatura spenta e il segno verde | Utile ✅ |
 | **Regia e troupe** | Un solo nome scritto in una pastiglia, senza faccia e senza mestiere | Le carte di regia, sceneggiatura, musiche, fotografia e produzione (chi l'ha ideata per le serie), che aprono la scheda della persona | Utile ✅ |
 | **Dati finanziari** | Budget e incassi non c'erano, e affiancati sarebbero una divisione da fare a mente | Le due cifre a confronto e il verdetto scritto — «ha incassato 2,6× il budget» — in dollari come li pubblica TMDB. Solo film | Utile ✅ |
-| **Studi di produzione** | La libreria teneva il nome del primo studio e basta | I marchi, su fondo chiaro perché i loghi di TMDB sono inchiostro nero su trasparente e sul velluto sparirebbero | Utile ✅ |
+| **Studi di produzione** | La libreria teneva il nome del primo studio e basta | I marchi, su una piastra chiara perché i loghi di TMDB sono inchiostro nero su trasparente e sul fondo scuro sparirebbero | Utile ✅ |
 | **Colonna sonora su Spotify** | Del film si vedeva tutto tranne la musica | La ricerca Spotify già scritta, col compositore quando lo conosciamo: «Dune Hans Zimmer» trova l'album, «Dune soundtrack» trova venti raccolte di terzi | Utile ✅ |
 | **Media (Video · Poster · Sfondi)** | Del titolo si vedeva una sola locandina e un solo trailer, che portava fuori dal sito | Trailer, scene e speciali dentro l'app (`youtube-nocookie`), locandine e sfondi alternativi ingranditi a schermo intero | Utile ✅ |
 | **Prequel & Sequel** | La striscia diceva *quanto* della saga avevi visto, non *dove eri* | La fila dei capitoli in ordine con anno, numero grande dietro e «SEI QUI» sotto quello aperto; si porta da sola sul corrente e i capitoli mancanti si aggiungono da lì | Utile ✅ |
@@ -407,11 +407,23 @@ sapere cosa crede di essere.
 
 ## 4. Design system
 
-Identità **"Velluto e Technicolor"** (già in produzione).
+Identità **"Sala buia"** (già in produzione).
 
-- **Base**: aubergine da velluto di poltrona `#1B1221` — scuro ma cromatico
-- **Coloranti Technicolor**: magenta `#FF4D9E`, ciano `#3FD3E8`, giallo `#FFC24D`
-- **Voti**: freddo → caldo, non semaforo rosso/verde
+Sostituisce *Velluto e Technicolor*, che era bello come tessuto e faticoso come
+interfaccia: il fondo melanzana `#1B1221` e i grigi lillà facevano tirare al
+rosa ogni testo secondario, e su quel fondo non si staccavano da niente — il
+testo «grigio» non si distingueva né dallo sfondo né dall'accento. Il nero fa
+due cose che il velluto non faceva: alza il contrasto di tutto ciò che gli sta
+sopra, e lascia che l'unico colore acceso dello schermo sia quello che si vuole
+guardare, cioè le locandine.
+
+- **Base**: nero neutro `#0A0A0B`, superfici `#141416` / `#1A1A1D`
+- **Testo**: bianco, e due grigi *neutri* — `#B6B6BD` e `#8B8B93`
+- **Accento**: verde `#22C55E` (`#4ADE80` come testo), il predefinito; gli altri
+  cinque restano scegliibili in Impostazioni → Aspetto
+- **Voti**: freddo → caldo, blu → verde → giallo → rosso. Prima la scala andava
+  dal ciano al magenta: due colori soli e sei rosa in mezzo, e nel Nastro — dove
+  le sessioni stanno una accanto all'altra — un 6 e un 9 erano la stessa striscia
 - **Tipografia**: Bricolage Grotesque (display) · Instrument Sans (testo) · IBM Plex Mono (**ogni cifra**)
 - **Firma**: Il Nastro — una sessione, un filo; tinta dal voto, larghezza dai minuti
 

@@ -23,7 +23,8 @@ tuo server, scritto una volta sola nelle Impostazioni.
 ## Stack
 
 - **Vite + React 18 + TypeScript**
-- **Tailwind CSS v4** — design tokens "Cinema Noir" custom in `src/index.css`
+- **Tailwind CSS v4** — design tokens "Sala buia" custom in `src/index.css`:
+  nero neutro, grigi neutri, accento verde
 - **Zustand** per lo stato (libreria, tema, obiettivi, layout della Home,
   controllo genitori, impostazioni, sheet), persistito su `localStorage`
 - **React Router** per la navigazione
@@ -174,8 +175,16 @@ rete che non è la tua.
   pubblica: convertirli al cambio di oggi sarebbe una stima inventata per un
   film del 1994.
 - **Studi di produzione**: i marchi, su fondo chiaro. Non è gusto: i loghi di
-  TMDB sono inchiostro nero su trasparente, e messi sul velluto scuro
+  TMDB sono inchiostro nero su trasparente, e messi sul fondo scuro
   sparirebbero.
+- **Grafica «Sala buia»**: fondo nero, grigi neutri e verde. Prima era velluto
+  melanzana con i grigi tinti di lillà: il testo secondario tirava al rosa e su
+  quel fondo non si staccava da niente. Adesso i titoli di sezione sono bianchi
+  e grandi, le etichette dei gruppi sono verdi, e i voti vanno dal blu al rosso
+  invece che dal ciano al magenta — nel Nastro un 6 e un 9 erano la stessa
+  striscia rosa. Gli altri cinque accenti restano in Impostazioni → Aspetto.
+- **Maggiori informazioni**: il pulsante sotto il cast porta ai dati del film —
+  regia, incassi, studi, media — senza risalire alla riga delle schede.
 - **Colonna sonora**: un tocco apre la ricerca di Spotify già scritta, col nome
   del compositore quando lo conosciamo — «Dune Hans Zimmer» trova l'album, «Dune
   soundtrack» trova venti raccolte di terzi. Si apre la ricerca e non l'album,

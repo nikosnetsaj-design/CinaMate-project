@@ -154,7 +154,10 @@ function WatchProviders({ item }: { item: Item }) {
 
   return (
     <div>
-      <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Dove guardarlo</span>
+      {/* Titolo pieno e non maiuscoletto grigio: è una domanda che si fa a voce
+          alta — «dove lo guardo?» — e merita lo stesso peso di «Regia e
+          troupe» o «Dati finanziari», che le stanno sotto. */}
+      <h3 className="mb-2.5 font-display text-lg font-semibold text-text">Dove guardarlo</h3>
       {linked && !tmdbApiKey && (
         <p className="text-xs text-text-faint">Aggiungi la tua chiave TMDB nelle Impostazioni per vedere la disponibilità.</p>
       )}

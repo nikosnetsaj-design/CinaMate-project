@@ -1,108 +1,122 @@
 @import "tailwindcss";
 
 /* ------------------------------------------------------------------ */
-/* CineMate design tokens — "Velluto e Technicolor"                     */
+/* CineMate design tokens — "Sala buia"                                 */
 /*                                                                      */
-/* Two sources, both specific to watching films rather than to apps:    */
-/*  - the room: aubergine seat velvet, a chromatic dark that is         */
-/*    deliberately NOT near-black, so the surfaces read as fabric;      */
-/*  - the stock: Technicolor three-strip dye primaries (magenta, cyan,  */
-/*    yellow), the actual pigments of golden-age cinema.                */
+/* Il fondo è nero e i grigi sono grigi. Prima erano velluto melanzana e */
+/* lilla: bello come tessuto, illeggibile come interfaccia — il testo    */
+/* secondario tirava al rosa e su un fondo viola non si staccava da      */
+/* niente, tanto che «il grigio» non si distingueva dall'accento. Un     */
+/* nero neutro fa due cose che il velluto non faceva: alza il contrasto  */
+/* di ogni testo che gli sta sopra, e lascia che l'unico colore acceso   */
+/* dello schermo sia quello che vuoi guardare — le locandine.            */
 /*                                                                      */
-/* The vote scale runs cold -> hot rather than bad -> good: a private   */
-/* diary is not quality control, so a 4 is "left me cold", not danger.  */
+/* I colori restano dove significano qualcosa: l'accento sulle azioni,   */
+/* la scala dei voti (fredda -> calda: un 4 è «mi ha lasciato freddo»,   */
+/* non «pericolo») e gli stati. Tutto il resto è bianco, grigio, nero.   */
 /* ------------------------------------------------------------------ */
 
-/* Dark is the primary theme — this is an app used at night. */
+/* Il tema scuro è quello principale: un'app che si usa di sera. */
 :root {
-  --bg: #1b1221;
-  --surface: #251829;
-  --surface-2: #2f2034;
-  --surface-hover: #3a2840;
-  --text: #f6eff6;
-  --text-muted: #c5b3cb;
-  --text-faint: #a494ac;
-  --border: rgba(255, 255, 255, 0.09);
-  --border-strong: rgba(255, 255, 255, 0.2);
+  --bg: #0a0a0b;
+  --surface: #141416;
+  --surface-2: #1a1a1d;
+  --surface-hover: #26262b;
+  --text: #ffffff;
+  /* Grigi neutri e non lillà: questi due valori sono metà del testo dell'app
+     — didascalie, motivi, unità di misura — e tinti di viola sparivano nel
+     fondo invece di stargli sopra. */
+  --text-muted: #b6b6bd;
+  --text-faint: #8b8b93;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.22);
 
-  /* Technicolor dyes */
-  --accent: #ff4d9e;        /* magenta dye — the signature */
-  --accent-text: #ff6fb0;   /* magenta legible as text on velvet */
-  --accent-contrast: #24071a;
-  --cyan: #3fd3e8;
-  --cyan-contrast: #04222a;
-  --yellow: #ffc24d;
+  /* Verde: l'accento predefinito. Sul nero è la cosa più leggibile che ci
+     sia, ed è il colore che le app di visione usano per «vai» da sempre. */
+  --accent: #22c55e;
+  --accent-text: #4ade80;   /* lo stesso verde, ma come testo sul fondo */
+  --accent-contrast: #04220f;
+  --cyan: #38bdf8;
+  --cyan-contrast: #041b2a;
+  --yellow: #fbbf24;
   --yellow-contrast: #2a1c00;
-  --danger: #ff8a7a;
-  --danger-contrast: #2c0803;
+  --danger: #fb7185;
+  --danger-contrast: #2c0308;
 
-  --status-watching: #3fd3e8;
-  --status-done: #7fd6a8;
-  --status-planned: #ff6fb0;
-  --status-dropped: #ff8a7a;
-  --status-hold: #b09bb8;
+  --status-watching: #38bdf8;
+  --status-done: #4ade80;
+  --status-planned: #a78bfa;
+  --status-dropped: #fb7185;
+  --status-hold: #a1a1aa;
 
-  /* Cold indifference -> hot obsession, along the dye axis. */
-  --vote-1: #7fa8c9;
-  --vote-2: #82b6d4;
-  --vote-3: #5fc6dd;
-  --vote-4: #3fd3e8;
-  --vote-5: #8fc9d8;
-  --vote-6: #c9aecb;
-  --vote-7: #e39dc0;
-  --vote-8: #f47db2;
-  --vote-9: #ff5ba5;
-  --vote-10: #ff4d9e;
+  /* Freddo -> caldo, dal blu al rosso.
+     Prima la scala andava dal ciano al magenta: due colori soli, e in mezzo
+     sei rosa che nessuno riesce a distinguere l'uno dall'altro — nel Nastro,
+     dove le sessioni stanno una accanto all'altra, un 6 e un 9 erano la
+     stessa striscia rosa. Blu -> verde -> giallo -> rosso è la scala che si
+     legge senza istruzioni, e ogni gradino si vede. */
+  --vote-1: #3b82f6;
+  --vote-2: #38bdf8;
+  --vote-3: #22d3ee;
+  --vote-4: #2dd4bf;
+  --vote-5: #4ade80;
+  --vote-6: #a3e635;
+  --vote-7: #facc15;
+  --vote-8: #fbbf24;
+  --vote-9: #fb923c;
+  --vote-10: #f87171;
 
-  --shadow-color: 290 40% 4%;
+  --shadow-color: 240 8% 2%;
   --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.5);
   --shadow-md: 0 8px 24px -4px hsl(var(--shadow-color) / 0.6);
   --shadow-lg: 0 24px 56px -12px hsl(var(--shadow-color) / 0.7);
 
-  --grain-opacity: 0.045;
+  --grain-opacity: 0.025;
   color-scheme: dark;
 }
 
-/* Light is the daylight counterpart: pale mauve-grey, never cream. */
+/* Il tema chiaro è la stessa scala alla luce del giorno: grigi neutri,
+   mai crema e mai malva — il grigio-lillà di prima faceva sembrare tinto
+   di rosa ogni testo secondario anche qui. */
 .light {
-  --bg: #f3eef4;
+  --bg: #f5f5f6;
   --surface: #ffffff;
-  --surface-2: #ebe3ee;
-  --surface-hover: #e0d5e4;
-  --text: #221629;
-  --text-muted: #5c4a63;
-  --text-faint: #5f4f66;
-  --border: rgba(34, 22, 41, 0.12);
-  --border-strong: rgba(34, 22, 41, 0.24);
+  --surface-2: #ececee;
+  --surface-hover: #e1e1e5;
+  --text: #17171a;
+  --text-muted: #55555e;
+  --text-faint: #6b6b76;
+  --border: rgba(20, 20, 25, 0.12);
+  --border-strong: rgba(20, 20, 25, 0.26);
 
-  --accent: #d6007a;
-  --accent-text: #a80060;
+  --accent: #157f3c;
+  --accent-text: #116632;
   --accent-contrast: #ffffff;
-  --cyan: #005f6b;
+  --cyan: #0d5f7a;
   --cyan-contrast: #ffffff;
   --yellow: #7a5200;
   --yellow-contrast: #ffffff;
-  --danger: #9c2a21;
+  --danger: #b3261e;
   --danger-contrast: #ffffff;
 
-  --status-watching: #005f6b;
-  --status-done: #16613d;
-  --status-planned: #a80060;
-  --status-dropped: #9c2a21;
-  --status-hold: #5f4f66;
+  --status-watching: #0d5f7a;
+  --status-done: #116632;
+  --status-planned: #5b3ab8;
+  --status-dropped: #b3261e;
+  --status-hold: #55555e;
 
-  --vote-1: #2f6d91;
-  --vote-2: #266f8c;
-  --vote-3: #1c7285;
-  --vote-4: #00707f;
-  --vote-5: #4a6a83;
-  --vote-6: #7b5680;
-  --vote-7: #9c4577;
-  --vote-8: #b02a72;
-  --vote-9: #c0006d;
-  --vote-10: #a80060;
+  --vote-1: #1d4ed8;
+  --vote-2: #0369a1;
+  --vote-3: #0e7490;
+  --vote-4: #0f766e;
+  --vote-5: #15803d;
+  --vote-6: #4d7c0f;
+  --vote-7: #a16207;
+  --vote-8: #b45309;
+  --vote-9: #c2410c;
+  --vote-10: #b91c1c;
 
-  --shadow-color: 290 30% 25%;
+  --shadow-color: 240 8% 25%;
   --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.1);
   --shadow-md: 0 6px 20px -4px hsl(var(--shadow-color) / 0.16);
   --shadow-lg: 0 20px 48px -12px hsl(var(--shadow-color) / 0.26);
@@ -114,17 +128,17 @@
 /* Saturated dye fills for the vote picker, paired with --vote-fill-ink.
    Theme-independent: these are swatches of pigment, not text colors. */
 :root {
-  --vote-fill-1: #7fa8c9;
-  --vote-fill-2: #82b6d4;
-  --vote-fill-3: #5fc6dd;
-  --vote-fill-4: #3fd3e8;
-  --vote-fill-5: #9ecfda;
-  --vote-fill-6: #d3b4d3;
-  --vote-fill-7: #eda3c6;
-  --vote-fill-8: #f97fb6;
-  --vote-fill-9: #ff5ba5;
-  --vote-fill-10: #ff4d9e;
-  --vote-fill-ink: #24071a;
+  --vote-fill-1: #3b82f6;
+  --vote-fill-2: #38bdf8;
+  --vote-fill-3: #22d3ee;
+  --vote-fill-4: #2dd4bf;
+  --vote-fill-5: #4ade80;
+  --vote-fill-6: #a3e635;
+  --vote-fill-7: #facc15;
+  --vote-fill-8: #fbbf24;
+  --vote-fill-9: #fb923c;
+  --vote-fill-10: #f87171;
+  --vote-fill-ink: #10151c;
 }
 
 @theme inline {
