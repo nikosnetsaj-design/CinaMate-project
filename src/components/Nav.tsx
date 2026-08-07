@@ -106,6 +106,7 @@ export function Nav() {
               to={to}
               end={end}
               {...prefetchHandlers(to)}
+              viewTransition
               className={({ isActive }) => linkClasses(isActive)}
             >
               {({ isActive }) => (
@@ -170,6 +171,7 @@ export function Nav() {
             to={to}
             end={end}
             {...prefetchHandlers(to)}
+            viewTransition
             className={({ isActive }) =>
               `flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium ${
                 isActive ? "text-accent-text" : "text-text-faint"

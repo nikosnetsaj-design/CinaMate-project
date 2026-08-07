@@ -427,6 +427,24 @@ guardare, cioè le locandine.
 - **Tipografia**: Bricolage Grotesque (display) · Instrument Sans (testo) · IBM Plex Mono (**ogni cifra**)
 - **Firma**: Il Nastro — una sessione, un filo; tinta dal voto, larghezza dai minuti
 
+**Comportamento nativo:** viewport `viewport-fit=cover` e altezze in `dvh`;
+variabili `--safe-*` dagli `env(safe-area-inset-*)`; `overscroll-behavior-y:
+none`, `-webkit-touch-callout: none`, `-webkit-user-drag: none` e selezione del
+testo spenta *sui comandi* ma viva su trame e note; `touch-action:
+manipulation` sugli interattivi (via i 300 ms del doppio tap) e riscontro
+immediato con `:active`; area di tocco portata a 44px sui comandi isolati che
+stavano sotto, con `.tap-target` che allarga il bersaglio senza allargare il
+disegno. Le transizioni fra viste usano la **View Transitions API** nativa —
+`document.startViewTransition` per i fogli, `viewTransition` di React Router per
+le rotte — quindi GPU, zero libreria, e niente movimento con
+`prefers-reduced-motion`.
+
+Due direttive della ricetta «app nativa» restano **non applicate, di proposito**:
+`user-scalable=no` (toglie l'ingrandimento a chi ne ha bisogno: WCAG 1.4.4) e
+`skipWaiting()` automatico del service worker (una SPA che scambia il worker a
+metà sessione serve mezza release vecchia e mezza nuova; qui l'aggiornamento si
+offre e si accetta — vedi `components/UpdatePrompt`).
+
 **Movimento:** un solo momento curato (il Nastro che si srotola). Niente
 micro‑animazioni ovunque: rispetto di `prefers-reduced-motion` sempre.
 

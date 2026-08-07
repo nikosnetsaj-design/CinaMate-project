@@ -99,7 +99,7 @@ function EpisodeRow({
           Il play stava nascosto sulla miniatura e compariva solo passandoci
           sopra col puntatore: su un telefono, dove questa lista si usa, quel
           passaggio non esiste e il pulsante era invisibile. */}
-      <div className="flex shrink-0 flex-col items-center gap-1.5">
+      <div className="flex shrink-0 flex-col items-center gap-2.5">
         {!unreleased && (
           <button
             type="button"
@@ -127,14 +127,14 @@ function EpisodeRow({
               : `Segna la serie come vista fino all'episodio ${episode.episodeNumber}`
           }
           title="Segna visto fino a qui"
-          className="flex h-6 w-6 items-center justify-center rounded-full border transition-colors"
+          className="flex h-8 w-8 items-center justify-center rounded-full border transition-colors"
           style={
             watched
               ? { borderColor: "var(--accent)", background: "var(--accent)", color: "var(--accent-contrast)" }
               : { borderColor: "var(--border-strong)", color: "var(--text-faint)" }
           }
         >
-          <CheckIcon size={13} />
+          <CheckIcon size={15} />
         </button>
       </div>
     </li>

@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+
 /* ------------------------------------------------------------------ */
 /* CineMate design tokens — "Sala buia"                                 */
 /*                                                                      */
@@ -182,14 +183,122 @@
   border-color: var(--border);
 }
 
+/* ------------------------------------------------------------------ */
+/* Comportarsi da applicazione e non da pagina                          */
+/*                                                                      */
+/* Le abitudini del browser — il rimbalzo a fine scorrimento, il menu    */
+/* che compare tenendo premuto su un'immagine, la selezione del testo    */
+/* che parte scorrendo di fretta, il mezzo secondo di attesa prima di    */
+/* accettare un tocco — sono giuste su una pagina e sbagliate su una     */
+/* cosa installata sulla schermata Home, dove ogni gesto ha già un       */
+/* significato dentro l'app.                                            */
+/*                                                                      */
+/* Quello che *non* è stato fatto, di proposito, è disabilitare lo zoom  */
+/* (`user-scalable=no`): toglierebbe l'ingrandimento a chi ne ha         */
+/* bisogno per leggere, che è un requisito WCAG (1.4.4) e non un         */
+/* dettaglio estetico. Un'app che si comporta da nativa non deve         */
+/* comportarsi da nativa anche in questo.                               */
+/* ------------------------------------------------------------------ */
+
+:root {
+  /* Gli scostamenti dell'hardware: notch, isola dinamica, barra di home. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}
+
+html {
+  /* Lo stesso fondo del tema anche dietro l'app: senza, la sovraestensione
+     dello scorrimento su iOS mostra una striscia bianca sopra e sotto. */
+  background: var(--bg);
+}
+
 body {
   margin: 0;
+  min-height: 100dvh;
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  /* Niente rimbalzo elastico e niente «tira per aggiornare»: in una libreria
+     che si scorre tutto il giorno, il secondo è un ricaricamento a sorpresa. */
+  overscroll-behavior-y: none;
+  /* Tenere premuto su una locandina apriva il menu «salva immagine» del
+     sistema, che qui non serve a niente e interrompe il gesto. */
+  -webkit-touch-callout: none;
+}
+
+/*
+ * La selezione del testo resta dove il testo si legge — trame, note, recensioni
+ * — e sparisce dai comandi. Spegnerla ovunque, come vorrebbe la ricetta, vuol
+ * dire togliere la possibilità di copiare la trama di un film: un'app locale
+ * che non lascia copiare i propri dati è una scortesia, non una rifinitura.
+ */
+button,
+a,
+nav,
+header,
+[role="tab"],
+[role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+img {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+/*
+ * `manipulation` toglie il doppio tocco per lo zoom, e con esso il ritardo di
+ * trecento millisecondi che il browser aspettava per capire se ne stesse
+ * arrivando un secondo. È la differenza fra un'app che risponde e una che
+ * «ci pensa su».
+ */
+button,
+a,
+select,
+[role="tab"],
+[role="button"],
+input[type="range"] {
+  touch-action: manipulation;
+}
+
+/*
+ * Il tocco si sente subito. Su un telefono `:hover` non esiste — o peggio,
+ * resta acceso dopo il tocco finché non ne arriva un altro — e senza `:active`
+ * l'unico riscontro sarebbe la schermata che cambia mezzo secondo dopo.
+ */
+@media (hover: none) {
+  button:active,
+  a:active,
+  [role="button"]:active {
+    transform: scale(0.97);
+    opacity: 0.9;
+  }
+}
+
+/*
+ * L'area toccabile minima: 44 punti su iOS, 48 su Android.
+ * Si allarga il bersaglio, non il disegno — il riquadro invisibile sborda
+ * oltre il bordo visibile del controllo, che resta della misura che deve
+ * avere. Va messa a mano sui comandi piccoli, non a tappeto: allargare tutto
+ * farebbe accavallare i bersagli fra loro, che è l'errore opposto.
+ */
+.tap-target {
+  position: relative;
+}
+.tap-target::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
 }
 
 /* Display face runs tight and wide — marquee lettering, not book typography. */
@@ -230,6 +339,55 @@ h1, h2, h3, .font-display {
   width: 3px;
   border-radius: 2px;
   background: var(--accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Transizioni di vista                                                 */
+/*                                                                      */
+/* Il browser fotografa la schermata prima e dopo il cambio e interpola  */
+/* fra le due sul compositore: nessuna libreria, nessun lavoro sul       */
+/* thread che sta già disegnando. Le durate sono corte di proposito —    */
+/* una scheda che si apre in mezzo secondo è un'attesa, non un effetto.  */
+/* ------------------------------------------------------------------ */
+
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+}
+
+::view-transition-old(root) {
+  animation: vt-fade-out 120ms ease both;
+}
+
+::view-transition-new(root) {
+  animation: vt-rise 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/*
+ * Chi ha chiesto meno movimento non ne riceve: l'API ha già un interruttore
+ * nel codice (`lib/viewTransition`), ma anche una transizione avviata da
+ * un'altra parte — la navigazione fra pagine — deve restare ferma.
+ */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 }
 
 /* Dye grain: the texture of film emulsion over flat color fields. */

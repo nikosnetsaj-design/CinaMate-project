@@ -348,6 +348,23 @@ rete che non è la tua.
   lista viaggia dentro il link.
 - **Controllo genitori**: filtro per età sulla classificazione reale del film,
   protetto da PIN.
+- **Si comporta da applicazione, non da pagina**: niente rimbalzo elastico a
+  fine scorrimento e niente «tira per aggiornare» (in una libreria che si scorre
+  tutto il giorno è un ricaricamento a sorpresa), niente menu «salva immagine»
+  tenendo premuto su una locandina, niente selezione di testo che parte
+  scorrendo di fretta — ma la trama e le note restano copiabili, perché un'app
+  locale che non lascia copiare i propri dati è una scortesia. I tocchi non
+  aspettano più i trecento millisecondi che il browser teneva da parte per il
+  doppio tap (`touch-action: manipulation`), e ogni pressione risponde subito
+  con un cenno visivo invece che al cambio di schermata.
+- **Transizioni native**: aprire una scheda, un catalogo o la pagina di una
+  persona passa dalla **View Transitions API** del browser — le due schermate
+  vengono fotografate e interpolate sulla GPU, fuori dal thread che disegna la
+  pagina. Zero byte di libreria, e chi ha chiesto meno movimento nelle
+  impostazioni di sistema non ne vede nessuno.
+- **Lo zoom resta**: `user-scalable=no` toglierebbe l'ingrandimento a chi ne ha
+  bisogno per leggere — è un requisito di accessibilità (WCAG 1.4.4), non un
+  dettaglio estetico. Un'app che si comporta da nativa non deve farlo anche qui.
 - **Funziona offline**: dopo la prima apertura con la rete, l'app si avvia
   anche senza. Libreria, diario, statistiche, saghe e profilo sono già tutti sul
   dispositivo; le copertine già viste restano in cache. Un avviso dice cosa
