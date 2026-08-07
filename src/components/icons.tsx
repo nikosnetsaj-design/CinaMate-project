@@ -288,3 +288,35 @@ export function ListIcon({ size = 18 }: IconProps) {
     </svg>
   );
 }
+
+/* Le tre icone del menu in cima: un anello di catena, un mappamondo, due
+   frecce che girano. Disegnate qui come tutte le altre invece di arrivare da
+   una libreria: sono nove righe di SVG, e un pacchetto di duemila icone per
+   usarne tre è peso che l'utente scarica e non vede mai. */
+export function LinkIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true">
+      <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5" />
+      <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5" />
+    </svg>
+  );
+}
+
+export function GlobeIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18-2.5-2.7-2.5-15.3 0-18Z" />
+    </svg>
+  );
+}
+
+export function RefreshIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 11a8 8 0 0 0-13.7-5.3L3 9" />
+      <path d="M4 13a8 8 0 0 0 13.7 5.3L21 15" />
+      <path d="M3 4v5h5M21 20v-5h-5" />
+    </svg>
+  );
+}

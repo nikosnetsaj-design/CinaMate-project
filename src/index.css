@@ -27,9 +27,9 @@
      — didascalie, motivi, unità di misura — e tinti di viola sparivano nel
      fondo invece di stargli sopra. */
   --text-muted: #b6b6bd;
-  --text-faint: #8b8b93;
+  --text-faint: #9a9aa4;
   --border: rgba(255, 255, 255, 0.1);
-  --border-strong: rgba(255, 255, 255, 0.22);
+  --border-strong: rgba(255, 255, 255, 0.36);
 
   /* Verde: l'accento predefinito. Sul nero è la cosa più leggibile che ci
      sia, ed è il colore che le app di visione usano per «vai» da sempre. */
@@ -85,9 +85,9 @@
   --surface-hover: #e1e1e5;
   --text: #17171a;
   --text-muted: #55555e;
-  --text-faint: #6b6b76;
+  --text-faint: #5d5d68;
   --border: rgba(20, 20, 25, 0.12);
-  --border-strong: rgba(20, 20, 25, 0.26);
+  --border-strong: rgba(20, 20, 25, 0.52);
 
   --accent: #157f3c;
   --accent-text: #116632;
@@ -209,6 +209,29 @@ h1, h2, h3, .font-display {
   letter-spacing: -0.01em;
 }
 
+/**
+ * Il segno di sezione: una barretta verticale d'accento prima del titolo.
+ *
+ * Serve a dare un attacco alle righe della Home. Una pagina fatta di righe
+ * orizzontali tutte uguali si legge come un elenco senza inizio: la barretta
+ * dice «qui comincia qualcosa» in un pixel di colore, senza aggiungere una
+ * parola né una linea di separazione che spezzerebbe lo scorrimento.
+ */
+.section-mark {
+  position: relative;
+  padding-left: 0.7rem;
+}
+.section-mark::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.1em;
+  bottom: 0.1em;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
 /* Dye grain: the texture of film emulsion over flat color fields. */
 .grain-overlay {
   pointer-events: none;
@@ -227,6 +250,35 @@ h1, h2, h3, .font-display {
   outline-color: var(--accent);
   outline-offset: 2px;
   border-radius: var(--radius-xs);
+}
+
+/*
+ * L'eccezione: un campo che vive dentro un contenitore che mostra il fuoco al
+ * posto suo — la pillola della ricerca, che si illumina tutta con
+ * `focus-within`. Senza questa riga si vedevano due bordi uno dentro l'altro,
+ * un rettangolo verde stretto dentro una pastiglia: non somiglia a niente e
+ * sembra un errore di disegno. Il fuoco resta visibile, solo sulla forma
+ * giusta — quella che si tocca.
+ *
+ * Sta qui e non fra le utility perché questa regola non è dentro un layer, e
+ * una classe dentro `@layer utilities` non la vincerebbe mai.
+ */
+.no-focus-ring:focus-visible {
+  outline: none;
+}
+
+/*
+ * …e il contenitore che quel fuoco lo mostra al posto suo.
+ *
+ * Anche questa sta fuori dai layer, e per la stessa ragione della regola qui
+ * sopra: `* { border-color: var(--border) }` è dichiarata fuori da ogni layer
+ * e per la cascata batte qualunque utility `border-…`, che sta invece dentro
+ * `@layer utilities`. È il motivo per cui in tutta l'app i bordi colorati si
+ * scrivono in `style`, e perché questa riga non poteva essere una classe
+ * Tailwind.
+ */
+.focus-shell:focus-within {
+  border-color: var(--accent);
 }
 
 /*

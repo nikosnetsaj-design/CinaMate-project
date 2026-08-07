@@ -41,7 +41,7 @@ export function ContinueSagaRow() {
     <section className="flex flex-col gap-3">
       <div className="flex items-end justify-between gap-3">
         <div>
-          <h2 className="font-display text-xl font-semibold text-text">Continua la saga</h2>
+          <h2 className="section-mark font-display text-xl font-semibold text-text">Continua la saga</h2>
           {/* Every row says why it is here — a suggestion without a reason is an advert. */}
           <p className="mt-0.5 text-xs text-text-faint">Storie che hai iniziato e non ancora finito</p>
         </div>

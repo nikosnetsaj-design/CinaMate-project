@@ -65,7 +65,7 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
   return (
     <section className="flex flex-col gap-2.5">
       <div>
-        <h2 className="font-display text-xl font-semibold text-text">{title}</h2>
+        <h2 className="section-mark font-display text-xl font-semibold text-text">{title}</h2>
         {/* Every row says why it is here — a suggestion without a reason is an advert. */}
         <p className="mt-0.5 text-xs text-text-faint">{why}</p>
       </div>
