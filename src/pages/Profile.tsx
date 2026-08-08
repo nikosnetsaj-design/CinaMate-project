@@ -4,15 +4,13 @@ import { useLibrary } from "../store/useLibrary";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { usePlayerPrefs } from "../store/usePlayerPrefs";
 import { useWatchProgress } from "../store/useWatchProgress";
-import { getLifetimeStats } from "../player/services/statsAndHistory";
-import { computeStats } from "../lib/stats";
+import { useLevelSummary } from "../lib/useLevelSummary";
 import {
   ACTIVITY_RANGES,
   activityBuckets,
   currentStreak,
   dailyMinutes,
   formatDay,
-  levelFor,
   personalRecord,
   seriesRanking,
   type ActivityRange,
@@ -23,7 +21,6 @@ import { ContinueWatchingCard } from "../components/ContinueWatchingRow";
 import { EmptyState } from "../components/EmptyState";
 import { PosterArt } from "../components/PosterArt";
 import { useAppReady } from "../lib/useAppReady";
-import { useVisibleInterval } from "../lib/useVisibleInterval";
 import { useVisibleItems } from "../lib/useVisibleItems";
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
@@ -46,6 +43,29 @@ function Tile({ value, label, color }: { value: string; label: string; color?: s
 }
 
 /** The ring around the avatar: how far through the current level you are. */
+/**
+ * L'attesa, disegnata come la pagina che sta arrivando.
+ *
+ * Prima era la parola «Caricamento…», che descrive sé stessa e non dice
+ * niente di ciò che si sta aspettando. Lo scheletro dice la forma: un
+ * riquadro grande per le ore, tre pastiglie per i totali, un rettangolo per
+ * il grafico. Quando i dati arrivano non c'è nessun salto, perché la pagina
+ * era già lì di misura.
+ */
+function ProfileSkeleton() {
+  return (
+    <div aria-hidden="true" className="flex flex-col gap-4">
+      <div className="skeleton h-28 rounded-md" />
+      <div className="grid grid-cols-3 gap-2.5">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="skeleton h-20 rounded-md" />
+        ))}
+      </div>
+      <div className="skeleton h-44 rounded-md" />
+    </div>
+  );
+}
+
 function LevelRing({ pct, children }: { pct: number; children: React.ReactNode }) {
   return (
     <div
@@ -95,7 +115,32 @@ function ActivityChart({ range, minutes }: { range: ActivityRange; minutes: Map<
   );
 }
 
-export function Profile() {
+/** L'intestazione di **Tu**: chi sei secondo le ore che hai messo. */
+export function ProfileHeader() {
+  const displayName = usePlayerPrefs((s) => s.displayName);
+  const { level } = useLevelSummary();
+  return (
+    <header className="flex items-center gap-4 rounded-md border border-border bg-surface-2 p-4">
+      <LevelRing pct={level.pct}>
+        <span className="t-numeral text-xl font-semibold" style={{ color: "var(--accent-text)" }}>
+          {level.level}
+        </span>
+      </LevelRing>
+      <div className="min-w-0 flex-1">
+        <p className="t-label text-text-faint">Livello {level.level}</p>
+        <h1 className="truncate font-display text-2xl font-semibold text-text sm:text-3xl">{level.title}</h1>
+        <p className="mt-0.5 truncate text-sm text-text-muted">
+          {displayName?.trim() ? displayName : "Tu"} ·{" "}
+          {level.hoursToNext != null
+            ? `${level.hoursToNext}h a «${level.nextTitle}»`
+            : "hai raggiunto l'ultimo livello"}
+        </p>
+      </div>
+    </header>
+  );
+}
+
+export function ProfileSummary() {
   const ready = useAppReady();
   const items = useVisibleItems();
   const allItems = useLibrary((s) => s.items);
@@ -103,18 +148,9 @@ export function Profile() {
   const daily = useWatchProgress((s) => s.daily);
   const progress = useWatchProgress((s) => s.progress);
   const openItem = useSelectedItem((s) => s.open);
-  const displayName = usePlayerPrefs((s) => s.displayName);
   const [range, setRange] = useState<ActivityRange>("settimana");
 
-  // The counter the player keeps runs while a video plays in this very tab, so
-  // the header has to be pulled rather than read once at mount — that is what
-  // "aggiornato in tempo reale" has to mean here.
-  const [lifetime, setLifetime] = useState(getLifetimeStats);
-  useVisibleInterval(() => setLifetime(getLifetimeStats()), 5000);
-
-  // Statistics read the whole library, never the parental-filtered view: a
-  // hidden title still cost you the hours it cost you (see useVisibleItems).
-  const stats = useMemo(() => computeStats(allItems), [allItems]);
+  const { stats, playerHours, totalHours } = useLevelSummary();
   const minutes = useMemo(() => dailyMinutes(allItems, history, daily), [allItems, history, daily]);
   const record = useMemo(() => personalRecord(minutes), [minutes]);
   const streak = useMemo(() => currentStreak(minutes), [minutes]);
@@ -124,47 +160,19 @@ export function Profile() {
     [items, progress, history],
   );
 
-  // Two sources, one number: hours the player measured second by second, plus
-  // the hours the library can account for from what it knows was watched. The
-  // player's are the exact ones, so they lead.
-  const playerHours = lifetime.totalWatchedSec / 3600;
-  const totalHours = Math.round(playerHours + stats.hours);
-  const level = levelFor(totalHours);
-
   const finished = useMemo(
     () => allItems.filter((i) => i.status === "Visto").sort((a, b) => b.added.localeCompare(a.added)).slice(0, 12),
     [allItems],
   );
 
-  if (!ready) {
-    return <div className="mx-auto max-w-3xl px-4 py-10 text-sm text-text-faint sm:px-6">Caricamento…</div>;
-  }
+  if (!ready) return <ProfileSkeleton />;
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6 sm:px-6 sm:py-10">
-      {/* --- Identity + level ------------------------------------------- */}
-      <header className="flex items-center gap-4 rounded-md border border-border bg-surface-2 p-4">
-        <LevelRing pct={level.pct}>
-          <span className="font-mono tabular text-xl font-semibold" style={{ color: "var(--accent-text)" }}>
-            {level.level}
-          </span>
-        </LevelRing>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs uppercase tracking-[0.2em] text-text-faint">Livello {level.level}</p>
-          <h1 className="truncate font-display text-2xl font-semibold text-text sm:text-3xl">{level.title}</h1>
-          <p className="mt-0.5 truncate text-sm text-text-muted">
-            {displayName?.trim() ? displayName : "Tu"} ·{" "}
-            {level.hoursToNext != null
-              ? `${level.hoursToNext}h a «${level.nextTitle}»`
-              : "hai raggiunto l'ultimo livello"}
-          </p>
-        </div>
-      </header>
-
+    <div className="flex flex-col gap-4">
       {items.length === 0 && history.length === 0 ? (
         <EmptyState
-          title="Il profilo è ancora vuoto"
-          description="Guarda qualcosa dal player o segna un titolo come visto: da lì in poi ore, grafico e record si riempiono da soli."
+          title="Il diario comincia col primo voto."
+          description="Segna un titolo come visto, o guarda qualcosa dal lettore: da lì in poi ore, grafico e record si riempiono da soli."
         />
       ) : (
         <>

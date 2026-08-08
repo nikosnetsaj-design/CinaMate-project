@@ -358,7 +358,7 @@ export function QuickMenu() {
                 label="Profilo"
                 onClick={() => {
                   setOpen(false);
-                  navigate("/profilo");
+                  navigate("/tu");
                 }}
               />
               <MenuItem

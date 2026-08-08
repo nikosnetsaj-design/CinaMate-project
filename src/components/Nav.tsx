@@ -5,44 +5,58 @@ import { useAddSheet } from "../store/useAddSheet";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { prefetchHandlers } from "../lib/prefetch";
 import { AlertsBell, QuickMenu } from "./TopBar";
-import { ChartIcon, CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, PersonIcon, PlayIcon, PlusIcon, PulseIcon, ReelMark, SearchIcon, SparkleIcon, StackIcon, SunIcon } from "./icons";
+import { CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, PersonIcon, PlusIcon, ReelMark, SearchIcon, SparkleIcon, StackIcon, SunIcon } from "./icons";
 
+/**
+ * Quattro destinazioni, le stesse sul telefono e sul desktop.
+ *
+ * Erano dieci, e i motivi per cui ognuna stava lì erano tutti ragionevoli
+ * uno per uno — è così che si arriva a dieci. Il problema non era la scelta
+ * della decima: era che la lista si allungava per aggiunte locali senza che
+ * nessuno la guardasse intera. Netflix ne ha quattro con diciottomila titoli,
+ * Spotify tre. Una barra è un indice, e un indice di dieci voci si legge come
+ * un menu.
+ *
+ * Le sei che sono uscite non hanno perso niente:
+ *
+ * - **Saghe** è una scheda dentro Libreria. Una saga è un modo di guardare lo
+ *   scaffale, non un posto diverso in cui andare.
+ * - **Scopri** è dentro Cerca, che è dove si cerca. Era già così sul telefono,
+ *   e il commento diceva «non manca niente»: se era vero lì, era vero anche
+ *   qui.
+ * - **Dati** e **Profilo** erano due risposte alla stessa domanda, e adesso
+ *   sono **Tu**. Che fossero la stessa cosa lo diceva il prodotto da solo:
+ *   avevano due stati vuoti diversi per lo stesso «non hai ancora visto
+ *   niente».
+ * - **Critico** si invoca da ogni scheda. Un assistente è qualcosa che chiami,
+ *   non un posto in cui vai.
+ * - **Player** è diventato la mini-barra: compare quando c'è qualcosa a metà e
+ *   ci riporta dentro con il titolo già scelto. Era in barra perché altrimenti
+ *   sul telefono diventava irraggiungibile — un vincolo vero, risolto meglio.
+ * - **Diagnostica** resta nelle Impostazioni, che stanno su ogni schermata. È
+ *   dove si va quando qualcosa non va, non tre volte al giorno.
+ */
 const NAV_ITEMS = [
-  { to: "/", label: "Home", icon: HomeIcon, end: true },
+  { to: "/", label: "Stasera", icon: HomeIcon, end: true },
   { to: "/libreria", label: "Libreria", icon: LibraryIcon, end: false },
-  { to: "/saghe", label: "Saghe", icon: StackIcon, end: false },
   { to: "/cerca", label: "Cerca", icon: SearchIcon, end: false },
-  { to: "/scopri", label: "Scopri", icon: CompassIcon, end: false },
-  { to: "/dati", label: "Dati", icon: ChartIcon, end: false },
-  { to: "/profilo", label: "Profilo", icon: PersonIcon, end: false },
-  { to: "/critico", label: "Critico", icon: SparkleIcon, end: false },
-  { to: "/player", label: "Player", icon: PlayIcon, end: false },
-  { to: "/diagnostica", label: "Diagnostica", icon: PulseIcon, end: false },
+  { to: "/tu", label: "Tu", icon: PersonIcon, end: false },
 ] as const;
 
-// Critico keeps only its sidebar entry: it is reachable from every title and
-// person sheet, so it is never the tap that strands you.
-//
-// Diagnostica is dropped from the bottom bar for a different reason: it is
-// somewhere you go when something is wrong, not several times a day, and a
-// seven-tab bar on a phone makes every tab harder to hit. It stays reachable
-// from Impostazioni, which is on every screen.
-//
-// Player cannot be dropped either way. The sidebar is desktop-only, and
-// nothing else on a phone links to it — leaving it out made the whole page
-// unreachable on the device the app is meant to be installed on.
-//
-// Profilo is out of the bar but not off the phone: it gets the avatar button in
-// the top bar instead, which is where a profile is looked for anyway. A seventh
-// tab would have shrunk every other one to win a destination that already has a
-// better place to live.
-//
-// Scopri cede il posto a Cerca, che sul telefono è la destinazione che si cerca
-// per prima e che dentro contiene già il catalogo TMDB: Scopri resta nella
-// barra laterale e dalla pagina Cerca non manca niente di ciò che offriva.
-const MOBILE_ITEMS = NAV_ITEMS.filter(
-  (i) => i.to !== "/critico" && i.to !== "/diagnostica" && i.to !== "/profilo" && i.to !== "/scopri",
-);
+/**
+ * Le destinazioni che restano raggiungibili ma non occupano la barra: vivono
+ * nel menu dei tre puntini e nelle Impostazioni, e sono elencate qui perché la
+ * barra laterale del desktop ha lo spazio per offrirle come scorciatoie senza
+ * far pesare la scelta principale.
+ */
+const SECONDARY = [
+  { to: "/saghe", label: "Saghe", icon: StackIcon },
+  { to: "/scopri", label: "Scopri", icon: CompassIcon },
+  { to: "/critico", label: "Critico", icon: SparkleIcon },
+] as const;
+
+// Stessa barra sulle due sponde: si impara una interfaccia, non due.
+const MOBILE_ITEMS = NAV_ITEMS;
 
 function linkClasses(isActive: boolean) {
   return `flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm font-medium transition-colors ${
@@ -118,6 +132,27 @@ export function Nav() {
                   )}
                 </>
               )}
+            </NavLink>
+          ))}
+
+          {/* Le scorciatoie: stessa raggiungibilità, peso minore. Sul telefono
+              queste stanno nel menu dei tre puntini — qui c'è la colonna, e
+              una colonna vuota non è una virtù. */}
+          <span className="mt-4 px-3 pb-1 t-label text-text-faint">Altro</span>
+          {SECONDARY.map(({ to, label, icon: Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              {...prefetchHandlers(to)}
+              viewTransition
+              className={({ isActive }) =>
+                `flex items-center gap-3 rounded-sm px-3 py-2 text-[13px] transition-colors ${
+                  isActive ? "text-text" : "text-text-faint hover:bg-surface-hover hover:text-text-muted"
+                }`
+              }
+            >
+              <Icon size={16} />
+              {label}
             </NavLink>
           ))}
         </nav>

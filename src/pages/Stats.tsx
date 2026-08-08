@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useLibrary } from "../store/useLibrary";
 import { useSagas } from "../store/useSagas";
-import { useSelectedItem } from "../store/useSelectedItem";
 import { useSelectedPerson } from "../store/useSelectedPerson";
 import { computeStats, computeYearInReview, yearsWithActivity } from "../lib/stats";
 import { computeAchievements } from "../lib/achievements";
@@ -11,20 +10,10 @@ import { PosterArt } from "../components/PosterArt";
 import { VoteBadge } from "../components/VoteBadge";
 import { EmptyState } from "../components/EmptyState";
 import { Nastro } from "../components/Nastro";
-import { GoalsPanel } from "../components/GoalsPanel";
-import { useAppReady } from "../lib/useAppReady";
 import type { Item } from "../types";
 
 const KIND_LABELS: Record<string, string> = { film: "Film", serie: "Serie TV", anime: "Anime", doc: "Documentario" };
 const KIND_COLORS = ["var(--accent)", "var(--status-watching)", "var(--danger)", "var(--status-done)"];
-
-type Tab = "panoramica" | "diario" | "traguardi" | "obiettivi";
-const TABS: { id: Tab; label: string }[] = [
-  { id: "panoramica", label: "Panoramica" },
-  { id: "diario", label: "Diario" },
-  { id: "traguardi", label: "Traguardi" },
-  { id: "obiettivi", label: "Obiettivi" },
-];
 
 function Card({ children }: { children: React.ReactNode }) {
   return <div className="rounded-md border border-border bg-surface-2 p-4">{children}</div>;
@@ -63,7 +52,7 @@ function PeopleCard({ title, rows }: { title: string; rows: [string, number][] }
   );
 }
 
-function Overview({ items, openItem }: { items: Item[]; openItem: (item: Item) => void }) {
+export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: Item) => void }) {
   const stats = computeStats(items);
   const history = useLibrary((s) => s.history);
   const maxVoteCount = Math.max(...stats.voteDist.map((d) => d.n), 1);
@@ -280,7 +269,7 @@ function Overview({ items, openItem }: { items: Item[]; openItem: (item: Item) =
   );
 }
 
-function DiaryTab({ items, openItem }: { items: Item[]; openItem: (item: Item) => void }) {
+export function DiaryTab({ items, openItem }: { items: Item[]; openItem: (item: Item) => void }) {
   const history = useLibrary((s) => s.history);
   const days = groupDiary(history, items);
 
@@ -338,7 +327,7 @@ function DiaryTab({ items, openItem }: { items: Item[]; openItem: (item: Item) =
   );
 }
 
-function AchievementsTab({ items }: { items: Item[] }) {
+export function AchievementsTab({ items }: { items: Item[] }) {
   const history = useLibrary((s) => s.history);
   const sagas = useSagas((s) => s.sagas);
   const achievements = computeAchievements(items, history, sagas);
@@ -375,48 +364,17 @@ function AchievementsTab({ items }: { items: Item[] }) {
   );
 }
 
-export function Stats() {
-  const ready = useAppReady();
-  const items = useLibrary((s) => s.items);
-  const openItem = useSelectedItem((s) => s.open);
-  const [tab, setTab] = useState<Tab>("panoramica");
-
-  if (!ready) return <div className="mx-auto max-w-3xl px-4 py-10 text-sm text-text-faint sm:px-6">Caricamento…</div>;
-
-  if (items.length === 0) {
-    return (
-      <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-        <EmptyState title="Nessun dato ancora" description="Aggiungi e vota qualche titolo per vedere le tue statistiche." />
-      </div>
-    );
-  }
-
-  return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6 sm:px-6 sm:py-10">
-      <h1 className="font-display text-3xl font-semibold text-text">Dati</h1>
-
-      <div className="flex gap-1 border-b border-border" role="tablist" aria-label="Sezioni dati">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === t.id}
-            onClick={() => setTab(t.id)}
-            className={`-mb-px rounded-t-sm border-b-2 px-3.5 py-2 text-sm font-medium transition-colors ${
-              tab === t.id ? "text-text" : "border-transparent text-text-faint hover:text-text-muted"
-            }`}
-            style={tab === t.id ? { borderColor: "var(--accent)" } : undefined}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {tab === "panoramica" && <Overview items={items} openItem={openItem} />}
-      {tab === "diario" && <DiaryTab items={items} openItem={openItem} />}
-      {tab === "traguardi" && <AchievementsTab items={items} />}
-      {tab === "obiettivi" && <GoalsPanel items={items} />}
-    </div>
-  );
-}
+/*
+ * La pagina «Dati» non esiste più: le sue schede sono diventate quelle di
+ * **Tu** (`pages/Tu.tsx`), insieme a quelle che stavano in «Profilo».
+ *
+ * Erano due destinazioni che rispondevano alla stessa domanda — quanto
+ * guardi, cosa, quando — e che si contendevano due delle dieci voci in barra.
+ * Che fossero la stessa cosa lo diceva il prodotto da solo, senza bisogno di
+ * un'opinione: avevano due stati vuoti diversi («Nessun dato ancora» qui, «Il
+ * profilo è ancora vuoto» là) per il medesimo «non hai ancora visto niente».
+ *
+ * Quello che restava di buono — la panoramica dei gusti, il diario, i
+ * traguardi — è rimasto intero e ha solo cambiato indirizzo: i tre componenti
+ * qui sopra sono esportati e montati da Tu.
+ */

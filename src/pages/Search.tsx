@@ -196,6 +196,27 @@ function TitleResults({ query }: { query: string }) {
 
   return (
     <div className="flex flex-col gap-6">
+      {/*
+       * Quanti risultati sono arrivati, detto a voce.
+       *
+       * La ricerca è la superficie più asincrona dell'app — la griglia si
+       * riscrive a ogni tasto — ed era l'unica delle tre grandi a non avere
+       * una regione viva: `aria-live` esisteva in tre file su sessanta, e
+       * nessuno dei tre era questo. Chi usa un lettore di schermo scriveva e
+       * non sentiva niente: né che stavano arrivando, né quanti, né che non
+       * ce n'erano. Qui il numero si annuncia da solo quando cambia.
+       *
+       * `polite` e non `assertive`: interrompere qualcuno che sta ancora
+       * digitando è peggio del silenzio.
+       */}
+      <p aria-live="polite" className="sr-only">
+        {query.length < MIN_REMOTE_QUERY
+          ? ""
+          : remote === null
+            ? "Cerco…"
+            : `${mine.length + remote.length} risultat${mine.length + remote.length === 1 ? "o" : "i"} per ${query}`}
+      </p>
+
       {mine.length > 0 && (
         <section>
           <h2 className="mb-2.5 text-xs font-medium uppercase tracking-wide text-text-faint">

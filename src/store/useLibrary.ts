@@ -111,6 +111,8 @@ interface LibraryState {
   justCompleted: JustCompleted | null;
 
   addItem: (data: Omit<Item, "id" | "added">) => void;
+  /** Un blocco di titoli come una sola azione: una scrittura, un messaggio. */
+  addItems: (list: Omit<Item, "id" | "added">[]) => void;
   updateItem: (id: string, patch: Partial<Item>) => void;
   removeItem: (id: string) => void;
   setStatus: (id: string, status: Status) => void;
@@ -127,6 +129,11 @@ interface LibraryState {
   importData: (items: Item[], history: HistoryEntry[]) => void;
   clearAll: () => void;
   resetCorruptedData: () => void;
+}
+
+/** L'identificativo di un record nuovo: il momento in cui è entrato, più caso. */
+function newId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 function persistOrToast(
@@ -159,9 +166,36 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   justCompleted: null,
 
   addItem: (data) => {
-    const item: Item = { ...data, id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, added: new Date().toISOString().slice(0, 10) };
+    const item: Item = { ...data, id: newId(), added: today() };
     persistOrToast(get, set, [item, ...get().items], `"${item.title}" aggiunto alla libreria.`);
     if (item.status === "Visto") logHistory(get, set, [makeHistoryEntry(item, item.added, "watched")]);
+  },
+
+  /**
+   * Più titoli in una volta sola: una scrittura e una conferma.
+   *
+   * `addItem` chiamata in ciclo faceva N salvataggi su `localStorage` e N
+   * messaggi impilati — con tre titoli scelti al primo avvio, tre pastiglie
+   * che coprivano per intero la vetrina appena costruita. Un'aggiunta in
+   * blocco *è* una sola azione, e va confermata una volta.
+   */
+  addItems: (list) => {
+    if (list.length === 0) return;
+    const added = today();
+    const items: Item[] = list.map((data) => ({ ...data, id: newId(), added }));
+    persistOrToast(
+      get,
+      set,
+      [...items, ...get().items],
+      list.length === 1
+        ? `"${items[0].title}" aggiunto alla libreria.`
+        : `${items.length} titoli aggiunti alla libreria.`,
+    );
+    logHistory(
+      get,
+      set,
+      items.filter((i) => i.status === "Visto").map((i) => makeHistoryEntry(i, i.added, "watched")),
+    );
   },
 
   updateItem: (id, patch) => {

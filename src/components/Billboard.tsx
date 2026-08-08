@@ -176,22 +176,47 @@ export function Billboard() {
           </div>
 
           {featured.length > 1 && (
-            <div className="mt-1 flex items-center justify-center gap-2" role="tablist" aria-label="Proposte in vetrina">
-              {featured.map((entry, i) => (
-                <button
-                  key={entry.item.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={i === index}
-                  aria-label={`Vetrina ${i + 1} di ${featured.length}: ${entry.item.title}`}
-                  onClick={() => setIndex(i)}
-                  className="h-2 rounded-full transition-all"
-                  style={{
-                    width: i === index ? 22 : 8,
-                    background: i === index ? "var(--accent)" : "rgba(255,255,255,0.45)",
-                  }}
-                />
-              ))}
+            <div className="mt-1 flex items-center justify-center gap-3">
+              <div className="flex items-center gap-2" role="tablist" aria-label="Proposte in vetrina">
+                {featured.map((entry, i) => (
+                  <button
+                    key={entry.item.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={i === index}
+                    aria-label={`Vetrina ${i + 1} di ${featured.length}: ${entry.item.title}`}
+                    onClick={() => setIndex(i)}
+                    className="h-2 rounded-full transition-all"
+                    style={{
+                      width: i === index ? 22 : 8,
+                      background: i === index ? "var(--accent)" : "rgba(255,255,255,0.45)",
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/*
+               * «Un'altra»: il gesto centrale del prodotto, finalmente
+               * visibile.
+               *
+               * La vetrina propone e tu rilanci — ma finora rilanciare si
+               * poteva solo scorrendo col dito, che è un gesto che nessuno
+               * annuncia e che con la tastiera o su un televisore non esiste
+               * affatto. La sezione si dichiarava «carosello» e non aveva un
+               * comando per andare avanti: questo è quel comando, ed è anche
+               * la funzione che stava in cima alla pagina come pulsante di
+               * testo, sopra la vetrina, dove sembrava una didascalia.
+               *
+               * Gira in tondo perché è un rilancio e non una lista da
+               * esaurire: arrivato in fondo, si ricomincia.
+               */}
+              <button
+                type="button"
+                onClick={() => setIndex((i) => (i + 1) % featured.length)}
+                className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/30"
+              >
+                Un'altra
+              </button>
             </div>
           )}
         </div>

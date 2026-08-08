@@ -62,11 +62,17 @@ verificata da una macchina invece che a occhio.
 ```
 src/
   components/   componenti UI (poster, sheet, saghe, maratona, timeline, nav…)
-  pages/        Home, Libreria, Saghe, Cerca, Scopri, Dati, Profilo, Critico,
-                Player, Diagnostica
+  pages/        Home («Stasera»), Libreria, Cerca, Tu — le quattro della barra —
+                più Saghe, Scopri, Critico, Player, Diagnostica, raggiunte da
+                dentro invece che da una voce fissa.
+                  Tu.tsx      fonde le vecchie pagine Dati e Profilo: erano due
+                              destinazioni per la stessa domanda, e si vedeva
+                              dai loro due stati vuoti diversi
+                  Profile.tsx / Stats.tsx  non sono più rotte: esportano i
+                              pezzi che Tu monta come schede
   store/        stato Zustand (libreria, saghe, maratona, promemoria,
                 obiettivi, layout della Home, punto di ripresa, controllo
-                genitori, tema, UI)
+                genitori, tema, primo avvio, UI)
   lib/          dominio e utility (tmdb, sagas, universes, upcoming, stats,
                 activity, continueWatching, achievements, search, filters,
                 recommend, goals, parental, accents, share, deepLinks,
@@ -253,7 +259,42 @@ rete che non è la tua.
 - **In barra restano due cose**: la **campanella**, che si accende solo quando
   una serie o un film che segui ha una data entro un mese e mezzo, e i **tre
   puntini** con Aggiungi titolo, Gestisci Link Host, Apri Web Viewer, Aggiorna
-  contenuti, Profilo, tema, Diagnostica e Impostazioni.
+  contenuti, Tu, tema, Diagnostica e Impostazioni.
+- **Quattro destinazioni, le stesse sul telefono e sul desktop**: **Stasera ·
+  Libreria · Cerca · Tu**. Erano dieci, e ognuna aveva la sua buona ragione per
+  esserci — è così che si arriva a dieci. Saghe è un modo di guardare lo
+  scaffale, quindi sta in Libreria; Scopri è dentro Cerca, dove già stava sul
+  telefono; Dati e Profilo rispondevano alla stessa domanda e sono diventati
+  **Tu**; il Critico si invoca da ogni scheda invece di essere un posto; la
+  Diagnostica resta nelle Impostazioni, che sono ovunque.
+- **La mini-barra del lettore** ha preso il posto della voce «Player»: compare
+  quando c'è qualcosa lasciato a metà, dice a che punto sei e quanto manca, e ci
+  riporta dentro con il titolo già scelto. La voce in barra c'era perché
+  altrimenti sul telefono il lettore diventava irraggiungibile: un vincolo vero,
+  risolto meglio — una scheda fissa è un indirizzo, questa è lo stato.
+- **Il primo minuto**: al primo avvio quattro schermate. Un muro di copertine
+  che mostra com'è l'app piena, una griglia di ventiquattro titoli famosi da
+  toccare per dire cosa hai già visto (bastano tre, e diventano il tuo
+  scaffale), e **solo allora** la chiave del catalogo — spiegata per quello che
+  accende, verificata mentre la incolli, e saltabile. Prima non c'era niente di
+  tutto questo: l'app si apriva su una libreria vuota e su un invito a cercare,
+  rivolto a un motore che senza chiave non avrebbe risposto mai. Si rivede da
+  Impostazioni → Rivedi il primo avvio.
+- **Sei righe in Home, per davvero**: la regola anti-Netflix era dichiarata in
+  `PRODUCT.md` e nel commento di `useHomeLayout`, e applicata in nessun punto —
+  le sezioni predefinite erano tredici e nessuna era spenta. Adesso `MAX_ROWS` è
+  una costante che il pannello «Home su misura» fa rispettare: dice quante ne
+  hai accese e, arrivato a sei, che per accenderne una bisogna spegnerne
+  un'altra.
+- **Quando manca la chiave del catalogo, lo dice un posto solo.** Prima lo
+  dicevano dieci componenti, ognuno con la sua frase e il suo tono, e nessuno
+  arrivava prima del momento in cui la cosa non funzionava: si scopriva che
+  serviva una chiave *fallendo*. Ora c'è una striscia chiudibile in cima alla
+  Home, una riga sotto ciò che senza catalogo è solo più povero, e un blocco al
+  posto di ciò che senza catalogo non esiste — stesso testo, tre pesi.
+- **Doppio tocco su una locandina: preferito.** Il cuore c'era già, ma per
+  arrivarci servivano tre tocchi e un viaggio nella scheda. Non aggiunge un
+  pixel all'interfaccia, ed è il gesto che tutti hanno già imparato altrove.
 - **Aggiorna contenuti**: butta via quello che TMDB ha lasciato in cache — fino a
   sei ore per una stagione, tutta la sessione per una locandina — ed è la
   risposta a «è uscito ieri e qui non lo vedo». La libreria non la tocca.

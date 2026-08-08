@@ -9,7 +9,7 @@ import { PosterCard } from "../components/PosterCard";
 import { EmptyState } from "../components/EmptyState";
 import { PosterGridSkeleton, StatCardSkeleton } from "../components/Skeletons";
 import { UpcomingRow } from "../components/UpcomingRow";
-import { NightPickerButton } from "../components/NightPicker";
+import { CatalogStrip } from "../components/NeedsCatalog";
 import { Nastro } from "../components/Nastro";
 import { MarathonCard } from "../components/MarathonCard";
 import { ContinueSagaRow } from "../components/ContinueSagaRow";
@@ -23,7 +23,6 @@ import { badgeFor, type PosterBadge } from "../lib/homeBadges";
 import { byItemId, useUpcoming } from "../lib/useUpcoming";
 import { useLibrary } from "../store/useLibrary";
 import { computeStats } from "../lib/stats";
-import { greeting } from "../lib/stats";
 import { useAppReady } from "../lib/useAppReady";
 import { useVisibleItems } from "../lib/useVisibleItems";
 
@@ -65,8 +64,6 @@ export function Home() {
     }
     return map;
   }, [items, upcoming]);
-
-  const today = new Intl.DateTimeFormat("it-IT", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
 
   // Every row is built here and picked from below, rather than written inline
   // in a fixed sequence. That is what makes the order in Impostazioni real:
@@ -151,18 +148,25 @@ export function Home() {
   };
 
   return (
+    /*
+     * La pagina si apre sul contenuto.
+     *
+     * Sopra la vetrina c'erano cinque elementi di cornice — l'occhiello «LA
+     * TUA COLLEZIONE», il saluto, il conteggio dei titoli, la data e il
+     * pulsante «cosa guardo stasera» — cioè un'intera schermata di telefono
+     * prima del primo pixel che risponde alla domanda per cui l'app è stata
+     * aperta. Netflix e Spotify aprono sul contenuto; questa pagina si
+     * chiama «Stasera» e adesso comincia da stasera.
+     *
+     * Niente è andato perso: saluto e data sono in **Tu**, dove un saluto ha
+     * un senso, e il conteggio sta in Libreria, che è la pagina che parla di
+     * quanti titoli hai. Il NightPicker non era cornice — era la funzione
+     * principale travestita da didascalia — ed è sceso dentro la vetrina,
+     * accanto a Riproduci.
+     */
     <div className="mx-auto flex max-w-6xl flex-col gap-9 px-4 py-6 sm:px-6 sm:py-10">
-      <div>
-        <p className="text-xs uppercase tracking-[0.2em] text-text-faint">La tua collezione</p>
-        <div className="mt-1 flex items-baseline justify-between">
-          <h1 className="font-display text-3xl font-semibold text-text sm:text-4xl">{greeting()}.</h1>
-          <span className="text-xs text-text-faint">{ready ? `${items.length} titoli` : ""}</span>
-        </div>
-        <div className="mt-1 flex items-center justify-between gap-3">
-          <p className="text-sm capitalize text-text-faint">{today}</p>
-          {ready && items.length > 0 && <NightPickerButton />}
-        </div>
-      </div>
+      {/* L'unico invito che parte da solo, e si può chiudere per sempre. */}
+      <CatalogStrip />
 
       {!ready ? (
         <>
@@ -174,9 +178,11 @@ export function Home() {
           <PosterGridSkeleton count={4} />
         </>
       ) : items.length === 0 ? (
+        /* Chi arriva qui ha attraversato o saltato il primo avvio: la scatola
+           vuota non è più il primo schermo dell'app, è una scelta fatta. */
         <EmptyState
-          title="La tua libreria è vuota"
-          description="Cerca il primo film, serie o anime: copertina, trama, cast e durata arrivano da soli."
+          title="Lo scaffale è tuo da riempire."
+          description="Cerca un film o una serie che hai visto: copertina, trama, cast e durata arrivano da soli."
           action={
             <button
               type="button"
