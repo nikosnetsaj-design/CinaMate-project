@@ -10,6 +10,7 @@ import { PosterArt } from "../components/PosterArt";
 import { EmptyState } from "../components/EmptyState";
 import { UpcomingBoard } from "../components/UpcomingBoard";
 import { NaturalSearch } from "../components/NaturalSearch";
+import { MoodPicker } from "../components/MoodPicker";
 
 const FEEDS: { id: DiscoverFeed; title: string; why: string }[] = [
   { id: "trending", title: "Di cosa si parla", why: "I film più visti questa settimana nel mondo" },
@@ -132,6 +133,15 @@ export function Discover() {
               : "Le date che ti riguardano: nuovi episodi delle serie che segui e film che aspetti."}
         </p>
       </div>
+
+      {/*
+        Sopra il controllo della chiave di proposito: la scoperta per stato
+        d'animo legge la libreria che hai già e non tocca la rete. Metterla
+        dentro il ramo protetto l'avrebbe nascosta proprio a chi non ha ancora
+        una chiave TMDB — cioè a chi ha più bisogno di una via d'ingresso che
+        funzioni subito.
+      */}
+      <MoodPicker />
 
       {!tmdbApiKey ? (
         <EmptyState

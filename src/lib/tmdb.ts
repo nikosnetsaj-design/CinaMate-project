@@ -1,5 +1,7 @@
 import type { Kind } from "../types";
 import { logError } from "./errorLog";
+import { TokenBucket } from "./rateLimit";
+import { TieredCache, TTL } from "./persistentCache";
 
 const BASE = "https://api.themoviedb.org/3";
 const IMG_BASE = "https://image.tmdb.org/t/p";
@@ -80,6 +82,21 @@ export class TmdbAbortError extends Error {
   }
 }
 
+/**
+ * Il contingentamento delle richieste uscenti.
+ *
+ * Venti di raffica e dieci al secondo a regime: i numeri sono scelti per non
+ * farsi sentire nel caso normale — aprire la Home o una scheda costa una
+ * dozzina di chiamate, che passano tutte senza un millisecondo di attesa — e
+ * per farsi sentire eccome sull'unico caso che può degenerare, la passata di
+ * collegamento automatico su una libreria intera.
+ *
+ * Il secchio è unico per tutto il modulo perché unico è il server dall'altra
+ * parte: contarle per pagina o per componente lascerebbe passare esattamente le
+ * raffiche che questo deve fermare.
+ */
+const bucket = new TokenBucket(20, 10);
+
 /** Quanti tentativi in più dopo il primo, prima di arrendersi. */
 const MAX_RETRIES = 3;
 /** L'attesa iniziale, che raddoppia a ogni tentativo: 500, 1000, 2000 ms. */
@@ -156,6 +173,12 @@ async function tmdbGet<T>(
    * trasforma un limite temporaneo in un ritardo invece che in un dato perso.
    */
   for (let attempt = 0; ; attempt++) {
+    // Il gettone si prende a ogni giro, ritentativi compresi: un tentativo
+    // dopo un 429 è una richiesta come le altre, e non contarla vorrebbe dire
+    // che proprio quando il server ci ha chiesto di rallentare noi smettiamo
+    // di contare.
+    await bucket.take(signal, () => new TmdbAbortError());
+
     let response: Response;
     try {
       response = await fetch(url.toString(), { signal });
@@ -489,13 +512,15 @@ function toProviders(raw: RawProviderEntry[] | undefined): TmdbWatchProvider[] {
  * riapre di continuo: senza cache ogni apertura era una chiamata in rete per
  * riavere la stessa risposta.
  */
-const watchCache = new Map<string, { at: number; info: TmdbWatchInfo }>();
-const WATCH_TTL_MS = 6 * 60 * 60 * 1000;
-
+/**
+ * Dove si guarda un titolo. Ventiquattro ore come gli altri metadati: un
+ * catalogo di streaming cambia, ma non nel giro di una sessione.
+ */
+const watchCache = new TieredCache<TmdbWatchInfo>("dove", TTL.metadata);
 export async function getWatchProviders(tmdbId: number, mediaType: "movie" | "tv", apiKey: string): Promise<TmdbWatchInfo> {
   const key = `${mediaType}:${tmdbId}`;
-  const hit = watchCache.get(key);
-  if (hit && Date.now() - hit.at < WATCH_TTL_MS) return hit.info;
+  const hit = await watchCache.get(key);
+  if (hit) return hit;
 
   const providers = await tmdbGet<RawProvidersResponse>(`/${mediaType}/${tmdbId}/watch/providers`, apiKey).catch(
     () => ({ results: {} }) as RawProvidersResponse,
@@ -508,11 +533,25 @@ export async function getWatchProviders(tmdbId: number, mediaType: "movie" | "tv
     buy: toProviders(it?.buy),
     link: it?.link ?? null,
   };
-  watchCache.set(key, { at: Date.now(), info });
+  watchCache.set(key, info);
   return info;
 }
 
+/**
+ * La scheda completa di un titolo, con TTL di 24 ore su disco.
+ *
+ * È la chiamata più pesante del client — porta con sé cast, video,
+ * raccomandazioni e classificazioni — e fino a ieri era anche l'unica senza
+ * alcuna cache: riaprire la stessa scheda due volte la riscaricava due volte,
+ * e la passata di collegamento automatico la rifaceva da capo a ogni avvio.
+ */
+const detailsCache = new TieredCache<TmdbDetails>("dettagli", TTL.metadata);
+
 export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiKey: string): Promise<TmdbDetails> {
+  const cacheKey = `${mediaType}:${tmdbId}`;
+  const cached = await detailsCache.get(cacheKey);
+  if (cached) return cached;
+
   const details = await tmdbGet<RawDetails>(`/${mediaType}/${tmdbId}`, apiKey, {
     append_to_response:
       mediaType === "movie"
@@ -532,7 +571,7 @@ export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiK
     (v) => v.site === "YouTube" && v.type === "Trailer" && v.official,
   ) || (details.videos?.results ?? []).find((v) => v.site === "YouTube" && v.type === "Trailer");
 
-  return {
+  const result: TmdbDetails = {
     tmdbId: details.id,
     title: details.title || details.name || "",
     year: dateStr ? Number(dateStr.slice(0, 4)) : null,
@@ -572,6 +611,9 @@ export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiK
     audioLangs: details.spoken_languages?.map((l) => l.iso_639_1).filter(Boolean) ?? [],
     certification: readCertification(details, mediaType),
   };
+
+  detailsCache.set(cacheKey, result);
+  return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -744,12 +786,15 @@ const FEED_PATH: Record<DiscoverFeed, string> = {
 };
 
 // Catalogue rows change at most daily; a session should never fetch one twice.
-const feedCache = new Map<DiscoverFeed, { at: number; rows: TmdbSearchResult[] }>();
-const FEED_TTL_MS = 3 * 60 * 60 * 1000;
+/**
+ * Tendenze, uscite, "al cinema ora". Tre ore, perché questi si muovono davvero
+ * — ma su disco: aprire l'app due volte di seguito non deve riscaricarli.
+ */
+const feedCache = new TieredCache<TmdbSearchResult[]>("catalogo", TTL.feed);
 
 export async function getFeed(feed: DiscoverFeed, apiKey: string): Promise<TmdbSearchResult[]> {
-  const hit = feedCache.get(feed);
-  if (hit && Date.now() - hit.at < FEED_TTL_MS) return hit.rows;
+  const hit = await feedCache.get(feed);
+  if (hit) return hit;
 
   const isTv = feed === "trendingTv";
   const params: Record<string, string> = { page: "1" };
@@ -775,7 +820,7 @@ export async function getFeed(feed: DiscoverFeed, apiKey: string): Promise<TmdbS
     })
     .filter((r) => r.title);
 
-  feedCache.set(feed, { at: Date.now(), rows });
+  feedCache.set(feed, rows);
   return rows;
 }
 
@@ -1002,8 +1047,8 @@ export function stillUrl(path: string | null | undefined, size: StillSize = "w30
  * per le date di uscita, e vale la pena tenerla: senza, ogni passaggio fra le
  * pastiglie delle stagioni sarebbe una chiamata in rete.
  */
-const seasonCache = new Map<string, { at: number; episodes: TmdbEpisode[] }>();
-const SEASON_TTL_MS = 6 * 60 * 60 * 1000;
+/** Gli episodi di una stagione: metadati, quindi ventiquattro ore. */
+const seasonCache = new TieredCache<TmdbEpisode[]>("stagione", TTL.metadata);
 
 export async function getSeason(
   tvId: number,
@@ -1011,8 +1056,8 @@ export async function getSeason(
   apiKey: string,
 ): Promise<TmdbEpisode[]> {
   const key = `${tvId}:${seasonNumber}`;
-  const hit = seasonCache.get(key);
-  if (hit && Date.now() - hit.at < SEASON_TTL_MS) return hit.episodes;
+  const hit = await seasonCache.get(key);
+  if (hit) return hit;
 
   const data = await tmdbGet<{ episodes?: RawEpisode[] }>(`/tv/${tvId}/season/${seasonNumber}`, apiKey);
   const episodes = (data.episodes ?? []).map((e, i) => ({
@@ -1028,7 +1073,7 @@ export async function getSeason(
     airDate: e.air_date || null,
   }));
 
-  seasonCache.set(key, { at: Date.now(), episodes });
+  seasonCache.set(key, episodes);
   return episodes;
 }
 
@@ -1080,10 +1125,15 @@ export function cleanSagaName(name: string): string {
     .trim() || name;
 }
 
-const collectionCache = new Map<number, TmdbSaga>();
+/**
+ * I capitoli di una saga. Sette giorni: «Il Padrino 1-2-3» non cambia, e
+ * quando cambia (un capitolo nuovo annunciato) una settimana di ritardo su una
+ * notizia del genere non è un danno.
+ */
+const collectionCache = new TieredCache<TmdbSaga>("saga", TTL.static);
 
 export async function getSaga(collectionId: number, apiKey: string): Promise<TmdbSaga> {
-  const hit = collectionCache.get(collectionId);
+  const hit = await collectionCache.get(String(collectionId));
   if (hit) return hit;
 
   const raw = await tmdbGet<RawCollection>(`/collection/${collectionId}`, apiKey);
@@ -1111,7 +1161,7 @@ export async function getSaga(collectionId: number, apiKey: string): Promise<Tmd
     backdropPath: raw.backdrop_path ?? null,
     parts,
   };
-  collectionCache.set(collectionId, saga);
+  collectionCache.set(String(collectionId), saga);
   return saga;
 }
 
@@ -1203,7 +1253,8 @@ function byRecency(a: TmdbPersonCredit, b: TmdbPersonCredit): number {
 }
 
 const personIdCache = new Map<string, number | null>();
-const personCache = new Map<number, TmdbPerson>();
+/** La scheda di una persona: filmografia e biografia, sette giorni. */
+const personCache = new TieredCache<TmdbPerson>("persona", TTL.static);
 
 /** Resolves a name to a TMDB person id — the library stores names, not ids. */
 export async function findPersonId(name: string, apiKey: string): Promise<number | null> {
@@ -1223,7 +1274,7 @@ export async function findPersonId(name: string, apiKey: string): Promise<number
 }
 
 export async function getPerson(personId: number, apiKey: string): Promise<TmdbPerson> {
-  const hit = personCache.get(personId);
+  const hit = await personCache.get(String(personId));
   if (hit) return hit;
 
   const raw = await tmdbGet<RawPerson>(`/person/${personId}`, apiKey, {
@@ -1256,7 +1307,7 @@ export async function getPerson(personId: number, apiKey: string): Promise<TmdbP
     actingCredits: acting,
     directingCredits: uniqueDirecting,
   };
-  personCache.set(personId, person);
+  personCache.set(String(personId), person);
   return person;
 }
 

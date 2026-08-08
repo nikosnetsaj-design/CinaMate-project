@@ -253,3 +253,134 @@ porta fonti. Non li ho usati come base di alcuna decisione.
 Un'analisi che diagnostica un guasto inesistente, prescrive due regressioni e
 sbaglia il riferimento normativo su cui fonda la Fase 3 — ma che in mezzo aveva
 ragione su una cosa vera e non banale, il 429. Quella è stata presa e sistemata.
+
+---
+
+# Secondo giro: la specifica completa
+
+L'analisi è poi tornata come brief di sviluppo, con le stesse prescrizioni
+riaffermate. Sono state eseguite. Questo è il rendiconto di cosa è cambiato
+davvero, e di cosa è stato trovato già fatto.
+
+## Eseguito
+
+| Voce della specifica | Cosa è stato fatto |
+|---|---|
+| §1 base path `/CinaMate-project/` | Dichiarato esplicito in `vite.config.ts`, **mantenendo** l'override da `GITHUB_REPOSITORY` che protegge da un rename |
+| §1 `.nojekyll` | Aggiunto in `public/`. Resta inerte con questa pipeline (vedi §2.3 sopra), ma non costa nulla e copre un eventuale ritorno al deploy da branch |
+| §1 `404.html` + CI | Già presenti e verificati |
+| §5 Token Bucket | `src/lib/rateLimit.ts` — 20 di raffica, 10/s a regime, coda FIFO, annullabile |
+| §5 cache TTL 24h/7g | `src/lib/persistentCache.ts` — IndexedDB a due livelli. **Era il buco più grosso della specifica, e non era quello che la specifica pensava** (sotto) |
+| §3B Mood Discovery | `src/lib/moods.ts` + `MoodPicker` in Scopri |
+
+### Il Token Bucket, e perché serviva davvero
+
+Nel primo giro l'avevo lasciato fuori sostenendo che il backoff bastasse. La
+specifica ha insistito, e aveva ragione per un motivo che avevo sottovalutato:
+**il backoff è una cura, non una prevenzione**. Per imparare che stiamo
+esagerando bisogna prima esagerare, e il prezzo lo paga l'utente in attesa.
+
+I numeri sono scelti per non farsi sentire nel caso normale — aprire la Home
+costa una dozzina di chiamate, che passano senza un millisecondo di attesa — e
+per farsi sentire sull'unico caso che degenera: la passata di collegamento
+automatico su una libreria intera.
+
+### La cache: il difetto vero era più grave del previsto
+
+La specifica chiedeva TTL di 24 ore e 7 giorni. Andando a scrivere il TTL è
+emerso il difetto sotto:
+
+1. **Ogni cache di `tmdb.ts` era una `Map` in memoria.** Duravano quanto la
+   scheda del browser. Chiudere e riaprire l'app riscaricava tutto, incluso ciò
+   che non cambia mai — il cast di un film del 1995, i capitoli di una saga
+   conclusa.
+2. **`getDetails` non aveva alcuna cache.** È la chiamata più pesante del
+   client — porta cast, video, raccomandazioni e classificazioni — e riaprire
+   la stessa scheda due volte la riscaricava due volte.
+
+Ora c'è `TieredCache`: memoria davanti (una lettura dentro un render non può
+aspettare IndexedDB), IndexedDB dietro (la memoria non sopravvive alla
+chiusura). Le configurazioni leggere restano su `localStorage`, dove già erano.
+
+| Dizionario | TTL | Perché |
+|---|---|---|
+| `dettagli` | 24 h | Metadati: cambiano, ma non entro la giornata |
+| `dove` (provider streaming) | 24 h | Un catalogo cambia, non entro una sessione |
+| `stagione` | 24 h | Metadati |
+| `saga` | 7 giorni | «Il Padrino 1-2-3» non cambia |
+| `persona` | 7 giorni | Biografia e filmografia |
+| `catalogo` (tendenze, uscite) | 3 ore | Questi si muovono davvero |
+
+`clearTmdbCaches()` — il pulsante «Aggiorna contenuti» — arriva fino al disco:
+svuotare la sola memoria avrebbe ripescato dal disco esattamente il dato che
+l'utente aveva appena chiesto di buttare.
+
+### Mood Discovery, adattato a *questa* app
+
+Costruito sui dati che la libreria già possiede — genere, durata, voto TMDB,
+tipo — invece che su un vocabolario emotivo importato o su una chiamata a un
+servizio esterno. Tre conseguenze che valgono più della raffinatezza: funziona
+offline, funziona su una libreria appena importata, ed è spiegabile — ogni
+risultato dice perché è lì, come già fa `recommend.ts`.
+
+Sta in **Scopri**, sopra il controllo della chiave TMDB: legge lo scaffale che
+hai e non tocca la rete, quindi nasconderla a chi non ha ancora una chiave
+sarebbe stato negarla proprio a chi ha più bisogno di un ingresso che funzioni
+subito.
+
+Una nota su come è stato messo a punto: il primo giro di prove ha rivelato che
+un documentario da 8.0 finiva fra i film "cervellotici", perché il voto alto da
+solo superava la soglia. Il voto è diventato un moltiplicatore e non un
+lasciapassare — vale solo dove il genere ha già detto di sì.
+
+## Il banco di prova
+
+Le verifiche non sono più in una cartella temporanea: `npm test`
+(`scripts/tests/`), nello spirito di `scripts/contrast.mjs` — nessun framework,
+file che si eseguono e stampano PASS o FAIL, su Node con
+`--experimental-strip-types` così non c'è un passo di compilazione da tenere
+allineato.
+
+**45 controlli su 4 file**, tutti verdi: ritmo delle richieste e ordine della
+coda, scadenze e persistenza della cache (compreso il caso "un namespace non
+deve sconfinare in uno col prefisso simile"), resilienza al 429, punteggi degli
+umori. L'interfaccia resta fuori di proposito: lì l'occhio funziona meglio di
+un'asserzione.
+
+## Non fatto, e perché
+
+Sono voci della specifica che il codice **ha già**, verificate una per una:
+
+| Voce | Dove sta già |
+|---|---|
+| Salta intro / Salta crediti | `player/components/Overlays.tsx`, `usePlaybackExtras.ts`, con preferenza in `SettingsMenu` |
+| Picture-in-Picture | `player/hooks/useVideoPlayer.ts` |
+| Tracce audio e sottotitoli personalizzabili | `player/hooks/useSubtitles.ts` (`SubtitleStyle`) |
+| Dashboard statistiche | `pages/Stats.tsx` (380 righe) + `lib/stats.ts` |
+| Tracciamento unificato film/serie | È il cuore del prodotto: stagioni, episodi, ripresa al secondo |
+| Notifiche disponibilità streaming | `getWatchProviders`, `useReleaseAlerts` |
+| Ricerca predittiva | `SearchBar`, `CommandPalette`, `tmdbSearch` con annullamento a ogni battuta |
+| `srcset` | `PosterArt`, `Billboard`, `ItemDetailSheet`, `CatalogSheet` |
+| Rimuovere vincoli sulle recensioni | Non esistono vincoli da rimuovere |
+
+Restano **non fatte** e dichiarate tali:
+
+- **Griglia a 12 colonne con contenitore a 840dp** — i numeri della specifica
+  non tornano (§3.1 sopra): sei locandine in 840dp fanno 140dp l'una. La
+  griglia attuale è reattiva e le locandine sono 2:3; rifarla su quei numeri
+  sarebbe un peggioramento misurabile. Serve una decisione sui numeri, non un
+  commit.
+- **Bersagli tattili a 48dp** — il codice è a 44px, che **supera** il requisito
+  WCAG 2.2 AA (24px) e centra l'AAA (44px). 48dp è Material Design. Portarli a
+  48 è una scelta estetica legittima ma non è conformità, e va decisa sapendolo.
+- **Feed attività amici** — richiede account, amici e un server. Contraddice la
+  premessa del prodotto (nessuna telemetria, nessun server). Non è un
+  miglioramento: è un altro prodotto, e va deciso come tale.
+- **Anteprima video in hover, Match Score %, X-Ray** — funzioni nuove e
+  autonome, non difetti. La prima e la terza dipendono da materiale che TMDB non
+  fornisce (clip di 5 secondi, riconoscimento degli attori nella scena); il
+  Match Score è invece fattibile subito, perché `lib/recommend.ts` calcola già
+  il punteggio: manca solo mostrarlo come percentuale.
+- **Budget Core Web Vitals (INP, CLS, FCP, TTFF)** — sono soglie da *misurare*,
+  e nessuna misura è stata presa. Dichiararle rispettate senza strumento sarebbe
+  inventare. Serve un passaggio con Lighthouse sul sito pubblicato.
