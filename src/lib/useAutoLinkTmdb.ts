@@ -1,10 +1,29 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLibrary } from "../store/useLibrary";
 import { useSettings } from "../store/useSettings";
-import { getDetails, searchTitles } from "./tmdb";
+import { getDetails, searchTitles, TmdbApiError } from "./tmdb";
 import type { Item } from "../types";
 
 const DELAY_MS = 300;
+
+/**
+ * Quanto aspettare prima di riprovare, quando la passata si ferma perché TMDB
+ * sta limitando il traffico. Il client ritenta già da solo con attese
+ * crescenti: se nonostante quello arriva ancora un rifiuto, il problema non si
+ * risolve in centinaia di millisecondi e insistere subito significherebbe solo
+ * bruciare l'intera libreria contro un muro.
+ */
+const COOLDOWN_MS = 60_000;
+
+/**
+ * Distingue "questo titolo non esiste su TMDB" da "ora non si può chiedere".
+ * È la distinzione che decide se un titolo va segnato come già tentato: il
+ * primo caso è una risposta definitiva, il secondo è un rinvio.
+ */
+function isTemporary(e: unknown): boolean {
+  if (e instanceof TmdbApiError) return e.status === 429 || e.status === undefined || e.status >= 500;
+  return false;
+}
 
 // Module scope on purpose: this is a background sync against a global store,
 // not component state. Keeping the guard outside React means a remount (React
@@ -75,10 +94,15 @@ export function useAutoLinkTmdb() {
   const items = useLibrary((s) => s.items);
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
   const pendingCount = items.filter((i) => needsSync(i) && !attempted.has(i.id)).length;
+  // Il contatore serve solo a far ripartire la passata dopo una pausa: senza,
+  // fermarsi per un limite di traffico vorrebbe dire fermarsi fino al prossimo
+  // cambiamento della libreria, cioè quasi sempre fino al ricaricamento.
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
     if (!tmdbApiKey || pendingCount === 0 || running) return;
     running = true;
+    let cooldown: number | null = null;
 
     void (async () => {
       try {
@@ -99,9 +123,20 @@ export function useAutoLinkTmdb() {
               const details = await getDetails(target.tmdbId, target.mediaType, tmdbApiKey);
               useLibrary.getState().updateItem(next.id, fillGaps(next, details, target.mediaType));
             }
-          } catch {
-            // Offline, rate limited or an unmatchable title: skip it rather
-            // than spinning. A reload retries everything still unlinked.
+          } catch (e) {
+            if (isTemporary(e)) {
+              // Il titolo non ha colpe: torna in coda invece di restare
+              // segnato come già tentato, altrimenti un limite passeggero gli
+              // costerebbe la copertina fino al ricaricamento. E la passata si
+              // ferma qui — se TMDB sta rifiutando, i titoli dopo questo
+              // troverebbero lo stesso muro, uno per uno.
+              attempted.delete(next.id);
+              cooldown = window.setTimeout(() => setRetry((n) => n + 1), COOLDOWN_MS);
+              break;
+            }
+            // Un titolo che TMDB non conosce resta segnato: ritentarlo a ogni
+            // giro sarebbe un ciclo senza uscita. Il pulsante manuale nella
+            // scheda resta la via di scampo.
           }
           await new Promise((r) => setTimeout(r, DELAY_MS));
         }
@@ -109,7 +144,11 @@ export function useAutoLinkTmdb() {
         running = false;
       }
     })();
-  }, [tmdbApiKey, pendingCount]);
+
+    return () => {
+      if (cooldown) clearTimeout(cooldown);
+    };
+  }, [tmdbApiKey, pendingCount, retry]);
 }
 
 /** Lets a fresh key retry titles this session already gave up on. */
