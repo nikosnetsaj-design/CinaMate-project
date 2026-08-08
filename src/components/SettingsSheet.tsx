@@ -14,7 +14,8 @@ import { usePlayerPrefs } from "../store/usePlayerPrefs";
 import { useGoals } from "../store/useGoals";
 import { useTheme } from "../store/useTheme";
 import { useTvMode, type TvPreference } from "../store/useTvMode";
-import { useHomeLayout, HOME_SECTIONS } from "../store/useHomeLayout";
+import { useHomeLayout, HOME_SECTIONS, MAX_ROWS } from "../store/useHomeLayout";
+import { useOnboarding } from "../store/useOnboarding";
 import { ACCENTS } from "../lib/accents";
 import { ParentalSettings } from "./ParentalSettings";
 import { LinkHostSettings } from "./LinkHostSettings";
@@ -180,14 +181,34 @@ function HomeLayoutSettings() {
   const move = useHomeLayout((s) => s.move);
   const reset = useHomeLayout((s) => s.reset);
 
+  const shown = order.filter((id) => !hidden.includes(id)).length;
+  const full = shown >= MAX_ROWS;
+
   const byId = new Map(HOME_SECTIONS.map((s) => [s.id, s]));
 
   return (
     <div>
       <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Home</span>
-      <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
+      <p className="mb-2 text-xs leading-relaxed text-text-faint">
         Cosa vedi appena apri l'app, e in che ordine. Una riga spenta non sparisce dai dati: resta
         dove è sempre stata, semplicemente non occupa la prima schermata.
+      </p>
+      {/*
+       * Il tetto, detto invece che subìto.
+       *
+       * «Massimo 6 righe» era la regola dichiarata due volte nella
+       * documentazione e applicata in nessun punto del codice. Adesso è una
+       * costante vera — e questa riga è la parte che la rende una funzione
+       * invece di un limite: dice quante ne hai accese, e quando sono sei
+       * dice che per accenderne un'altra bisogna spegnerne una. È la
+       * decisione che la regola voleva far prendere.
+       */}
+      <p className="mb-2.5 text-xs leading-relaxed" style={{ color: full ? "var(--accent-text)" : "var(--text-faint)" }}>
+        <span className="t-numeral">
+          {shown} di {MAX_ROWS}
+        </span>{" "}
+        righe accese.{" "}
+        {full ? "È il massimo: per accenderne una, spegnine un'altra." : "Una Home corta è una Home che si legge."}
       </p>
 
       <ul className="flex flex-col gap-1.5">
@@ -229,8 +250,10 @@ function HomeLayoutSettings() {
                 type="button"
                 onClick={() => toggle(id)}
                 aria-pressed={visible}
+                // Spegnere è sempre possibile; accendere solo se c'è posto.
+                disabled={!visible && full}
                 aria-label={visible ? `Nascondi ${section.label}` : `Mostra ${section.label}`}
-                className="shrink-0 rounded-sm border border-border-strong px-2 py-1 text-xs text-text-muted"
+                className="shrink-0 rounded-sm border border-border-strong px-2 py-1 text-xs text-text-muted disabled:opacity-30"
               >
                 {visible ? "Mostra" : "Nascosta"}
               </button>
@@ -457,6 +480,7 @@ function AboutPanel() {
 
 function SettingsForm() {
   const close = useSettingsSheet((s) => s.close);
+  const replayOnboarding = useOnboarding((s) => s.replay);
   const apiKey = useSettings((s) => s.apiKey);
   const model = useSettings((s) => s.model);
   const setApiKey = useSettings((s) => s.setApiKey);
@@ -620,6 +644,18 @@ function SettingsForm() {
                 title="Aspetto"
                 subtitle="Tema chiaro o scuro e colore d'accento."
                 onClick={() => setPanel("aspetto")}
+              />
+              {/* Il primo avvio si può rivedere: è l'unico posto dell'app che
+                  si attraversa una volta sola, e l'unico modo di ritrovarlo
+                  sarebbe cancellare la libreria. */}
+              <SettingsRow
+                icon={<ReelMark size={17} />}
+                title="Rivedi il primo avvio"
+                subtitle="Le quattro schermate di benvenuto, compresa la chiave del catalogo."
+                onClick={() => {
+                  close();
+                  replayOnboarding();
+                }}
               />
               <SettingsRow
                 icon={<HomeIcon size={17} />}

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { Nav } from "./components/Nav";
 import { ToastStack } from "./components/ToastStack";
 import { CommandPalette } from "./components/CommandPalette";
@@ -15,6 +15,8 @@ import { ResumePrompt } from "./components/ResumePrompt";
 import { IncomingShare } from "./components/IncomingShare";
 import { UpdatePrompt } from "./components/UpdatePrompt";
 import { WebViewer } from "./components/WebViewer";
+import { Onboarding } from "./components/Onboarding";
+import { MiniPlayerBar } from "./components/MiniPlayerBar";
 import { useOnline } from "./lib/useOnline";
 import { useTheme } from "./store/useTheme";
 import { applyAccent } from "./lib/accents";
@@ -28,8 +30,7 @@ import { Library } from "./pages/Library";
 import { Sagas } from "./pages/Sagas";
 import { Discover } from "./pages/Discover";
 import { Search } from "./pages/Search";
-import { Stats } from "./pages/Stats";
-import { Profile } from "./pages/Profile";
+import { Tu } from "./pages/Tu";
 import { Critic } from "./pages/Critic";
 import { useWatchProgressSync } from "./store/useWatchProgress";
 
@@ -68,8 +69,10 @@ function OfflineBanner() {
       className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-4 py-2 text-xs text-text-muted sm:px-6"
     >
       <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "var(--danger)" }} />
-      Sei offline: la tua libreria funziona tutta, ma la ricerca su TMDB, le copertine nuove e il
-      critico restano in attesa della connessione.
+      {/* Erano 28 parole, e due delle tre cose che nominavano — «TMDB», «il
+          critico» — non dicono niente a chi legge nel momento in cui legge.
+          Quello che serve sapere è che la libreria non si è rotta. */}
+      Sei offline. La libreria funziona tutta; copertine e ricerca tornano con la rete.
     </div>
   );
 }
@@ -141,8 +144,14 @@ export default function App() {
             <Route path="/saghe" element={<Sagas />} />
             <Route path="/scopri" element={<Discover />} />
             <Route path="/cerca" element={<Search />} />
-            <Route path="/dati" element={<Stats />} />
-            <Route path="/profilo" element={<Profile />} />
+            <Route path="/tu" element={<Tu />} />
+            {/* I due vecchi indirizzi restano vivi e portano dove è finito il
+                loro contenuto: erano nella barra per mesi, quindi stanno nella
+                cronologia dei browser e nelle scorciatoie sulla schermata
+                Home. Un indirizzo che qualcuno ha salvato non si spegne, si
+                inoltra. */}
+            <Route path="/dati" element={<Navigate to="/tu" replace />} />
+            <Route path="/profilo" element={<Navigate to="/tu" replace />} />
             <Route path="/critico" element={<Critic />} />
             <Route
               path="/diagnostica"
@@ -176,6 +185,12 @@ export default function App() {
         </main>
       </div>
       <ToastStack />
+      {/* Sopra la barra di navigazione e sotto i fogli: è la riga che dice
+          cosa sta suonando, e da cui si rientra nel lettore. Ha preso il
+          posto della voce «Player» in barra — un lettore che ha una scheda
+          fra le destinazioni è una pagina, uno che ha una riga viva è
+          un'applicazione. */}
+      <MiniPlayerBar />
       <CommandPalette />
       <ItemDetailSheetPortal />
       <CatalogSheetPortal />
@@ -188,6 +203,10 @@ export default function App() {
       <NextChapterPrompt />
       <IncomingShare />
       <UpdatePrompt />
+      {/* Il primo minuto. Sta in fondo perché copre tutto il resto, e si
+          mostra da sé solo a libreria vuota: chi ha già uno scaffale ha
+          superato questo passaggio molto tempo fa. */}
+      <Onboarding />
       {/* In fondo a tutto e fuori da ogni rotta: il Web Viewer si apre dalle
           Impostazioni, dal player e dalla scheda di un titolo, e da qualunque
           punto parta deve coprire lo schermo intero senza portarsi via la

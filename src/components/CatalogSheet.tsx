@@ -10,7 +10,7 @@ import { useCatalogPreview, type CatalogTarget } from "../store/useCatalogPrevie
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useLibrary } from "../store/useLibrary";
 import { useSettings } from "../store/useSettings";
-import { useSettingsSheet } from "../store/useSettingsSheet";
+import { CatalogNote } from "./NeedsCatalog";
 import { PosterArt } from "./PosterArt";
 import { CastRow } from "./CastRow";
 import { TitleFacts } from "./TitleFacts";
@@ -78,7 +78,6 @@ function previewItem(target: CatalogTarget, details: TmdbDetails | null): Item {
 function CatalogDetail({ target }: { target: CatalogTarget }) {
   const close = useCatalogPreview((s) => s.close);
   const openItem = useSelectedItem((s) => s.open);
-  const openSettings = useSettingsSheet((s) => s.open);
   const items = useLibrary((s) => s.items);
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
   const { add, adding } = useAddFromCatalog(close);
@@ -240,12 +239,9 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
         )}
 
         {!tmdbApiKey && (
-          <p className="mt-3 text-xs leading-relaxed text-text-faint">
-            Trama, cast e disponibilità arrivano da TMDB: serve la tua chiave.
-            <button type="button" onClick={() => openSettings("chiavi")} className="ml-1.5 underline underline-offset-2">
-              Aggiungila in Impostazioni
-            </button>
-          </p>
+          <div className="mt-3">
+            <CatalogNote what="Trama, cast e disponibilità arrivano da TMDB." />
+          </div>
         )}
         {error && <p className="mt-3 text-sm text-text-muted">{error}</p>}
 

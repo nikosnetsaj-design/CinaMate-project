@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSettings } from "../store/useSettings";
+import { CatalogNote } from "./NeedsCatalog";
 import { useWatchSession } from "../store/useWatchSession";
 import { getWatchProviders, providerLogoUrl, type TmdbWatchInfo, type TmdbWatchProvider } from "../lib/tmdb";
 import { serviceLinkFor } from "../lib/deepLinks";
@@ -158,16 +159,18 @@ function WatchProviders({ item }: { item: Item }) {
           alta — «dove lo guardo?» — e merita lo stesso peso di «Regia e
           troupe» o «Dati finanziari», che le stanno sotto. */}
       <h3 className="mb-2.5 font-display text-lg font-semibold text-text">Dove guardarlo</h3>
-      {linked && !tmdbApiKey && (
-        <p className="text-xs text-text-faint">Aggiungi la tua chiave TMDB nelle Impostazioni per vedere la disponibilità.</p>
-      )}
+      {linked && !tmdbApiKey && <CatalogNote what="Dove danno un titolo lo sa TMDB." />}
       {linked && tmdbApiKey && state === "busy" && (
         <div className="flex items-center gap-2 text-xs text-text-faint">
           <span className="spinner h-3.5 w-3.5 rounded-full border-2" style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }} />
           Verifico su TMDB…
         </div>
       )}
-      {linked && tmdbApiKey && state === "error" && <p className="text-xs text-text-faint">Non disponibile al momento.</p>}
+      {/* «Non disponibile» sembrava dire che il film non c'è. La cosa che
+          manca è la nostra informazione, non il titolo. */}
+      {linked && tmdbApiKey && state === "error" && (
+        <p className="text-xs text-text-faint">Non so dove danno questo titolo.</p>
+      )}
       {linked && tmdbApiKey && state === "done" && providers.length === 0 && (
         <p className="text-xs text-text-faint">Non risulta disponibile in Italia al momento.</p>
       )}

@@ -2,13 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Sheet } from "./Sheet";
 import { PosterArt } from "./PosterArt";
+import { CatalogBlock } from "./NeedsCatalog";
 import { TitlePreview } from "./TitlePreview";
 import { useAddSheet } from "../store/useAddSheet";
 import { useEditSheet } from "../store/useEditSheet";
 import { useLibrary } from "../store/useLibrary";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useSettings } from "../store/useSettings";
-import { useSettingsSheet } from "../store/useSettingsSheet";
 import { MissingTmdbKeyError, TmdbAbortError, TmdbApiError, type TmdbDetails, type TmdbSearchResult } from "../lib/tmdb";
 import { searchTitlesForgiving } from "../lib/tmdbSearch";
 import { matchQuality } from "../lib/search";
@@ -25,7 +25,6 @@ function AddItemForm() {
   const prefillTitle = useAddSheet((s) => s.prefillTitle);
   const openNew = useEditSheet((s) => s.openNew);
   const openItem = useSelectedItem((s) => s.open);
-  const openSettingsSheet = useSettingsSheet((s) => s.open);
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
   const items = useLibrary((s) => s.items);
   const titleId = "add-sheet-title";
@@ -213,24 +212,7 @@ function AddItemForm() {
               </section>
             )}
 
-            {missingKey && (
-              <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-border-strong px-4 py-8 text-center">
-                <p className="text-sm text-text-muted">
-                  Per cercare titoli con copertine reali serve una chiave API TMDB gratuita, salvata solo su questo
-                  dispositivo. Si ottiene in pochi minuti su themoviedb.org.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    close();
-                    openSettingsSheet();
-                  }}
-                  className="rounded-sm border border-border-strong px-4 py-2 text-sm font-medium text-text hover:bg-surface-hover"
-                >
-                  Aggiungi la tua chiave nelle Impostazioni
-                </button>
-              </div>
-            )}
+            {missingKey && <CatalogBlock />}
 
             {/* Said out loud, because these answer a question slightly different
                 from the one that was asked. */}
