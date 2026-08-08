@@ -80,6 +80,60 @@ export class TmdbAbortError extends Error {
   }
 }
 
+/** Quanti tentativi in più dopo il primo, prima di arrendersi. */
+const MAX_RETRIES = 3;
+/** L'attesa iniziale, che raddoppia a ogni tentativo: 500, 1000, 2000 ms. */
+const BASE_RETRY_MS = 500;
+/**
+ * Il tetto all'attesa. TMDB può chiedere di rientrare fra un minuto: rispettarlo
+ * alla lettera vorrebbe dire lasciare una schermata a girare per un minuto, che
+ * è peggio del fallimento. Oltre il tetto si preferisce fallire e lasciare che
+ * sia un gesto dell'utente a riprovare.
+ */
+const MAX_RETRY_MS = 8_000;
+
+/**
+ * Gli stati che vale la pena ritentare: il traffico (429) e i guasti
+ * temporanei del server. Un 401 è una chiave sbagliata e un 404 è una risposta
+ * ordinaria — ritentarli sarebbe solo un modo più lento di dare la stessa
+ * notizia.
+ */
+function isTransient(status: number): boolean {
+  return status === 429 || (status >= 500 && status < 600);
+}
+
+function retryDelay(attempt: number, retryAfter: string | null): number {
+  // Quando TMDB limita, dice anche per quanto. Se lo dice, quel numero vince su
+  // qualsiasi stima nostra: è l'unico che conosce il proprio contatore.
+  const stated = Number(retryAfter);
+  if (retryAfter && Number.isFinite(stated) && stated >= 0) return Math.min(stated * 1000, MAX_RETRY_MS);
+  const backoff = Math.min(BASE_RETRY_MS * 2 ** attempt, MAX_RETRY_MS);
+  // Il jitter non è un vezzo: le richieste che vengono fermate insieme sono
+  // quelle partite insieme (la rassegna «In arrivo» ne manda una per titolo).
+  // Senza una componente casuale ripartirebbero anch'esse insieme, ricreando
+  // esattamente la raffica che ha causato il limite.
+  return backoff / 2 + Math.random() * (backoff / 2);
+}
+
+/** Un'attesa che si interrompe se la richiesta viene annullata nel frattempo. */
+function wait(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new TmdbAbortError());
+      return;
+    }
+    const onAbort = () => {
+      clearTimeout(timer);
+      reject(new TmdbAbortError());
+    };
+    const timer = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
+}
+
 async function tmdbGet<T>(
   path: string,
   apiKey: string,
@@ -92,30 +146,57 @@ async function tmdbGet<T>(
   url.searchParams.set("language", "it-IT");
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
 
-  let response: Response;
-  try {
-    response = await fetch(url.toString(), { signal });
-  } catch (e) {
-    // A cancelled request is not a failure: search-as-you-type abandons one on
-    // every keystroke, and logging those would fill the error page with noise
-    // and show the user a network error for a request nobody was waiting for.
-    if (signal?.aborted || (e instanceof DOMException && e.name === "AbortError")) throw new TmdbAbortError();
-    // Logged as well as thrown: much of this runs in the background linker,
-    // where the throw is swallowed on purpose so one unmatchable title doesn't
-    // stop the pass — and the failure would otherwise leave no trace anywhere.
-    logError("tmdb", "Connessione a TMDB non riuscita", path);
-    throw new TmdbApiError("Connessione a TMDB non riuscita. Controlla la rete e riprova.");
-  }
-  if (!response.ok) {
+  /**
+   * Il ciclo esiste per una ragione sola: un 429 non è un difetto del titolo,
+   * è il server che chiede di rallentare. Prima veniva trattato come qualsiasi
+   * altro rifiuto, e siccome ogni chiamante qui sopra ingoia l'errore per non
+   * fermare la propria passata, il limite si traduceva in un buco silenzioso —
+   * un titolo che resta senza copertina fino al ricaricamento, una riga «In
+   * arrivo» più corta del vero. Ritentare con un'attesa crescente è ciò che
+   * trasforma un limite temporaneo in un ritardo invece che in un dato perso.
+   */
+  for (let attempt = 0; ; attempt++) {
+    let response: Response;
+    try {
+      response = await fetch(url.toString(), { signal });
+    } catch (e) {
+      // A cancelled request is not a failure: search-as-you-type abandons one on
+      // every keystroke, and logging those would fill the error page with noise
+      // and show the user a network error for a request nobody was waiting for.
+      if (signal?.aborted || (e instanceof DOMException && e.name === "AbortError")) throw new TmdbAbortError();
+      // Un errore di rete non si ritenta: quasi sempre è "sei offline", e tre
+      // tentativi silenziosi ritarderebbero di secondi una notizia che è già
+      // certa. Il traffico è un'altra cosa, e si ritenta più sotto.
+      //
+      // Logged as well as thrown: much of this runs in the background linker,
+      // where the throw is swallowed on purpose so one unmatchable title doesn't
+      // stop the pass — and the failure would otherwise leave no trace anywhere.
+      logError("tmdb", "Connessione a TMDB non riuscita", path);
+      throw new TmdbApiError("Connessione a TMDB non riuscita. Controlla la rete e riprova.");
+    }
+
+    if (response.ok) return (await response.json()) as T;
+
+    if (isTransient(response.status) && attempt < MAX_RETRIES) {
+      // `wait` propaga l'annullamento: una ricerca abbandonata a metà attesa
+      // non deve restare appesa per il backoff di una richiesta che non
+      // interessa più a nessuno.
+      await wait(retryDelay(attempt, response.headers.get("retry-after")), signal);
+      continue;
+    }
+
     // A 404 is an ordinary answer here ("this title isn't on TMDB") rather
     // than a fault, so it stays out of the log — filling the page with those
     // would bury the failures worth reading.
     if (response.status !== 404) logError("tmdb", `HTTP ${response.status}`, path);
     if (response.status === 401) throw new TmdbApiError("Chiave API TMDB non valida.", 401);
     if (response.status === 404) throw new TmdbApiError("Titolo non trovato su TMDB.", 404);
+    // Il 429 sopravvissuto ai tentativi merita di dirlo con parole sue: chi
+    // legge deve capire che non c'è niente di rotto e che basta aspettare.
+    if (response.status === 429)
+      throw new TmdbApiError("TMDB sta limitando le richieste. Riprova fra qualche istante.", 429);
     throw new TmdbApiError(`Richiesta TMDB rifiutata (HTTP ${response.status}).`, response.status);
   }
-  return (await response.json()) as T;
 }
 
 export type PosterSize = "w92" | "w154" | "w185" | "w342" | "w500" | "w780";
