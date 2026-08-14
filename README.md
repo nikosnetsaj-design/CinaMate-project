@@ -784,6 +784,23 @@ lettore**: il tuo server manda già CORS e non ha nessun bisogno di un
 intermediario, e un salto di rete in più su una richiesta che sarebbe riuscita è
 solo tempo perso. Il lettore è il ripiego, non la strada maestra.
 
+Se non ne hai uno, la ricetta completa — un Cloudflare Worker, piano gratuito,
+dieci minuti — sta in **[docs/LETTORE-DI-PAGINE.md](docs/LETTORE-DI-PAGINE.md)**,
+e la stessa è dentro l'app sotto la casella, perché il momento in cui serve è
+quello in cui hai la casella vuota davanti e non vuoi aprire GitHub dal telefono.
+
+**«Non ci si può fingere un browser normale, così il sito ci lascia entrare?»**
+È la domanda che si fanno tutti, e la risposta dice qualcosa di preciso su dove
+sta il muro. No, e non perché sia difficile: `User-Agent` è un *forbidden
+header*, e `fetch` in una pagina si rifiuta di impostarlo. Ma soprattutto non
+servirebbe — **i due muri non li alza il sito, li alza il browser che stai
+usando**. Il sito risponde, spesso perfettamente; è il browser che, arrivata la
+risposta, si rifiuta di consegnarla al codice della pagina. Non c'è un
+buttafuori da ingannare: è una serratura sul lato interno della nostra porta.
+Dove invece quell'idea funziona è *dentro il lettore*, che browser non è: lì lo
+`User-Agent` si scrive, e cambia davvero cosa il sito serve. Il Worker della
+guida lo fa.
+
 Tre cose vanno dette prima di scriverne uno:
 
 - **CineMate non ne contiene e non ne propone nessuno**, per la stessa ragione
