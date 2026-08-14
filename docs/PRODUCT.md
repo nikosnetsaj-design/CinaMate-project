@@ -145,6 +145,8 @@ titolo sotto licenza continua a portare al servizio che ce l'ha.
 | **Estrazione del flusso** | Il player della pagina è sepolto sotto la pagina | L'`.m3u8` viene isolato dal sorgente e mandato al lettore proprio. Il master firmato batte la variante 720p; i manifest di reti pubblicitarie note sono scartati; gli indirizzi senza estensione che promettono una playlist si confermano dal MIME type o dal `#EXTM3U` |
 | **Più siti insieme** | Tre mirror lenti sono tre timeout sommati | Ricerca in parallelo, e fra le risposte vince la migliore invece della prima: si legge il master di ognuna e la risoluzione pesa più della latenza |
 | **Web Viewer con ad-block** | Quei siti sono inguardabili | `<iframe sandbox>` a permessi zero: niente script, quindi niente overlay, pop-under o redirect al terzo clic. `allow-popups`, `allow-top-navigation` e `allow-modals` non si concedono a nessun livello |
+| **«Pagina letta»** | Metà di quei siti rifiuta di stare in un riquadro (`X-Frame-Options`), e il Web Viewer restava un rettangolo bianco senza rimedio | La pagina non viene incorniciata ma **ridisegnata qui**, dentro un documento nostro con un `<base>` che punta al sito: un divieto di incorniciare non è un divieto di leggere. Permessi azzerati per forza — in un `srcdoc` `allow-same-origin` sarebbe la *nostra* origine — e i collegamenti della pagina che somigliano al titolo cercato diventano pulsanti del viewer |
+| **Lettore di pagine** | Leggere il sorgente di un sito che non manda CORS è impossibile da un browser, e da lì dipendevano sia l'estrazione sia «Pagina letta» | L'indirizzo di un servizio tuo che scarica la pagina al posto del browser (venti righe di Worker, o un `cors-anywhere` in casa). Ogni lettura prova prima da sola e poi attraverso di lui. Nessuno è precaricato, e l'interfaccia dice che il lettore vede gli indirizzi che gli passi. Non fa passare il *video*: quello resta un muro dell'host |
 | **Redirect tracking** | Il sito trasloca e l'indirizzo salvato è morto | Il redirect viene seguito e il nuovo dominio **proposto**, mai applicato da solo. Quando è sparito del tutto, lo stesso nome si cerca sotto altre estensioni: prima al DNS, poi si bussa solo a chi risolve |
 | **DNS: diagnosi, non solo scheda** | Un host muto può essere spento *o* avere un nome che non si traduce, e sono due rimedi diversi | Cloudflare e Google servono il resolver in JSON con CORS aperto, quindi l'app li interroga davvero: «il nome non esiste», «esiste ma il server tace», «risponde ma non si lascia leggere». Più la scheda su DoH/DoT e i resolver pubblici |
 
@@ -158,7 +160,8 @@ titolo sotto licenza continua a portare al servizio che ce l'ha.
 3. *Il limite si dichiara.* Siamo in un browser: leggere il sorgente di un altro
    dominio dipende dai suoi header CORS, che i siti di terzi quasi mai mandano.
    Un fallimento dice quale dei due è — "non trovato" o "il browser non mi ha
-   lasciato leggere" — perché solo il secondo si risolve col Web Viewer. Le
+   lasciato leggere" — perché le due strade che restano sono diverse: la seconda
+   si risolve con un lettore di pagine tuo, o col Web Viewer a mano. Le
    tecniche che richiederebbero una WebView nativa (intercettare le richieste di
    un iframe, iniettarvi script, impostare `Referer` e `Cookie`, un proxy locale)
    sono elencate una per una nel README invece di essere lasciate implicite: ogni
@@ -244,6 +247,7 @@ il resto al servizio che ha la licenza.
 | **Consigli di fine visione** | Finisce un film e la scelta ricomincia da zero | Presi dal *tuo* scaffale, ognuno con il suo perché (regola 2) | Utile ✅ |
 | **Gesture** | Sul telefono i controlli sono più piccoli del dito | Scorri per avanzare, alza e abbassa volume e luminosità, doppio tocco per ±10s | Utile ✅ |
 | **Scena in tre fasce** | Undici comandi in fila sono undici bersagli da sbagliare | Titolo e voto in alto, ±10s e play grandi al centro, avanzamento e azioni in fondo; la luminosità ha la sua colonna a sinistra | Essenziale ✅ |
+| **Le tre fasce su un telefono** | Un 16/9 largo quanto un telefono è alto 180px, non 470: le tre fasce si accavallavano — il cartello sul play, la fila delle azioni a due righe su metà film — e il riquadro in orizzontale era più alto dello schermo | Le misure discendono dall'altezza *della scena* (`@container`, non `@media`: la finestra è alta 800 anche quando la scena è alta 180). Pastiglie e cartello in una colonna sola che non può accavallarsi; sotto i 380px le fasce si stringono; il riquadro non supera i tre quarti dello schermo | Essenziale ✅ |
 | **Voto in tre gesti** | A metà film non si sceglie fra 7 e 8 | Pollice giù / su / doppio: scrive il voto della libreria, non un giudizio parallelo (`lib/reactions.ts`) | Utile ✅ |
 | **Blocco comandi** | Il telefono in mano riceve tocchi che nessuno voleva | Un lucchetto e la scena smette di rispondere — tocco e tastiera assieme — finché non si sblocca | Utile ✅ |
 | **Azioni con l'etichetta scritta** | Un fumetto lo riconosce solo chi già sa cos'è | Ritaglia · Velocità · Episodi · Audio e sottotitoli · Pross. ep., a parole; solo sul telefono restano le sole icone | Utile ✅ |

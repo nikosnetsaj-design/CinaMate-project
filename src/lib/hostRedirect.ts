@@ -208,7 +208,7 @@ export const REDIRECT_HINT: Record<RedirectStatus, string> = {
   invariato: "L'indirizzo salvato è ancora quello giusto.",
   traslocato: "Il vecchio indirizzo rimanda altrove. Puoi accettare il nuovo o lasciare com'è.",
   "raggiungibile-ma-opaco":
-    "Qualcosa a quell'indirizzo c'è, ma non manda gli header CORS: da una pagina web non si può sapere dove porta. Aprilo nel Web Viewer per vederlo con i tuoi occhi.",
+    "Qualcosa a quell'indirizzo c'è, ma non manda gli header CORS: da una pagina web non si può sapere dove porta. Aprilo nel Web Viewer per vederlo con i tuoi occhi — e se anche lì resta bianco, è un sito che rifiuta di essere incorniciato: lì serve «Pagina letta», che a sua volta ha bisogno di un lettore di pagine (Impostazioni → Indirizzi delle tue sorgenti).",
   "nome-non-risolto":
     "Anche un resolver pubblico dice che quel nome non esiste. Non è il tuo DNS e non è un blocco: o è scritto male, o il dominio è stato dismesso. Prova a cercarne uno alternativo.",
   "risolve-ma-muto":

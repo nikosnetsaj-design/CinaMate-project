@@ -96,6 +96,10 @@ src/
                                     metadati e costruzione della ricerca
                   streamExtract.ts  lettura di una pagina, isolamento dell'.m3u8
                                     e scelta del risultato che è il titolo
+                  pageReader.ts     il lettore di pagine: l'unica strada per
+                                    leggere un sito che non manda CORS, e la
+                                    pagina letta preparata per essere mostrata
+                                    invece che incorniciata
                   hostRedirect.ts   dove è finito un indirizzo che ha traslocato,
                                     e i nomi alternativi quando è sparito
                   dnsGuide.ts       riferimento DoH/DoT e resolver pubblici
@@ -133,6 +137,10 @@ interne. I file dello strato di collegamento sono i soli che conoscono gli store
 di CineMate; `player/components/` e `player/hooks/` non ne sanno nulla — l'unica
 eccezione è `useFocusTrap`, che è un'utility generica per i modali usata da tutti
 i fogli dell'app e che riscrivere qui sarebbe peggio che condividere.
+
+Il lettore di pagine sta invece in `useSettings`, accanto alle chiavi API: non è
+una sorgente ma un modo di leggere, e vale per tutta l'app — la ricerca
+automatica sui Siti e il Web Viewer passano dalla stessa `readPage`.
 
 Gli store lato CineMate sono `usePlayerSources` (le sorgenti per titolo),
 `usePlayerPrefs` (modelli di indirizzo, risparmio dati, relay della Watch Party,
@@ -530,6 +538,38 @@ affatto.
 **A fine episodio**, «Guarda i titoli di coda» oppure «Prossimo episodio», con
 il conto alla rovescia che riempie il pulsante mentre scorre.
 
+### La scena bassa, che è quella di un telefono
+
+Un 16/9 largo quanto un telefono in verticale è alto **180 pixel**: la stessa
+scena che su un portatile ne è alta 470. Tutte e tre le fasce erano scritte per
+la seconda, e sulla prima si accavallavano — il cartello della classificazione
+atterrava sul play, la colonna della luminosità restava alta venti pixel, e la
+fila delle azioni andava a capo prendendosi *più della metà del film* per una
+riga di icone.
+
+Adesso la scena si misura da sola. Sotto i 380 pixel di altezza le fasce si
+stringono, il cartello passa su una riga sola, la colonna della luminosità si
+toglie di mezzo — il gesto verticale e la voce in Impostazioni fanno la stessa
+cosa — e la slitta del volume sparisce, che su un telefono ha due tasti fisici
+accanto che la battono. Sotto i 700 pixel di larghezza le parole delle azioni
+lasciano le sole icone.
+
+Due dettagli che valgono più di quanto sembri:
+
+- **si misura la scena, non la finestra.** Un telefono in orizzontale ha 844
+  pixel di finestra e 520 di scena: una `@media` guarda i primi e sbaglia. Una
+  `@container` guarda i secondi. È l'unico modo perché la stessa regola valga
+  nel player della pagina, nel mini player e a schermo intero.
+- **le pastiglie e il cartello ora sono una colonna sola.** Erano due strati
+  assoluti a due coordinate diverse, sfalsati in diagonale per schivare la
+  luminosità: schivavano quella e si scrivevano addosso l'un l'altro appena
+  comparivano insieme. Impilati non possono più, a nessuna altezza.
+
+E la scena non è più più alta dello schermo: su un telefono in orizzontale il
+riquadro si ferma a tre quarti dell'altezza e l'immagine si mette in mezzo alle
+sue bande nere, invece di finire sotto il bordo e costringere a scorrere la
+pagina mentre il film va. A schermo intero il tetto si toglie.
+
 ## Player: come dargli qualcosa da riprodurre
 
 La pagina Player prende i titoli dalla tua libreria e mostra quelli per cui c'è
@@ -678,7 +718,32 @@ Tre livelli: **Rigido** (niente script né moduli), **Normale** (i moduli
 funzionano, per i siti la cui ricerca è un form), **Minimo** (gli script girano,
 per i player che si caricano da JavaScript). Da dentro, il pulsante **Estrai il
 flusso** rilegge la pagina corrente e, se ci trova un manifest, lo collega al
-titolo e apre il lettore.
+titolo e apre il lettore. Cerca anche gli indirizzi *senza* `.m3u8` in fondo —
+un `/api/getlink?id=…` firmato — e li conferma leggendoli: se rispondono
+`#EXTM3U`, sono una playlist comunque.
+
+**«Il sito» oppure «Pagina letta».** Sono due modi di mostrare la stessa pagina,
+e servono contro due muri diversi.
+
+- *Il sito* è il riquadro di sempre. Se resta bianco, quel sito rifiuta di
+  essere incorniciato (`X-Frame-Options`) e non c'è opzione che lo convinca.
+- *Pagina letta* non lo incornicia affatto: legge il sorgente e lo **ridisegna
+  qui**, dentro un documento nostro con un `<base>` che punta al sito, così
+  immagini e stili arrivano da lì. Un divieto di incorniciare non è un divieto
+  di leggere, ed è esattamente la differenza che rende visibile una pagina che
+  prima era un rettangolo bianco.
+
+In «Pagina letta» i permessi sono azzerati e non sono scegliibili: in un
+`srcdoc`, `allow-same-origin` vorrebbe dire *la nostra* origine, cioè HTML di
+terzi con gli script accesi dentro casa. I clic sui collegamenti sono spenti
+per lo stesso motivo per cui la modalità esiste — porterebbero il riquadro sul
+sito vero, contro il divieto di prima. Per spostarsi c'è la barra
+dell'indirizzo e, quando il viewer è stato aperto per un titolo, **i
+collegamenti della pagina che somigliano a quel titolo**, estratti e messi come
+pulsanti suoi: dalla pagina dei risultati alla scheda in un tocco.
+
+Perché «Pagina letta» funzioni bisogna poter *leggere* la pagina, ed è l'altro
+muro — CORS — di cui parla la sezione qui sotto.
 
 ### Il limite, detto una volta
 
@@ -686,17 +751,51 @@ CineMate è una pagina web, non un'app nativa. **Leggere il sorgente di una
 pagina di un altro dominio richiede che quel dominio mandi gli header CORS**, e
 i siti di terzi quasi mai li mandano. Quindi:
 
-| Passo | Su un host tuo | Su un sito di terzi |
-|---|---|---|
-| Costruire la ricerca | ✅ sempre | ✅ sempre |
-| Leggere i risultati ed estrarre l'`.m3u8` | ✅ se manda CORS | ⛔️ quasi sempre bloccato dal browser |
-| Vedere la pagina nel Web Viewer | ✅ | ✅ salvo `X-Frame-Options` |
-| Riprodurre l'`.m3u8` trovato | ✅ se manda CORS | ⛔️ stesso muro |
+| Passo | Su un host tuo | Su un sito di terzi | Con un lettore di pagine |
+|---|---|---|---|
+| Costruire la ricerca | ✅ sempre | ✅ sempre | ✅ sempre |
+| Leggere i risultati ed estrarre l'`.m3u8` | ✅ se manda CORS | ⛔️ bloccato dal browser | ✅ |
+| Vedere la pagina nel Web Viewer | ✅ | ✅ salvo `X-Frame-Options` | ✅ con «Pagina letta», anche allora |
+| Riprodurre l'`.m3u8` trovato | ✅ se manda CORS | ⛔️ stesso muro | ⛔️ **il muro resta** |
 
 Non è un difetto da correggere: è come funziona il browser, e il codice lo
 riporta invece di mascherarlo. Un fallimento dice *quale* dei due è —
-"non l'ho trovato" o "il browser non mi ha lasciato leggere" — perché solo il
-secondo si risolve aprendo il Web Viewer.
+"non l'ho trovato" o "il browser non mi ha lasciato leggere" — perché le due
+strade che restano sono diverse.
+
+### Il lettore di pagine
+
+La terza colonna della tabella è l'unica cosa che, da dentro un browser, quel
+muro lo scavalca — e proprio perché *non* è un browser. Un **lettore di pagine**
+è un servizio tuo che scarica una pagina al posto del browser e te la ripassa
+con l'header che serve: venti righe di Cloudflare Worker, un `cors-anywhere` su
+un Raspberry in casa, o una rotta del reverse proxy che hai già davanti al tuo
+server. L'indirizzo si scrive in **Impostazioni → Indirizzi delle tue sorgenti →
+Lettore di pagine**, in una delle tre forme che i lettori del mondo usano:
+
+| Come lo scrivi | Cosa fa |
+|---|---|
+| `https://mio-lettore.dev/?u={url}` | l'indirizzo va nel parametro, codificato |
+| `https://mio-lettore.casa/leggi/{url-nudo}` | l'indirizzo va nel percorso, intero |
+| `https://mio-lettore.casa/` | nessun segnaposto: si attacca in fondo (è come funziona `cors-anywhere`) |
+
+Da qui in poi ogni lettura ci prova **prima da sola e poi attraverso il
+lettore**: il tuo server manda già CORS e non ha nessun bisogno di un
+intermediario, e un salto di rete in più su una richiesta che sarebbe riuscita è
+solo tempo perso. Il lettore è il ripiego, non la strada maestra.
+
+Tre cose vanno dette prima di scriverne uno:
+
+- **CineMate non ne contiene e non ne propone nessuno**, per la stessa ragione
+  per cui non contiene indirizzi di siti. La casella è vuota finché non la
+  riempi tu, e quello che ci scrivi resta su questo dispositivo.
+- **Il lettore vede ogni indirizzo che gli passi.** Uno tuo è una cosa fra te e
+  il tuo server; uno pubblico di terzi è una persona in mezzo che legge la tua
+  navigazione. La differenza è tutta lì.
+- **Non riproduce.** Il lettore serve a *leggere pagine*, non a far passare il
+  video: il flusso lo chiede `hls.js` direttamente all'host, e se quell'host non
+  manda CORS il film non parte comunque. È l'ultima riga della tabella, ed è
+  perché dice ⛔️ anche nella terza colonna.
 
 #### Cosa richiederebbe una WebView nativa
 

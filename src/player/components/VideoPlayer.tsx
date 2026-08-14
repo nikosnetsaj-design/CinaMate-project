@@ -439,22 +439,27 @@ export default function VideoPlayer({
             onClose={onClose}
           />
 
-          <PlayerIndicators
-            quality={player.levels.find(l => Number(l.id) === player.currentLevel)}
-            isAuto={player.currentLevel === -1}
-            audioLabel={player.audioTracks.find(a => Number(a.id) === player.currentAudioTrack)?.label}
-            subtitleLabel={content.subtitleTracks.find(t => t.id === subtitles.activeSubtitleId)?.label}
-            castDeviceName={cast.castDeviceName}
-            resumed={resumedBadge}
-            hostName={!isPrimaryHostActive ? activeHostName : null}
-            isDownloaded={isDownloaded}
-            networkQuality={network.quality}
-            sourceLabel={sourceLabel}
-            sleepAtEnd={sleep.choice === 'end-of-episode'}
-            sleepMinutes={sleep.remainingSec != null ? Math.ceil(sleep.remainingSec / 60) : null}
-          />
+          {/* Le pastiglie e il cartello in una colonna sola. Erano due strati
+              assoluti a due coordinate diverse, e nei primi sette secondi si
+              scrivevano addosso: impilati non possono più. */}
+          <div className="pv-notices">
+            <PlayerIndicators
+              quality={player.levels.find(l => Number(l.id) === player.currentLevel)}
+              isAuto={player.currentLevel === -1}
+              audioLabel={player.audioTracks.find(a => Number(a.id) === player.currentAudioTrack)?.label}
+              subtitleLabel={content.subtitleTracks.find(t => t.id === subtitles.activeSubtitleId)?.label}
+              castDeviceName={cast.castDeviceName}
+              resumed={resumedBadge}
+              hostName={!isPrimaryHostActive ? activeHostName : null}
+              isDownloaded={isDownloaded}
+              networkQuality={network.quality}
+              sourceLabel={sourceLabel}
+              sleepAtEnd={sleep.choice === 'end-of-episode'}
+              sleepMinutes={sleep.remainingSec != null ? Math.ceil(sleep.remainingSec / 60) : null}
+            />
 
-          {showRatingCard && content.rating && <RatingCard rating={content.rating} />}
+            {showRatingCard && content.rating && <RatingCard rating={content.rating} />}
+          </div>
 
           <GestureOverlay feedback={gestures.feedback} />
 
