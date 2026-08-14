@@ -14,20 +14,30 @@ interface Settings {
   apiKey: string;
   model: ModelId;
   tmdbApiKey: string;
+  /**
+   * Il lettore di pagine: l'indirizzo di un servizio tuo che scarica una
+   * pagina al posto del browser e la restituisce con gli header CORS. Vuoto
+   * significa «nessuno», ed è il valore di partenza — vedi `lib/pageReader.ts`
+   * per cosa cambia quando c'è e perché non ne viene proposto nessuno.
+   */
+  pageReader: string;
 }
+
+const EMPTY: Settings = { apiKey: "", model: "claude-opus-5", tmdbApiKey: "", pageReader: "" };
 
 function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { apiKey: "", model: "claude-opus-5", tmdbApiKey: "" };
+    if (!raw) return { ...EMPTY };
     const parsed = JSON.parse(raw) as Partial<Settings>;
     return {
       apiKey: typeof parsed.apiKey === "string" ? parsed.apiKey : "",
       model: MODELS.some((m) => m.id === parsed.model) ? (parsed.model as ModelId) : "claude-opus-5",
       tmdbApiKey: typeof parsed.tmdbApiKey === "string" ? parsed.tmdbApiKey : "",
+      pageReader: typeof parsed.pageReader === "string" ? parsed.pageReader : "",
     };
   } catch {
-    return { apiKey: "", model: "claude-opus-5", tmdbApiKey: "" };
+    return { ...EMPTY };
   }
 }
 
@@ -45,12 +55,13 @@ interface SettingsState extends Settings {
   clearApiKey: () => void;
   setTmdbApiKey: (tmdbApiKey: string) => void;
   clearTmdbApiKey: () => void;
+  setPageReader: (pageReader: string) => void;
 }
 
 const initial = loadSettings();
 
 function currentSettings(s: SettingsState): Settings {
-  return { apiKey: s.apiKey, model: s.model, tmdbApiKey: s.tmdbApiKey };
+  return { apiKey: s.apiKey, model: s.model, tmdbApiKey: s.tmdbApiKey, pageReader: s.pageReader };
 }
 
 export const useSettings = create<SettingsState>((set, get) => ({
@@ -77,6 +88,11 @@ export const useSettings = create<SettingsState>((set, get) => ({
   },
   clearTmdbApiKey: () => {
     const next = { ...currentSettings(get()), tmdbApiKey: "" };
+    save(next);
+    set(next);
+  },
+  setPageReader: (pageReader) => {
+    const next = { ...currentSettings(get()), pageReader: pageReader.trim() };
     save(next);
     set(next);
   },

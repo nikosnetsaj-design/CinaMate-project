@@ -1,4 +1,5 @@
 import type { Item } from "../types";
+import { readerFor } from "./pageReader";
 import { slugify } from "./sourceTemplate";
 
 /**
@@ -18,8 +19,13 @@ import { slugify } from "./sourceTemplate";
  * mandano. Su un tuo host — la tua pagina, il tuo server, un tuo Jellyfin
  * dietro un reverse proxy che aggiunge l'header — funziona. Su un sito di
  * terzi quasi sempre no, e il chiamante riceve `bloccato-cors` invece di un
- * fallimento generico, perché la risposta giusta in quel caso è «aprilo nel
- * Web Viewer», non «riprova».
+ * fallimento generico, perché la risposta giusta in quel caso è un'altra
+ * strada, non «riprova».
+ *
+ * La seconda strada è il **lettore di pagine** (`lib/pageReader.ts`): se ne hai
+ * configurato uno, un fallimento non è più la fine della corsa — la stessa
+ * pagina si richiede a lui, che browser non è e quel muro non ce l'ha. Senza
+ * lettore configurato tutto si comporta esattamente come prima.
  */
 
 /** Quanto sorgente si legge. Una pagina è ~200 KB; oltre è un file. */
@@ -33,7 +39,36 @@ export type PageResult =
   | { ok: false; reason: FetchFailure };
 
 /**
- * Scarica una pagina come testo.
+ * Scarica una pagina come testo: prima da qui, poi — se non si è potuto e ne
+ * hai configurato uno — attraverso il lettore di pagine.
+ *
+ * L'ordine non è casuale. Il tentativo diretto è quello che funziona sul *tuo*
+ * server, che gli header CORS li manda: passare comunque da un lettore
+ * significherebbe fargli vedere indirizzi che non ha nessun bisogno di vedere,
+ * e aggiungere un salto di rete a una richiesta che sarebbe riuscita da sola.
+ * Il lettore è il ripiego, non la strada maestra.
+ */
+export async function readPage(url: string, signal?: AbortSignal): Promise<PageResult> {
+  const direct = await fetchPage(url, signal);
+  // Un file è un file: il lettore leggerebbe gli stessi byte e la risposta non
+  // cambierebbe. Su tutto il resto — muro CORS, o niente del tutto, che dal
+  // browser sono la stessa cosa — vale la pena chiedere a lui.
+  if (direct.ok || direct.reason === "non-e-una-pagina") return direct;
+
+  const relay = readerFor(url);
+  if (!relay) return direct;
+  const read = await fetchPage(relay, signal);
+  if (!read.ok) return direct;
+
+  // L'indirizzo che conta resta quello del sito, non quello del lettore: i
+  // percorsi relativi dentro la pagina — `/hls/xyz/master.m3u8` — si risolvono
+  // sul sito che li ha scritti. Tenere qui l'indirizzo del lettore vorrebbe
+  // dire costruire flussi che puntano al proxy, cioè da nessuna parte.
+  return { ok: true, html: read.html, finalUrl: url };
+}
+
+/**
+ * Una singola lettura, che di lettori e ripieghi non sa niente.
  *
  * `fetch` fallisce con lo stesso `TypeError` opaco sia per CORS sia per un
  * server spento — il browser lo fa apposta, per non trasformare la fetch in
@@ -42,7 +77,7 @@ export type PageResult =
  * comunque se qualcosa dall'altra parte c'è. Risposta opaca = il sito è vivo e
  * ci ha detto di no; niente = il sito non c'è.
  */
-export async function readPage(url: string, signal?: AbortSignal): Promise<PageResult> {
+async function fetchPage(url: string, signal?: AbortSignal): Promise<PageResult> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), PAGE_TIMEOUT_MS);
   const onAbort = () => controller.abort();

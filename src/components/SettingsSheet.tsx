@@ -22,6 +22,7 @@ import { LinkHostSettings } from "./LinkHostSettings";
 import { DnsGuideButton } from "./DnsGuide";
 import { useLinkHosts } from "../store/useLinkHosts";
 import { TEMPLATE_FIELDS, previewTemplate, previewCount } from "../lib/sourceTemplate";
+import { readerAddress } from "../lib/pageReader";
 import { getHosts, restoreHosts } from "../player/services/hostStore";
 import { getDailySeconds, restoreDailySeconds } from "../player/services/statsAndHistory";
 import { useWatchProgress } from "../store/useWatchProgress";
@@ -352,6 +353,87 @@ function SourceTemplates() {
             sul server che hai indicato.
           </p>
         </dl>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Il lettore di pagine.
+ *
+ * Sta qui accanto agli indirizzi delle sorgenti perché risponde alla stessa
+ * domanda — dove vanno a prendere i dati questi pulsanti — ma da un lato
+ * diverso: gli indirizzi dicono *dove* leggere, questo dice *chi* legge quando
+ * il browser non può. Il perché per esteso sta in `lib/pageReader.ts`.
+ */
+function PageReaderSetting() {
+  const pageReader = useSettings((s) => s.pageReader);
+  const setPageReader = useSettings((s) => s.setPageReader);
+  const [showHelp, setShowHelp] = useState(false);
+  const preview = readerAddress(pageReader, "https://sito.tld/film/esempio");
+
+  return (
+    <div>
+      <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">
+        Lettore di pagine
+      </span>
+      <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
+        «Estrai il flusso» e la ricerca sui Siti devono leggere il sorgente di una pagina, e un
+        browser può leggere solo i siti che glielo permettono con un header (
+        <span className="font-mono">CORS</span>): i siti di streaming non lo mandano mai, e da lì non
+        si passa — non è un'opzione da accendere, è come è fatto il web. Ciò che può leggerli è
+        qualcosa che browser non è: un servizio tuo che scarica la pagina e te la ripassa. Venti
+        righe di Cloudflare Worker, o un <span className="font-mono">cors-anywhere</span> in casa.
+        Scrivi qui il suo indirizzo e i due pulsanti smettono di sbattere contro il muro.
+      </p>
+      <input
+        value={pageReader}
+        onChange={(e) => setPageReader(e.target.value)}
+        inputMode="url"
+        autoComplete="off"
+        autoCapitalize="off"
+        spellCheck={false}
+        aria-label="Indirizzo del lettore di pagine"
+        placeholder="https://mio-lettore.dev/?u={url}"
+        className="w-full rounded-sm border border-border-strong bg-surface px-3 py-2.5 font-mono text-xs text-text placeholder:text-text-faint focus:border-accent"
+      />
+      {pageReader.trim() && (
+        <p className="mt-1 break-all px-1 font-mono text-[10px] leading-relaxed text-text-faint">
+          {preview ? `Per una pagina chiederà ${preview}` : "Quell'indirizzo non è utilizzabile."}
+        </p>
+      )}
+
+      <button
+        type="button"
+        onClick={() => setShowHelp((v) => !v)}
+        aria-expanded={showHelp}
+        className="mt-2 rounded-sm border border-border-strong px-2.5 py-1.5 text-xs text-text-muted"
+      >
+        {showHelp ? "Nascondi le forme accettate" : "Come si scrive l'indirizzo?"}
+      </button>
+
+      {showHelp && (
+        <div className="mt-2 flex flex-col gap-1.5 rounded-sm border border-border bg-surface-2 p-3 text-xs leading-relaxed text-text-faint">
+          <p>
+            <span className="font-mono text-accent-text">{"{url}"}</span> è l'indirizzo da leggere,
+            codificato: la forma giusta per chi lo mette in un parametro —{" "}
+            <span className="font-mono">https://mio-lettore.dev/?u={"{url}"}</span>.
+          </p>
+          <p>
+            <span className="font-mono text-accent-text">{"{url-nudo}"}</span> è lo stesso indirizzo
+            lasciato intero, per chi lo vuole come coda del percorso.
+          </p>
+          <p>
+            Senza segnaposto l'indirizzo si attacca in fondo così com'è —{" "}
+            <span className="font-mono">https://mio-lettore.casa/</span> — che è come funziona{" "}
+            <span className="font-mono">cors-anywhere</span> e quasi tutto ciò che gli somiglia.
+          </p>
+          <p className="border-t border-border pt-1.5 text-text-muted">
+            Da sapere prima di scriverlo: il lettore vede ogni indirizzo che gli passi. Uno tuo
+            resta una cosa fra te e il tuo server; uno pubblico di terzi è una persona in mezzo che
+            legge la tua navigazione. CineMate non ne propone nessuno apposta.
+          </p>
+        </div>
       )}
     </div>
   );
@@ -850,6 +932,8 @@ function SettingsForm() {
         {panel === "sorgenti" && (
           <>
         <SourceTemplates />
+
+        <PageReaderSetting />
 
         <div>
           <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">

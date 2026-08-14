@@ -3,6 +3,7 @@ import type { EpisodePosition, LinkHost } from "../lib/linkHost";
 import { effectiveUrl, searchUrlsFor } from "../lib/linkHost";
 import { bestStreamConfirmed, bestStreamIn, readPage, titleLinksIn } from "../lib/streamExtract";
 import type { FoundLink } from "../lib/streamExtract";
+import { hasPageReader } from "../lib/pageReader";
 import { parseMaster } from "./services/hlsManifest";
 
 /**
@@ -26,9 +27,14 @@ import { parseMaster } from "./services/hlsManifest";
  * **CORS, di nuovo.** Il passo 2 e il passo 3 leggono il sorgente di pagine di
  * un altro dominio. Un'app nativa lo fa e basta; un browser lo permette solo se
  * quel dominio manda gli header. Quindi questa catena funziona per intero su un
- * host che è tuo, e sulla maggior parte dei siti di terzi si ferma al primo
- * `bloccato-cors`. Non è una funzione rotta: è il motivo per cui il Web Viewer
- * esiste, ed è scritto nell'interfaccia invece che scoperto dall'utente.
+ * host che è tuo, e sulla maggior parte dei siti di terzi si fermava al primo
+ * `bloccato-cors`.
+ *
+ * Si ferma ancora, ma non più per forza: `readPage` prova anche il **lettore di
+ * pagine** (`lib/pageReader.ts`) quando ne hai configurato uno, e quello browser
+ * non è. Con un lettore la catena arriva in fondo anche sui siti di terzi;
+ * senza, il messaggio dice quale delle due strade resta — configurarne uno, o
+ * il Web Viewer per cercare a mano.
  */
 
 /** Quanto vale un flusso trovato, per scegliere fra più host che rispondono. */
@@ -242,7 +248,9 @@ export function outcomeMessage(outcome: SearchOutcome): string {
     case "solo-pagina":
       return "Ho trovato la pagina del titolo ma non il flusso: quasi sempre vuol dire che il player del sito lo carica da JavaScript, che qui non gira. Aprila nel Web Viewer.";
     case "bloccato":
-      return "Il sito risponde ma non lascia che questa pagina ne legga il contenuto (CORS). È il limite di un'app che gira nel browser: aprilo nel Web Viewer e cerca a mano.";
+      return hasPageReader()
+        ? "Il sito risponde ma non lascia che questa pagina ne legga il contenuto (CORS), e nemmeno il lettore di pagine che hai configurato ce l'ha fatta. Controlla in Impostazioni che il suo indirizzo risponda, o apri il sito nel Web Viewer e cerca a mano."
+        : "Il sito risponde ma non lascia che questa pagina ne legga il contenuto (CORS). È il limite di un'app che gira nel browser, e si supera in un modo solo: un lettore di pagine tuo, in Impostazioni → Indirizzi delle tue sorgenti. Senza, resta il Web Viewer per cercare a mano.";
     case "nessun-risultato":
       return "La ricerca è andata a buon fine ma non ha restituito questo titolo. Prova a cambiare la ricetta della domanda o a scrivere il percorso di ricerca del sito.";
     case "niente-host":

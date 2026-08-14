@@ -89,15 +89,54 @@
 }
 
 /* ===================== Player shell ===================== */
+/*
+ * La scena, e le due misure che tutto il resto legge da qui.
+ *
+ * `--pv-topbar-h` e `--pv-controls-h` sono l'altezza dichiarata delle due
+ * fasce: quella in cima e quella in fondo. Gli strati che devono starne fuori
+ * — le pastiglie, il cartello, il pulsante «salta», la barra della ripresa —
+ * si ancorano a quelle variabili invece di ripetere un numero a occhio. Quando
+ * la scena si stringe basta cambiarle in un punto solo.
+ *
+ * `container-type: size` fa della scena un contenitore misurabile: le regole
+ * compatte in fondo al file rispondono all'altezza *del riquadro*, non a quella
+ * della finestra. È la distinzione che serve qui — un 16/9 dentro un telefono
+ * in verticale è alto 180px con la finestra alta 800, e nessuna media query lo
+ * vede. L'altezza del riquadro discende dal rapporto d'aspetto e non dal
+ * contenuto, quindi il contenimento non ha niente da rompere.
+ */
 .pv-shell {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
+  /*
+   * Un 16/9 largo quanto un telefono in orizzontale è più alto dello schermo:
+   * la scena finiva sotto il bordo e per vedere i comandi bisognava scorrere la
+   * pagina — mentre il film andava. Il tetto la fa rientrare; il rapporto
+   * d'aspetto lo tiene l'immagine, che con `object-fit: contain` si mette in
+   * mezzo alle sue bande nere come fa ogni lettore.
+   *
+   * A schermo intero il tetto si toglie: lì la scena *è* lo schermo, e limitarla
+   * a tre quarti sarebbe la stessa cosa che non andare a schermo intero.
+   */
+  max-height: 78svh;
   background: #000;
   border-radius: var(--pv-radius);
   overflow: hidden;
   isolation: isolate;
+  container-type: size;
+  container-name: pv;
+  --pv-topbar-h: 62px;
+  --pv-controls-h: 96px;
+  /* Quanto la colonna degli avvisi deve tenersi lontana dal centro: metà del
+     pulsante play, più aria. */
+  --pv-center-clear: 30px;
 }
+
+/* Due regole separate e non un elenco: un selettore che il browser non conosce
+   invaliderebbe tutta la riga, e questi due non li conoscono tutti. */
+.pv-shell:fullscreen { max-height: none; }
+.pv-shell:-webkit-full-screen { max-height: none; }
 
 .pv-backdrop {
   position: absolute;
@@ -251,18 +290,47 @@
 .pv-reaction:hover { background: rgba(245, 241, 232, 0.26); transform: scale(1.06); }
 .pv-reaction.active { background: var(--pv-accent); color: #1a1408; }
 
+/* ===================== La colonna degli avvisi ===================== */
+/*
+ * Le pastiglie e il cartello della classificazione, impilati in un solo
+ * strato.
+ *
+ * Prima erano due strati assoluti a due coordinate diverse — `top: 62px` le
+ * une, `top: 64px; left: 62px` l'altro — sfalsati in diagonale per schivare la
+ * colonna della luminosità. Schivavano quella e si addosso l'uno all'altro:
+ * bastava una pastiglia di qualità nei primi sette secondi per scrivere due
+ * righe sopra la stessa riga. Impilati in una colonna vera non possono più
+ * sovrapporsi, qualunque cosa compaia e qualunque sia l'altezza della scena.
+ *
+ * Il tetto in altezza è il patto con i comandi al centro: quello che non ci
+ * sta si taglia invece di scendere addosso al play.
+ */
+.pv-notices {
+  position: absolute;
+  top: var(--pv-topbar-h);
+  /* Oltre la colonna della luminosità, che parte dallo stesso bordo. */
+  left: 62px;
+  right: 16px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  max-height: calc(50% - var(--pv-topbar-h) - var(--pv-center-clear));
+  overflow: hidden;
+  /* Niente qui dentro si preme: sono cose scritte, non comandi. La scena
+     sotto resta play/pausa al tocco. */
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+.pv-controls-hidden .pv-notices { opacity: 0; }
+
 /* ===================== Indicators ===================== */
 .pv-indicators {
-  position: absolute;
-  /* Sotto la barra del titolo, che occupa la riga in cui stavano prima. */
-  top: 62px; left: 16px;
-  z-index: 4;
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
-  transition: opacity 0.35s ease;
 }
-.pv-controls-hidden .pv-indicators { opacity: 0; }
 .pv-badge {
   font-family: var(--pv-font-mono);
   font-size: 0.7rem;
@@ -286,8 +354,19 @@
   pointer-events: none;
   padding: 0 8%;
 }
-.pv-subtitle-bottom { bottom: 12%; }
-.pv-subtitle-top { top: 14%; }
+/* La riga di dialogo sta sopra la fascia dei comandi finché la fascia c'è, e
+   scende al bordo quando sparisce. Ferma in quota finiva dietro la barra
+   dell'avanzamento ogni volta che qualcuno sfiorava lo schermo. */
+.pv-subtitle-bottom {
+  bottom: calc(var(--pv-controls-h) + 10px);
+  transition: bottom 0.35s ease;
+}
+.pv-controls-hidden .pv-subtitle-bottom { bottom: 7%; }
+.pv-subtitle-top {
+  top: calc(var(--pv-topbar-h) + 10px);
+  transition: top 0.35s ease;
+}
+.pv-controls-hidden .pv-subtitle-top { top: 7%; }
 .pv-subtitle span {
   font-family: var(--pv-font-body);
   font-weight: 600;
@@ -401,11 +480,9 @@
 .pv-lock-btn svg { width: 22px; height: 22px; }
 
 /* ===================== Cartello della classificazione ===================== */
+/* Vive dentro `.pv-notices`: la sua posizione è quella della colonna, e sotto
+   di lui non c'è mai niente che possa finirgli addosso. */
 .pv-rating-card {
-  position: absolute;
-  /* A destra della colonna della luminosità, che parte dallo stesso bordo. */
-  top: 64px; left: 62px;
-  z-index: 5;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -427,9 +504,17 @@
 .pv-rating-detail { font-size: clamp(0.8rem, 2vw, 1rem); color: var(--pv-text); }
 
 /* ===================== Skip button ===================== */
+/*
+ * Sopra la fascia dei comandi finché la fascia c'è, e giù al bordo quando
+ * sparisce. In quota — `bottom: 25%` — era giusto solo all'altezza per cui era
+ * stato scritto: sotto i 400px di scena quel 25% cadeva dentro la fascia, e il
+ * pulsante che salta l'intro finiva sopra la barra dell'avanzamento.
+ */
 .pv-skip-btn {
   position: absolute;
-  right: 20px; bottom: 25%;
+  right: 20px;
+  bottom: calc(var(--pv-controls-h) + 8px);
+  transition: bottom 0.35s ease;
   z-index: 6;
   background: rgba(19, 17, 22, 0.9);
   color: var(--pv-text);
@@ -575,7 +660,8 @@
 .pv-resume-bar {
   position: absolute;
   left: 20px;
-  bottom: 22%;
+  bottom: calc(var(--pv-controls-h) + 8px);
+  transition: bottom 0.35s ease;
   z-index: 6;
   display: flex;
   align-items: center;
@@ -605,7 +691,8 @@
 .pv-autoskip-note {
   position: absolute;
   right: 20px;
-  bottom: 22%;
+  bottom: calc(var(--pv-controls-h) + 8px);
+  transition: bottom 0.35s ease;
   z-index: 6;
   padding: 8px 14px;
   font-size: 0.85rem;
@@ -647,11 +734,17 @@
 }
 .pv-shortcuts-list span { font-size: 0.9rem; }
 
+/* Quando la fascia dei comandi sparisce, quello che le stava sopra scende a
+   prendersi lo spazio: sono avvisi sul film, e il film è tornato tutto. */
+.pv-controls-hidden .pv-skip-btn,
+.pv-controls-hidden .pv-autoskip-note,
+.pv-controls-hidden .pv-resume-bar { bottom: 16px; }
+
 @media (max-width: 560px) {
   /* On a phone the bar would sit on top of the scrub controls it is meant to
      explain; the picture is the only place with room left. */
-  .pv-resume-bar { left: 12px; right: 12px; bottom: 26%; max-width: none; }
-  .pv-autoskip-note { right: 12px; bottom: 32%; }
+  .pv-resume-bar { left: 12px; right: 12px; max-width: none; }
+  .pv-autoskip-note { right: 12px; }
 }
 
 /* ===================== Progress bar + film-strip scrub preview (signature) ===================== */
@@ -1298,18 +1391,12 @@
   .pv-reaction { width: 34px; height: 34px; }
   .pv-reaction svg { width: 16px; height: 16px; }
   .pv-volume input[type='range'] { width: 46px; }
-  /* Su un telefono le parole delle azioni non ci stanno tutte in riga: restano
-     le icone, che a quel punto sono già state imparate leggendole altrove. */
-  .pv-action span { display: none; }
-  .pv-action { padding: 8px; }
-  .pv-actions { gap: 4px; justify-content: space-between; }
   .pv-transport-play svg { width: 34px; height: 34px; }
   .pv-brightness { left: 8px; }
   .pv-app-toolbar { flex-wrap: wrap; }
   .pv-stat-chip { margin-left: 0; flex-basis: 100%; }
   .pv-settings-panel { width: 100%; }
   .pv-side-panel { width: 100%; }
-  .pv-rating-card { top: 52px; left: 46px; }
   .pv-postplay-actions button { flex: 1 1 auto; }
   /* Clear CineMate's bottom tab bar, which the mini player would otherwise
      sit right on top of. */
@@ -1317,6 +1404,121 @@
   .pv-host-row { flex-wrap: wrap; }
   .pv-host-row-actions { flex-direction: row; flex-wrap: wrap; }
   .pv-host-toolbar { flex-direction: column; align-items: stretch; }
+}
+
+/* ===================== Scena stretta ===================== */
+/*
+ * Le parole accanto alle icone stanno o non stanno a seconda di quanto è larga
+ * *la scena*, che è un'altra cosa da quanto è larga la finestra: un telefono in
+ * orizzontale ha 844 pixel di finestra e 520 di scena, e con la media query
+ * vecchia — `max-width: 560px` sulla finestra — le parole restavano accese
+ * dentro una fascia che non poteva contenerle. Andavano a capo, la fascia
+ * diventava due righe, e due righe su una scena bassa sono un terzo del film.
+ *
+ * Sotto i 700px di scena restano le icone: a quel punto le parole sono già
+ * state lette altrove, ed è lì che si sono imparate.
+ */
+@container pv (max-width: 700px) {
+  .pv-action span { display: none; }
+  .pv-action { padding: 8px; }
+  .pv-actions { gap: 4px; justify-content: space-between; }
+}
+
+/* ===================== Scena bassa ===================== */
+/*
+ * Un 16/9 largo quanto un telefono in verticale è alto 180 pixel — la stessa
+ * scena che su un portatile ne è alta 470. Tutto quello che sta qui sopra era
+ * scritto per la seconda: la barra del titolo prendeva un terzo dell'altezza,
+ * il cartello della classificazione atterrava esattamente sul play, la colonna
+ * della luminosità restava alta venti pixel, e i comandi al centro finivano
+ * dentro la fascia in fondo. Non era un dettaglio di stile: era il lettore
+ * illeggibile su un telefono.
+ *
+ * La misura giusta è l'altezza *della scena*, non quella della finestra —
+ * la finestra è alta 800 anche quando la scena è alta 180 — e questo è
+ * esattamente ciò che una @container sa vedere e una @media no.
+ *
+ * La regola qui sotto non nasconde comandi: li stringe. L'unica cosa che
+ * sparisce è la colonna della luminosità, che ha altre due strade per la stessa
+ * cosa — lo scorrimento verticale sulla scena e la voce in Impostazioni — e che
+ * su una scena bassa occuperebbe il bordo che serve a leggere.
+ */
+@container pv (max-height: 380px) {
+  /* Le misure si riscrivono sui figli e non sulla scena: una @container non
+     può ridisegnare il contenitore che sta misurando — quello che scrive lì
+     dentro vale per chi ci sta *dentro*. Ogni strato porta quindi le sue due
+     quote addosso, e le eredita a chi ha sotto. */
+  .pv-shell > * {
+    --pv-topbar-h: 44px;
+    --pv-controls-h: 62px;
+    --pv-center-clear: 22px;
+  }
+
+  .pv-topbar { padding: 7px 10px; gap: 8px; }
+  .pv-topbar-label { font-size: 0.85rem; }
+  .pv-reaction { width: 30px; height: 30px; }
+  .pv-reaction svg { width: 15px; height: 15px; }
+  .pv-topbar .pv-icon-btn { padding: 5px; }
+  .pv-topbar .pv-icon-btn svg { width: 18px; height: 18px; }
+
+  .pv-brightness { display: none; }
+
+  .pv-notices { left: 12px; right: 12px; }
+  /* Nei primi sette secondi il cartello parla da solo, e le pastiglie tornano
+     appena sparisce: qui c'è spazio per una riga, non per due. */
+  .pv-notices:has(.pv-rating-card) .pv-indicators { display: none; }
+  .pv-indicators { flex-wrap: nowrap; }
+  /* Sigla e destinatari accanto invece che incolonnati: due righe, su una
+     scena così, sono un quarto dell'altezza. */
+  .pv-rating-card {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 8px;
+    padding: 1px 0 1px 10px;
+    max-width: 100%;
+  }
+  .pv-rating-cert { font-size: 0.85rem; }
+  .pv-rating-detail { font-size: 0.75rem; }
+
+  .pv-transport { gap: clamp(24px, 10vw, 56px); }
+  .pv-transport-btn svg,
+  .pv-transport-play svg { width: 34px; height: 34px; }
+
+  /*
+   * La fascia in fondo su una riga sola.
+   *
+   * A due righe prendeva 111 pixel su 183 di scena — più della metà del film,
+   * per una fila di icone. Le tre cose che la facevano andare a capo erano la
+   * slitta del volume, l'aria attorno alle icone e la loro dimensione: tolta la
+   * prima e stretti gli altri due, i comandi ci stanno tutti in fila.
+   *
+   * Il volume è l'unico che se ne va davvero, e solo qui: su un telefono è una
+   * fessura da centrare col pollice mentre il film va, e accanto ha due tasti
+   * fisici che fanno la stessa cosa meglio. Il muto resta — quello sì che il
+   * telefono non lo fa da solo con la stessa immediatezza.
+   */
+  .pv-controls-bar { padding: 4px 10px 8px; }
+  .pv-progress-wrap { gap: 8px; }
+  .pv-remaining { font-size: 0.8rem; }
+  .pv-actions { margin-top: 6px; gap: 2px; }
+  .pv-volume input[type='range'] { display: none; }
+  .pv-action { padding: 5px; }
+  .pv-action svg { width: 18px; height: 18px; }
+  .pv-icon-btn { padding: 5px; }
+  .pv-icon-btn svg { width: 18px; height: 18px; }
+  .pv-skip-btn { right: 12px; padding: 8px 16px; font-size: 0.85rem; }
+  .pv-resume-bar { left: 12px; right: 12px; max-width: none; padding: 8px 10px; }
+  .pv-resume-text { font-size: 0.82rem; }
+  .pv-autoskip-note { right: 12px; }
+
+  /* La schermata di fine e i suggerimenti hanno la stessa aria di prima, ma
+     in un quarto dello spazio. */
+  .pv-postplay { gap: 10px; padding: 12px; }
+  .pv-postplay-poster { width: 38px; height: 55px; }
+  .pv-postplay-actions button { padding: 9px 14px; font-size: 0.85rem; }
+  .pv-recommendations { gap: 10px; padding: 12px; }
+  .pv-recommendations h4 { font-size: 1.1rem; }
+  .pv-rec-card { width: 84px; }
 }
 
 /* ------------------------------------------------------------------ */
