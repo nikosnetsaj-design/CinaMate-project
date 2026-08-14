@@ -73,6 +73,47 @@ export function readerAddress(template: string, url: string): string | null {
   return isHttp(built) ? built : null;
 }
 
+/**
+ * Il modello del lettore, costruito da ciò che Cloudflare restituisce dopo il
+ * deploy: un indirizzo nudo, tipo `https://qualcosa.tuonome.workers.dev`.
+ *
+ * Esiste per togliere di mezzo l'unico passaggio in cui si può sbagliare a
+ * mano. La forma giusta — `…/?k=parola&u={url}` — ha tre pezzi che vanno
+ * scritti nell'ordine e con i simboli giusti, e sbagliarne uno dà un lettore
+ * che non risponde e nessun modo di capire perché. Incollato l'indirizzo, il
+ * resto lo scrive questa funzione.
+ */
+export function readerTemplateFor(workerAddress: string, secret: string): string | null {
+  const raw = workerAddress.trim();
+  if (!raw || !secret) return null;
+  let base: string;
+  try {
+    const parsed = new URL(withProtocol(raw));
+    if (!/^https?:$/.test(parsed.protocol) || !parsed.hostname) return null;
+    // Solo origine e percorso: quello che Cloudflare dà è un indirizzo nudo, e
+    // un eventuale `?` già scritto lì confonderebbe i nostri parametri.
+    base = `${parsed.origin}${parsed.pathname}`.replace(/\/+$/, "");
+  } catch {
+    return null;
+  }
+  return `${base}/?k=${encodeURIComponent(secret)}&u=${READER_TOKEN}`;
+}
+
+/**
+ * Una parola segreta per il Worker, diversa su ogni dispositivo.
+ *
+ * Serve a non lasciare in giro un proxy aperto: senza, chiunque trovi
+ * l'indirizzo del Worker può usarlo per scaricare qualunque cosa, e le
+ * richieste risultano fatte da chi l'ha acceso. Generarla qui invece di
+ * chiederla evita l'unica risposta che si dà quando un campo del genere è
+ * vuoto e si ha fretta, cioè `123456`.
+ */
+export function makeReaderSecret(): string {
+  const bytes = new Uint8Array(9);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 function isHttp(url: string): boolean {
   try {
     return /^https?:$/.test(new URL(url).protocol);

@@ -39,9 +39,18 @@ davvero cosa il sito risponde. Il trucco è giusto: va solo messo nel posto in c
 Un **Cloudflare Worker**: piano gratuito, nessuna carta, nessun server da tenere
 acceso.
 
+> **La strada breve è dentro l'app.** In *Impostazioni → Indirizzi delle tue
+> sorgenti → Lettore di pagine* c'è il pulsante **«Non ne ho uno: come me lo
+> faccio?»**: lì trovi lo stesso codice **con la parola segreta già dentro**,
+> generata per questo dispositivo, e una casella in cui incollare l'indirizzo
+> che Cloudflare restituisce — il modello completo lo scrive l'app. Due
+> incollate e niente da correggere a mano. Quello che segue è la stessa cosa
+> spiegata per esteso, per chi preferisce leggere prima.
+
 1. Vai su [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers &
    Pages** → **Create** → **Start with Hello World** → **Deploy**.
-2. Apri **Edit code**, cancella tutto e incolla questo:
+2. Apri **Edit code**, cancella tutto e incolla questo (se copi da qui e non
+   dall'app, la parola segreta cambiala tu):
 
 ```js
 export default {

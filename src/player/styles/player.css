@@ -138,6 +138,29 @@
 .pv-shell:fullscreen { max-height: none; }
 .pv-shell:-webkit-full-screen { max-height: none; }
 
+/*
+ * Lo schermo pieno quando quello del browser non c'è — su iPhone, dove l'API
+ * per gli elementi non esiste affatto e il pulsante non poteva fare niente.
+ *
+ * La scena si prende la pagina: niente rapporto d'aspetto e niente tetto, i
+ * bordi dello schermo e basta. L'immagine dentro resta proporzionata da sé
+ * (`object-fit: contain`), e le regole di scena bassa qui sotto misurano il
+ * riquadro, quindi il lettore si ridisegna da solo alla nuova altezza — che a
+ * telefono girato è finalmente quella giusta.
+ */
+.pv-shell--fullpage {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  aspect-ratio: auto;
+  border-radius: 0;
+  /* Sotto le tacche e la barra di sistema, sui telefoni che le hanno. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
 .pv-backdrop {
   position: absolute;
   inset: 0;
@@ -1443,7 +1466,11 @@
  * cosa — lo scorrimento verticale sulla scena e la voce in Impostazioni — e che
  * su una scena bassa occuperebbe il bordo che serve a leggere.
  */
-@container pv (max-height: 380px) {
+/* 420 e non 380: a schermo pieno un telefono girato è alto fra i 375 e i 415
+   pixel, cioè esattamente sopra la vecchia soglia — la scena diventava tutto
+   lo schermo e i comandi tornavano quelli larghi. Un portatile resta sopra
+   (459px sulla finestra tipica) e tiene la scena piena. */
+@container pv (max-height: 420px) {
   /* Le misure si riscrivono sui figli e non sulla scena: una @container non
      può ridisegnare il contenitore che sta misurando — quello che scrive lì
      dentro vale per chi ci sta *dentro*. Ogni strato porta quindi le sue due

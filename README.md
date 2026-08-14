@@ -570,6 +570,29 @@ riquadro si ferma a tre quarti dell'altezza e l'immagine si mette in mezzo alle
 sue bande nere, invece di finire sotto il bordo e costringere a scorrere la
 pagina mentre il film va. A schermo intero il tetto si toglie.
 
+### Schermo pieno, e il fatto che su iPhone non esista
+
+**Su iPhone l'API di schermo intero per gli elementi non c'è.** Safari la
+concede solo al video nudo (`webkitEnterFullscreen`), e solo dopo che il video ha
+una sorgente caricata: su una scena ancora ferma quella chiamata lancia, il
+`catch` la ingoiava, e il pulsante sembrava rotto perché *non faceva niente* —
+che è esattamente come lo si vive.
+
+Quindi lo schermo pieno è diventato una cosa garantita da noi: se il browser ha
+l'API vera la usa; altrimenti la scena si prende la pagina — `position: fixed`,
+tutto lo schermo, i nostri comandi ancora addosso e la pagina sotto bloccata
+perché non scorra dietro al film. Non è un ripiego povero: le regole di scena
+bassa misurano il riquadro, quindi a schermo pieno il lettore si ridisegna da
+solo alla nuova altezza, e i comandi restano i nostri — episodi, sottotitoli,
+maratona — che nel lettore di sistema sparirebbero tutti.
+
+Due conseguenze pratiche: il pulsante c'è **sempre** (prima si decideva
+guardando `videoRef.current`, che al primo render è ancora `null` — e un ref non
+fa ridisegnare niente, quindi su un telefono poteva restare nascosto proprio
+all'apertura), e la soglia della scena bassa è a 420px perché un telefono girato
+a schermo pieno è alto fra i 375 e i 415: sotto la soglia vecchia ci finiva per
+un pelo dalla parte sbagliata.
+
 ## Player: come dargli qualcosa da riprodurre
 
 La pagina Player prende i titoli dalla tua libreria e mostra quelli per cui c'è
