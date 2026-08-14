@@ -81,6 +81,27 @@ type FullscreenElement = HTMLElement & {
   webkitRequestFullscreen?: () => void;
 };
 
+/** Le due metà prefissate dell'API, che Safari ha tenuto più a lungo di tutti. */
+type WebkitDocument = Document & {
+  webkitFullscreenElement?: Element | null;
+  webkitFullscreenEnabled?: boolean;
+  webkitExitFullscreen?: () => Promise<void> | void;
+};
+
+/**
+ * Se questo browser sa mettere *un elemento* a schermo intero.
+ *
+ * Si guardano le proprietà del documento e non un elemento vivo: al primo
+ * render il video non è ancora attaccato, e un ref non fa ridisegnare nulla.
+ * Su iPhone entrambe sono false — lì lo schermo intero di un `<div>` non
+ * esiste, ed è il caso per cui la scena se lo fa da sé.
+ */
+function nativeFullscreenAvailable(): boolean {
+  if (typeof document === 'undefined') return false;
+  const doc = document as WebkitDocument;
+  return !!(doc.fullscreenEnabled || doc.webkitFullscreenEnabled);
+}
+
 // Swaps only the origin (protocol + host + port) of `originalUrl` for the
 // one in `newOrigin`, keeping path/query/hash untouched. Falls back to the
 // original URL if either string doesn't parse — malformed host config
@@ -134,6 +155,8 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
   const [failure, setFailure] = useState<PlayerFailure | null>(null);
   const [isPiP, setIsPiP] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  /** Lo schermo pieno fatto da noi, quando il browser non ha quello vero. */
+  const [inPageFullscreen, setInPageFullscreen] = useState(false);
 
   // Attach HLS / native source whenever the content changes.
   useEffect(() => {
@@ -312,7 +335,8 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
       setMuted(video.muted);
     };
     const onRateChange = () => setPlaybackRateState(video.playbackRate);
-    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    const onFsChange = () =>
+      setIsFullscreen(!!(document.fullscreenElement ?? (document as WebkitDocument).webkitFullscreenElement));
     // iOS never sets document.fullscreenElement, so its own begin/end events
     // are the only way to know the OS player was dismissed.
     const onWebkitBegin = () => setIsFullscreen(true);
@@ -523,43 +547,81 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
     }
   }, []);
 
+  /**
+   * Schermo pieno, e il fatto che su un telefono Apple non esista.
+   *
+   * Su iPhone l'API di schermo intero **non c'è per gli elementi**: Safari la
+   * concede solo al video nudo, con `webkitEnterFullscreen`, e solo dopo che il
+   * video ha una sorgente caricata. Su una scena ancora ferma quella chiamata
+   * lancia e basta, il `catch` la ingoiava, e il pulsante sembrava rotto perché
+   * *non faceva niente* — che è esattamente come lo si vive.
+   *
+   * Quindi lo schermo pieno diventa una cosa che possiamo garantire noi: se il
+   * browser ha l'API vera la usa, altrimenti la scena si prende la pagina —
+   * `position: fixed`, tutto lo schermo, i nostri comandi ancora addosso. Non è
+   * un ripiego povero: le regole di scena bassa scritte in `player.css`
+   * misurano il riquadro, quindi a schermo pieno il lettore si ridisegna da
+   * solo alla nuova altezza. E i comandi restano i nostri — episodi,
+   * sottotitoli, maratona — che nel lettore di sistema sparirebbero tutti.
+   */
   const toggleFullscreen = useCallback(async (container?: HTMLElement | null) => {
-    const video = videoRef.current as WebkitVideoElement | null;
     const el = (container || videoRef.current) as FullscreenElement | null;
     if (!el) return;
     try {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
+      const doc = document as WebkitDocument;
+      const active = doc.fullscreenElement ?? doc.webkitFullscreenElement;
+      if (active) {
+        await (doc.exitFullscreen?.() ?? doc.webkitExitFullscreen?.());
         return;
       }
-      if (el.requestFullscreen) {
-        await el.requestFullscreen();
-        return;
+      if (nativeFullscreenAvailable()) {
+        if (el.requestFullscreen) {
+          await el.requestFullscreen();
+          return;
+        }
+        if (el.webkitRequestFullscreen) {
+          el.webkitRequestFullscreen();
+          return;
+        }
       }
-      // Older WebKit desktop path, then iOS, which only ever fullscreens the
-      // video itself.
-      if (el.webkitRequestFullscreen) {
-        el.webkitRequestFullscreen();
-        return;
-      }
-      if (video?.webkitEnterFullscreen) {
-        video.webkitEnterFullscreen();
-        setIsFullscreen(true);
-      }
+      setInPageFullscreen((v) => !v);
     } catch {
-      // fullscreen request rejected (e.g. not a user gesture) — ignore
+      // Il browser ha rifiutato (fuori da un gesto, o per sua politica): invece
+      // di restare senza niente, la scena si prende la pagina lo stesso.
+      setInPageFullscreen((v) => !v);
     }
   }, []);
+
+  /**
+   * Lo schermo pieno «nostro» tiene ferma la pagina sotto: senza, su un
+   * telefono si scorre dietro alla scena e si torna a vedere la libreria
+   * mentre il film va.
+   */
+  useEffect(() => {
+    if (!inPageFullscreen) return;
+    const body = document.body;
+    const previous = body.style.overflow;
+    body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setInPageFullscreen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      body.style.overflow = previous;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [inPageFullscreen]);
 
   /** Whether this browser can do it at all, so the UI can hide what it can't. */
   const pipSupported =
     typeof document !== 'undefined' &&
     (document.pictureInPictureEnabled ||
       !!(videoRef.current as WebkitVideoElement | null)?.webkitSupportsPresentationMode);
-  const fullscreenSupported =
-    typeof document !== 'undefined' &&
-    (document.fullscreenEnabled ||
-      !!(videoRef.current as WebkitVideoElement | null)?.webkitEnterFullscreen);
+  // Sempre: quando l'API vera non c'è, lo schermo pieno lo fa la scena da sé.
+  // Prima si guardava `videoRef.current`, che al primo render è ancora `null` —
+  // e un ref non fa ridisegnare niente, quindi su un telefono il pulsante
+  // poteva restare nascosto proprio all'apertura, cioè quando serve.
+  const fullscreenSupported = true;
 
   const retryPlayback = useCallback(() => {
     retryCountRef.current = 0;
@@ -577,7 +639,12 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
     isPlaying, isBuffering, currentTime, duration, bufferedEnd,
     bufferHealthSec, bufferTargetSec: bufferProfile.maxBufferLength,
     levels, currentLevel, audioTracks, currentAudioTrack,
-    volume, muted, playbackRate, isPiP, isFullscreen,
+    // Per chi guarda l'icona è una cosa sola: o la scena è tutto lo schermo o
+    // non lo è. Da dove venga — l'API del browser o la nostra — non riguarda
+    // chi preme il pulsante.
+    volume, muted, playbackRate, isPiP,
+    isFullscreen: isFullscreen || inPageFullscreen,
+    inPageFullscreen,
     // `error` stays a plain string for every caller that only wants to know
     // *whether* something broke; `failure` carries the diagnosis.
     error: failure?.message ?? null,

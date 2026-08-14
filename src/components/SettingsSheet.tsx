@@ -22,7 +22,7 @@ import { LinkHostSettings } from "./LinkHostSettings";
 import { DnsGuideButton } from "./DnsGuide";
 import { useLinkHosts } from "../store/useLinkHosts";
 import { TEMPLATE_FIELDS, previewTemplate, previewCount } from "../lib/sourceTemplate";
-import { readerAddress } from "../lib/pageReader";
+import { makeReaderSecret, readerAddress, readerTemplateFor } from "../lib/pageReader";
 import { getHosts, restoreHosts } from "../player/services/hostStore";
 import { getDailySeconds, restoreDailySeconds } from "../player/services/statsAndHistory";
 import { useWatchProgress } from "../store/useWatchProgress";
@@ -379,13 +379,13 @@ function SourceTemplates() {
  * `User-Agent` è un forbidden header; da qui sì, ed è il posto in cui quella
  * idea funziona davvero.
  */
-const WORKER_SNIPPET = `export default {
+const workerSnippet = (secret: string) => `export default {
   async fetch(request) {
     const url = new URL(request.url);
 
-    // CAMBIA QUESTA PAROLA: è l'unica cosa che impedisce a chi
+    // La parola segreta è già dentro: non toccarla. Impedisce a chi
     // trova il tuo indirizzo di usarlo come proxy a spese tue.
-    const SEGRETO = "cambia-questa-parola";
+    const SEGRETO = "${secret}";
     if (url.searchParams.get("k") !== SEGRETO) {
       return new Response("no", { status: 403 });
     }
@@ -427,18 +427,39 @@ const WORKER_SNIPPET = `export default {
 function PageReaderSetting() {
   const pageReader = useSettings((s) => s.pageReader);
   const setPageReader = useSettings((s) => s.setPageReader);
+  const readerSecret = useSettings((s) => s.readerSecret);
+  const setReaderSecret = useSettings((s) => s.setReaderSecret);
   const pushToast = useLibrary((s) => s.pushToast);
   const [showHelp, setShowHelp] = useState(false);
   const [showRecipe, setShowRecipe] = useState(false);
+  const [workerAddress, setWorkerAddress] = useState("");
   const preview = readerAddress(pageReader, "https://sito.tld/film/esempio");
+
+  // La parola segreta si genera alla prima apertura della ricetta e poi resta:
+  // deve essere la stessa nel codice incollato su Cloudflare e nell'indirizzo
+  // scritto qui, o il lettore risponde «no» a tutto senza spiegare perché.
+  const secret = readerSecret || "";
+  function openRecipe() {
+    if (!readerSecret) setReaderSecret(makeReaderSecret());
+    setShowRecipe((v) => !v);
+  }
+
+  const snippet = workerSnippet(secret || "genera-aprendo-la-ricetta");
 
   async function copyWorker() {
     try {
-      await navigator.clipboard.writeText(WORKER_SNIPPET);
+      await navigator.clipboard.writeText(snippet);
       pushToast("success", "Codice copiato: incollalo nell'editor del Worker.");
     } catch {
       pushToast("error", "Il browser non ha concesso gli appunti.");
     }
+  }
+
+  /** Dall'indirizzo che dà Cloudflare al modello completo, senza scriverlo. */
+  function applyWorkerAddress(raw: string) {
+    setWorkerAddress(raw);
+    const template = readerTemplateFor(raw, secret);
+    if (template) setPageReader(template);
   }
 
   return (
@@ -483,7 +504,7 @@ function PageReaderSetting() {
         </button>
         <button
           type="button"
-          onClick={() => setShowRecipe((v) => !v)}
+          onClick={openRecipe}
           aria-expanded={showRecipe}
           className="rounded-sm border border-border-strong px-2.5 py-1.5 text-xs text-text-muted"
         >
@@ -494,25 +515,17 @@ function PageReaderSetting() {
       {showRecipe && (
         <div className="mt-2 flex flex-col gap-2 rounded-sm border border-border bg-surface-2 p-3 text-xs leading-relaxed text-text-faint">
           <p className="text-text-muted">
-            Un Cloudflare Worker: piano gratuito, nessuna carta, niente da tenere acceso. Dieci
-            minuti.
+            Due cose da incollare, niente da scrivere. Un Cloudflare Worker: piano gratuito,
+            nessuna carta, niente da tenere acceso.
           </p>
-          <ol className="ml-4 flex list-decimal flex-col gap-1.5">
-            <li>
-              Su <span className="font-mono">dash.cloudflare.com</span> → Workers &amp; Pages →
-              Create → Start with Hello World → Deploy.
-            </li>
-            <li>Apri «Edit code», cancella tutto e incolla il codice qui sotto.</li>
-            <li>Cambia la parola in «SEGRETO» con una tua, e premi Deploy.</li>
-            <li>
-              Cloudflare ti dà un indirizzo. Scrivilo qui sopra in questa forma, con la tua parola:{" "}
-              <span className="break-all font-mono text-text-muted">
-                https://tuo.workers.dev/?k=tua-parola&amp;u={"{url}"}
-              </span>
-            </li>
-          </ol>
-          <pre className="max-h-56 overflow-auto rounded-sm border border-border bg-surface p-2 font-mono text-[10px] leading-relaxed text-text-muted">
-            {WORKER_SNIPPET}
+
+          <p className="font-medium text-text">
+            1. Su <span className="font-mono">dash.cloudflare.com</span> → Workers &amp; Pages →
+            Create → Start with Hello World → Deploy. Poi «Edit code», cancella tutto e incolla
+            questo:
+          </p>
+          <pre className="max-h-52 overflow-auto rounded-sm border border-border bg-surface p-2 font-mono text-[10px] leading-relaxed text-text-muted">
+            {snippet}
           </pre>
           <button
             type="button"
@@ -522,6 +535,34 @@ function PageReaderSetting() {
           >
             Copia il codice
           </button>
+          <p>
+            La parola segreta è già dentro, diversa per ogni dispositivo: non c'è niente da
+            cambiare. Premi <span className="text-text-muted">Deploy</span>.
+          </p>
+
+          <p className="mt-1 font-medium text-text">
+            2. Cloudflare ti dà un indirizzo. Incollalo qui e la casella qui sopra si compila da
+            sola:
+          </p>
+          <input
+            value={workerAddress}
+            onChange={(e) => applyWorkerAddress(e.target.value)}
+            inputMode="url"
+            autoComplete="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            aria-label="L'indirizzo che ti ha dato Cloudflare"
+            placeholder="qualcosa.tuonome.workers.dev"
+            className="w-full rounded-sm border border-border-strong bg-surface px-3 py-2.5 font-mono text-xs text-text placeholder:text-text-faint focus:border-accent"
+          />
+          {workerAddress.trim() && (
+            <p className={readerTemplateFor(workerAddress, secret) ? "text-text-muted" : "text-text-faint"}>
+              {readerTemplateFor(workerAddress, secret)
+                ? "Fatto: il lettore è configurato. Provalo con «Estrai il flusso» nel Web Viewer."
+                : "Quell'indirizzo non si capisce: dovrebbe somigliare a qualcosa.tuonome.workers.dev"}
+            </p>
+          )}
+
           <p className="border-t border-border pt-1.5">
             La riga sullo <span className="font-mono">User-Agent</span> è il punto in cui «fingersi
             un browser normale» funziona davvero: da una pagina web quell'header non si può

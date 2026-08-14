@@ -14,7 +14,9 @@ const store = new Map<string, string>();
   removeItem: (k: string) => void store.delete(k),
 };
 
-const { readerAddress, readableDocument } = await import("../../src/lib/pageReader.ts");
+const { readerAddress, readableDocument, readerTemplateFor } = await import(
+  "../../src/lib/pageReader.ts"
+);
 
 let failures = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -134,6 +136,57 @@ const PAGE = "https://sito.tld/film/esempio?x=1&y=2";
   const doc = readableDocument("<head></head>", 'https://sito.tld/?q="><script>alert(1)</script>');
   check("indirizzo con virgolette → attributo chiuso", !doc.includes('"><script>'), doc.slice(0, 120));
   check("virgolette codificate", doc.includes("&quot;"), doc.slice(0, 120));
+}
+
+// ---------------------------------------------------------------------------
+// Dall'indirizzo del Worker al modello completo
+// ---------------------------------------------------------------------------
+
+// 14. Il caso normale: quello che Cloudflare restituisce, nudo.
+{
+  const t = readerTemplateFor("qualcosa.tuonome.workers.dev", "abc123");
+  check(
+    "indirizzo nudo → modello completo",
+    t === "https://qualcosa.tuonome.workers.dev/?k=abc123&u={url}",
+    String(t),
+  );
+  // E il modello che ne esce deve funzionare davvero: è il vero controllo.
+  const finale = readerAddress(t ?? "", "https://sito.tld/x");
+  check(
+    "il modello costruito è utilizzabile",
+    finale === `https://qualcosa.tuonome.workers.dev/?k=abc123&u=${encodeURIComponent("https://sito.tld/x")}`,
+    String(finale),
+  );
+}
+
+// 15. Le sbavature dell'incollare: barra finale, protocollo già scritto, spazi.
+{
+  check(
+    "barra finale tolta",
+    readerTemplateFor("https://x.workers.dev/", "k1") === "https://x.workers.dev/?k=k1&u={url}",
+  );
+  check(
+    "spazi attorno tolti",
+    readerTemplateFor("  x.workers.dev  ", "k1") === "https://x.workers.dev/?k=k1&u={url}",
+  );
+  check(
+    "un percorso proprio resta",
+    readerTemplateFor("https://x.dev/leggi", "k1") === "https://x.dev/leggi/?k=k1&u={url}",
+    String(readerTemplateFor("https://x.dev/leggi", "k1")),
+  );
+}
+
+// 16. Una parola segreta con caratteri da codificare non rompe l'indirizzo.
+{
+  const t = readerTemplateFor("x.workers.dev", "a b&c=d");
+  check("segreto codificato", t === "https://x.workers.dev/?k=a%20b%26c%3Dd&u={url}", String(t));
+}
+
+// 17. Quello che non è un indirizzo non diventa un modello.
+{
+  check("vuoto → niente", readerTemplateFor("", "k") === null);
+  check("senza segreto → niente", readerTemplateFor("x.workers.dev", "") === null);
+  check("non un indirizzo → niente", readerTemplateFor("non un indirizzo", "k") === null);
 }
 
 console.log(failures === 0 ? "\nTutti i controlli passati." : `\n${failures} controlli falliti.`);

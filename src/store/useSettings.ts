@@ -21,9 +21,23 @@ interface Settings {
    * per cosa cambia quando c'è e perché non ne viene proposto nessuno.
    */
   pageReader: string;
+  /**
+   * La parola segreta del Worker della ricetta, generata una volta per
+   * dispositivo. Vive qui e non nel codice del Worker perché deve restare la
+   * stessa fra il codice incollato su Cloudflare e l'indirizzo scritto nella
+   * casella: se cambiasse a ogni apertura, il lettore smetterebbe di rispondere
+   * senza che si capisca perché.
+   */
+  readerSecret: string;
 }
 
-const EMPTY: Settings = { apiKey: "", model: "claude-opus-5", tmdbApiKey: "", pageReader: "" };
+const EMPTY: Settings = {
+  apiKey: "",
+  model: "claude-opus-5",
+  tmdbApiKey: "",
+  pageReader: "",
+  readerSecret: "",
+};
 
 function loadSettings(): Settings {
   try {
@@ -35,6 +49,7 @@ function loadSettings(): Settings {
       model: MODELS.some((m) => m.id === parsed.model) ? (parsed.model as ModelId) : "claude-opus-5",
       tmdbApiKey: typeof parsed.tmdbApiKey === "string" ? parsed.tmdbApiKey : "",
       pageReader: typeof parsed.pageReader === "string" ? parsed.pageReader : "",
+      readerSecret: typeof parsed.readerSecret === "string" ? parsed.readerSecret : "",
     };
   } catch {
     return { ...EMPTY };
@@ -56,12 +71,19 @@ interface SettingsState extends Settings {
   setTmdbApiKey: (tmdbApiKey: string) => void;
   clearTmdbApiKey: () => void;
   setPageReader: (pageReader: string) => void;
+  setReaderSecret: (readerSecret: string) => void;
 }
 
 const initial = loadSettings();
 
 function currentSettings(s: SettingsState): Settings {
-  return { apiKey: s.apiKey, model: s.model, tmdbApiKey: s.tmdbApiKey, pageReader: s.pageReader };
+  return {
+    apiKey: s.apiKey,
+    model: s.model,
+    tmdbApiKey: s.tmdbApiKey,
+    pageReader: s.pageReader,
+    readerSecret: s.readerSecret,
+  };
 }
 
 export const useSettings = create<SettingsState>((set, get) => ({
@@ -93,6 +115,11 @@ export const useSettings = create<SettingsState>((set, get) => ({
   },
   setPageReader: (pageReader) => {
     const next = { ...currentSettings(get()), pageReader: pageReader.trim() };
+    save(next);
+    set(next);
+  },
+  setReaderSecret: (readerSecret) => {
+    const next = { ...currentSettings(get()), readerSecret };
     save(next);
     set(next);
   },

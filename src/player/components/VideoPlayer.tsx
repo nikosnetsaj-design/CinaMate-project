@@ -362,7 +362,7 @@ export default function VideoPlayer({
       tabIndex={0}
       role="region"
       aria-label={`Player video — ${content.title}`}
-      className={`pv-shell ${isMini ? 'pv-shell--mini' : ''} ${controlsVisible ? '' : 'pv-controls-hidden'}`}
+      className={`pv-shell ${isMini ? 'pv-shell--mini' : ''} ${player.inPageFullscreen ? 'pv-shell--fullpage' : ''} ${controlsVisible ? '' : 'pv-controls-hidden'}`}
       style={{ '--pv-picture-brightness': gestures.brightness } as CSSProperties}
       onMouseMove={handleActivity}
       // Da bloccato la tastiera tace come tace il tocco: metà blocco sarebbe
