@@ -366,11 +366,80 @@ function SourceTemplates() {
  * diverso: gli indirizzi dicono *dove* leggere, questo dice *chi* legge quando
  * il browser non può. Il perché per esteso sta in `lib/pageReader.ts`.
  */
+/**
+ * Il Worker da incollare, per chi un lettore non ce l'ha.
+ *
+ * Sta qui dentro e non solo in `docs/` perché il momento in cui serve è
+ * *questo*: la casella vuota davanti. Mandare a leggere un file su GitHub da un
+ * telefono, mentre stai cercando di far partire un film, è il modo migliore per
+ * non farlo fare a nessuno.
+ *
+ * La riga sullo `User-Agent` è la risposta alla domanda che si fanno tutti —
+ * «non ci si può fingere un browser normale?». Da una pagina web no,
+ * `User-Agent` è un forbidden header; da qui sì, ed è il posto in cui quella
+ * idea funziona davvero.
+ */
+const WORKER_SNIPPET = `export default {
+  async fetch(request) {
+    const url = new URL(request.url);
+
+    // CAMBIA QUESTA PAROLA: è l'unica cosa che impedisce a chi
+    // trova il tuo indirizzo di usarlo come proxy a spese tue.
+    const SEGRETO = "cambia-questa-parola";
+    if (url.searchParams.get("k") !== SEGRETO) {
+      return new Response("no", { status: 403 });
+    }
+
+    const target = url.searchParams.get("u");
+    if (!target) return new Response("manca u", { status: 400 });
+
+    let dest;
+    try {
+      dest = new URL(target);
+      if (!/^https?:$/.test(dest.protocol)) throw new Error();
+    } catch {
+      return new Response("indirizzo non valido", { status: 400 });
+    }
+
+    const risposta = await fetch(dest.toString(), {
+      redirect: "follow",
+      headers: {
+        // Qui lo User-Agent si può scrivere: da una pagina web no.
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+          "(KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+        "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
+      },
+    });
+
+    return new Response(risposta.body, {
+      status: risposta.status,
+      headers: {
+        "content-type":
+          risposta.headers.get("content-type") ?? "text/html; charset=utf-8",
+        "access-control-allow-origin": "*",
+        "cache-control": "no-store",
+      },
+    });
+  },
+};`;
+
 function PageReaderSetting() {
   const pageReader = useSettings((s) => s.pageReader);
   const setPageReader = useSettings((s) => s.setPageReader);
+  const pushToast = useLibrary((s) => s.pushToast);
   const [showHelp, setShowHelp] = useState(false);
+  const [showRecipe, setShowRecipe] = useState(false);
   const preview = readerAddress(pageReader, "https://sito.tld/film/esempio");
+
+  async function copyWorker() {
+    try {
+      await navigator.clipboard.writeText(WORKER_SNIPPET);
+      pushToast("success", "Codice copiato: incollalo nell'editor del Worker.");
+    } catch {
+      pushToast("error", "Il browser non ha concesso gli appunti.");
+    }
+  }
 
   return (
     <div>
@@ -403,14 +472,65 @@ function PageReaderSetting() {
         </p>
       )}
 
-      <button
-        type="button"
-        onClick={() => setShowHelp((v) => !v)}
-        aria-expanded={showHelp}
-        className="mt-2 rounded-sm border border-border-strong px-2.5 py-1.5 text-xs text-text-muted"
-      >
-        {showHelp ? "Nascondi le forme accettate" : "Come si scrive l'indirizzo?"}
-      </button>
+      <div className="mt-2 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setShowHelp((v) => !v)}
+          aria-expanded={showHelp}
+          className="rounded-sm border border-border-strong px-2.5 py-1.5 text-xs text-text-muted"
+        >
+          {showHelp ? "Nascondi le forme accettate" : "Come si scrive l'indirizzo?"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowRecipe((v) => !v)}
+          aria-expanded={showRecipe}
+          className="rounded-sm border border-border-strong px-2.5 py-1.5 text-xs text-text-muted"
+        >
+          {showRecipe ? "Nascondi la ricetta" : "Non ne ho uno: come me lo faccio?"}
+        </button>
+      </div>
+
+      {showRecipe && (
+        <div className="mt-2 flex flex-col gap-2 rounded-sm border border-border bg-surface-2 p-3 text-xs leading-relaxed text-text-faint">
+          <p className="text-text-muted">
+            Un Cloudflare Worker: piano gratuito, nessuna carta, niente da tenere acceso. Dieci
+            minuti.
+          </p>
+          <ol className="ml-4 flex list-decimal flex-col gap-1.5">
+            <li>
+              Su <span className="font-mono">dash.cloudflare.com</span> → Workers &amp; Pages →
+              Create → Start with Hello World → Deploy.
+            </li>
+            <li>Apri «Edit code», cancella tutto e incolla il codice qui sotto.</li>
+            <li>Cambia la parola in «SEGRETO» con una tua, e premi Deploy.</li>
+            <li>
+              Cloudflare ti dà un indirizzo. Scrivilo qui sopra in questa forma, con la tua parola:{" "}
+              <span className="break-all font-mono text-text-muted">
+                https://tuo.workers.dev/?k=tua-parola&amp;u={"{url}"}
+              </span>
+            </li>
+          </ol>
+          <pre className="max-h-56 overflow-auto rounded-sm border border-border bg-surface p-2 font-mono text-[10px] leading-relaxed text-text-muted">
+            {WORKER_SNIPPET}
+          </pre>
+          <button
+            type="button"
+            onClick={copyWorker}
+            className="self-start rounded-sm px-3 py-1.5 text-xs font-semibold"
+            style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+          >
+            Copia il codice
+          </button>
+          <p className="border-t border-border pt-1.5">
+            La riga sullo <span className="font-mono">User-Agent</span> è il punto in cui «fingersi
+            un browser normale» funziona davvero: da una pagina web quell'header non si può
+            toccare, da un Worker sì — ed è ciò che molti siti guardano per decidere cosa servire.
+            La parola segreta non è decorativa: senza, chiunque trovi l'indirizzo ha un proxy
+            aperto a spese tue.
+          </p>
+        </div>
+      )}
 
       {showHelp && (
         <div className="mt-2 flex flex-col gap-1.5 rounded-sm border border-border bg-surface-2 p-3 text-xs leading-relaxed text-text-faint">
