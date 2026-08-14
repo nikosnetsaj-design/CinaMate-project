@@ -67,7 +67,10 @@ const LEVELS: { id: BlockLevel; label: string; hint: string }[] = [
   {
     id: "minimo",
     label: "Minimo",
-    hint: "Gli script girano. È il livello in cui un player che si carica da JavaScript parte davvero — e anche quello in cui torna tutto il resto. Pop-up e cambi di pagina restano bloccati comunque.",
+    // La riga sui pop-up la scrive la nota sotto i livelli, che vale per tutti
+    // e tre: ripeterla qui la faceva comparire due volte di fila, con due
+    // parole diverse per la stessa cosa.
+    hint: "Gli script girano. È il livello in cui un player che si carica da JavaScript parte davvero — e anche quello in cui torna tutto il resto.",
   },
 ];
 
