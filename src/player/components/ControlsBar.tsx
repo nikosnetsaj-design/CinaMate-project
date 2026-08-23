@@ -31,11 +31,17 @@ type Props = {
   onNext: (() => void) | null;
   onToggleMini: () => void;
   onToggleFullscreen: () => void;
+  /**
+   * Dove far arrivare il motivo quando un comando non ha potuto agire. Un
+   * pulsante che si preme e non fa niente è la cosa peggiore che ci sia in una
+   * fascia di comandi: chi lo preme non sa se sia rotto lui o il telefono.
+   */
+  onNotice: (message: string) => void;
 };
 
 export default function ControlsBar({
   player, progress, onOpenSettings, onOpenEpisodes, hasEpisodes, onOpenClip, onNext,
-  onToggleMini, onToggleFullscreen,
+  onToggleMini, onToggleFullscreen, onNotice,
 }: Props) {
   return (
     <div className="pv-controls-bar">
@@ -86,12 +92,31 @@ export default function ControlsBar({
           </div>
 
           {player.pipSupported && (
-            <button className="pv-icon-btn" aria-label="Picture in Picture" onClick={player.togglePiP}>
+            <button
+              className="pv-icon-btn"
+              aria-label="Immagine nell'immagine"
+              title="Immagine nell'immagine: il video esce in una finestrella sopra le altre app"
+              onClick={async () => {
+                const esito = await player.togglePiP();
+                if (esito === 'non-ora') {
+                  onNotice('L’immagine nell’immagine ha bisogno di un video già avviato.');
+                } else if (esito === 'non-supportato') {
+                  onNotice('Questo browser non concede l’immagine nell’immagine.');
+                }
+              }}
+            >
               <PipIcon />
+              <span className="pv-tool-label">Finestrella</span>
             </button>
           )}
-          <button className="pv-icon-btn" aria-label="Mini player" onClick={onToggleMini}>
+          <button
+            className="pv-icon-btn"
+            aria-label="Mini player"
+            title="Mini player: la scena si rimpicciolisce in un angolo di CineMate"
+            onClick={onToggleMini}
+          >
             <MiniPlayerIcon />
+            <span className="pv-tool-label">Mini</span>
           </button>
           <button className="pv-icon-btn" aria-label="Impostazioni" onClick={() => onOpenSettings('quality')}>
             <SettingsIcon />

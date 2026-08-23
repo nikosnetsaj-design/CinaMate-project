@@ -1697,3 +1697,31 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ===================== Le parole accanto agli attrezzi ===================== */
+/*
+ * «Finestrella» e «Mini» accanto alle loro icone, sulle scene abbastanza larghe.
+ *
+ * Erano due rettangoli quasi identici — l'immagine nell'immagine e il mini
+ * player — affiancati nella stessa fascia: chi li guardava non aveva niente da
+ * cui capire quale fosse quale, e infatti la domanda che è arrivata è stata
+ * «non so cos'è». Il disegno adesso li distingue (vedi `Icons.tsx`), ma dove
+ * c'è spazio la parola è meglio del disegno: è la stessa regola delle cinque
+ * azioni a sinistra, applicata alle due che nessuno riconosce.
+ */
+.pv-tool-label { display: none; }
+/*
+ * 1150 e non un numero a caso: è la larghezza misurata alla quale la fascia
+ * con tutte e cinque le azioni scritte, la slitta del volume e queste due
+ * parole sta ancora su una riga sola. Sotto, andava a capo e la fascia si
+ * prendeva 98 pixel invece di 34 — cioè il rimedio costava più del problema.
+ */
+@container pv (min-width: 1150px) {
+  .pv-tool-label {
+    display: inline;
+    font-size: 0.92rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .pv-icon-btn:has(.pv-tool-label) { gap: 8px; padding: 6px 8px; }
+}

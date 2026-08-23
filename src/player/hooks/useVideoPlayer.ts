@@ -529,21 +529,33 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
   // fullscreen on iOS hands over to the OS player rather than blowing up our
   // own shell; that is the only fullscreen iOS offers.
   // ---------------------------------------------------------------------
-  const togglePiP = useCallback(async () => {
+  /**
+   * Torna com'è andata, invece di ingoiare tutto.
+   *
+   * Il `catch` muto era il difetto: l'immagine nell'immagine ha bisogno di un
+   * video che stia già suonando — su un elemento senza sorgente il browser
+   * rifiuta — e chi premeva vedeva un pulsante che non fa niente, senza sapere
+   * se fosse rotto lui o il telefono. Chi chiama può dirlo.
+   */
+  const togglePiP = useCallback(async (): Promise<'ok' | 'non-supportato' | 'non-ora'> => {
     const video = videoRef.current as WebkitVideoElement | null;
-    if (!video) return;
+    if (!video) return 'non-ora';
     try {
       if (document.pictureInPictureEnabled) {
         if (document.pictureInPictureElement) await document.exitPictureInPicture();
         else await video.requestPictureInPicture();
-        return;
+        return 'ok';
       }
       if (video.webkitSupportsPresentationMode?.('picture-in-picture')) {
         const next = video.webkitPresentationMode === 'picture-in-picture' ? 'inline' : 'picture-in-picture';
         video.webkitSetPresentationMode?.(next);
+        return 'ok';
       }
+      return 'non-supportato';
     } catch {
-      // Blocked (no user gesture, or the OS refused) — the button stays put.
+      // Rifiutata: quasi sempre perché non c'è ancora niente da riprodurre —
+      // `readyState` a zero — oppure perché il gesto non è stato riconosciuto.
+      return video.readyState === 0 ? 'non-ora' : 'non-supportato';
     }
   }, []);
 
@@ -613,10 +625,16 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
   }, [inPageFullscreen]);
 
   /** Whether this browser can do it at all, so the UI can hide what it can't. */
+  // Come per lo schermo intero: si guardano il documento e il *prototipo*, non
+  // un elemento vivo. `videoRef.current` al primo render è ancora `null`, e un
+  // ref non fa ridisegnare niente: il pulsante poteva mancare all'apertura e
+  // comparire dopo, senza che nulla lo spiegasse.
   const pipSupported =
     typeof document !== 'undefined' &&
-    (document.pictureInPictureEnabled ||
-      !!(videoRef.current as WebkitVideoElement | null)?.webkitSupportsPresentationMode);
+    (!!document.pictureInPictureEnabled ||
+      (typeof HTMLVideoElement !== 'undefined' &&
+        typeof (HTMLVideoElement.prototype as WebkitVideoElement).webkitSupportsPresentationMode ===
+          'function'));
   // Sempre: quando l'API vera non c'è, lo schermo pieno lo fa la scena da sé.
   // Prima si guardava `videoRef.current`, che al primo render è ancora `null` —
   // e un ref non fa ridisegnare niente, quindi su un telefono il pulsante

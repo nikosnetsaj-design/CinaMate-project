@@ -35,14 +35,33 @@ export const MuteIcon = () => (
     <line x1="22" y1="9" x2="17" y2="15" />
   </svg>
 );
+/*
+ * Impostazioni: tre cursori, non un cerchio con i raggi.
+ *
+ * Il disegno di prima era un sole — cerchio al centro e otto raggi attorno — e
+ * questo lettore ha *davvero* un comando per la luminosità: due cose diverse
+ * con la stessa figura, una accanto all'altra nella stessa fascia. Tre cursori
+ * dicono «qui si regolano delle cose» e non somigliano a nient'altro sulla
+ * scena.
+ */
 export const SettingsIcon = () => (
   <svg {...base}>
-    <circle cx="12" cy="12" r="3" />
-    <path d="M4 12h2M18 12h2M12 4v2M12 18v2M6.5 6.5l1.4 1.4M16.1 16.1l1.4 1.4M17.5 6.5l-1.4 1.4M7.9 16.1l-1.4 1.4" />
+    <path d="M4 7h16M4 12h16M4 17h16" />
+    <circle cx="9" cy="7" r="1.9" fill="currentColor" />
+    <circle cx="15" cy="12" r="1.9" fill="currentColor" />
+    <circle cx="8" cy="17" r="1.9" fill="currentColor" />
   </svg>
 );
+/*
+ * Immagine nell'immagine: il riquadro grande centrato nella griglia (prima
+ * stava alto, con quattro pixel sopra e sei sotto) e il riquadro piccolo pieno
+ * nell'angolo, che è la convenzione che tutti riconoscono.
+ */
 export const PipIcon = () => (
-  <svg {...base}><rect x="3" y="4" width="18" height="14" rx="1" /><rect x="12" y="11" width="7" height="5" rx="1" fill="currentColor" stroke="none" /></svg>
+  <svg {...base}>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <rect x="12" y="12" width="7" height="5" rx="1" fill="currentColor" stroke="none" />
+  </svg>
 );
 export const CastIcon = () => (
   <svg {...base}>
@@ -64,8 +83,22 @@ export const ExitFullscreenIcon = () => (
     <path d="M9 21v-3a2 2 0 0 0-2-2H4" /><path d="M15 21v-3a2 2 0 0 1 2-2h3" />
   </svg>
 );
+/*
+ * Mini player: la freccia è tutta la differenza.
+ *
+ * Prima era un riquadro con dentro un altro riquadro — cioè la stessa figura
+ * dell'immagine nell'immagine, un quadrato invece che un rettangolo. Due
+ * comandi diversi, affiancati nella stessa fascia, disegnati uguali: non è che
+ * si sbagliasse a premere, è che non c'era niente da capire. La freccia che
+ * rientra nell'angolo dice cosa fa: la scena si rimpicciolisce lì.
+ */
 export const MiniPlayerIcon = () => (
-  <svg {...base}><rect x="3" y="3" width="18" height="18" rx="1" /><rect x="11" y="12" width="8" height="6" rx="1" /></svg>
+  <svg {...base}>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <rect x="12" y="12" width="7" height="5" rx="1" fill="currentColor" stroke="none" />
+    <path d="M10 8.5L6.5 12" />
+    <path d="M6.5 12h2.6M6.5 12V9.4" />
+  </svg>
 );
 export const CloseIcon = () => (
   <svg {...base}><line x1="5" y1="5" x2="19" y2="19" /><line x1="19" y1="5" x2="5" y2="19" /></svg>
