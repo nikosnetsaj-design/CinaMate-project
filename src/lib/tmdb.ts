@@ -1166,6 +1166,114 @@ export async function getSaga(collectionId: number, apiKey: string): Promise<Tmd
 }
 
 /* ------------------------------------------------------------------ */
+/* Collezioni — la famiglia di un titolo, film e serie insieme         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Un titolo che fa parte della stessa collezione di un altro: un capitolo, uno
+ * spin-off, il remake coreano, il documentario dietro le quinte.
+ *
+ * Non è una `TmdbSagaPart` perché quella descrive un film di una collezione
+ * TMDB, e qui metà delle voci sono serie — con le stagioni al posto dell'anno
+ * di uscita come misura di quanto c'è da guardare.
+ */
+export interface TmdbFranchiseEntry {
+  tmdbId: number;
+  mediaType: "movie" | "tv";
+  kind: Kind;
+  title: string;
+  /** La data di uscita o della prima puntata: è l'ordine in cui si guardano. */
+  releaseDate: string | null;
+  year: number | null;
+  overview: string;
+  posterPath: string | null;
+  popularity: number;
+}
+
+function toFranchiseEntry(raw: RawMultiSearchResult, mediaType: "movie" | "tv"): TmdbFranchiseEntry {
+  const genreNames = (raw.genre_ids ?? []).map((id) => GENRE_NAMES[id]).filter((n): n is string => !!n);
+  const date = raw.release_date || raw.first_air_date || null;
+  return {
+    tmdbId: raw.id,
+    mediaType,
+    kind: guessKind(mediaType, genreNames, raw.origin_country),
+    title: (raw.title || raw.name || "").trim(),
+    releaseDate: date && date.length >= 4 ? date : null,
+    year: date && date.length >= 4 ? Number(date.slice(0, 4)) : null,
+    overview: raw.overview || "",
+    posterPath: raw.poster_path ?? null,
+    popularity: raw.popularity ?? 0,
+  };
+}
+
+/**
+ * Tutto quello che porta una parola chiave, film e serie insieme.
+ *
+ * Una richiesta per tipo, perché `/discover` non è multi: TMDB tiene i due
+ * cataloghi separati, ed è esattamente la separazione che questa funzione
+ * esiste per ricucire — «La casa di carta» e «Berlino» sono la stessa storia in
+ * due schede che non si conoscono.
+ *
+ * Sette giorni di cache: una collezione guadagna un titolo ogni tanti mesi.
+ */
+const keywordTitlesCache = new TieredCache<TmdbFranchiseEntry[]>("keyword-titoli", TTL.static);
+
+export async function getKeywordTitles(keywordId: number, apiKey: string): Promise<TmdbFranchiseEntry[]> {
+  const hit = await keywordTitlesCache.get(String(keywordId));
+  if (hit) return hit;
+
+  const [movies, shows] = await Promise.all([
+    tmdbGet<{ results: RawMultiSearchResult[] }>("/discover/movie", apiKey, {
+      with_keywords: String(keywordId),
+      sort_by: "primary_release_date.asc",
+      include_adult: "false",
+    }).catch(() => ({ results: [] as RawMultiSearchResult[] })),
+    tmdbGet<{ results: RawMultiSearchResult[] }>("/discover/tv", apiKey, {
+      with_keywords: String(keywordId),
+      sort_by: "first_air_date.asc",
+      include_adult: "false",
+    }).catch(() => ({ results: [] as RawMultiSearchResult[] })),
+  ]);
+
+  const entries = [
+    ...movies.results.map((r) => toFranchiseEntry(r, "movie")),
+    ...shows.results.map((r) => toFranchiseEntry(r, "tv")),
+  ].filter((e) => e.title);
+
+  keywordTitlesCache.set(String(keywordId), entries);
+  return entries;
+}
+
+/**
+ * I titoli che cominciano come questo — l'altra metà della collezione.
+ *
+ * Le parole chiave prendono gli spin-off che hanno cambiato nome; questa prende
+ * i seguiti che il nome se lo sono tenuto («… Corea», «… Il fenomeno») e che
+ * nessuno si è preso la briga di etichettare. Chi le mette insieme, e con quali
+ * regole, è `lib/franchise.ts`: qui si chiede soltanto.
+ */
+const franchiseSearchCache = new TieredCache<TmdbFranchiseEntry[]>("collezione-cerca", TTL.metadata);
+
+export async function searchFranchiseTitles(query: string, apiKey: string): Promise<TmdbFranchiseEntry[]> {
+  const key = query.trim().toLowerCase();
+  if (!key) return [];
+  const hit = await franchiseSearchCache.get(key);
+  if (hit) return hit;
+
+  const data = await tmdbGet<{ results: RawMultiSearchResult[] }>("/search/multi", apiKey, {
+    query,
+    include_adult: "false",
+  });
+  const entries = data.results
+    .filter((r): r is RawMultiSearchResult & { media_type: "movie" | "tv" } => r.media_type === "movie" || r.media_type === "tv")
+    .map((r) => toFranchiseEntry(r, r.media_type))
+    .filter((e) => e.title);
+
+  franchiseSearchCache.set(key, entries);
+  return entries;
+}
+
+/* ------------------------------------------------------------------ */
 /* Persone — attori e registi                                          */
 /* ------------------------------------------------------------------ */
 
@@ -1415,6 +1523,32 @@ export interface TmdbTitleExtras {
   posters: string[];
   backdrops: string[];
   related: TmdbSearchResult[];
+  /**
+   * Le parole chiave della comunità TMDB. Sono qui per una ragione sola: sono
+   * il solo appiglio che TMDB offre per tenere insieme una *famiglia* di serie
+   * — le collezioni esistono per i film e basta. Vedi `lib/franchise.ts`.
+   */
+  keywords: TmdbKeyword[];
+  /**
+   * Le stagioni come le elenca TMDB, con quanti episodi ha ciascuna. Arrivano
+   * nella stessa risposta della scheda, quindi la tendina delle stagioni e il
+   * conto «dove sei rimasto» non costano una richiesta in più.
+   */
+  seasons: TmdbSeasonSummary[];
+}
+
+export interface TmdbKeyword {
+  id: number;
+  name: string;
+}
+
+export interface TmdbSeasonSummary {
+  seasonNumber: number;
+  /** Il nome che le ha dato TMDB — «Stagione 3», ma anche «Parte 5». */
+  name: string;
+  episodeCount: number;
+  airDate: string | null;
+  posterPath: string | null;
 }
 
 interface RawImage {
@@ -1435,6 +1569,22 @@ interface RawExtras extends RawDetails {
   credits?: { cast?: RawCast[]; crew?: (RawCrew & { id: number; profile_path?: string | null; department?: string })[] };
   videos?: { results?: (RawVideo & { name?: string; iso_639_1?: string })[] };
   recommendations?: { results?: RawMultiSearchResult[] };
+  // I film le chiamano `keywords`, le serie `results`: stessa cosa, due nomi.
+  keywords?: { keywords?: RawKeyword[]; results?: RawKeyword[] };
+  seasons?: RawSeason[];
+}
+
+interface RawKeyword {
+  id: number;
+  name?: string;
+}
+
+interface RawSeason {
+  season_number?: number;
+  name?: string;
+  episode_count?: number;
+  air_date?: string | null;
+  poster_path?: string | null;
 }
 
 /**
@@ -1505,7 +1655,7 @@ export function getTitleExtras(tmdbId: number, mediaType: "movie" | "tv", apiKey
   // partirebbero quattro richieste identiche.
   const promise = (async (): Promise<TmdbTitleExtras> => {
     const raw = await tmdbGet<RawExtras>(`/${mediaType}/${tmdbId}`, apiKey, {
-      append_to_response: "credits,images,videos,recommendations",
+      append_to_response: "credits,images,videos,recommendations,keywords",
       // Senza questi due, `language=it-IT` restituisce solo il materiale
       // italiano — che per tre titoli su quattro vuol dire niente.
       include_image_language: "it,en,null",
@@ -1581,6 +1731,21 @@ export function getTitleExtras(tmdbId: number, mediaType: "movie" | "tv", apiKey
       posters: sortImages(raw.images?.posters, 16),
       backdrops: sortImages(raw.images?.backdrops, 16),
       related,
+      keywords: (raw.keywords?.keywords ?? raw.keywords?.results ?? [])
+        .map((k) => ({ id: k.id, name: (k.name ?? "").trim() }))
+        .filter((k) => k.name),
+      // La stagione 0 sono gli speciali, e non è una stagione: metterla in
+      // cima alla tendina vorrebbe dire aprire una serie sui suoi extra.
+      seasons: (raw.seasons ?? [])
+        .filter((s) => (s.season_number ?? 0) > 0 && (s.episode_count ?? 0) > 0)
+        .map((s) => ({
+          seasonNumber: s.season_number ?? 0,
+          name: s.name?.trim() || `Stagione ${s.season_number}`,
+          episodeCount: s.episode_count ?? 0,
+          airDate: s.air_date || null,
+          posterPath: s.poster_path ?? null,
+        }))
+        .sort((a, b) => a.seasonNumber - b.seasonNumber),
     };
   })();
 
@@ -1610,6 +1775,8 @@ export function clearTmdbCaches(): void {
   creditsCache.clear();
   logoCache.clear();
   collectionCache.clear();
+  keywordTitlesCache.clear();
+  franchiseSearchCache.clear();
   personCache.clear();
   personIdCache.clear();
   keywordIdCache.clear();

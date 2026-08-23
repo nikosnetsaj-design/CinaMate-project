@@ -48,6 +48,7 @@ npm install
 npm run dev      # ambiente di sviluppo
 npm run build    # build di produzione (tsc + vite build)
 npm run lint      # oxlint
+npm test          # il banco di prova: scripts/tests/*.test.ts
 npm run contrast  # WCAG AA su ogni coppia testo/sfondo dei due temi
 ```
 
@@ -79,7 +80,15 @@ src/
                 spatialNav, anthropic, backup, errorLog, selfTest)
                   useTitleExtras.ts il resto della scheda in una richiesta sola:
                                     troupe, budget, studi, video, immagini,
-                                    correlati — fuori dal record della libreria
+                                    correlati, parole chiave e stagioni — fuori
+                                    dal record della libreria
+                  franchise.ts      chi sta nella stessa collezione, e con quali
+                                    regole: codice puro, provato in
+                                    scripts/tests/franchise.test.ts
+                  useFranchise.ts   la collezione montata da TMDB — collezione
+                                    del film, parola chiave della famiglia,
+                                    titoli che cominciano uguale — per le serie
+                                    come per i film
                   useAddFromCatalog.ts  da una locandina del catalogo al foglio
                                     di aggiunta già compilato, uguale ovunque
                                     (lo usa il pulsante dentro la scheda del
@@ -172,8 +181,8 @@ rete che non è la tua.
 - **Scheda del titolo**: si apre con la copertina larga e il play al centro,
   la riga dei fatti (anno · classificazione · stagioni · durata · qualità), un
   solo pulsante pieno — **Guarda** — e cinque azioni tonde: Trailer, Preferito,
-  Voto, Guardato, Condividi. Sotto, quattro schede: **Episodi**, Dettagli, Saga,
-  Simili.
+  Voto, Guardato, Condividi. Sotto, le schede: **Episodi**, **Collezione**,
+  Dettagli, Simili.
 - **Cast con le facce**: foto tonde, nome e personaggio, con «mostra tutti».
   Un attore si ricorda per la faccia e per il ruolo prima che per il nome; senza
   TMDB restano le pastiglie con i nomi, che la libreria ha comunque.
@@ -222,6 +231,25 @@ rete che non è la tua.
   corrente, perché in una saga da dieci film «sei qui» sarebbe fuori schermo. I
   capitoli che non hai sono spenti e aprono il foglio di aggiunta: un buco nella
   saga è esattamente il momento in cui uno vuole tapparlo.
+- **Collezione**: tutto quello che sta nella stessa storia — film *e* serie
+  insieme — in griglia, con **SEI QUI** sotto quello aperto, il segno di visione
+  su ognuno, quanto ne hai visto e **Continua con** in fondo. È la sezione che
+  alle serie mancava del tutto: una collezione TMDB esiste solo per i film,
+  quindi «La casa di carta» non portava da nessuna parte e le altre quattro
+  schede della stessa storia — il remake coreano, lo spin-off su Berlino, i due
+  documentari — esistevano senza che dalla prima ci fosse modo di sapere che
+  esistono. Chi ci sta dentro lo decidono tre indizi in ordine di fiducia
+  (`lib/franchise.ts`): la collezione TMDB quando c'è, la parola chiave che
+  porta il **nome** del titolo — `la casa de papel`, non `rapina in banca`:
+  quella è l'etichetta con cui la comunità ha marcato la famiglia, ed è l'unica
+  strada per uno spin-off che ha cambiato nome — e i titoli che cominciano
+  uguale a parola intera («… Corea» entra, «Berlinale» no). Quello che qui non
+  si fa è indovinare per somiglianza: due gialli con lo stesso attore non sono
+  una collezione, e i titoli simili hanno già la loro fila, che dice di essere
+  una proposta. Dove la linea Prequel & Sequel c'è già, la griglia si tiene solo
+  il resto — le serie, gli spin-off, i documentari — invece di ripetere gli
+  stessi capitoli due volte. «Continua con» salta i documentari finché c'è
+  ancora storia: il making of non è il seguito.
 - **Film correlati**: venti titoli con la locandina, presi da TMDB nel momento
   in cui apri la scheda — quindi non invecchiano mai. Quelli che hai già portano
   il segno e aprono la loro scheda; gli altri si aggiungono da lì. Le tre
@@ -235,7 +263,14 @@ rete che non è la tua.
 - **Episodi per stagione**: per una serie collegata a TMDB l'elenco delle
   puntate con miniatura, durata, voto e trama, con la tendina delle stagioni
   (sette stagioni in fila orizzontale costringono a scorrere per arrivare
-  all'ultima, che è quella che si cerca). Il segno di spunta segna «visto
+  all'ultima, che è quella che si cerca). Le stagioni sono quelle che elenca
+  TMDB, coi loro nomi veri — «Parte 3», non «Stagione 3» — e con quante puntate
+  hanno accanto; gli speciali (la stagione 0) restano fuori, perché aprire una
+  serie sui suoi extra non è aprirla. **L'elenco si apre dove sei rimasto**:
+  la stagione che contiene la puntata dopo l'ultima vista, con **Riprendi da
+  S3E3** in cima e la riga marcata più sotto. Prima si apriva sempre sulla
+  prima, il che per una serie a metà del quarto anno vuol dire aprire nel punto
+  sbagliato ogni volta. Il segno di spunta segna «visto
   fino a qui» — traducendo la puntata nel totale che la libreria tiene — e il
   play su una riga apre *quella* puntata: stagione ed episodio finiscono nelle
   sorgenti del titolo, quindi l'indirizzo costruito diventa `…/s02e07.m3u8`
