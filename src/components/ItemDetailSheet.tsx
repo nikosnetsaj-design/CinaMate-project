@@ -18,17 +18,19 @@ import { SagaLine } from "./SagaLine";
 import { CastRow } from "./CastRow";
 import { TitleFacts } from "./TitleFacts";
 import { RelatedRow } from "./RelatedRow";
+import { CollectionGrid } from "./CollectionGrid";
 import { ShareSheet } from "./ShareSheet";
 import { EpisodeList } from "./EpisodeList";
 import { DownloadButton } from "./DownloadButton";
 import { SpoilerFreeRecap, TranslateOverview } from "./AiItemExtras";
-import { HeartIcon, InfoIcon, PlayIcon } from "./icons";
+import { HeartIcon, InfoIcon, PlayIcon, StackIcon } from "./icons";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useLibrary } from "../store/useLibrary";
 import { useEditSheet } from "../store/useEditSheet";
 import { useAddSheet } from "../store/useAddSheet";
 import { useCriticDraft } from "../store/useCriticDraft";
 import { useTitleLogo } from "../lib/useTitleLogo";
+import { useFranchise } from "../lib/useFranchise";
 import type { Item, Status } from "../types";
 
 /**
@@ -71,7 +73,7 @@ function RoundAction({
   );
 }
 
-type Tab = "episodi" | "dettagli" | "saga" | "simili";
+type Tab = "episodi" | "dettagli" | "collezione" | "simili";
 
 function ItemDetail({ item }: { item: Item }) {
   const close = useSelectedItem((s) => s.close);
@@ -101,12 +103,26 @@ function ItemDetail({ item }: { item: Item }) {
   const pct = isSeries && item.episodes ? Math.round(((item.seen || 0) / item.episodes) * 100) : null;
   const watchedMinutes = item.kind === "film" ? (item.status === "Visto" ? item.runtime : 0) : (item.seen || 0) * item.runtime;
 
+  // La collezione decide da sola se esistere: per un film la conosce TMDB
+  // (`collectionId`), per una serie la ricostruisce `lib/franchise.ts` e la
+  // risposta arriva poco dopo l'apertura. La scheda compare quando c'è
+  // qualcosa dentro, e non prima — una scheda vuota è peggio di una in meno.
+  const franchise = useFranchise(item);
+  // Finché la risposta non c'è vale la collezione TMDB, che si sa dal record:
+  // per i film — il caso comune — la scheda è lì da subito e non compare a
+  // pagina già letta. Dopo, decide quello che è stato trovato davvero.
+  const hasCollection = franchise.loading ? item.collectionId != null : franchise.entries.length > 1;
+
   const TABS: { id: Tab; label: string }[] = [
     ...(isSeries ? [{ id: "episodi" as const, label: "Episodi" }] : []),
+    ...(hasCollection ? [{ id: "collezione" as const, label: "Collezione" }] : []),
     { id: "dettagli", label: "Dettagli" },
-    ...(item.collectionId != null ? [{ id: "saga" as const, label: "Saga" }] : []),
     { id: "simili", label: "Simili" },
   ];
+  // La scheda scelta può sparire sotto i piedi — una collezione che si rivela
+  // vuota — e senza questo resterebbe un pannello vuoto senza nessuna linguetta
+  // accesa. In quel caso vince la prima.
+  const active: Tab = TABS.some((t) => t.id === tab) ? tab : TABS[0].id;
 
   return createPortal(
     <div className="fixed inset-0 z-70 overflow-y-auto bg-bg" ref={containerRef} role="dialog" aria-modal="true" aria-labelledby={titleId}>
@@ -265,6 +281,47 @@ function ItemDetail({ item }: { item: Item }) {
 
         <CastRow item={item} />
 
+        {/* La collezione, annunciata dove si legge la scheda invece che solo
+            nella riga delle linguette. Una serie che fa parte di qualcosa di
+            più grande è un fatto del titolo, come l'anno o il cast: dirlo qui
+            costa una riga e risparmia la scoperta per caso. Sparisce quando sei
+            già nella scheda che aprirebbe. */}
+        {hasCollection && active !== "collezione" && (
+          <button
+            type="button"
+            onClick={() => {
+              setTab("collezione");
+              requestAnimationFrame(() => tabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+            }}
+            className="mt-4 flex w-full items-center gap-3 rounded-md border border-border bg-surface-2 p-3.5 text-left transition-colors hover:bg-surface-hover"
+          >
+            <span
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+              style={{ background: "color-mix(in srgb, var(--accent) 16%, transparent)", color: "var(--accent-text)" }}
+            >
+              <StackIcon size={17} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[11px] uppercase tracking-[0.16em] text-text-faint">
+                Fa parte di una collezione
+              </span>
+              <span className="block truncate font-display text-sm font-semibold text-text">
+                {franchise.name ||
+                  (item.collectionName ?? "") ||
+                  `${franchise.progress.total} titoli nella stessa storia`}
+              </span>
+            </span>
+            {franchise.progress.total > 0 && (
+              <span className="shrink-0 font-mono tabular text-[11px] text-text-faint">
+                {franchise.progress.watched}/{franchise.progress.total}
+              </span>
+            )}
+            <span aria-hidden="true" className="shrink-0 text-text-faint">
+              →
+            </span>
+          </button>
+        )}
+
         {/* «Maggiori informazioni»: la scorciatoia dal cast ai dati del film.
             Le schede qui sotto ci sono già, ma dopo una fila di facce lo
             sguardo è a metà pagina e la riga delle schede è appena passata —
@@ -295,12 +352,12 @@ function ItemDetail({ item }: { item: Item }) {
               key={t.id}
               type="button"
               role="tab"
-              aria-selected={tab === t.id}
+              aria-selected={active === t.id}
               onClick={() => setTab(t.id)}
               className={`-mb-px rounded-t-sm border-b-2 px-3.5 py-2 text-sm font-medium transition-colors ${
-                tab === t.id ? "text-text" : "border-transparent text-text-faint hover:text-text-muted"
+                active === t.id ? "text-text" : "border-transparent text-text-faint hover:text-text-muted"
               }`}
-              style={tab === t.id ? { borderColor: "var(--accent)" } : undefined}
+              style={active === t.id ? { borderColor: "var(--accent)" } : undefined}
             >
               {t.label}
             </button>
@@ -308,7 +365,7 @@ function ItemDetail({ item }: { item: Item }) {
         </div>
 
         <div className="mt-4">
-          {tab === "episodi" && (
+          {active === "episodi" && (
             <div className="flex flex-col gap-4">
               <EpisodeList item={item} onNavigate={close} />
 
@@ -360,7 +417,7 @@ function ItemDetail({ item }: { item: Item }) {
             </div>
           )}
 
-          {tab === "dettagli" && (
+          {active === "dettagli" && (
             <div className="flex flex-col">
               <div>
                 <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Stato</span>
@@ -460,14 +517,21 @@ function ItemDetail({ item }: { item: Item }) {
             </div>
           )}
 
-          {tab === "saga" && (
-            <div className="flex flex-col gap-1">
+          {active === "collezione" && (
+            <div className="flex flex-col gap-5">
+              {/* Prima la linea dei capitoli — prequel e sequel in ordine, con
+                  "sei qui" — che esiste solo per i film di una collezione TMDB.
+                  Poi la griglia, che tiene dentro anche quello che una
+                  collezione TMDB non sa: le serie, gli spin-off, i
+                  documentari. Per una serie c'è solo la seconda, ed è
+                  esattamente il buco che prima non aveva niente. */}
               <SagaLine item={item} />
+              <CollectionGrid item={item} />
               <ItemSagaStrip item={item} />
             </div>
           )}
 
-          {tab === "simili" && (
+          {active === "simili" && (
             <div className="flex flex-col gap-4">
               {/* Le locandine di TMDB per prime: sono la risposta piena alla
                   domanda "e adesso cosa guardo", e i titoli che hai già

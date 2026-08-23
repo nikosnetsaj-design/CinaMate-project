@@ -15,6 +15,7 @@ import { PosterArt } from "./PosterArt";
 import { CastRow } from "./CastRow";
 import { TitleFacts } from "./TitleFacts";
 import { RelatedRow } from "./RelatedRow";
+import { CollectionGrid } from "./CollectionGrid";
 import { WatchProvidersBlock } from "./WatchAndLinks";
 import { PlayIcon, PlusIcon } from "./icons";
 import type { Item } from "../types";
@@ -272,6 +273,13 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
         <CastRow item={item} />
         <WatchProvidersBlock item={item} />
         <TitleFacts item={item} />
+
+        {/* La collezione anche qui, e prima dei correlati: di un titolo che non
+            hai la prima domanda è «da dove viene», e la risposta cambia se è il
+            terzo capitolo di qualcosa che stai già guardando. */}
+        <div className="mt-6">
+          <CollectionGrid item={item} />
+        </div>
 
         <div className="mt-6">
           <RelatedRow item={item} />

@@ -12,6 +12,7 @@ import { useVisibleItems } from "../lib/useVisibleItems";
 import { useUpcoming } from "../lib/useUpcoming";
 import { effectiveUrl, hostLabel, withProtocol } from "../lib/linkHost";
 import { clearTmdbCaches } from "../lib/tmdb";
+import { clearFranchiseCache } from "../lib/useFranchise";
 import { countdown, dayLabel } from "../lib/format";
 import { BellIcon, DotsIcon, GearIcon, GlobeIcon, LinkIcon, MoonIcon, PersonIcon, PlusIcon, PulseIcon, RefreshIcon, SunIcon } from "./icons";
 
@@ -347,6 +348,7 @@ export function QuickMenu() {
               hint="Riscarica da TMDB, senza toccare la libreria"
               onClick={() => {
                 clearTmdbCaches();
+                clearFranchiseCache();
                 setOpen(false);
                 pushToast("success", "Contenuti aggiornati: TMDB verrà richiesto di nuovo.");
               }}
