@@ -505,7 +505,12 @@ lì puoi sempre aggiustare la sfumatura. A destra: trasmetti, lucchetto, chiudi.
 **Il lucchetto blocca i comandi, non lo schermo.** Un telefono tenuto in mano
 durante un film riceve decine di tocchi involontari; da bloccato la scena non
 risponde più né al dito né alla tastiera, e resta solo il pulsante per
-sbloccare.
+sbloccare — che **se ne va da solo dopo qualche secondo e torna al tocco**, come
+fa ogni lettore. Prima restava piantato in mezzo allo schermo: i comandi si
+nascondevano solo *mentre il film andava*, e su una scena in pausa non spariva
+mai. È giusto per la fascia in fondo — in pausa quei comandi servono ancora — ma
+non per il lucchetto, che è la richiesta di non vedere più niente, e che si
+preme proprio prima di far partire il film.
 
 **Al centro: il tempo.** Indietro di 10, play/pausa, avanti di 10, grandi e
 lontani fra loro — tre bersagli premibili al buio invece di undici icone in
@@ -526,7 +531,23 @@ alla fine, non quanto è passato. Sotto, cinque azioni con l'etichetta scritta:
   quindi invisibile a schermo intero.
 - **Pross. ep.** — manda avanti subito.
 
-Volume, PiP, mini player e schermo intero restano a destra come icone sole.
+Volume, immagine nell'immagine, mini player, impostazioni e schermo intero
+restano a destra. Tre cose su di loro, che erano tre difetti veri:
+
+- **Il PiP e il mini player erano disegnati uguali** — un rettangolo con dentro
+  un altro rettangolo, uno quadrato e uno no — affiancati nella stessa fascia.
+  Non è che si sbagliasse a premere: non c'era proprio niente da cui capire
+  quale fosse quale. Ora l'immagine nell'immagine ha il riquadro pieno
+  nell'angolo e il mini player la freccia che ci rientra dentro, e dove la scena
+  supera i 1150px (misurati: è la larghezza a cui la fascia intera sta ancora su
+  una riga) accanto compaiono le parole.
+- **L'icona delle impostazioni era un sole** — cerchio e otto raggi — in un
+  lettore che ha *davvero* un comando per la luminosità, due passi più in là.
+  Adesso sono tre cursori.
+- **Il PiP taceva quando non poteva partire.** Ha bisogno di un video già
+  avviato, e su una scena ferma il browser rifiuta: il `catch` ingoiava tutto e
+  restava un pulsante che si preme e non fa niente. Ora lo dice, sul film, per
+  qualche secondo.
 
 **All'avvio, il cartello della classificazione.** Sigla dell'ente (`TV-14`,
 `VM14`) e, sotto, le avvertenze che hai scritto tu nella scheda del titolo alla
