@@ -53,6 +53,13 @@ const Player = lazy(() => import("./pages/Player").then((m) => ({ default: m.Pla
 const Diagnostics = lazy(() => import("./pages/Diagnostics").then((m) => ({ default: m.Diagnostics })));
 
 /**
+ * La tavola della proposta di design: fuori dalla navigazione e in un pezzo a
+ * parte, con il suo carattere e le sue icone, così chi non la apre non scarica
+ * niente di quello che contiene.
+ */
+const DesignPreview = lazy(() => import("./pages/DesignPreview").then((m) => ({ default: m.DesignPreview })));
+
+/**
  * Says why the parts that need a network have gone quiet.
  *
  * Everything that matters here — the library, the diary, the statistics, the
@@ -164,6 +171,14 @@ export default function App() {
                   }
                 >
                   <Diagnostics />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/design-preview"
+              element={
+                <Suspense fallback={null}>
+                  <DesignPreview />
                 </Suspense>
               }
             />
