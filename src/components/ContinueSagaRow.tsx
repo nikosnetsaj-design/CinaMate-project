@@ -1,10 +1,10 @@
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
 import { useLibrary } from "../store/useLibrary";
 import { useSagas, sagaKey } from "../store/useSagas";
 import { useSelectedSaga } from "../store/useSelectedSaga";
 import { buildEntries, orderParts, sagaProgress } from "../lib/sagas";
 import { PosterArt } from "./PosterArt";
+import { RowHeader } from "./RowHeader";
 
 const MAX_SHOWN = 6;
 
@@ -38,19 +38,11 @@ export function ContinueSagaRow() {
   if (started.length === 0) return null;
 
   return (
-    <section className="flex flex-col gap-3">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <h2 className="section-mark font-display text-xl font-semibold text-text">Continua la saga</h2>
-          {/* Every row says why it is here — a suggestion without a reason is an advert. */}
-          <p className="mt-0.5 text-xs text-text-faint">Storie che hai iniziato e non ancora finito</p>
-        </div>
-        <Link to="/saghe" className="shrink-0 text-sm font-medium text-accent-text">
-          tutte
-        </Link>
-      </div>
+    <section className="flex flex-col gap-4">
+      {/* Every row says why it is here — a suggestion without a reason is an advert. */}
+      <RowHeader title="Continua la saga" note="Storie che hai iniziato e non ancora finito" to="/saghe" action="Vedi tutte" />
 
-      <div className="no-scrollbar flex gap-3.5 overflow-x-auto pb-1">
+      <div className="shelf">
         {started.map(({ saga, key, progress }) => {
           const next = progress.next!;
           return (
@@ -59,29 +51,26 @@ export function ContinueSagaRow() {
               type="button"
               onClick={() => openSaga(key)}
               aria-label={`Continua ${saga.name}: prossimo capitolo ${next.part.title}`}
-              className="w-32 shrink-0 text-left"
+              className="group w-32 text-left sm:w-36"
             >
               <div className="relative">
                 <PosterArt
                   item={{ title: next.part.title, kind: "film", posterPath: next.part.posterPath }}
                   size="sm"
                   showTitle={!next.part.posterPath}
-                  className="w-32"
+                  className="w-full transition-transform duration-200 group-active:scale-[0.98]"
                 />
-                <span
-                  className="absolute left-1 top-1 rounded-full px-1.5 py-0.5 font-mono tabular text-[10px] font-semibold"
-                  style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
-                >
+                <span className="absolute left-1.5 top-1.5 rounded-xs bg-black/65 px-1.5 py-0.5 tabular text-xs font-semibold text-white backdrop-blur-sm">
                   {next.number}
                 </span>
               </div>
-              <p className="mt-1.5 line-clamp-1 text-xs font-semibold text-text">{saga.name}</p>
-              <p className="line-clamp-1 text-[11px] text-text-faint">{next.part.title}</p>
-              <div className="mt-1 flex items-center gap-1.5">
+              <p className="mt-2 line-clamp-1 text-sm font-medium text-text">{saga.name}</p>
+              <p className="line-clamp-1 text-xs text-text-faint">{next.part.title}</p>
+              <div className="mt-1.5 flex items-center gap-2">
                 <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-surface-hover">
                   <div className="h-full rounded-full" style={{ width: `${progress.pct}%`, background: "var(--accent)" }} />
                 </div>
-                <span className="font-mono tabular text-[10px] text-text-faint">
+                <span className="tabular text-xs text-text-faint">
                   {progress.watched}/{progress.total}
                 </span>
               </div>

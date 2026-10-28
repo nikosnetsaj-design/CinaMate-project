@@ -113,7 +113,7 @@ export function CatalogStrip() {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md border border-border bg-surface-2 px-4 py-3">
+    <div className="flex flex-col gap-3 rounded-lg bg-surface px-4 py-3.5 shadow-[var(--shadow-sm)] sm:flex-row sm:items-center">
       <p className="min-w-0 flex-1 t-caption text-text-muted">
         <strong className="font-semibold text-text">Le copertine mancano.</strong> {WHAT}
       </p>
@@ -129,7 +129,7 @@ export function CatalogStrip() {
           type="button"
           onClick={dismiss}
           aria-label="Nascondi l'avviso sul catalogo"
-          className="tap-target rounded-sm px-2 py-1.5 text-xs font-medium text-text-faint transition-colors hover:text-text"
+          className="btn btn-plain btn-sm font-medium text-text-muted"
         >
           Non ora
         </button>

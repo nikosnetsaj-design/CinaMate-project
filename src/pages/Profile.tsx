@@ -242,7 +242,7 @@ export function ProfileSummary() {
           {resume.length > 0 && (
             <Card>
               <Label>Continua a guardare</Label>
-              <div className="no-scrollbar flex gap-3.5 overflow-x-auto pb-1">
+              <div className="shelf">
                 {resume.map((entry) => (
                   <ContinueWatchingCard key={entry.item.id} entry={entry} />
                 ))}

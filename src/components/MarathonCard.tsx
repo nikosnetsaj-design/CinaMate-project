@@ -79,11 +79,7 @@ export function MarathonCard() {
   return (
     <section
       aria-label="Maratona in corso"
-      className="rounded-md border p-3.5"
-      style={{
-        borderColor: `color-mix(in srgb, ${view.accent} 38%, transparent)`,
-        background: `color-mix(in srgb, ${view.accent} 8%, transparent)`,
-      }}
+      className="rounded-lg bg-surface p-4 shadow-[var(--shadow-sm)]"
     >
       <div className="flex items-center justify-between gap-3">
         <button
@@ -92,8 +88,8 @@ export function MarathonCard() {
           className="min-w-0 text-left"
           aria-label={`Apri la saga ${view.name}`}
         >
-          <p className="text-[11px] uppercase tracking-[0.16em] text-text-faint">Maratona · ordine {orderLabel}</p>
-          <p className="truncate font-display text-base font-semibold text-text">{view.name}</p>
+          <p className="text-xs font-medium text-text-faint">Maratona · ordine {orderLabel}</p>
+          <p className="t-title truncate text-text">{view.name}</p>
         </button>
         <button
           type="button"
@@ -108,7 +104,7 @@ export function MarathonCard() {
         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-hover">
           <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: view.accent }} />
         </div>
-        <span className="font-mono tabular text-xs font-semibold" style={{ color: view.accent }}>
+        <span className="tabular text-xs font-semibold text-text-muted">
           {watched}/{queue.length}
         </span>
       </div>
@@ -121,11 +117,11 @@ export function MarathonCard() {
           className="w-12 shrink-0"
         />
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] text-text-faint">
+          <p className="text-xs text-text-faint">
             Capitolo {marathon.index + 1} di {marathon.queue.length}
           </p>
-          <p className="truncate font-display text-sm font-semibold text-text">{current.title}</p>
-          <p className="font-mono tabular text-[11px] text-text-faint">{current.year ?? "in arrivo"}</p>
+          <p className="truncate text-sm font-medium text-text">{current.title}</p>
+          <p className="tabular text-xs text-text-faint">{current.year ?? "in arrivo"}</p>
         </div>
       </div>
 
@@ -152,8 +148,7 @@ export function MarathonCard() {
         <button
           type="button"
           onClick={finishAndAdvance}
-          className="flex-[1.4] rounded-sm py-2 text-xs font-semibold"
-          style={{ background: view.accent, color: "var(--accent-contrast)" }}
+          className="btn btn-primary btn-sm flex-[1.4]"
         >
           {currentItem ? "Visto → prossimo" : "Salta al prossimo"}
         </button>

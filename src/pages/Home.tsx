@@ -1,6 +1,5 @@
 import { Fragment, useMemo } from "react";
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useAddSheet } from "../store/useAddSheet";
 import { useHomeLayout, type HomeSectionId } from "../store/useHomeLayout";
@@ -15,6 +14,7 @@ import { MarathonCard } from "../components/MarathonCard";
 import { ContinueSagaRow } from "../components/ContinueSagaRow";
 import { ContinueWatchingRow } from "../components/ContinueWatchingRow";
 import { PosterRow } from "../components/PosterRow";
+import { RowHeader } from "../components/RowHeader";
 import { Billboard } from "../components/Billboard";
 import { BrowseChips } from "../components/TopBar";
 import { becauseYouWatched, forYou, mostWatched, recentlyAdded } from "../lib/recommend";
@@ -126,18 +126,8 @@ export function Home() {
 
     watchlist:
       planned.length > 0 ? (
-        <section className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <h2 className="section-mark font-display text-xl font-semibold text-text">
-              Watchlist{" "}
-              <span className="text-sm font-normal text-text-faint">
-                · {items.filter((i) => i.status === "Da vedere").length}
-              </span>
-            </h2>
-            <Link to="/libreria" className="text-sm font-medium text-accent-text">
-              tutti
-            </Link>
-          </div>
+        <section className="flex flex-col gap-4">
+          <RowHeader title="Da vedere" count={items.filter((i) => i.status === "Da vedere").length} to="/libreria" />
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {planned.map((item) => (
               <PosterCard key={item.id} item={item} onOpen={openItem} badge={badges[item.id]} />
@@ -164,7 +154,7 @@ export function Home() {
      * principale travestita da didascalia — ed è sceso dentro la vetrina,
      * accanto a Riproduci.
      */
-    <div className="mx-auto flex max-w-6xl flex-col gap-9 px-4 py-6 sm:px-6 sm:py-10">
+    <div className="mx-auto flex max-w-6xl flex-col gap-10 px-[var(--gutter)] py-6 sm:gap-12 sm:py-10">
       {/* L'unico invito che parte da solo, e si può chiudere per sempre. */}
       <CatalogStrip />
 

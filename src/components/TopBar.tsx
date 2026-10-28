@@ -418,7 +418,7 @@ export function BrowseChips() {
   ].filter((s) => s.show);
 
   return (
-    <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6">
+    <div className="shelf gap-2">
       {shortcuts.map((s) => (
         <button key={s.to} type="button" onClick={() => navigate(s.to)} className={CHIP}>
           {s.label}

@@ -189,6 +189,9 @@
      devono starle sopra al millimetro. Da 1024 px la barra non c'è. */
   --tabbar-h: 56px;
 
+  /* Il margine laterale delle pagine: 16 sul telefono, 24 dal tablet. */
+  --gutter: 16px;
+
   /* Impilamento. Erano cinque numeri in cinque file. */
   --z-raised: 10;
   --z-nav: 40;
@@ -460,6 +463,23 @@
     .chip:not([aria-pressed="true"]):not([aria-selected="true"]):not([data-active="true"]):hover { background: var(--surface-hover); }
   }
 
+  /* La riga che scorre di lato: arriva fino al bordo dello schermo — si vede
+     che continua — ma la prima copertina resta allineata al testo, e lo
+     scorrimento si ferma sulle copertine invece che a metà di una. */
+  .shelf {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    scroll-padding-inline: var(--gutter);
+    padding-bottom: 4px;
+  }
+  .shelf::-webkit-scrollbar { display: none; }
+  .shelf > * { flex: none; scroll-snap-align: start; }
+
   /* L'elenco raggruppato: una superficie, filo rientrato fra le voci. */
   .list-group {
     overflow: hidden;
@@ -519,6 +539,10 @@
  * Quando la mini-barra del lettore c'è, la pagina finisce sopra di lei: senza,
  * l'ultima riga di ogni schermata stava sempre nascosta dietro la barra.
  */
+@media (min-width: 640px) {
+  :root { --gutter: 24px; }
+}
+
 html.has-miniplayer #main-content {
   padding-bottom: 76px;
 }
