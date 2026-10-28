@@ -69,7 +69,7 @@ function Prompt({ item, minutes }: { item: Item; minutes: number }) {
               type="button"
               onClick={() => setCount((c) => Math.max(1, c - 1))}
               aria-label="Un episodio in meno"
-              className="h-9 w-9 rounded-sm border border-border-strong text-text-muted"
+              className="btn btn-secondary"
             >
               −
             </button>
@@ -92,15 +92,14 @@ function Prompt({ item, minutes }: { item: Item; minutes: number }) {
           <button
             type="button"
             onClick={clear}
-            className="flex-1 rounded-sm border border-border-strong py-2.5 text-sm text-text-muted"
+            className="btn btn-secondary flex-1"
           >
             Non ancora
           </button>
           <button
             type="button"
             onClick={confirm}
-            className="flex-[2] rounded-sm py-2.5 text-sm font-semibold"
-            style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+            className="btn btn-primary flex-[2]"
           >
             {isSeries ? `Segna ${count} episod${count === 1 ? "io" : "i"}` : "Sì, visto"}
           </button>

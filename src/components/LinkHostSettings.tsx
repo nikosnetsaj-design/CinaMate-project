@@ -83,8 +83,7 @@ export function LinkHostSettings() {
           <button
             type="submit"
             disabled={!url.trim()}
-            className="shrink-0 rounded-sm px-3.5 py-2 text-xs font-semibold disabled:opacity-50"
-            style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+            className="btn btn-primary btn-sm shrink-0"
           >
             Aggiungi
           </button>
@@ -284,7 +283,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
             onClick={() => move(host.id, -1)}
             disabled={index === 0}
             aria-label={`Sposta ${host.name} in alto`}
-            className="rounded-sm border border-border-strong px-1.5 text-[10px] text-text-muted disabled:opacity-30"
+            className="btn btn-secondary btn-sm disabled:opacity-30"
           >
             <ChevronUpIcon />
           </button>
@@ -293,7 +292,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
             onClick={() => move(host.id, 1)}
             disabled={index === total - 1}
             aria-label={`Sposta ${host.name} in basso`}
-            className="rounded-sm border border-border-strong px-1.5 text-[10px] text-text-muted disabled:opacity-30"
+            className="btn btn-secondary btn-sm disabled:opacity-30"
           >
             <ChevronDownIcon />
           </button>
@@ -322,15 +321,14 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
             <button
               type="button"
               onClick={() => acceptMove(host.id)}
-              className="rounded-sm px-3 py-1.5 text-xs font-semibold"
-              style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+              className="btn btn-primary btn-sm"
             >
               Aggiorna l'indirizzo
             </button>
             <button
               type="button"
               onClick={() => dismissMove(host.id)}
-              className="rounded-sm border border-border-strong px-3 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
+              className="btn btn-secondary btn-sm"
             >
               Lascia com'è
             </button>
@@ -369,7 +367,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
                 <button
                   type="button"
                   onClick={() => openViewer(m.url)}
-                  className="rounded-sm border border-border-strong px-2 py-0.5 text-[10px] text-text-muted hover:bg-surface-hover"
+                  className="btn btn-secondary btn-sm"
                 >
                   Guarda
                 </button>
@@ -380,7 +378,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
                     setMirrors(null);
                     pushToast("success", `Indirizzo aggiornato a ${hostLabel(m.url)}.`);
                   }}
-                  className="rounded-sm border border-border-strong px-2 py-0.5 text-[10px] text-text-muted hover:bg-surface-hover"
+                  className="btn btn-secondary btn-sm"
                 >
                   Usa questo
                 </button>
@@ -395,7 +393,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="rounded-sm border border-border-strong px-2.5 py-1 text-[11px] text-text-muted hover:bg-surface-hover"
+          className="btn btn-secondary btn-sm"
         >
           {open ? "Chiudi" : "Modifica"}
         </button>
@@ -403,7 +401,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
           type="button"
           onClick={check}
           disabled={checking}
-          className="rounded-sm border border-border-strong px-2.5 py-1 text-[11px] text-text-muted hover:bg-surface-hover disabled:opacity-50"
+          className="btn btn-secondary btn-sm disabled:opacity-50"
         >
           {checking ? "Controllo…" : "Controlla l'indirizzo"}
         </button>
@@ -412,21 +410,21 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
           onClick={hunt}
           disabled={hunting}
           title="Cerca lo stesso nome sotto altre estensioni di dominio"
-          className="rounded-sm border border-border-strong px-2.5 py-1 text-[11px] text-text-muted hover:bg-surface-hover disabled:opacity-50"
+          className="btn btn-secondary btn-sm disabled:opacity-50"
         >
           {hunting ? "Cerco…" : "Cerca un nome alternativo"}
         </button>
         <button
           type="button"
           onClick={() => openViewer(effectiveUrl(host))}
-          className="rounded-sm border border-border-strong px-2.5 py-1 text-[11px] text-text-muted hover:bg-surface-hover"
+          className="btn btn-secondary btn-sm"
         >
           Apri nel Web Viewer
         </button>
         <button
           type="button"
           onClick={() => remove(host.id)}
-          className="rounded-sm border border-border-strong px-2.5 py-1 text-[11px] text-text-faint hover:bg-surface-hover"
+          className="btn btn-secondary btn-sm"
         >
           Rimuovi
         </button>

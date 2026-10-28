@@ -130,7 +130,7 @@ export function TranslateOverview({ item }: { item: Item }) {
         type="button"
         onClick={run}
         disabled={busy}
-        className="mt-2.5 w-full rounded-sm border border-border-strong py-2.5 text-sm font-medium text-text disabled:opacity-50"
+        className="btn btn-secondary mt-2.5 w-full disabled:opacity-50"
       >
         {busy ? "Traduco…" : "Traduci la sinossi"}
       </button>

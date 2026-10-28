@@ -90,7 +90,7 @@ export function Critic() {
             key={p}
             type="button"
             onClick={() => setQuestion(p)}
-            className="rounded-full border border-border-strong px-3 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
+            className="chip chip-wrap"
           >
             {p}
           </button>
@@ -104,14 +104,13 @@ export function Critic() {
           onKeyDown={(e) => e.key === "Enter" && ask()}
           placeholder="Chiedi qualsiasi cosa…"
           aria-label="Chiedi al critico"
-          className="flex-1 rounded-sm border border-border-strong bg-surface px-3 py-2.5 text-sm text-text placeholder:text-text-faint focus:border-accent"
+          className="field flex-1"
         />
         <button
           type="button"
           onClick={() => ask()}
           disabled={busy || !question.trim()}
-          className="min-w-14 rounded-sm px-4 text-lg font-bold disabled:opacity-50"
-          style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+          className="btn btn-primary min-w-14"
         >
           {busy ? "…" : <ArrowRightIcon />}
         </button>
@@ -132,7 +131,7 @@ export function Critic() {
           <button
             type="button"
             onClick={() => openSettingsSheet()}
-            className="rounded-sm border border-border-strong px-4 py-2 text-sm font-medium text-text hover:bg-surface-hover"
+            className="btn btn-secondary"
           >
             Aggiungi la tua chiave nelle Impostazioni
           </button>
@@ -145,7 +144,7 @@ export function Critic() {
           <button
             type="button"
             onClick={() => ask()}
-            className="rounded-sm border border-border-strong px-4 py-2 text-sm font-medium text-text hover:bg-surface-hover"
+            className="btn btn-secondary"
           >
             Riprova
           </button>

@@ -46,8 +46,7 @@ function Primary({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="w-full rounded-sm px-4 py-3 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-40"
-      style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+      className="btn btn-primary btn-lg w-full"
     >
       {children}
     </button>
@@ -266,7 +265,7 @@ function Catalogue({ onDone, onSkip }: { onDone: () => void; onSkip: () => void 
         href="https://www.themoviedb.org/settings/api"
         target="_blank"
         rel="noreferrer"
-        className="inline-flex items-center justify-center gap-1.5 rounded-sm border border-border-strong px-4 py-2.5 text-center text-sm font-medium text-text transition-colors hover:bg-surface-hover"
+        className="btn btn-secondary"
       >
         Apri TMDB per prenderla
         <ExternalIcon />
@@ -283,7 +282,7 @@ function Catalogue({ onDone, onSkip }: { onDone: () => void; onSkip: () => void 
           spellCheck={false}
           autoComplete="off"
           placeholder="es. 8f2c…"
-          className="w-full rounded-sm border border-border-strong bg-surface-2 px-3 py-2.5 font-mono text-sm text-text placeholder:text-text-faint focus:border-accent"
+          className="field w-full font-mono"
         />
         <p aria-live="polite" className="min-h-[1.25rem] t-caption">
           {state === "checking" && <span className="text-text-faint">Controllo…</span>}

@@ -34,7 +34,7 @@ export function SearchBar({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label="Cerca film"
-        className="w-full rounded-sm border border-border-strong bg-surface py-2.5 pl-9 pr-9 text-sm text-text placeholder:text-text-faint focus:border-accent"
+        className="field w-full pl-9 pr-9"
       />
       {value && (
         <button

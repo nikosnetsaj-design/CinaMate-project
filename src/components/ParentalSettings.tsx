@@ -30,7 +30,7 @@ function PinInput({
         maxLength={PIN_LENGTH}
         value={value}
         onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))}
-        className="rounded-sm border border-border-strong bg-surface px-3 py-2 font-mono text-lg tracking-[0.4em] text-text"
+        className="field w-auto font-mono text-lg tracking-[0.4em]"
         placeholder="••••"
       />
     </label>
@@ -146,7 +146,7 @@ export function ParentalSettings() {
               <button
                 type="button"
                 onClick={state.lock}
-                className="w-full rounded-sm border border-border-strong px-3.5 py-2.5 text-sm text-text"
+                className="btn btn-secondary w-full"
               >
                 Richiudi adesso
               </button>
@@ -158,8 +158,7 @@ export function ParentalSettings() {
                 type="button"
                 onClick={unlock}
                 disabled={busy || pin.length !== PIN_LENGTH}
-                className="w-full rounded-sm py-2.5 text-sm font-semibold disabled:opacity-40"
-                style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+                className="btn btn-primary w-full"
               >
                 Sblocca
               </button>
@@ -221,8 +220,7 @@ export function ParentalSettings() {
             type="button"
             onClick={enable}
             disabled={busy || pin.length !== PIN_LENGTH}
-            className="w-full rounded-sm py-2.5 text-sm font-semibold disabled:opacity-40"
-            style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+            className="btn btn-primary w-full"
           >
             Attiva controllo genitori
           </button>

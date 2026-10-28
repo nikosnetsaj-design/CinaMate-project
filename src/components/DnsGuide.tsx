@@ -80,13 +80,12 @@ function Lookup() {
           spellCheck={false}
           aria-label="Nome da risolvere"
           placeholder="esempio.tld"
-          className="min-w-0 flex-1 rounded-sm border border-border-strong bg-surface px-3 py-2 font-mono text-xs text-text placeholder:text-text-faint focus:border-accent"
+          className="field field-sm min-w-0 flex-1 font-mono"
         />
         <button
           type="submit"
           disabled={busy || !name.trim()}
-          className="shrink-0 rounded-sm px-3.5 py-2 text-xs font-semibold disabled:opacity-50"
-          style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+          className="btn btn-primary btn-sm shrink-0"
         >
           {busy ? "Chiedo…" : "Risolvi"}
         </button>
@@ -265,7 +264,7 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
         <button
           type="button"
           onClick={onClose}
-          className="rounded-sm border border-border-strong px-3.5 py-2 text-xs text-text-muted hover:bg-surface-hover"
+          className="btn btn-secondary btn-sm"
         >
           Chiudi
         </button>

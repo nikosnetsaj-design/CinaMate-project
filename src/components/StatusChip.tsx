@@ -21,14 +21,17 @@ export function StatusMark({ status }: { status: Status }) {
   return <span aria-hidden="true" className="h-[7px] w-[7px] shrink-0 rounded-full" style={{ background: color }} />;
 }
 
+/**
+ * Lo stato di un titolo: il segno e la parola, in grigio.
+ *
+ * Era una pastiglia con bordo, riempimento e testo nel colore dello stato:
+ * cinque colori pieni sotto ogni copertina, in gara con le copertine stesse.
+ * Il colore resta nel segno, che è piccolo; la parola è testo secondario.
+ */
 export function StatusChip({ status, size = "md" }: { status: Status; size?: "sm" | "md" }) {
-  const meta = STATUS_META[status];
-  const cls = size === "sm" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[11px]";
+  const cls = size === "sm" ? "gap-1.5 text-xs" : "gap-2 text-sm";
   return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full border font-semibold whitespace-nowrap ${cls}`}
-      style={{ borderColor: `color-mix(in srgb, ${meta.color} 45%, transparent)`, background: `color-mix(in srgb, ${meta.color} 14%, transparent)`, color: meta.color }}
-    >
+    <span className={`inline-flex items-center whitespace-nowrap font-medium text-text-muted ${cls}`}>
       <StatusMark status={status} />
       {status}
     </span>

@@ -184,6 +184,11 @@
   --dur-move: 280ms;
   --dur-enter: 350ms;
 
+  /* L'altezza della barra in basso, senza la striscia della barra di home:
+     la usano la barra stessa, la mini-barra del lettore e gli avvisi, che
+     devono starle sopra al millimetro. Da 1024 px la barra non c'è. */
+  --tabbar-h: 56px;
+
   /* Impilamento. Erano cinque numeri in cinque file. */
   --z-raised: 10;
   --z-nav: 40;
@@ -297,6 +302,225 @@
  */
 * {
   border-color: var(--border);
+}
+
+/* ------------------------------------------------------------------ */
+/* I componenti di base                                                 */
+/*                                                                      */
+/* Erano scritti ogni volta da capo, una stringa di classi per bottone:  */
+/* `rounded-sm px-4 py-2 text-sm font-medium` qui, `rounded-md px-3      */
+/* py-2.5 text-[13px]` là, e nessuno dei due uguale al terzo. Stanno nel */
+/* livello dei componenti, così una classe di utilità accanto può ancora */
+/* correggerli dove serve.                                              */
+/* ------------------------------------------------------------------ */
+
+@layer components {
+  /* Bottoni. Un primario per schermata, al massimo; il secondario è un
+     riempimento e non un contorno; le azioni minori sono testo. */
+  .btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    /* Un'altezza minima e non fissa: un'etichetta lunga su un telefono va a
+       capo dentro il bottone invece di uscirne di lato. */
+    min-height: 44px;
+    padding: 10px 18px;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.006em;
+    text-align: center;
+    cursor: pointer;
+    transition:
+      background-color var(--dur-state) var(--ease-out),
+      color var(--dur-state) var(--ease-out),
+      opacity var(--dur-state) var(--ease-out),
+      transform var(--dur-state) var(--ease-out);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn svg { flex: none; }
+  .btn:active:not(:disabled) {
+    transform: scale(0.97);
+    transition-duration: var(--dur-tap);
+  }
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .btn-lg { min-height: 50px; padding: 12px 22px; }
+  .btn-sm { min-height: 36px; padding: 8px 14px; font-size: 0.875rem; border-radius: var(--radius-sm); }
+  /* Piccolo da vedere, non da toccare: l'area sborda fino a 44. */
+  .btn-sm::after { content: ""; position: absolute; inset: -4px 0; }
+  .btn-block { width: 100%; }
+
+  .btn-primary { background: var(--accent); color: var(--accent-contrast); }
+  .btn-secondary { background: var(--surface-2); color: var(--text); }
+  .btn-plain { background: transparent; color: var(--accent-text); padding-inline: 12px; }
+  .btn-danger { background: transparent; color: var(--danger); padding-inline: 12px; }
+  .btn-danger-fill { background: var(--danger); color: var(--danger-contrast); }
+
+  @media (hover: hover) {
+    .btn-primary:hover:not(:disabled) { background: color-mix(in oklab, var(--accent) 90%, var(--text)); }
+    .btn-secondary:hover:not(:disabled) { background: var(--surface-hover); }
+    .btn-plain:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+    .btn-danger:hover:not(:disabled) { background: color-mix(in srgb, var(--danger) 12%, transparent); }
+  }
+
+  /* Il bottone tondo con la sola icona: 44 di lato, pieno o trasparente. */
+  .icon-btn {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition:
+      background-color var(--dur-state) var(--ease-out),
+      color var(--dur-state) var(--ease-out),
+      transform var(--dur-state) var(--ease-out);
+  }
+  .icon-btn:active { transform: scale(0.94); transition-duration: var(--dur-tap); }
+  .icon-btn-filled { background: var(--surface-2); color: var(--text); }
+  .icon-btn-sm { width: 32px; height: 32px; }
+  .icon-btn-sm::after { content: ""; position: absolute; inset: -6px; }
+  /* Sopra un'immagine: vetro chiaro, icona bianca. */
+  .icon-btn-media {
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    backdrop-filter: blur(16px) saturate(160%);
+  }
+  @media (hover: hover) {
+    .icon-btn:hover { background: var(--surface-hover); color: var(--text); }
+    .icon-btn-media:hover { background: rgba(255, 255, 255, 0.26); color: #fff; }
+  }
+
+  /* Campi: pieni, con un filo che regge 3:1 sul fondo, accesi al fuoco. */
+  .field {
+    height: 48px;
+    width: 100%;
+    padding: 0 16px;
+    border-radius: var(--radius-md);
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 1rem;
+    box-shadow: inset 0 0 0 1px var(--border-strong);
+    outline: none;
+    transition: box-shadow var(--dur-state) var(--ease-out), background-color var(--dur-state) var(--ease-out);
+  }
+  .field::placeholder { color: var(--text-faint); }
+  /* Il campo compatto, per le barre di strumenti: alto come un bottone piccolo. */
+  .field-sm { height: 36px; padding: 0 12px; border-radius: var(--radius-sm); font-size: 0.875rem; }
+  .field:focus {
+    background: var(--surface);
+    box-shadow: inset 0 0 0 2px var(--accent), 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+  .field[aria-invalid="true"] {
+    box-shadow: inset 0 0 0 1px var(--danger), 0 0 0 3px color-mix(in srgb, var(--danger) 14%, transparent);
+  }
+
+  /* Pastiglie di filtro: un riempimento, che si inverte quando è scelta. */
+  .chip {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color var(--dur-state) var(--ease-out),
+      color var(--dur-state) var(--ease-out),
+      transform var(--dur-state) var(--ease-out);
+  }
+  .chip::after { content: ""; position: absolute; inset: -4px 0; }
+  /* La pastiglia che porta una frase — un suggerimento, una domanda — va a
+     capo invece di uscire dallo schermo. */
+  .chip-wrap { height: auto; min-height: 36px; padding-block: 8px; white-space: normal; text-align: left; flex: 0 1 auto; }
+  .chip[aria-pressed="true"],
+  .chip[aria-selected="true"],
+  .chip[data-active="true"] { background: var(--text); color: var(--bg); }
+  .chip:active { transform: scale(0.96); transition-duration: var(--dur-tap); }
+  @media (hover: hover) {
+    .chip:not([aria-pressed="true"]):not([aria-selected="true"]):not([data-active="true"]):hover { background: var(--surface-hover); }
+  }
+
+  /* L'elenco raggruppato: una superficie, filo rientrato fra le voci. */
+  .list-group {
+    overflow: hidden;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+  }
+  .list-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 56px;
+    padding: 12px 16px;
+    text-align: left;
+    transition: background-color var(--dur-state) var(--ease-out);
+  }
+  .list-row + .list-row::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 52px;
+    height: 1px;
+    background: var(--separator);
+  }
+  button.list-row:active,
+  a.list-row:active { background: var(--surface-2); transition-duration: var(--dur-tap); }
+  @media (hover: hover) {
+    button.list-row:hover,
+    a.list-row:hover { background: var(--surface-2); }
+  }
+}
+
+/*
+ * Sedici pixel, sempre, nei campi sul telefono: sotto, Safari su iPhone
+ * ingrandisce la pagina al tocco di ogni campo e non la rimette a posto. Fuori
+ * dai livelli di proposito: deve battere i `text-sm` e `text-xs` scritti sui
+ * singoli campi, che altrove restano come sono.
+ */
+/* Il campo disegna il fuoco da sé, con un anello di 2 px nella sua forma:
+   l'anello generale sopra farebbe due cornici una dentro l'altra. */
+.field:focus-visible {
+  outline: none;
+}
+
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/*
+ * Quando la mini-barra del lettore c'è, la pagina finisce sopra di lei: senza,
+ * l'ultima riga di ogni schermata stava sempre nascosta dietro la barra.
+ */
+html.has-miniplayer #main-content {
+  padding-bottom: 76px;
 }
 
 /* ------------------------------------------------------------------ */

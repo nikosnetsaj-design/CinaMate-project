@@ -254,7 +254,7 @@ function HomeLayoutSettings() {
                 // Spegnere è sempre possibile; accendere solo se c'è posto.
                 disabled={!visible && full}
                 aria-label={visible ? `Nascondi ${section.label}` : `Mostra ${section.label}`}
-                className="shrink-0 rounded-sm border border-border-strong px-2 py-1 text-xs text-text-muted disabled:opacity-30"
+                className="btn btn-secondary btn-sm shrink-0 disabled:opacity-30"
               >
                 {visible ? "Mostra" : "Nascosta"}
               </button>
@@ -266,7 +266,7 @@ function HomeLayoutSettings() {
       <button
         type="button"
         onClick={reset}
-        className="mt-2 w-full rounded-sm border border-border-strong px-3.5 py-2 text-xs text-text-muted hover:bg-surface-hover"
+        className="btn btn-secondary btn-sm mt-2 w-full"
       >
         Torna all'ordine predefinito
       </button>
@@ -314,7 +314,7 @@ function SourceTemplates() {
                 spellCheck={false}
                 aria-label={`Indirizzo ${i + 1}`}
                 placeholder={i === 0 ? "https://mio-server.com" : `Indirizzo ${i + 1} (facoltativo)`}
-                className="w-full rounded-sm border border-border-strong bg-surface px-3 py-2.5 font-mono text-xs text-text placeholder:text-text-faint focus:border-accent"
+                className="field w-full font-mono"
               />
               {preview && (
                 <p className="mt-1 break-all px-1 font-mono text-[10px] leading-relaxed text-text-faint">
@@ -333,7 +333,7 @@ function SourceTemplates() {
         type="button"
         onClick={() => setShowHelp((v) => !v)}
         aria-expanded={showHelp}
-        className="mt-2 rounded-sm border border-border-strong px-2.5 py-1.5 text-xs text-text-muted"
+        className="btn btn-secondary btn-sm mt-2"
       >
         {showHelp ? "Nascondi i segnaposto" : "Quali segnaposto posso usare?"}
       </button>
@@ -485,7 +485,7 @@ function PageReaderSetting() {
         spellCheck={false}
         aria-label="Indirizzo del lettore di pagine"
         placeholder="https://mio-lettore.dev/?u={url}"
-        className="w-full rounded-sm border border-border-strong bg-surface px-3 py-2.5 font-mono text-xs text-text placeholder:text-text-faint focus:border-accent"
+        className="field w-full font-mono"
       />
       {pageReader.trim() && (
         <p className="mt-1 break-all px-1 font-mono text-[10px] leading-relaxed text-text-faint">
@@ -498,7 +498,7 @@ function PageReaderSetting() {
           type="button"
           onClick={() => setShowHelp((v) => !v)}
           aria-expanded={showHelp}
-          className="rounded-sm border border-border-strong px-2.5 py-1.5 text-xs text-text-muted"
+          className="btn btn-secondary btn-sm"
         >
           {showHelp ? "Nascondi le forme accettate" : "Come si scrive l'indirizzo?"}
         </button>
@@ -506,7 +506,7 @@ function PageReaderSetting() {
           type="button"
           onClick={openRecipe}
           aria-expanded={showRecipe}
-          className="rounded-sm border border-border-strong px-2.5 py-1.5 text-xs text-text-muted"
+          className="btn btn-secondary btn-sm"
         >
           {showRecipe ? "Nascondi la ricetta" : "Non ne ho uno: come me lo faccio?"}
         </button>
@@ -530,8 +530,7 @@ function PageReaderSetting() {
           <button
             type="button"
             onClick={copyWorker}
-            className="self-start rounded-sm px-3 py-1.5 text-xs font-semibold"
-            style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+            className="btn btn-primary btn-sm self-start"
           >
             Copia il codice
           </button>
@@ -553,7 +552,7 @@ function PageReaderSetting() {
             spellCheck={false}
             aria-label="L'indirizzo che ti ha dato Cloudflare"
             placeholder="qualcosa.tuonome.workers.dev"
-            className="w-full rounded-sm border border-border-strong bg-surface px-3 py-2.5 font-mono text-xs text-text placeholder:text-text-faint focus:border-accent"
+            className="field w-full font-mono"
           />
           {workerAddress.trim() && (
             <p className={readerTemplateFor(workerAddress, secret) ? "text-text-muted" : "text-text-faint"}>
@@ -845,7 +844,7 @@ function SettingsForm() {
               type="button"
               onClick={() => setPanel(null)}
               aria-label="Torna alle impostazioni"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border-strong text-text-muted"
+              className="icon-btn icon-btn-filled icon-btn-sm shrink-0"
             >
               <BackIcon size={16} />
             </button>
@@ -965,13 +964,13 @@ function SettingsForm() {
               onChange={(e) => setDraftKey(e.target.value)}
               placeholder="sk-ant-…"
               autoComplete="off"
-              className="flex-1 rounded-sm border border-border-strong bg-surface px-3 py-2.5 font-mono text-sm text-text placeholder:text-text-faint focus:border-accent"
+              className="field flex-1 font-mono"
             />
             <button
               type="button"
               onClick={() => setReveal((r) => !r)}
               aria-label={reveal ? "Nascondi chiave" : "Mostra chiave"}
-              className="rounded-sm border border-border-strong px-3 text-xs text-text-muted"
+              className="btn btn-secondary btn-sm"
             >
               {reveal ? "Nascondi" : "Mostra"}
             </button>
@@ -983,8 +982,7 @@ function SettingsForm() {
                 setApiKey(draftKey);
                 pushToast("success", "Chiave salvata.");
               }}
-              className="rounded-sm px-3.5 py-2 text-xs font-semibold"
-              style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+              className="btn btn-primary btn-sm"
             >
               Salva chiave
             </button>
@@ -996,7 +994,7 @@ function SettingsForm() {
                   setDraftKey("");
                   pushToast("info", "Chiave rimossa.");
                 }}
-                className="rounded-sm border border-border-strong px-3.5 py-2 text-xs text-text-muted"
+                className="btn btn-secondary btn-sm"
               >
                 Rimuovi
               </button>
@@ -1018,13 +1016,13 @@ function SettingsForm() {
               onChange={(e) => setDraftTmdbKey(e.target.value)}
               placeholder="Chiave API TMDB (v3)"
               autoComplete="off"
-              className="flex-1 rounded-sm border border-border-strong bg-surface px-3 py-2.5 font-mono text-sm text-text placeholder:text-text-faint focus:border-accent"
+              className="field flex-1 font-mono"
             />
             <button
               type="button"
               onClick={() => setRevealTmdb((r) => !r)}
               aria-label={revealTmdb ? "Nascondi chiave" : "Mostra chiave"}
-              className="rounded-sm border border-border-strong px-3 text-xs text-text-muted"
+              className="btn btn-secondary btn-sm"
             >
               {revealTmdb ? "Nascondi" : "Mostra"}
             </button>
@@ -1038,8 +1036,7 @@ function SettingsForm() {
                 resetAutoLinkAttempts();
                 pushToast("success", "Chiave TMDB salvata.");
               }}
-              className="rounded-sm px-3.5 py-2 text-xs font-semibold"
-              style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+              className="btn btn-primary btn-sm"
             >
               Salva chiave
             </button>
@@ -1051,7 +1048,7 @@ function SettingsForm() {
                   setDraftTmdbKey("");
                   pushToast("info", "Chiave TMDB rimossa.");
                 }}
-                className="rounded-sm border border-border-strong px-3.5 py-2 text-xs text-text-muted"
+                className="btn btn-secondary btn-sm"
               >
                 Rimuovi
               </button>

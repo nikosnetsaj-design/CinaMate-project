@@ -18,7 +18,7 @@ import { STATUSES } from "../lib/status";
 import { useAppReady } from "../lib/useAppReady";
 import { useVisibleItems } from "../lib/useVisibleItems";
 import type { Kind, Status } from "../types";
-import { GridIcon, ListIcon } from "../components/icons";
+import { GridIcon, ListIcon, ShareIcon } from "../components/icons";
 
 /** I tipi che un indirizzo può nominare: di ciò che arriva scritto lì non ci si fida. */
 const KIND_IDS: Kind[] = ["film", "serie", "anime", "doc"];
@@ -131,21 +131,42 @@ export function Library() {
         </p>
       )}
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-2">
         <button
           type="button"
           onClick={() => setFiltersOpen(true)}
-          className={`flex shrink-0 items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
-            filterCount > 0 ? "border-transparent" : "border-border-strong text-text-muted hover:bg-surface-hover"
-          }`}
-          style={filterCount > 0 ? { background: "var(--accent)", color: "var(--accent-contrast)" } : undefined}
+          className="chip"
+          data-active={filterCount > 0}
         >
           Filtri
-          {filterCount > 0 && <span className="font-mono">{filterCount}</span>}
+          {filterCount > 0 && <span className="tabular">{filterCount}</span>}
         </button>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-text-faint">{list.length} titoli</span>
+        <div className="flex min-w-0 items-center gap-1">
+          {/* Il conteggio compare solo quando dice qualcosa di nuovo: senza filtri
+              né ricerca ripeteva i «titoli in totale» scritti appena sopra. */}
+          {list.length !== items.length && (
+            <span className="mr-1 whitespace-nowrap text-xs text-text-faint tabular">{list.length} titoli</span>
+          )}
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as Sort)}
+            aria-label="Ordina per"
+            className="field field-sm w-auto"
+          >
+            <option value="recenti">Recenti</option>
+            <option value="voto">Voto</option>
+            <option value="titolo">A–Z</option>
+            <option value="anno">Anno</option>
+          </select>
+          <button
+            type="button"
+            onClick={() => setGrid((g) => !g)}
+            aria-label={grid ? "Vista elenco" : "Vista griglia"}
+            className="icon-btn"
+          >
+            {grid ? <ListIcon size={20} /> : <GridIcon size={20} />}
+          </button>
           {/* Shares exactly what is on screen, filters and search included —
               that is what makes it a *list* rather than an export: "gli horror
               che ho visto" is a query, and the query's result is the list. */}
@@ -154,29 +175,10 @@ export function Library() {
             onClick={() => setSharing(true)}
             disabled={list.length === 0}
             aria-label="Condividi questa lista"
-            className="rounded-sm border border-border-strong px-2 py-1 text-xs text-text-muted disabled:opacity-40"
+            className="icon-btn disabled:opacity-40"
           >
-            Condividi
+            <ShareIcon size={20} />
           </button>
-          <button
-            type="button"
-            onClick={() => setGrid((g) => !g)}
-            aria-label={grid ? "Vista elenco" : "Vista griglia"}
-            className="rounded-sm border border-border-strong px-2 py-1 text-xs text-text-muted"
-          >
-            {grid ? <ListIcon size={16} /> : <GridIcon size={16} />}
-          </button>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as Sort)}
-            aria-label="Ordina per"
-            className="rounded-sm border border-border-strong bg-surface px-2 py-1 text-xs text-text-muted"
-          >
-            <option value="recenti">Recenti</option>
-            <option value="voto">Voto</option>
-            <option value="titolo">A–Z</option>
-            <option value="anno">Anno</option>
-          </select>
         </div>
       </div>
 
@@ -201,7 +203,7 @@ export function Library() {
                 setQ("");
                 setFilters({});
               }}
-              className="rounded-sm border border-border-strong px-4 py-2 text-sm font-medium text-text hover:bg-surface-hover"
+              className="btn btn-secondary"
             >
               {items.length === 0 ? "Aggiungi un titolo" : "Azzera filtri"}
             </button>

@@ -91,8 +91,7 @@ export function ShareSheet({ target, onClose }: { target: Target; onClose: () =>
         <button
           type="button"
           onClick={handleShare}
-          className="w-full rounded-sm py-2.5 text-sm font-semibold"
-          style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+          className="btn btn-primary w-full"
         >
           {copied ? "Copia di nuovo" : "Condividi o copia"}
         </button>

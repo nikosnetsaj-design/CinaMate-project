@@ -55,7 +55,7 @@ function Select({
       value={value}
       aria-label={label}
       onChange={(e) => onChange(e.target.value)}
-      className="rounded-sm border border-border-strong bg-surface px-2.5 py-2 text-sm text-text"
+      className="field field-sm w-auto"
     >
       {children}
     </select>
@@ -186,7 +186,7 @@ export function FilterSheet({
               placeholder={String(earliest)}
               aria-label="Anno minimo"
               onChange={(e) => set("yearFrom", e.target.value ? Number(e.target.value) : undefined)}
-              className="rounded-sm border border-border-strong bg-surface px-2.5 py-2 font-mono text-sm text-text"
+              className="field field-sm w-auto font-mono"
             />
           </Field>
           <Field label="Al">
@@ -199,7 +199,7 @@ export function FilterSheet({
               placeholder={String(latest)}
               aria-label="Anno massimo"
               onChange={(e) => set("yearTo", e.target.value ? Number(e.target.value) : undefined)}
-              className="rounded-sm border border-border-strong bg-surface px-2.5 py-2 font-mono text-sm text-text"
+              className="field field-sm w-auto font-mono"
             />
           </Field>
         </div>
@@ -309,15 +309,14 @@ export function FilterSheet({
             type="button"
             onClick={() => onChange({})}
             disabled={count === 0}
-            className="flex-1 rounded-sm border border-border-strong px-4 py-2.5 text-sm font-medium text-text disabled:opacity-40 hover:bg-surface-hover"
+            className="btn btn-secondary flex-1 disabled:opacity-40"
           >
             Azzera
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-sm px-4 py-2.5 text-sm font-medium"
-            style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+            className="btn btn-primary flex-1"
           >
             Vedi {resultCount} {resultCount === 1 ? "titolo" : "titoli"}
           </button>

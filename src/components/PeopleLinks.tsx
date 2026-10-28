@@ -19,7 +19,7 @@ function PersonChip({ name, prefix }: { name: string; prefix?: string }) {
         openPerson(name);
       }}
       aria-label={`Apri la scheda di ${name}`}
-      className="rounded-full border border-border-strong px-2.5 py-1 text-xs text-text-muted transition-colors hover:bg-surface-hover hover:text-text"
+      className="chip"
     >
       {prefix && <span className="text-text-faint">{prefix} </span>}
       {name}

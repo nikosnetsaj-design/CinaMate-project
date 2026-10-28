@@ -16,14 +16,13 @@ export function UpdatePrompt() {
   return (
     <div
       role="status"
-      className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 mx-auto flex w-fit max-w-[calc(100%-2rem)] items-center gap-3 rounded-md border border-border bg-surface-2 px-4 py-2.5 shadow-[var(--shadow-md)] sm:bottom-6"
+      className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 mx-auto flex w-fit max-w-[calc(100%-2rem)] items-center gap-3 rounded-md border border-border bg-surface-2 px-4 py-2.5 shadow-[var(--shadow-md)] lg:bottom-6"
     >
       <span className="text-sm text-text">È disponibile una versione aggiornata.</span>
       <button
         type="button"
         onClick={applyUpdate}
-        className="shrink-0 rounded-sm px-3 py-1.5 text-sm font-medium"
-        style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+        className="btn btn-primary btn-sm shrink-0"
       >
         Ricarica
       </button>

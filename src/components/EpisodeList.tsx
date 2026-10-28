@@ -231,7 +231,7 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
             onClick={() => setSeasonMenu((v) => !v)}
             aria-expanded={seasonMenu}
             aria-haspopup="listbox"
-            className="flex items-center gap-2 rounded-sm border border-border-strong bg-surface-2 px-3.5 py-2 text-sm font-medium text-text"
+            className="btn btn-secondary"
           >
             Stagione {season}
             <span aria-hidden="true" className="text-text-faint">

@@ -231,8 +231,7 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
                 posterPath: item.posterPath,
               })
             }
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-md py-3.5 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60"
-            style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+            className="btn btn-primary btn-lg mt-4 w-full"
           >
             <PlusIcon size={18} />
             {adding !== null ? "Preparo la scheda…" : "Aggiungi alla libreria"}

@@ -117,8 +117,7 @@ export function NaturalSearch() {
           <button
             type="button"
             onClick={() => openSettings()}
-            className="rounded-sm px-4 py-2 text-sm font-semibold"
-            style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+            className="btn btn-primary"
           >
             Aggiungi la chiave
           </button>
@@ -141,13 +140,12 @@ export function NaturalSearch() {
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="film di fantascienza anni '90"
           aria-label="Descrivi cosa cerchi"
-          className="min-w-0 flex-1 rounded-sm border border-border-strong bg-surface px-3 py-2.5 text-sm text-text"
+          className="field min-w-0 flex-1"
         />
         <button
           type="submit"
           disabled={busy || !question.trim()}
-          className="shrink-0 rounded-sm px-4 py-2.5 text-sm font-semibold disabled:opacity-40"
-          style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+          className="btn btn-primary shrink-0"
         >
           {busy ? "Cerco…" : "Cerca"}
         </button>
@@ -163,7 +161,7 @@ export function NaturalSearch() {
                 setQuestion(example);
                 void run(example);
               }}
-              className="rounded-full border border-border-strong px-3 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
+              className="chip chip-wrap"
             >
               {example}
             </button>

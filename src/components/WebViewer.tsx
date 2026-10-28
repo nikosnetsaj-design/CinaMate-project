@@ -316,12 +316,11 @@ function ViewerFrame({
               autoCapitalize="off"
               spellCheck={false}
               aria-label="Indirizzo"
-              className="min-w-0 flex-1 rounded-sm border border-border-strong bg-surface px-3 py-1.5 font-mono text-xs text-text focus:border-accent"
+              className="field field-sm min-w-0 flex-1 font-mono"
             />
             <button
               type="submit"
-              className="rounded-sm px-3 py-1.5 text-xs font-semibold"
-              style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+              className="btn btn-primary btn-sm"
             >
               Vai
             </button>
@@ -331,7 +330,7 @@ function ViewerFrame({
             target="_blank"
             rel="noopener noreferrer nofollow"
             title="Apri in una scheda del browser"
-            className="rounded-sm border border-border-strong px-2.5 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
+            className="btn btn-secondary btn-sm"
           >
             <ExternalIcon size={16} />
           </a>
@@ -339,7 +338,7 @@ function ViewerFrame({
             type="button"
             onClick={onClose}
             aria-label="Chiudi il Web Viewer"
-            className="rounded-sm border border-border-strong px-2.5 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
+            className="btn btn-secondary btn-sm"
           >
             <CloseIcon size={16} />
           </button>
@@ -456,8 +455,7 @@ function ViewerFrame({
               <button
                 type="button"
                 onClick={useForTitle}
-                className="rounded-sm px-3 py-1.5 text-xs font-semibold"
-                style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+                className="btn btn-primary btn-sm"
               >
                 Usa per «{context.title}»
               </button>
@@ -465,7 +463,7 @@ function ViewerFrame({
             <button
               type="button"
               onClick={copyFound}
-              className="rounded-sm border border-border-strong px-3 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
+              className="btn btn-secondary btn-sm"
             >
               Copia
             </button>

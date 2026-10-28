@@ -25,10 +25,10 @@ import { BellIcon, ChevronRightIcon, DotsIcon, GearIcon, GlobeIcon, LinkIcon, Mo
  * Nessuna funzione nuova: le stesse, dove si cercano.
  */
 
+/* I menu sono superfici sollevate: ombra e un filo, nessuna cornice. */
 const PANEL =
-  "absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md border border-border-strong bg-surface shadow-[var(--shadow-md)]";
-const ROUND =
-  "relative flex h-9 w-9 items-center justify-center rounded-full border border-border-strong text-text-muted transition-colors hover:text-text";
+  "absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md bg-surface shadow-[var(--shadow-md),0_0_0_1px_var(--separator)]";
+const ROUND = "icon-btn relative";
 
 /**
  * Lo sfondo invisibile che chiude il menu al primo tocco fuori — e Esc, che è
@@ -78,8 +78,7 @@ function MenuItem({
 }
 
 /** La forma delle pastiglie della riga di scorciatoie: bordo sottile, testo pieno. */
-const CHIP =
-  "flex shrink-0 items-center gap-1.5 rounded-full border border-border-strong bg-surface-2 px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-surface-hover";
+const CHIP = "chip";
 
 /**
  * I generi che hai davvero.
@@ -146,7 +145,7 @@ function GenreMenu() {
           <>
             <Backdrop onClose={() => setOpen(false)} />
             <div
-              className="fixed z-50 max-h-80 w-56 overflow-y-auto rounded-md border border-border-strong bg-surface shadow-[var(--shadow-md)]"
+              className="fixed z-50 max-h-80 w-56 overflow-y-auto rounded-md bg-surface shadow-[var(--shadow-md),0_0_0_1px_var(--separator)]"
               style={{ top: at.top, left: at.left }}
               role="menu"
             >
@@ -223,7 +222,7 @@ export function AlertsBell() {
         <>
           <Backdrop onClose={() => setOpen(false)} />
           <div className={`${PANEL} w-72`} role="menu">
-            <p className="border-b border-border px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-text-faint">
+            <p className="px-3.5 pb-1.5 pt-3 text-xs font-medium text-text-faint">
               In arrivo
             </p>
             {soon.length === 0 ? (

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useLibrary } from "../store/useLibrary";
 import { useWatchProgress } from "../store/useWatchProgress";
@@ -42,16 +42,24 @@ export function MiniPlayerBar() {
     return list.find((e) => e.hasPlayhead) ?? null;
   }, [items, progress, history]);
 
-  if (!entry || pathname === "/player") return null;
+  const visible = !!entry && pathname !== "/player";
+  // La pagina sotto deve sapere che la barra c'è, per finire sopra di lei
+  // invece di sparirle dietro (vedi `has-miniplayer` in index.css).
+  useEffect(() => {
+    document.documentElement.classList.toggle("has-miniplayer", visible);
+    return () => document.documentElement.classList.remove("has-miniplayer");
+  }, [visible]);
+
+  if (!entry || !visible) return null;
 
   const { item, pct, remainingMin, label } = entry;
 
   return (
-    <div
-      className="fixed inset-x-0 bottom-14 z-40 px-2 pb-1 md:bottom-0 md:left-60 md:px-4 md:pb-4"
-      style={{ marginBottom: "env(safe-area-inset-bottom)" }}
-    >
-      <div className="mx-auto flex max-w-3xl items-center gap-3 overflow-hidden rounded-md border border-border bg-surface/95 p-2 shadow-[var(--shadow-md)] backdrop-blur-sm md:max-w-md">
+    <div className="fixed inset-x-0 bottom-[calc(var(--tabbar-h)+env(safe-area-inset-bottom))] z-40 px-2 pb-2 lg:bottom-0 lg:left-60 lg:px-4 lg:pb-4">
+      <div
+        className="mx-auto flex max-w-3xl items-center gap-3 overflow-hidden rounded-md bg-material p-2 backdrop-blur-xl backdrop-saturate-150 lg:max-w-md"
+        style={{ boxShadow: "var(--shadow-md), 0 0 0 1px var(--separator)" }}
+      >
         <button
           type="button"
           {...prefetchHandlers("/player")}
@@ -61,7 +69,7 @@ export function MiniPlayerBar() {
           <PosterArt item={item} size="sm" showTitle={false} className="w-9 shrink-0" />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-semibold text-text">{item.title}</span>
-            <span className="block truncate t-caption text-text-faint">
+            <span className="block truncate t-caption tabular text-text-muted">
               {label} ·{" "}
               <span className="t-numeral">
                 {remainingMin > 0 ? `${remainingMin} min alla fine` : "quasi finito"}
@@ -75,7 +83,7 @@ export function MiniPlayerBar() {
           {...prefetchHandlers("/player")}
           onClick={() => navigate(`/player?titolo=${encodeURIComponent(item.id)}`)}
           aria-label={`Riprendi ${item.title}`}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-opacity hover:opacity-90"
+          className="icon-btn"
           style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
         >
           <PlayIcon size={17} />
@@ -86,7 +94,7 @@ export function MiniPlayerBar() {
           informazione che non ha bisogno di una parola per essere letta. */}
       <div
         aria-hidden="true"
-        className="mx-auto -mt-1 h-0.5 max-w-3xl overflow-hidden rounded-full md:max-w-md"
+        className="mx-auto -mt-1 h-0.5 max-w-3xl overflow-hidden rounded-full lg:max-w-md"
         style={{ background: "var(--border)" }}
       >
         <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--accent)" }} />

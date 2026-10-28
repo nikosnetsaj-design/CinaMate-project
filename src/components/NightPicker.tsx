@@ -55,7 +55,7 @@ function PickerModal({ onClose }: { onClose: () => void }) {
           type="button"
           onClick={onClose}
           aria-label="Chiudi"
-          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-border-strong text-text-muted"
+          className="icon-btn icon-btn-filled icon-btn-sm absolute right-3 top-3"
         >
           <CloseIcon size={16} />
         </button>
@@ -87,7 +87,7 @@ function PickerModal({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               onClick={respin}
-              className="flex-1 rounded-sm border border-border-strong py-2.5 text-sm text-text-muted"
+              className="btn btn-secondary flex-1"
             >
               Un altro
             </button>
@@ -97,8 +97,7 @@ function PickerModal({ onClose }: { onClose: () => void }) {
                 openItem(pick);
                 onClose();
               }}
-              className="flex-1 rounded-sm py-2.5 text-sm font-semibold"
-              style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+              className="btn btn-primary flex-1"
             >
               Guarda ora
             </button>
@@ -117,7 +116,7 @@ export function NightPickerButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 rounded-full border border-border-strong px-3 py-1.5 text-xs font-medium text-text-muted transition-colors hover:text-text"
+        className="chip gap-1.5"
       >
         <DiceIcon size={14} />
         Cosa guardo stasera?

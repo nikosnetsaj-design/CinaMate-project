@@ -70,8 +70,7 @@ export function CatalogBlock() {
       <button
         type="button"
         onClick={turnOn}
-        className="rounded-sm px-4 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
-        style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+        className="btn btn-primary"
       >
         Accendi il catalogo
       </button>
@@ -122,8 +121,7 @@ export function CatalogStrip() {
         <button
           type="button"
           onClick={turnOn}
-          className="rounded-sm px-3 py-1.5 text-xs font-semibold transition-opacity hover:opacity-90"
-          style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+          className="btn btn-primary btn-sm"
         >
           Accendilo
         </button>

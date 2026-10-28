@@ -79,7 +79,7 @@ export function DownloadButton({ item }: { item: Item }) {
       <button
         type="button"
         onClick={() => openSettings()}
-        className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border-strong py-2.5 text-sm font-medium text-text-muted"
+        className="btn btn-secondary btn-sm mt-2.5 w-full font-medium text-text-muted"
       >
         <DownloadIcon />
         Scarica — prima dimmi dov'è il tuo server
@@ -94,7 +94,7 @@ export function DownloadButton({ item }: { item: Item }) {
         onClick={() => setPicking((v) => !v)}
         disabled={busy}
         aria-expanded={picking}
-        className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-md border border-border-strong bg-surface-hover py-2.5 text-sm font-semibold text-text disabled:opacity-60"
+        className="btn btn-secondary mt-2.5 w-full disabled:opacity-60"
       >
         <DownloadIcon />
         {busy ? "Preparo il download…" : "Scarica"}

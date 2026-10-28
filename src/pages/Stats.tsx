@@ -85,7 +85,7 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
               aria-label="Anno da mostrare"
-              className="rounded-sm border border-border-strong bg-surface px-2 py-1 font-mono tabular text-xs text-text-muted"
+              className="field field-sm w-auto font-mono tabular"
             >
               {years.map((y) => (
                 <option key={y} value={y}>

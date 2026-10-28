@@ -375,7 +375,7 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
                   onClick={() => setMode("lista")}
                   aria-pressed={mode === "lista"}
                   aria-label="Vista elenco"
-                  className="flex h-8 w-8 items-center justify-center rounded-sm border border-border-strong"
+                  className="btn btn-secondary"
                   style={mode === "lista" ? { color: accent, borderColor: accent } : { color: "var(--text-faint)" }}
                 >
                   <ListIcon size={15} />
@@ -385,7 +385,7 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
                   onClick={() => setMode("timeline")}
                   aria-pressed={mode === "timeline"}
                   aria-label="Vista timeline"
-                  className="flex h-8 w-8 items-center justify-center rounded-sm border border-border-strong"
+                  className="btn btn-secondary"
                   style={mode === "timeline" ? { color: accent, borderColor: accent } : { color: "var(--text-faint)" }}
                 >
                   <TimelineIcon size={15} />

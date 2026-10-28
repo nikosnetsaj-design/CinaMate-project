@@ -169,7 +169,7 @@ function AddItemForm() {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Es. Interstellar, The Bear, Naruto…"
                 aria-label="Cerca un titolo"
-                className="w-full rounded-sm border border-border-strong bg-surface px-3 py-2.5 pr-10 text-sm text-text placeholder:text-text-faint focus:border-accent"
+                className="field w-full pr-10"
               />
               {busy && (
                 <span
@@ -257,7 +257,7 @@ function AddItemForm() {
             <button
               type="button"
               onClick={manual}
-              className="mt-1 rounded-md border border-dashed border-border-strong px-4 py-3 text-sm text-text-muted hover:bg-surface-hover"
+              className="btn btn-secondary btn-lg mt-1"
             >
               Inserisci a mano
             </button>

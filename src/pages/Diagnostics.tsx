@@ -153,8 +153,7 @@ export function Diagnostics() {
             type="button"
             onClick={run}
             disabled={running}
-            className="shrink-0 rounded-sm px-3.5 py-2 text-sm font-semibold disabled:opacity-50"
-            style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+            className="btn btn-primary shrink-0"
           >
             {running ? "Eseguo…" : tests ? "Riesegui" : "Esegui i test"}
           </button>
@@ -194,7 +193,7 @@ export function Diagnostics() {
             <button
               type="button"
               onClick={clearErrorLog}
-              className="shrink-0 rounded-sm border border-border-strong px-3 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
+              className="btn btn-secondary btn-sm shrink-0"
             >
               Svuota
             </button>
@@ -232,7 +231,7 @@ export function Diagnostics() {
         <button
           type="button"
           onClick={() => openSettings()}
-          className="self-start rounded-sm border border-border-strong px-3.5 py-2.5 text-sm text-text hover:bg-surface-hover"
+          className="btn btn-secondary self-start"
         >
           Apri Impostazioni
         </button>

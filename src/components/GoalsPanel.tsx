@@ -33,7 +33,7 @@ function GoalCard({
           type="button"
           onClick={onRemove}
           aria-label="Elimina obiettivo"
-          className="shrink-0 rounded-sm border border-border-strong px-2 py-1 text-xs text-text-muted hover:bg-surface-hover"
+          className="btn btn-secondary btn-sm shrink-0"
         >
           <CloseIcon size={14} />
         </button>
@@ -130,14 +130,13 @@ function NewGoalForm({ genres, onDone }: { genres: string[]; onDone: () => void 
         <button
           type="button"
           onClick={onDone}
-          className="flex-1 rounded-sm border border-border-strong py-2.5 text-sm text-text-muted hover:bg-surface-hover"
+          className="btn btn-secondary flex-1"
         >
           Annulla
         </button>
         <button
           type="submit"
-          className="flex-1 rounded-sm py-2.5 text-sm font-semibold"
-          style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+          className="btn btn-primary flex-1"
         >
           Crea obiettivo
         </button>
@@ -184,8 +183,7 @@ export function GoalsPanel({ items }: { items: Item[] }) {
             <button
               type="button"
               onClick={() => setAdding(true)}
-              className="rounded-sm px-4 py-2 text-sm font-medium"
-              style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+              className="btn btn-primary"
             >
               Crea il primo obiettivo
             </button>
@@ -200,7 +198,7 @@ export function GoalsPanel({ items }: { items: Item[] }) {
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="rounded-md border border-dashed border-border-strong py-3 text-sm text-text-muted hover:bg-surface-hover"
+            className="btn btn-secondary btn-lg"
           >
             + Aggiungi obiettivo
           </button>

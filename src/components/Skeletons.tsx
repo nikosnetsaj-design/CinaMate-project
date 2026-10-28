@@ -1,3 +1,8 @@
+/*
+ * Gli scheletri hanno la forma esatta di quello che arriva — stessa proporzione
+ * della locandina, stesse righe di testo — così quando arriva non salta niente.
+ */
+
 export function PosterSkeleton() {
   return (
     <div className="flex flex-col gap-2">
@@ -21,9 +26,10 @@ export function PosterGridSkeleton({ count = 10 }: { count?: number }) {
   );
 }
 
+/* Senza cornice, come la cifra che sostituisce: un numero non sta in una scatola. */
 export function StatCardSkeleton() {
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-border bg-surface p-4">
+    <div className="flex flex-col gap-2 rounded-md bg-surface p-4">
       <div className="skeleton h-3 w-20 rounded-xs" />
       <div className="skeleton h-7 w-14 rounded-xs" />
     </div>

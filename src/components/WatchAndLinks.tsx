@@ -295,7 +295,7 @@ export function WatchAndLinks({ item }: { item: Item }) {
               href={item.trailerUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full border border-border-strong px-3 py-1.5 text-xs font-medium text-text hover:bg-surface-hover"
+              className="chip gap-1.5"
             >
               <PlayIcon size={12} />
               Trailer
@@ -308,7 +308,7 @@ export function WatchAndLinks({ item }: { item: Item }) {
               onClick={() => startWatching(item.id)}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full border border-border-strong px-3 py-1.5 text-xs font-medium text-text hover:bg-surface-hover"
+              className="chip gap-1.5"
             >
               <LinkIcon size={13} />
               {linkLabel(l)}

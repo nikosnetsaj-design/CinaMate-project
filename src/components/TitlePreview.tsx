@@ -145,7 +145,7 @@ export function TitlePreview({
                 target="_blank"
                 rel="noopener noreferrer"
                 title={`Apri ${details.title} su ${link.service}`}
-                className="inline-flex items-center gap-1 rounded-full border border-border-strong px-2.5 py-1 text-xs font-medium hover:bg-surface-hover"
+                className="chip"
                 style={{ color: "var(--accent-text)" }}
               >
                 {p.name}
@@ -165,8 +165,7 @@ export function TitlePreview({
           type="button"
           onClick={() => details && onAdd(details)}
           disabled={!details || adding}
-          className="flex-1 rounded-sm px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
-          style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+          className="btn btn-primary flex-1"
         >
           {adding ? "…" : alreadyInLibrary ? "Aggiungi comunque" : "Aggiungi alla libreria"}
         </button>
@@ -175,7 +174,7 @@ export function TitlePreview({
             href={details.trailerUrl}
             target="_blank"
             rel="noreferrer"
-            className="rounded-sm border border-border-strong px-4 py-2.5 text-sm font-medium text-text hover:bg-surface-hover"
+            className="btn btn-secondary"
           >
             Trailer
           </a>

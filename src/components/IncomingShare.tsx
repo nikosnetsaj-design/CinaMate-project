@@ -95,7 +95,7 @@ export function IncomingShare() {
         <button
           type="button"
           onClick={() => setList(null)}
-          className="w-full rounded-sm border border-border-strong py-2.5 text-sm text-text-muted"
+          className="btn btn-secondary w-full"
         >
           Chiudi
         </button>

@@ -59,7 +59,7 @@ function Prompt({ finishedTitle, entry, onDismiss }: {
       exit={{ opacity: 0, y: 16 }}
       transition={{ type: "spring", stiffness: 340, damping: 30 }}
       role="status"
-      className="fixed inset-x-3 bottom-20 z-60 mx-auto max-w-md rounded-md border bg-surface p-3.5 shadow-[var(--shadow-lg)] sm:inset-x-6 md:bottom-6 md:left-auto md:right-6"
+      className="fixed inset-x-3 bottom-20 z-60 mx-auto max-w-md rounded-md border bg-surface p-3.5 shadow-[var(--shadow-lg)] sm:inset-x-6 lg:bottom-6 lg:left-auto lg:right-6"
       style={{ borderColor: "color-mix(in srgb, var(--accent) 40%, transparent)" }}
     >
       <div className="flex items-start justify-between gap-3">
@@ -96,8 +96,7 @@ function Prompt({ finishedTitle, entry, onDismiss }: {
         type="button"
         onClick={start}
         disabled={adding}
-        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-sm py-2.5 text-sm font-semibold disabled:opacity-60"
-        style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+        className="btn btn-primary mt-3 w-full"
       >
         <PlayIcon size={14} />
         {entry.item ? "Continua con il prossimo capitolo" : "Aggiungi il prossimo capitolo"}

@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { MotionConfig } from "framer-motion";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Nav } from "./components/Nav";
 import { ToastStack } from "./components/ToastStack";
@@ -17,6 +18,7 @@ import { UpdatePrompt } from "./components/UpdatePrompt";
 import { WebViewer } from "./components/WebViewer";
 import { Onboarding } from "./components/Onboarding";
 import { MiniPlayerBar } from "./components/MiniPlayerBar";
+import { ErrorIcon } from "./components/icons";
 import { useOnline } from "./lib/useOnline";
 import { useTheme } from "./store/useTheme";
 import { applyAccent } from "./lib/accents";
@@ -73,9 +75,9 @@ function OfflineBanner() {
   return (
     <div
       role="status"
-      className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-4 py-2 text-xs text-text-muted sm:px-6"
+      className="flex items-center gap-2.5 bg-surface-2 px-4 py-2.5 text-sm text-text-muted sm:px-6"
     >
-      <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "var(--danger)" }} />
+      <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: "var(--warning)" }} />
       {/* Erano 28 parole, e due delle tre cose che nominavano — «TMDB», «il
           critico» — non dicono niente a chi legge nel momento in cui legge.
           Quello che serve sapere è che la libreria non si è rotta. */}
@@ -84,24 +86,47 @@ function OfflineBanner() {
   );
 }
 
+/**
+ * I dati del dispositivo non si leggono.
+ *
+ * Il bottone svuota libreria e diario, e lo faceva al primo tocco, senza dire
+ * che cosa si sarebbe perso: un comando distruttivo travestito da «ripristina».
+ * Adesso chiede una conferma che dice la conseguenza con parole sue, e solo al
+ * secondo tocco fa quello che faceva prima.
+ */
 function ErrorBanner() {
   const storageError = useLibrary((s) => s.storageError);
   const resetCorruptedData = useLibrary((s) => s.resetCorruptedData);
+  const [confirming, setConfirming] = useState(false);
   if (!storageError) return null;
   return (
     <div
       role="alert"
-      className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-2.5 text-sm sm:px-6"
-      style={{ background: "var(--danger)", color: "var(--danger-contrast)", borderColor: "var(--danger)" }}
+      className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3 sm:px-6"
+      style={{ background: "color-mix(in srgb, var(--danger) 12%, var(--bg))" }}
     >
-      <span>I dati salvati sul dispositivo sembrano danneggiati e non possono essere letti.</span>
-      <button
-        type="button"
-        onClick={resetCorruptedData}
-        className="rounded-xs border border-current px-2.5 py-1 text-xs font-medium hover:opacity-80"
-      >
-        Ripristina dati locali
-      </button>
+      <span className="flex min-w-0 flex-1 basis-64 items-start gap-2.5 text-sm text-text">
+        <span className="mt-0.5 shrink-0" style={{ color: "var(--danger)" }}>
+          <ErrorIcon />
+        </span>
+        {confirming
+          ? "Libreria e diario di questo dispositivo verranno svuotati. Non si torna indietro."
+          : "Non riesco a leggere i dati salvati su questo dispositivo."}
+      </span>
+      {confirming ? (
+        <span className="flex gap-2">
+          <button type="button" onClick={() => setConfirming(false)} className="btn btn-secondary btn-sm">
+            Annulla
+          </button>
+          <button type="button" onClick={resetCorruptedData} className="btn btn-danger-fill btn-sm">
+            Svuota e ricomincia
+          </button>
+        </span>
+      ) : (
+        <button type="button" onClick={() => setConfirming(true)} className="btn btn-secondary btn-sm">
+          Ricomincia da capo
+        </button>
+      )}
     </div>
   );
 }
@@ -136,7 +161,11 @@ export default function App() {
   }, [accent, theme]);
 
   return (
-    <>
+    // Le animazioni scritte in JavaScript non sentono la regola CSS di
+    // «riduci movimento»: senza questa riga fogli e avvisi continuavano a
+    // scivolare per chi aveva chiesto di non vederli. Così si spengono
+    // spostamenti e scale, e resta la dissolvenza.
+    <MotionConfig reducedMotion="user">
       <a
         href="#main-content"
         className="skip-link rounded-sm bg-accent px-4 py-2 text-sm font-medium text-accent-contrast"
@@ -144,7 +173,7 @@ export default function App() {
         Vai al contenuto
       </a>
       <Nav />
-      <div className="min-h-screen pb-16 pt-14 md:pb-0 md:pl-60 md:pt-0">
+      <div className="min-h-screen pb-[calc(var(--tabbar-h)+env(safe-area-inset-bottom))] pt-14 lg:pb-0 lg:pl-60 lg:pt-0">
         <OfflineBanner />
         <ErrorBanner />
         <main id="main-content">
@@ -230,6 +259,6 @@ export default function App() {
           punto parta deve coprire lo schermo intero senza portarsi via la
           pagina che c'era. */}
       <WebViewer />
-    </>
+    </MotionConfig>
   );
 }

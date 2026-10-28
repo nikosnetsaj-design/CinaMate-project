@@ -1,20 +1,13 @@
 import type { ReactNode } from "react";
+import { Popcorn } from "lucide-react";
 
-function ReelIcon() {
-  return (
-    <svg width="44" height="44" viewBox="0 0 44 44" fill="none" aria-hidden="true">
-      <circle cx="22" cy="22" r="15" stroke="var(--border-strong)" strokeWidth="2" />
-      <circle cx="22" cy="10.5" r="2.2" fill="var(--border-strong)" />
-      <circle cx="32.5" cy="16" r="2.2" fill="var(--border-strong)" />
-      <circle cx="32.5" cy="28" r="2.2" fill="var(--border-strong)" />
-      <circle cx="22" cy="33.5" r="2.2" fill="var(--border-strong)" />
-      <circle cx="11.5" cy="28" r="2.2" fill="var(--border-strong)" />
-      <circle cx="11.5" cy="16" r="2.2" fill="var(--border-strong)" />
-      <circle cx="22" cy="22" r="4.5" fill="var(--accent)" />
-    </svg>
-  );
-}
-
+/**
+ * Lo stato vuoto: un invito, non un riquadro da riempire.
+ *
+ * Era una cornice tratteggiata, cioè il disegno di un segnaposto — la cosa che
+ * si lascia nei prototipi per ricordarsi che lì va qualcosa. Ora è una pausa
+ * nella pagina: un'icona in un cerchio, un titolo, una riga, un'azione.
+ */
 export function EmptyState({
   title,
   description,
@@ -27,13 +20,13 @@ export function EmptyState({
   icon?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-border px-6 py-16 text-center">
-      {icon ?? <ReelIcon />}
-      <div className="flex flex-col gap-1.5">
-        <h3 className="font-display text-lg font-medium text-text">{title}</h3>
-        <p className="max-w-sm text-sm text-text-muted">{description}</p>
+    <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
+      <div className="mb-1 grid h-14 w-14 place-items-center rounded-full bg-surface-2 text-text-muted">
+        {icon ?? <Popcorn size={24} strokeWidth={1.75} aria-hidden="true" />}
       </div>
-      {action}
+      <h3 className="t-title text-text">{title}</h3>
+      <p className="max-w-[34ch] text-sm text-text-muted">{description}</p>
+      {action && <div className="mt-2">{action}</div>}
     </div>
   );
 }

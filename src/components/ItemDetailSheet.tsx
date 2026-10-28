@@ -278,7 +278,7 @@ function ItemDetail({ item }: { item: Item }) {
             // non è ancora nel documento e lo scorrimento non troverebbe nulla.
             requestAnimationFrame(() => tabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
           }}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-border-strong py-3 text-sm font-medium text-text transition-colors hover:bg-surface-hover"
+          className="chip mt-4 w-full"
         >
           <InfoIcon size={17} />
           Maggiori informazioni
@@ -342,7 +342,7 @@ function ItemDetail({ item }: { item: Item }) {
                     <button
                       type="button"
                       onClick={() => decrementEpisode(item.id)}
-                      className="flex-1 rounded-sm border border-border-strong bg-surface py-2 text-xs text-text-muted"
+                      className="btn btn-secondary btn-sm flex-1"
                     >
                       − 1 ep
                     </button>
@@ -390,7 +390,7 @@ function ItemDetail({ item }: { item: Item }) {
                       <button
                         type="button"
                         onClick={() => setRewatch(item.id, (item.rewatch || 0) - 1)}
-                        className="tap-target h-8 w-8 rounded-sm border border-border-strong text-text-muted"
+                        className="btn btn-secondary tap-target"
                       >
                         −
                       </button>
@@ -409,7 +409,7 @@ function ItemDetail({ item }: { item: Item }) {
                   <button
                     type="button"
                     onClick={() => openEdit(item)}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-dashed border-border-strong text-xs text-text-muted"
+                    className="btn btn-secondary btn-sm flex-1"
                   >
                     <StarIcon size={14} />
                     Dai un voto
@@ -440,7 +440,7 @@ function ItemDetail({ item }: { item: Item }) {
                 <button
                   type="button"
                   onClick={() => openEdit(item)}
-                  className="flex-1 rounded-md border border-border-strong bg-surface-hover py-2.5 text-sm text-text"
+                  className="btn btn-secondary flex-1"
                 >
                   Modifica
                 </button>
@@ -520,7 +520,7 @@ function ItemDetail({ item }: { item: Item }) {
                           close();
                           openAddSheet(s);
                         }}
-                        className="rounded-full border border-border-strong px-3 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
+                        className="chip"
                       >
                         {s} <span style={{ color: "var(--accent-text)" }}>＋</span>
                       </button>

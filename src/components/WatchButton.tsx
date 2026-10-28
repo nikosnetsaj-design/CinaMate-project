@@ -60,8 +60,7 @@ export function WatchButton({ item, onNavigate }: { item: Item; onNavigate?: () 
         // The player reads this and starts on the title straight away.
         navigate(`/player?titolo=${encodeURIComponent(item.id)}`);
       }}
-      className="mt-4 flex w-full items-center justify-center gap-2 rounded-md py-3 text-sm font-semibold transition-opacity hover:opacity-90"
-      style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+      className="btn btn-primary btn-lg mt-4 w-full"
     >
       <PlayIcon size={17} />
       Guarda

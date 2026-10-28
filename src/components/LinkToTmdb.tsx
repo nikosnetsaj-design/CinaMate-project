@@ -65,7 +65,7 @@ export function LinkToTmdb({ item }: { item: Item }) {
         <button
           type="button"
           onClick={() => openSettings()}
-          className="mt-2.5 rounded-sm border border-border-strong px-3.5 py-2 text-xs font-medium text-text hover:bg-surface-hover"
+          className="btn btn-secondary btn-sm mt-2.5"
         >
           Apri Impostazioni
         </button>

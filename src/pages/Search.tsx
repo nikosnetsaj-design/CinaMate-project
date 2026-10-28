@@ -57,7 +57,7 @@ function SuggestionRow({ item, reason }: { item: Item; reason?: string }) {
         {...prefetchHandlers("/player")}
         onClick={() => navigate(`/player?titolo=${encodeURIComponent(item.id)}`)}
         aria-label={`Riproduci ${item.title}`}
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border-strong text-text transition-colors hover:bg-surface-hover"
+        className="icon-btn icon-btn-filled shrink-0"
       >
         <PlayIcon size={18} />
       </button>
@@ -334,7 +334,7 @@ export function Search() {
 
       {/* La casella resta appesa in alto mentre la griglia scorre: su un
           telefono, correggere una parola non deve costare una risalita. */}
-      <div className="sticky top-14 z-20 -mx-4 bg-bg px-4 py-2 md:top-0 sm:-mx-6 sm:px-6">
+      <div className="sticky top-14 z-20 -mx-4 bg-bg px-4 py-2 lg:top-0 sm:-mx-6 sm:px-6">
         {/*
           Una `label` e non un `div`: prima il bersaglio era la sola riga di
           testo, così un tocco sulla lente o sul bordo della pillola non apriva

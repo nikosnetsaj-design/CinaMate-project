@@ -278,8 +278,7 @@ function EditItemForm() {
           type="button"
           onClick={save}
           disabled={!draft.title.trim()}
-          className="rounded-sm px-4 py-3 text-sm font-semibold transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
-          style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+          className="btn btn-primary btn-lg"
         >
           {editingId ? "Salva modifiche" : "Aggiungi alla libreria"}
         </button>

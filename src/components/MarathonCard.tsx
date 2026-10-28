@@ -98,7 +98,7 @@ export function MarathonCard() {
         <button
           type="button"
           onClick={stop}
-          className="shrink-0 rounded-sm border border-border-strong px-2.5 py-1 text-[11px] text-text-muted hover:bg-surface-hover"
+          className="btn btn-secondary btn-sm shrink-0"
         >
           Termina
         </button>
@@ -134,7 +134,7 @@ export function MarathonCard() {
           <button
             type="button"
             onClick={() => openItem(currentItem)}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-sm border border-border-strong bg-surface py-2 text-xs font-medium text-text"
+            className="btn btn-secondary btn-sm flex-1"
           >
             <PlayIcon size={13} />
             Dove guardarlo
@@ -144,7 +144,7 @@ export function MarathonCard() {
             type="button"
             onClick={addCurrent}
             disabled={adding || !tmdbApiKey}
-            className="flex-1 rounded-sm border border-border-strong bg-surface py-2 text-xs font-medium text-text disabled:opacity-60"
+            className="btn btn-secondary btn-sm flex-1 disabled:opacity-60"
           >
             {adding ? "…" : "Aggiungi in libreria"}
           </button>
