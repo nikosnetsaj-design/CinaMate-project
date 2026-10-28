@@ -32,7 +32,7 @@ const RUNTIME_BANDS: { label: string; min?: number; max?: number }[] = [
 function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-xs font-medium uppercase tracking-[0.08em] text-text-faint">{label}</span>
+      <span className="text-sm font-medium text-text">{label}</span>
       {children}
       {hint && <span className="text-xs text-text-faint">{hint}</span>}
     </div>
@@ -83,10 +83,7 @@ function Chips<T extends string>({
             type="button"
             aria-pressed={active}
             onClick={() => onChange(active ? undefined : o.value)}
-            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-              active ? "border-transparent" : "border-border-strong text-text-muted hover:bg-surface-hover"
-            }`}
-            style={active ? { background: "var(--accent)", color: "var(--accent-contrast)" } : undefined}
+            className="chip"
           >
             {o.label}
           </button>
@@ -141,10 +138,10 @@ export function FilterSheet({
     <Sheet onClose={onClose} titleId="filtri-title">
       <div className="flex flex-col gap-5 p-5 sm:p-6">
         <div>
-          <h2 id="filtri-title" className="font-display text-2xl font-semibold text-text">
+          <h2 id="filtri-title" className="t-title text-text">
             Filtri
           </h2>
-          <p className="mt-1 text-sm text-text-muted">
+          <p className="mt-1 text-sm tabular text-text-muted">
             {resultCount} {resultCount === 1 ? "titolo" : "titoli"}
             {count > 0 && ` · ${count} ${count === 1 ? "filtro attivo" : "filtri attivi"}`}
           </p>
@@ -186,7 +183,7 @@ export function FilterSheet({
               placeholder={String(earliest)}
               aria-label="Anno minimo"
               onChange={(e) => set("yearFrom", e.target.value ? Number(e.target.value) : undefined)}
-              className="field field-sm w-auto font-mono"
+              className="field field-sm w-auto tabular"
             />
           </Field>
           <Field label="Al">
@@ -199,7 +196,7 @@ export function FilterSheet({
               placeholder={String(latest)}
               aria-label="Anno massimo"
               onChange={(e) => set("yearTo", e.target.value ? Number(e.target.value) : undefined)}
-              className="field field-sm w-auto font-mono"
+              className="field field-sm w-auto tabular"
             />
           </Field>
         </div>
@@ -294,24 +291,29 @@ export function FilterSheet({
           />
         </Field>
 
-        <label className="flex items-center gap-2.5 text-sm text-text">
+        <label className="flex min-h-11 items-center gap-3 text-sm text-text">
           <input
             type="checkbox"
             checked={!!filters.hasSubtitles}
             onChange={(e) => set("hasSubtitles", e.target.checked || undefined)}
-            className="h-4 w-4"
+            className="h-5 w-5 shrink-0"
           />
           Solo titoli con sottotitoli configurati
         </label>
 
-        <div className="flex gap-3">
+        {/* Il piede resta in fondo al foglio mentre si scorre fra i filtri: il
+            conteggio dal vivo serve proprio mentre si stringe, non alla fine. */}
+        <div
+          className="sticky bottom-0 -mx-5 -mb-5 flex gap-3 bg-surface px-5 pb-5 pt-3 sm:-mx-6 sm:-mb-6 sm:px-6 sm:pb-6"
+          style={{ boxShadow: "inset 0 1px 0 var(--separator)" }}
+        >
           <button
             type="button"
             onClick={() => onChange({})}
             disabled={count === 0}
-            className="btn btn-secondary flex-1 disabled:opacity-40"
+            className="btn btn-secondary flex-1"
           >
-            Azzera
+            Togli tutti
           </button>
           <button
             type="button"

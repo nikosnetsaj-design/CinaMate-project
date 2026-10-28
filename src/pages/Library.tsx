@@ -108,10 +108,10 @@ export function Library() {
     q.trim() || (filterCount > 0 ? "Selezione dalla mia libreria" : "La mia libreria");
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 sm:px-6 sm:py-10">
+    <div className="mx-auto flex max-w-6xl flex-col gap-5 px-[var(--gutter)] py-6 sm:py-10">
       <div>
-        <h1 className="font-display text-3xl font-semibold text-text">Libreria</h1>
-        <p className="mt-1 text-sm text-text-muted">{items.length} titoli in totale.</p>
+        <h1 className="t-display text-text">Libreria</h1>
+        <p className="mt-1 text-sm tabular text-text-muted">{items.length} titoli in totale</p>
       </div>
 
       <SearchBar value={q} onChange={setQ} placeholder="Cerca per titolo, regista, genere, attore…" />
@@ -122,8 +122,7 @@ export function Library() {
           <button
             type="button"
             onClick={() => setQ(suggestion)}
-            className="font-medium underline underline-offset-2"
-            style={{ color: "var(--accent-text)" }}
+            className="font-medium text-accent-text underline underline-offset-2"
           >
             {suggestion}
           </button>
@@ -185,12 +184,15 @@ export function Library() {
       {!ready ? (
         <PosterGridSkeleton count={8} />
       ) : list.length === 0 ? (
+        /* Due situazioni, due frasi: la libreria vuota usa le stesse parole della
+           Home — era una delle quattro frasi diverse per dire «non c'è niente» —
+           e quella filtrata dice cosa fare invece di constatare. */
         <EmptyState
-          title={items.length === 0 ? "La tua libreria è vuota" : "Nessun risultato"}
+          title={items.length === 0 ? "Lo scaffale è tuo da riempire." : "Niente con questi filtri"}
           description={
             items.length === 0
-              ? "Aggiungi il tuo primo titolo per iniziare a costruire la tua collezione."
-              : "Nessun titolo corrisponde ai filtri attuali."
+              ? "Cerca un film o una serie che hai visto: copertina, trama, cast e durata arrivano da soli."
+              : "Prova a toglierne uno, o a cercare con un'altra parola."
           }
           action={
             <button
@@ -203,35 +205,35 @@ export function Library() {
                 setQ("");
                 setFilters({});
               }}
-              className="btn btn-secondary"
+              className={items.length === 0 ? "btn btn-primary" : "btn btn-secondary"}
             >
-              {items.length === 0 ? "Aggiungi un titolo" : "Azzera filtri"}
+              {items.length === 0 ? "Aggiungi il primo titolo" : "Togli filtri e ricerca"}
             </button>
           }
         />
       ) : grid ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {list.map((item) => (
             <PosterCard key={item.id} item={item} onOpen={openItem} progress />
           ))}
         </div>
       ) : (
-        <ul className="flex flex-col gap-2.5">
+        <ul className="list-group">
           {list.map((item) => (
             <li key={item.id}>
               <button
                 type="button"
                 onClick={() => openItem(item)}
                 aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
-                className="flex w-full items-center gap-3.5 rounded-md border border-border bg-surface p-3 text-left transition-colors hover:bg-surface-hover"
+                className="list-row gap-4"
               >
-                <PosterArt item={item} size="sm" className="w-12 shrink-0" />
+                <PosterArt item={item} size="sm" showTitle={false} className="w-12 shrink-0 rounded-xs" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-display text-sm font-semibold text-text">{item.title}</p>
-                  <p className="mt-0.5 truncate text-xs text-text-faint">
+                  <p className="truncate text-base font-medium text-text">{item.title}</p>
+                  <p className="mt-0.5 truncate text-sm tabular text-text-muted">
                     {[item.year, item.genre, item.platform].filter(Boolean).join(" · ")}
                   </p>
-                  <div className="mt-1">
+                  <div className="mt-1.5">
                     <StatusChip status={item.status} size="sm" />
                   </div>
                 </div>

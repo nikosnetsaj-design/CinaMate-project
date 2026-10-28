@@ -521,6 +521,26 @@
  * dai livelli di proposito: deve battere i `text-sm` e `text-xs` scritti sui
  * singoli campi, che altrove restano come sono.
  */
+/* La × di sistema dei campi di ricerca: l'app ne disegna già una sua, e su
+   Safari comparivano tutte e due, una accanto all'altra. */
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Gli elenchi raggruppati fatti di `<li>`: il filo fra le voci va messo fra
+   gli elementi della lista, non fra i bottoni, che lì non sono fratelli. */
+.list-group > li + li > .list-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 76px;
+  height: 1px;
+  background: var(--separator);
+}
+
 /* Il campo disegna il fuoco da sé, con un anello di 2 px nella sua forma:
    l'anello generale sopra farebbe due cornici una dentro l'altra. */
 .field:focus-visible {
@@ -573,6 +593,9 @@ html.has-miniplayer #main-content {
 }
 
 html {
+  /* Caselle, interruttori nativi e cursori prendono l'accento invece del blu
+     del sistema: erano l'unico blu rimasto nell'app. */
+  accent-color: var(--accent);
   /* Lo stesso fondo del tema anche dietro l'app: senza, la sovraestensione
      dello scorrimento su iOS mostra una striscia bianca sopra e sotto. */
   background: var(--bg);
