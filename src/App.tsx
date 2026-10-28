@@ -122,6 +122,10 @@ export default function App() {
   useEffect(() => {
     // Dark is the base theme, so the light variant is the one that opts in.
     document.documentElement.classList.toggle("light", theme === "light");
+    // La barra di sistema prende il colore del fondo: con il tema chiaro una
+    // striscia nera sopra la carta sembra un pezzo di un'altra app.
+    const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
+    if (bg) document.querySelector('meta[name="theme-color"]')?.setAttribute("content", bg);
   }, [theme]);
 
   // Keyed on the theme too: each accent carries a dark and a light variant,
@@ -139,7 +143,6 @@ export default function App() {
       >
         Vai al contenuto
       </a>
-      <div className="grain-overlay" />
       <Nav />
       <div className="min-h-screen pb-16 pt-14 md:pb-0 md:pl-60 md:pt-0">
         <OfflineBanner />

@@ -2,144 +2,164 @@
 
 
 /* ------------------------------------------------------------------ */
-/* CineMate design tokens — "Sala buia"                                 */
+/* CineMate design tokens — «Sala e carta»                              */
 /*                                                                      */
-/* Il fondo è nero e i grigi sono grigi. Prima erano velluto melanzana e */
-/* lilla: bello come tessuto, illeggibile come interfaccia — il testo    */
-/* secondario tirava al rosa e su un fondo viola non si staccava da      */
-/* niente, tanto che «il grigio» non si distingueva dall'accento. Un     */
-/* nero neutro fa due cose che il velluto non faceva: alza il contrasto  */
-/* di ogni testo che gli sta sopra, e lascia che l'unico colore acceso   */
-/* dello schermo sia quello che vuoi guardare — le locandine.            */
+/* Di sera un nero caldo, di giorno una carta calda: mai il nero pieno,  */
+/* che fa vibrare il testo bianco e rende le locandine adesivi su un     */
+/* vuoto, e mai il grigio freddo, che fa sembrare l'app un modulo. Le    */
+/* locandine portano il colore; l'interfaccia intorno tace.              */
 /*                                                                      */
-/* I colori restano dove significano qualcosa: l'accento sulle azioni,   */
-/* la scala dei voti (fredda -> calda: un 4 è «mi ha lasciato freddo»,   */
-/* non «pericolo») e gli stati. Tutto il resto è bianco, grigio, nero.   */
+/* L'accento è uno solo, color brace, e sta dove c'è un'azione o uno     */
+/* stato attivo. I colori di esito (riuscito, attenzione, errore) dicono */
+/* un esito e basta. La scala dei voti resta da freddo a caldo — un 4 è  */
+/* «mi ha lasciato freddo», non «pericolo» — ma nei toni della carta     */
+/* invece che dell'arcobaleno.                                          */
+/*                                                                      */
+/* I due temi non sono uno l'inverso dell'altro: di sera la profondità   */
+/* la dà la luminosità delle superfici e un filo di luce sul bordo alto, */
+/* di giorno la carta più chiara del fondo e un'ombra morbida.           */
+/*                                                                      */
+/* Ogni coppia testo/fondo è verificata da `npm run contrast`.          */
 /* ------------------------------------------------------------------ */
 
 /* Il tema scuro è quello principale: un'app che si usa di sera. */
 :root {
-  --bg: #0a0a0b;
-  --surface: #141416;
-  --surface-2: #1a1a1d;
-  --surface-hover: #26262b;
-  --text: #ffffff;
-  /* Grigi neutri e non lillà: questi due valori sono metà del testo dell'app
-     — didascalie, motivi, unità di misura — e tinti di viola sparivano nel
-     fondo invece di stargli sopra. */
-  --text-muted: #b6b6bd;
-  --text-faint: #9a9aa4;
-  --border: rgba(255, 255, 255, 0.1);
-  --border-strong: rgba(255, 255, 255, 0.36);
+  --bg: #131211;
+  --surface: #1c1b19;
+  --surface-2: #262422;
+  --surface-hover: #302e2b;
+  --text: #f3efe7;
+  --text-muted: #b9b2a6;
+  --text-faint: #a19a8f;
+  /* Il filo che separa le voci di un elenco, e il bordo che si vede appena. */
+  --separator: rgba(243, 239, 231, 0.08);
+  --border: rgba(243, 239, 231, 0.1);
+  /* Il bordo che deve staccarsi 3:1 dal fondo: campi, interruttori spenti. */
+  --border-strong: rgba(243, 239, 231, 0.4);
 
-  /* Verde: l'accento predefinito. Sul nero è la cosa più leggibile che ci
-     sia, ed è il colore che le app di visione usano per «vai» da sempre. */
-  --accent: #22c55e;
-  --accent-text: #4ade80;   /* lo stesso verde, ma come testo sul fondo */
-  --accent-contrast: #04220f;
-  --cyan: #38bdf8;
-  --cyan-contrast: #041b2a;
-  --yellow: #fbbf24;
-  --yellow-contrast: #2a1c00;
-  --danger: #fb7185;
-  --danger-contrast: #2c0308;
+  /* Brace: l'unico accento. */
+  --accent: #dc7a54;
+  --accent-text: #ec9670;   /* la stessa brace, come testo sul fondo */
+  --accent-contrast: #1a0b05;
 
-  --status-watching: #38bdf8;
-  --status-done: #4ade80;
-  --status-planned: #a78bfa;
-  --status-dropped: #fb7185;
-  --status-hold: #a1a1aa;
+  /* Esiti. */
+  --success: #93c08a;
+  --warning: #e3b462;
+  /* Cremisi e non corallo: vicino alla brace un errore sembrava un invito. */
+  --danger: #f47c8b;
+  --danger-contrast: #24070c;
 
-  /* Freddo -> caldo, dal blu al rosso.
-     Prima la scala andava dal ciano al magenta: due colori soli, e in mezzo
-     sei rosa che nessuno riesce a distinguere l'uno dall'altro — nel Nastro,
-     dove le sessioni stanno una accanto all'altra, un 6 e un 9 erano la
-     stessa striscia rosa. Blu -> verde -> giallo -> rosso è la scala che si
-     legge senza istruzioni, e ogni gradino si vede. */
-  --vote-1: #3b82f6;
-  --vote-2: #38bdf8;
-  --vote-3: #22d3ee;
-  --vote-4: #2dd4bf;
-  --vote-5: #4ade80;
-  --vote-6: #a3e635;
-  --vote-7: #facc15;
-  --vote-8: #fbbf24;
-  --vote-9: #fb923c;
-  --vote-10: #f87171;
+  /* Due nomi storici, tenuti perché li usano una decina di componenti.
+     «Ciano» era il colore secondario — pastiglie del critico, delle saghe,
+     barre dei grafici — e diventa un neutro: erano proprio le cose che
+     facevano concorrenza alle locandine. «Giallo» è l'attenzione. */
+  --cyan: #b9b2a6;
+  --cyan-contrast: #131211;
+  --yellow: #e3b462;
+  --yellow-contrast: #1f0e07;
 
-  --shadow-color: 240 8% 2%;
-  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.5);
-  --shadow-md: 0 8px 24px -4px hsl(var(--shadow-color) / 0.6);
-  --shadow-lg: 0 24px 56px -12px hsl(var(--shadow-color) / 0.7);
+  /* Gli stati della libreria pescano dai colori che ci sono già: tre
+     colori per tre stati che dicono qualcosa, due neutri per gli altri. */
+  --status-watching: #ec9670;
+  --status-done: #93c08a;
+  --status-planned: #b9b2a6;
+  --status-dropped: #a19a8f;
+  --status-hold: #e3b462;
 
-  --grain-opacity: 0.025;
+  /* Da freddo a caldo, nei toni della carta. Ogni gradino regge 3:1 sul
+     fondo, così una striscia del Nastro si vede anche da sola. */
+  --vote-1: #5f7690;
+  --vote-2: #6f8499;
+  --vote-3: #8495a3;
+  --vote-4: #9ba5aa;
+  --vote-5: #b4b0a5;
+  --vote-6: #cbb18f;
+  --vote-7: #d8a37a;
+  --vote-8: #e0906a;
+  --vote-9: #e07a52;
+  --vote-10: #cf5d38;
+
+  /* Materiali: vetro per le barre e per i comandi sopra un'immagine. */
+  --material: rgba(28, 27, 25, 0.72);
+  --scrim: rgba(8, 7, 6, 0.62);
+
+  /* Elevazione, sera: ombre scure più un filo di luce sul bordo alto. */
+  --shadow-sm: inset 0 1px 0 rgba(255, 248, 235, 0.04);
+  --shadow-md: 0 12px 32px -8px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 248, 235, 0.05);
+  --shadow-lg: 0 32px 80px -16px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 248, 235, 0.06);
+
   color-scheme: dark;
 }
 
-/* Il tema chiaro è la stessa scala alla luce del giorno: grigi neutri,
-   mai crema e mai malva — il grigio-lillà di prima faceva sembrare tinto
-   di rosa ogni testo secondario anche qui. */
+/* Il tema chiaro: carta calda, non bianco ottico e non grigio freddo. */
 .light {
-  --bg: #f5f5f6;
-  --surface: #ffffff;
-  --surface-2: #ececee;
-  --surface-hover: #e1e1e5;
-  --text: #17171a;
-  --text-muted: #55555e;
-  --text-faint: #5d5d68;
-  --border: rgba(20, 20, 25, 0.12);
-  --border-strong: rgba(20, 20, 25, 0.52);
+  --bg: #f6f3ee;
+  --surface: #fdfcfa;
+  --surface-2: #eeeae3;
+  --surface-hover: #e5e0d7;
+  --text: #1c1a17;
+  --text-muted: #57524a;
+  --text-faint: #645e54;
+  --separator: rgba(28, 26, 23, 0.09);
+  --border: rgba(28, 26, 23, 0.1);
+  --border-strong: rgba(28, 26, 23, 0.5);
 
-  --accent: #157f3c;
-  --accent-text: #116632;
+  --accent: #b0502c;
+  --accent-text: #9f4624;
   --accent-contrast: #ffffff;
-  --cyan: #0d5f7a;
-  --cyan-contrast: #ffffff;
-  --yellow: #7a5200;
-  --yellow-contrast: #ffffff;
-  --danger: #b3261e;
+
+  --success: #3d7536;
+  --warning: #865900;
+  --danger: #b42a40;
   --danger-contrast: #ffffff;
 
-  --status-watching: #0d5f7a;
-  --status-done: #116632;
-  --status-planned: #5b3ab8;
-  --status-dropped: #b3261e;
-  --status-hold: #55555e;
+  --cyan: #57524a;
+  --cyan-contrast: #ffffff;
+  --yellow: #865900;
+  --yellow-contrast: #ffffff;
 
-  --vote-1: #1d4ed8;
-  --vote-2: #0369a1;
-  --vote-3: #0e7490;
-  --vote-4: #0f766e;
-  --vote-5: #15803d;
-  --vote-6: #4d7c0f;
-  --vote-7: #a16207;
-  --vote-8: #b45309;
-  --vote-9: #c2410c;
-  --vote-10: #b91c1c;
+  --status-watching: #9f4624;
+  --status-done: #3d7536;
+  --status-planned: #57524a;
+  --status-dropped: #645e54;
+  --status-hold: #865900;
 
-  --shadow-color: 240 8% 25%;
-  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.1);
-  --shadow-md: 0 6px 20px -4px hsl(var(--shadow-color) / 0.16);
-  --shadow-lg: 0 20px 48px -12px hsl(var(--shadow-color) / 0.26);
+  --vote-1: #4a6581;
+  --vote-2: #5b7489;
+  --vote-3: #6f8291;
+  --vote-4: #7c8589;
+  --vote-5: #8c8679;
+  --vote-6: #9a7c55;
+  --vote-7: #b47645;
+  --vote-8: #c26c42;
+  --vote-9: #b65532;
+  --vote-10: #a2401f;
 
-  --grain-opacity: 0.03;
+  --material: rgba(246, 243, 238, 0.78);
+  --scrim: rgba(28, 26, 23, 0.38);
+
+  --shadow-sm: 0 1px 2px rgba(31, 26, 20, 0.05), 0 1px 1px rgba(31, 26, 20, 0.03);
+  --shadow-md: 0 8px 24px -8px rgba(31, 26, 20, 0.14), 0 2px 6px rgba(31, 26, 20, 0.05);
+  --shadow-lg: 0 24px 64px -16px rgba(31, 26, 20, 0.24), 0 4px 12px rgba(31, 26, 20, 0.06);
+
   color-scheme: light;
 }
 
-/* Saturated dye fills for the vote picker, paired with --vote-fill-ink.
-   Theme-independent: these are swatches of pigment, not text colors. */
+/* Le tessere del selettore del voto, con l'inchiostro scuro sopra.
+   Uguali nei due temi: sono campioni di colore, non testo. Più chiare
+   della scala qui sopra, perché il numero dentro deve leggersi a 4,5:1. */
 :root {
-  --vote-fill-1: #3b82f6;
-  --vote-fill-2: #38bdf8;
-  --vote-fill-3: #22d3ee;
-  --vote-fill-4: #2dd4bf;
-  --vote-fill-5: #4ade80;
-  --vote-fill-6: #a3e635;
-  --vote-fill-7: #facc15;
-  --vote-fill-8: #fbbf24;
-  --vote-fill-9: #fb923c;
-  --vote-fill-10: #f87171;
-  --vote-fill-ink: #10151c;
+  --vote-fill-1: #9cb0c6;
+  --vote-fill-2: #a5b6c7;
+  --vote-fill-3: #b0bcc6;
+  --vote-fill-4: #bcc2c3;
+  --vote-fill-5: #cbc6b9;
+  --vote-fill-6: #dac7a7;
+  --vote-fill-7: #e4ba95;
+  --vote-fill-8: #e9a885;
+  --vote-fill-9: #ea9574;
+  --vote-fill-10: #e5805f;
+  --vote-fill-ink: #1a1714;
 }
 
 /* ------------------------------------------------------------------ */
@@ -155,77 +175,74 @@
 /* ------------------------------------------------------------------ */
 
 :root {
-  /* Movimento. Tre durate, perché tre sono i casi: qualcosa risponde,
-     qualcosa si sposta, qualcosa entra. La curva è quella che l'app già
-     usava per le transizioni di vista — cambiava solo il nome. */
+  /* Movimento. Il tocco risponde subito, uno stato cambia, qualcosa si
+     sposta, un foglio entra: quattro durate per quattro casi. */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --dur-tap: 90ms;
-  --dur-move: 180ms;
-  --dur-enter: 240ms;
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-tap: 100ms;
+  --dur-state: 200ms;
+  --dur-move: 280ms;
+  --dur-enter: 350ms;
 
-  /* Impilamento. Erano cinque numeri in cinque file, e per sapere se la
-     grana finiva sopra o sotto un foglio bisognava aprirli tutti. */
+  /* Impilamento. Erano cinque numeri in cinque file. */
   --z-raised: 10;
   --z-nav: 40;
   --z-toast: 50;
   --z-sheet: 70;
-  --z-grain: 100;
 
-  /* Spaziatura, base 4. Sei passi e nient'altro: il ritmo di una pagina
-     si sente quando i salti sono pochi e sempre gli stessi. */
-  --space-1: 2px;
-  --space-2: 4px;
-  --space-3: 8px;
-  --space-4: 12px;
-  --space-5: 20px;
-  --space-6: 36px;
+  /* Spaziatura su base 4, con l'8 come passo principale. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
 }
 
-/* I sette ruoli tipografici. Erano `text-3xl`, `text-xl`, `text-[11px]`
-   scelti caso per caso: gli stessi corpi ricomparivano con nomi diversi e
-   corpi diversi ricomparivano con lo stesso nome. */
+/* I ruoli tipografici: un serif per i titoli, il sans per tutto il resto,
+   cinque corpi in tutto. Il più piccolo è 12: sotto, su un telefono, si
+   legge a fatica. */
 .t-display {
   font-family: var(--font-display);
-  font-size: clamp(1.75rem, 1.2rem + 2.4vw, 2.75rem);
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1.04;
+  font-size: clamp(2.125rem, 1.75rem + 1.6vw, 2.75rem);
+  font-weight: 500;
+  letter-spacing: -0.018em;
+  line-height: 1.08;
   text-wrap: balance;
 }
 .t-title {
   font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  letter-spacing: -0.024em;
-  line-height: 1.1;
+  font-size: 1.375rem;
+  font-weight: 500;
+  letter-spacing: -0.008em;
+  line-height: 1.75rem;
   text-wrap: balance;
 }
 .t-section {
   font-family: var(--font-display);
-  font-size: 1.25rem;
-  font-weight: 600;
-  letter-spacing: -0.022em;
-  line-height: 1.2;
+  font-size: 1.375rem;
+  font-weight: 500;
+  letter-spacing: -0.008em;
+  line-height: 1.75rem;
 }
 .t-body {
-  font-size: 0.9375rem;
-  line-height: 1.55;
+  font-size: 1rem;
+  line-height: 1.5rem;
 }
 .t-caption {
-  font-size: 0.8125rem;
-  line-height: 1.45;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
 }
 .t-label {
-  font-size: 0.6875rem;
-  line-height: 1.2;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  font-weight: 600;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  letter-spacing: 0.01em;
+  font-weight: 500;
 }
 .t-numeral {
-  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
 }
 
 @theme inline {
@@ -248,6 +265,10 @@
   --color-yellow-contrast: var(--yellow-contrast);
   --color-danger: var(--danger);
   --color-danger-contrast: var(--danger-contrast);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-separator: var(--separator);
+  --color-material: var(--material);
 
   --color-status-watching: var(--status-watching);
   --color-status-done: var(--status-done);
@@ -255,16 +276,25 @@
   --color-status-dropped: var(--status-dropped);
   --color-status-hold: var(--status-hold);
 
-  --font-display: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Newsreader Variable", "Iowan Old Style", Georgia, serif;
   --font-sans: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
 
-  --radius-xs: 2px;
-  --radius-sm: 5px;
-  --radius-md: 9px;
-  --radius-lg: 14px;
+  /* Quattro raggi e la pillola. Erano 2, 5, 9 e 14: bottoni a 5 px accanto
+     a pastiglie tonde, e niente che tenesse insieme le due cose. */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 24px;
 }
 
+/*
+ * Fuori dai livelli, quindi batte ogni classe `border-…`: è il motivo per cui
+ * i bordi colorati dell'app sono scritti in `style`. Resta qui finché i
+ * componenti non hanno perso le cornici che non servono — le 137
+ * `border-border-strong` scritte in giro non si sono mai viste, e liberarle
+ * tutte insieme renderebbe l'app più bordata, non meno.
+ */
 * {
   border-color: var(--border);
 }
@@ -403,44 +433,51 @@ input[type="range"] {
   transform: translate(-50%, -50%);
 }
 
-/* Display face runs tight and wide — marquee lettering, not book typography. */
+/* I titoli in Newsreader, con il taglio ottico che si adatta al corpo: più
+   stretto e contrastato in grande, più aperto in piccolo. Un solo peso, il
+   500, perché il serif fa gerarchia con la forma e non con il nero. */
 h1, h2, h3, .font-display {
   font-family: var(--font-display);
   font-optical-sizing: auto;
-  font-variation-settings: "wdth" 100;
-  letter-spacing: -0.022em;
-  line-height: 1.04;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  line-height: 1.15;
 }
 
-/* Every number in the app is set in mono: votes, dates, episode counts,
-   runtimes. A viewing diary is a ledger, and the figures should line up. */
-.font-mono, .tabular {
-  font-family: var(--font-mono);
+/* Sotto i 18 px un serif si legge come una nota a piè di pagina: lì i titoli
+   — quello sotto una locandina, quello di una voce d'elenco — tornano nel
+   sans, con il peso e l'interlinea che il componente aveva già scelto. */
+:is(h1, h2, h3, .font-display):is(.text-xs, .text-sm, .text-base, .text-\[11px\], .text-\[13px\]) {
+  font-family: var(--font-sans);
+  font-weight: revert-layer;
+  letter-spacing: -0.006em;
+  line-height: revert-layer;
+}
+
+/* Le cifre si incolonnano — un diario di visione è un registro — ma stanno
+   nel sans, che ha cifre tabulari vere: il mono faceva sembrare «108 min
+   alla fine» una riga di terminale. Il mono resta a indirizzi, chiavi e
+   codici, cioè alle cose che si copiano. */
+.tabular {
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
+}
+.font-mono {
+  font-variant-numeric: tabular-nums;
+}
+.font-mono.tabular {
+  font-family: var(--font-sans);
 }
 
 /**
- * Il segno di sezione: una barretta verticale d'accento prima del titolo.
+ * Il segno di sezione, spento.
  *
- * Serve a dare un attacco alle righe della Home. Una pagina fatta di righe
- * orizzontali tutte uguali si legge come un elenco senza inizio: la barretta
- * dice «qui comincia qualcosa» in un pixel di colore, senza aggiungere una
- * parola né una linea di separazione che spezzerebbe lo scorrimento.
+ * Era una barretta d'accento davanti a ogni titolo di riga: la Home aveva
+ * sette punti verdi prima ancora di una locandina. Ora l'attacco della riga
+ * lo dà il titolo in serif, e la classe resta solo perché sette file la
+ * usano ancora — se ne vanno con le loro pagine.
  */
 .section-mark {
   position: relative;
-  padding-left: 0.7rem;
-}
-.section-mark::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0.1em;
-  bottom: 0.1em;
-  width: 3px;
-  border-radius: 2px;
-  background: var(--accent);
 }
 
 /* ------------------------------------------------------------------ */
@@ -472,11 +509,11 @@ h1, h2, h3, .font-display {
 }
 
 ::view-transition-old(root) {
-  animation: vt-fade-out 120ms ease both;
+  animation: vt-fade-out var(--dur-state) var(--ease-in-out) both;
 }
 
 ::view-transition-new(root) {
-  animation: vt-rise 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: vt-rise var(--dur-move) var(--ease-out) both;
 }
 
 /*
@@ -492,23 +529,12 @@ h1, h2, h3, .font-display {
   }
 }
 
-/* Dye grain: the texture of film emulsion over flat color fields.
- *
- * Stava a 60: sopra la barra di navigazione (40) e i messaggi (50), ma sotto
- * i fogli (70). Il risultato era che metà dell'interfaccia era granulosa e
- * metà no, e la metà pulita era quella che si guarda più da vicino — non si
- * notava finché non lo si notava, e da lì in poi non si smetteva. La grana è
- * atmosfera: o sta sopra tutto o non sta da nessuna parte. Non tocca nulla
- * (`pointer-events: none`), quindi stare in cima non costa un clic. */
-.grain-overlay {
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: var(--z-grain);
-  opacity: var(--grain-opacity);
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
+/*
+ * La grana della pellicola non c'è più. Era un velo a tutto schermo sopra
+ * ogni cosa, in fusione `overlay`: una texture contro un'interfaccia che deve
+ * stare zitta, e un livello in più da comporre a ogni scorrimento sul
+ * telefono.
+ */
 
 :focus-visible {
   outline: 2px solid var(--accent);
@@ -516,7 +542,9 @@ h1, h2, h3, .font-display {
      reset the ring to currentColor and lose the brand signal. */
   outline-color: var(--accent);
   outline-offset: 2px;
-  border-radius: var(--radius-xs);
+  /* Niente `border-radius` qui. C'era, e fuori dai livelli batteva ogni
+     `rounded-*`: un bottone tondo che riceveva il fuoco diventava un
+     quadrato da 2 px. L'anello segue già da solo la forma del controllo. */
 }
 
 /*
@@ -566,7 +594,6 @@ html.tv :focus {
   outline: 3px solid var(--accent);
   outline-color: var(--accent);
   outline-offset: 3px;
-  border-radius: var(--radius-xs);
 }
 
 ::selection {
@@ -579,12 +606,15 @@ html.tv :focus {
   left: 1rem;
   top: -3rem;
   z-index: 100;
-  transition: top 0.15s ease;
+  transition: top var(--dur-state) var(--ease-out);
 }
 .skip-link:focus {
   top: 1rem;
 }
 
+/* Lo scheletro: la forma di quello che arriva, con un riflesso lento che
+   la attraversa. Di giorno il riempimento sale di un gradino, perché sulla
+   carta il primo quasi non si vede. */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -592,7 +622,10 @@ html.tv :focus {
 .skeleton {
   background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-hover) 50%, var(--surface-2) 75%);
   background-size: 200% 100%;
-  animation: shimmer 1.6s ease-in-out infinite;
+  animation: shimmer 1.6s var(--ease-in-out) infinite;
+}
+.light .skeleton {
+  background-image: linear-gradient(90deg, var(--surface-hover) 25%, var(--surface-2) 50%, var(--surface-hover) 75%);
 }
 
 @keyframes spin {
