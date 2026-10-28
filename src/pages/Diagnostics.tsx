@@ -50,7 +50,7 @@ function Section({ title, children, action }: { title: string; children: React.R
 
 function TestRow({ result }: { result: TestResult }) {
   return (
-    <div className="flex items-start gap-3 rounded-md border border-border bg-surface-2 p-3.5">
+    <div className="flex items-start gap-3 rounded-lg bg-surface-2 p-3.5">
       <span
         aria-hidden
         className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
@@ -79,16 +79,16 @@ function HostSummary() {
         .map((host) => {
           const stats = computeHostStats(host.id);
           return (
-            <div key={host.id} className="flex items-center justify-between gap-3 rounded-md border border-border bg-surface-2 px-3.5 py-2.5">
+            <div key={host.id} className="flex items-center justify-between gap-3 rounded-lg bg-surface-2 px-3.5 py-2.5">
               <div className="min-w-0">
                 <p className="truncate text-sm text-text">{host.name}</p>
-                <p className="truncate font-mono text-[11px] text-text-faint">{host.url}</p>
+                <p className="truncate font-mono text-xs text-text-faint">{host.url}</p>
               </div>
               <div className="shrink-0 text-right">
                 <p className="font-mono tabular text-sm" style={{ color: "var(--accent-text)" }}>
                   {stats.score}/100
                 </p>
-                <p className="font-mono text-[11px] text-text-faint">
+                <p className="font-mono text-xs text-text-faint">
                   {stats.reliability30d}% · {stats.avgPingMs ?? "—"}ms
                 </p>
               </div>
@@ -208,15 +208,15 @@ export function Diagnostics() {
         ) : (
           <ul className="flex flex-col gap-1.5">
             {[...errors].reverse().map((error: LoggedError) => (
-              <li key={error.id} className="rounded-md border border-border bg-surface-2 px-3.5 py-2.5">
+              <li key={error.id} className="rounded-lg bg-surface-2 px-3.5 py-2.5">
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="text-xs font-medium" style={{ color: "var(--danger)" }}>
                     {SCOPE_LABEL[error.scope]}
                   </span>
-                  <span className="shrink-0 font-mono text-[11px] text-text-faint">{when(error.at)}</span>
+                  <span className="shrink-0 font-mono text-xs text-text-faint">{when(error.at)}</span>
                 </div>
                 <p className="mt-1 break-words text-sm text-text">{error.message}</p>
-                {error.source && <p className="mt-0.5 break-all font-mono text-[11px] text-text-faint">{error.source}</p>}
+                {error.source && <p className="mt-0.5 break-all font-mono text-xs text-text-faint">{error.source}</p>}
               </li>
             ))}
           </ul>

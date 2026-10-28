@@ -112,7 +112,7 @@ function PaletteDialog() {
             aria-label="Cerca nella libreria"
             className="flex-1 bg-transparent text-sm text-text placeholder:text-text-faint focus:outline-none"
           />
-          <kbd className="rounded-xs border border-border-strong px-1.5 py-0.5 text-[10px] text-text-faint">esc</kbd>
+          <kbd className="rounded-xs border border-border-strong px-1.5 py-0.5 text-xs text-text-faint">esc</kbd>
         </div>
 
         <ul role="listbox" aria-label="Risultati" className="max-h-80 overflow-y-auto py-1.5">
@@ -123,7 +123,7 @@ function PaletteDialog() {
           )}
           {grouped.map(({ group, hits }) => (
             <li key={group}>
-              <p className="px-4 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-text-faint">
+              <p className="px-4 pb-1 pt-2 text-xs font-semibold text-text-faint">
                 {GROUP_LABELS[group]}
               </p>
               <ul>

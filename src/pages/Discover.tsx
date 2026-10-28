@@ -91,7 +91,7 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
                     <PosterArt item={{ title: r.title, kind: r.kind, posterPath: r.posterPath }} size="sm" className="w-28" showTitle={!r.posterPath} />
                     {owned && (
                       <span
-                        className="absolute right-1 top-1 flex items-center justify-center rounded-full px-1.5 py-1 text-[10px] font-semibold"
+                        className="absolute right-1 top-1 flex items-center justify-center rounded-full px-1.5 py-1 text-xs font-semibold"
                         style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
                       >
                         <CheckIcon size={11} />
@@ -99,7 +99,7 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
                     )}
                   </div>
                   <p className="mt-1.5 line-clamp-2 text-xs font-medium text-text">{r.title}</p>
-                  <p className="font-mono tabular text-[10px] text-text-faint">
+                  <p className="font-mono tabular text-xs text-text-faint">
                     {picking === r.tmdbId ? "…" : (r.year ?? "")}
                   </p>
                 </button>

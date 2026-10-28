@@ -184,7 +184,7 @@ function AddItemForm() {
                 "do I have this?", and it needs neither key nor network. */}
             {owned.length > 0 && (
               <section className="flex flex-col gap-2">
-                <p className="text-xs font-medium uppercase tracking-wide text-text-faint">Già nella tua libreria</p>
+                <p className="text-xs font-medium text-text-faint">Già nella tua libreria</p>
                 {owned.map((item) => (
                   <button
                     key={item.id}
@@ -193,7 +193,7 @@ function AddItemForm() {
                       close();
                       openItem(item);
                     }}
-                    className="flex items-center gap-3 rounded-md border border-border bg-surface-2 p-2.5 text-left transition-colors hover:bg-surface-hover"
+                    className="flex items-center gap-3 rounded-lg bg-surface-2 p-2.5 text-left transition-colors hover:bg-surface-hover"
                   >
                     <PosterArt
                       item={item}
@@ -228,7 +228,7 @@ function AddItemForm() {
                   key={`${r.mediaType}-${r.tmdbId}`}
                   type="button"
                   onClick={() => setPreview(r)}
-                  className="flex items-center gap-3.5 rounded-md border border-border bg-surface-2 p-3 text-left transition-colors hover:bg-surface-hover"
+                  className="flex items-center gap-3.5 rounded-lg bg-surface-2 p-3 text-left transition-colors hover:bg-surface-hover"
                 >
                   <PosterArt
                     item={{ title: r.title, kind: r.kind, posterPath: r.posterPath }}

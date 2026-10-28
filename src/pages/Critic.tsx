@@ -124,7 +124,7 @@ export function Critic() {
       )}
 
       {missingKey && !busy && (
-        <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-border-strong px-4 py-8 text-center">
+        <div className="flex flex-col items-center gap-3 rounded-md px-4 py-8 text-center bg-surface-2">
           <p className="text-sm text-text-muted">
             Per parlare con il critico serve una chiave API Anthropic personale, salvata solo su questo dispositivo.
           </p>
@@ -152,14 +152,14 @@ export function Critic() {
       )}
 
       {answer && !busy && (
-        <div className="rounded-md border border-border bg-surface-2 p-5">
+        <div className="rounded-lg bg-surface-2 p-5">
           <div className="mb-3.5 h-0.5 w-6" style={{ background: "var(--accent)" }} />
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-text">{answer}</p>
         </div>
       )}
 
       <div className="rounded-md border border-border bg-surface p-4">
-        <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Su cosa si basa</span>
+        <span className="mb-2 block text-xs font-medium text-text-faint">Su cosa si basa</span>
         {done.length === 0 ? (
           <p className="text-sm text-text-faint">Segna qualche titolo come "Visto" per consigli su misura.</p>
         ) : (

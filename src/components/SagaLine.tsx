@@ -83,29 +83,29 @@ function Chapter({ entry, current, onOpen }: { entry: SagaEntry; current: boolea
             />
           )}
           {part.year != null && (
-            <span className="absolute right-1 top-1 rounded-full bg-black/65 px-1.5 py-0.5 font-mono tabular text-[10px] text-white backdrop-blur-sm">
+            <span className="absolute right-1 top-1 rounded-full bg-black/65 px-1.5 py-0.5 font-mono tabular text-xs text-white backdrop-blur-sm">
               {part.year}
             </span>
           )}
           {state === "visto" && (
             <span
-              className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold"
+              className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold"
               style={{ background: "var(--status-done)", color: "var(--accent-contrast)" }}
             >
               <CheckIcon size={12} />
             </span>
           )}
           {state === "assente" && (
-            <span className="absolute inset-x-0 bottom-0 bg-black/60 py-1 text-[10px] font-semibold text-white">
+            <span className="absolute inset-x-0 bottom-0 bg-black/60 py-1 text-xs font-semibold text-white">
               Vedi scheda
             </span>
           )}
         </span>
       </button>
 
-      <p className="mt-1.5 line-clamp-2 text-[11px] font-medium leading-snug text-text">{part.title}</p>
+      <p className="mt-1.5 line-clamp-2 text-xs font-medium leading-snug text-text">{part.title}</p>
       {current && (
-        <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: "var(--accent-text)" }}>
+        <p className="mt-0.5 text-xs font-bold" style={{ color: "var(--accent-text)" }}>
           Sei qui
         </p>
       )}

@@ -17,10 +17,10 @@ const KIND_LABELS: Record<string, string> = { film: "Film", serie: "Serie TV", a
 const KIND_COLORS = ["var(--accent)", "var(--status-watching)", "var(--danger)", "var(--status-done)"];
 
 function Card({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-md border border-border bg-surface-2 p-4">{children}</div>;
+  return <div className="rounded-lg bg-surface-2 p-4">{children}</div>;
 }
 function Label({ children }: { children: string }) {
-  return <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">{children}</span>;
+  return <span className="mb-2 block text-xs font-medium text-text-faint">{children}</span>;
 }
 
 /** Ranked list of people, each a way into their filmography. */
@@ -79,7 +79,7 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
 
       <Card>
         <div className="mb-2 flex items-center justify-between gap-3">
-          <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Il tuo anno</span>
+          <span className="text-xs font-medium text-text-faint">Il tuo anno</span>
           {years.length > 1 && (
             <select
               value={year}
@@ -103,32 +103,32 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
               <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--accent-text)" }}>
                 {yir.watchedCount}
               </div>
-              <div className="text-[10px] text-text-faint">titoli completati</div>
+              <div className="text-xs text-text-faint">titoli completati</div>
             </div>
             <div className="text-center">
               <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--status-watching)" }}>
                 {yir.hours}h
               </div>
-              <div className="text-[10px] text-text-faint">ore guardate</div>
+              <div className="text-xs text-text-faint">ore guardate</div>
             </div>
             {yir.topGenre && (
               <div className="text-center">
                 <div className="font-display text-lg font-bold text-text">{yir.topGenre}</div>
-                <div className="text-[10px] text-text-faint">genere top</div>
+                <div className="text-xs text-text-faint">genere top</div>
               </div>
             )}
             {yir.busiestMonth && (
               <div className="text-center">
                 <div className="font-display text-lg font-bold text-text">{yir.busiestMonth}</div>
-                <div className="text-[10px] text-text-faint">mese più attivo</div>
+                <div className="text-xs text-text-faint">mese più attivo</div>
               </div>
             )}
           </div>
         )}
       </Card>
 
-      <div className="rounded-md border border-border bg-surface-2 p-6 text-center">
-        <span className="text-xs uppercase tracking-[0.14em] text-text-faint">Tempo totale davanti allo schermo</span>
+      <div className="rounded-lg bg-surface-2 p-6 text-center">
+        <span className="text-xs text-text-faint">Tempo totale davanti allo schermo</span>
         <div className="mt-1.5 font-mono tabular text-5xl font-semibold" style={{ color: "var(--accent-text)" }}>
           {stats.hours}
           <span className="text-2xl">h</span>
@@ -137,38 +137,38 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
       </div>
 
       <div className="grid grid-cols-3 gap-2.5">
-        <div className="rounded-md border border-border bg-surface-2 p-3.5 text-center">
+        <div className="rounded-lg bg-surface-2 p-3.5 text-center">
           <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--status-done)" }}>
             {stats.byStatus.Visto}
           </div>
-          <div className="mt-0.5 text-[11px] text-text-faint">visti</div>
+          <div className="mt-0.5 text-xs text-text-faint">visti</div>
         </div>
-        <div className="rounded-md border border-border bg-surface-2 p-3.5 text-center">
+        <div className="rounded-lg bg-surface-2 p-3.5 text-center">
           <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--status-watching)" }}>
             {stats.byStatus["In visione"]}
           </div>
-          <div className="mt-0.5 text-[11px] text-text-faint">in corso</div>
+          <div className="mt-0.5 text-xs text-text-faint">in corso</div>
         </div>
-        <div className="rounded-md border border-border bg-surface-2 p-3.5 text-center">
+        <div className="rounded-lg bg-surface-2 p-3.5 text-center">
           <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--accent-text)" }}>
             {stats.byStatus["Da vedere"]}
           </div>
-          <div className="mt-0.5 text-[11px] text-text-faint">da vedere</div>
+          <div className="mt-0.5 text-xs text-text-faint">da vedere</div>
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-2.5">
-        <div className="rounded-md border border-border bg-surface-2 p-3.5 text-center">
+        <div className="rounded-lg bg-surface-2 p-3.5 text-center">
           <div className="font-mono tabular text-2xl font-semibold text-text">{stats.filmsCompleted}</div>
-          <div className="mt-0.5 text-[11px] text-text-faint">film completati</div>
+          <div className="mt-0.5 text-xs text-text-faint">film completati</div>
         </div>
-        <div className="rounded-md border border-border bg-surface-2 p-3.5 text-center">
+        <div className="rounded-lg bg-surface-2 p-3.5 text-center">
           <div className="font-mono tabular text-2xl font-semibold text-text">{stats.seriesCompleted}</div>
-          <div className="mt-0.5 text-[11px] text-text-faint">serie completate</div>
+          <div className="mt-0.5 text-xs text-text-faint">serie completate</div>
         </div>
-        <div className="rounded-md border border-border bg-surface-2 p-3.5 text-center">
+        <div className="rounded-lg bg-surface-2 p-3.5 text-center">
           <div className="font-mono tabular text-2xl font-semibold text-text">{stats.episodesWatched}</div>
-          <div className="mt-0.5 text-[11px] text-text-faint">episodi visti</div>
+          <div className="mt-0.5 text-xs text-text-faint">episodi visti</div>
         </div>
       </div>
 
@@ -257,7 +257,7 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
               <PosterArt item={item} size="sm" showTitle={false} className="w-8 shrink-0" />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-semibold text-text">{item.title}</div>
-                <div className="text-[10px] text-text-faint">
+                <div className="text-xs text-text-faint">
                   {item.year} · {item.genre}
                 </div>
               </div>
@@ -295,10 +295,10 @@ export function DiaryTab({ items, openItem }: { items: Item[]; openItem: (item: 
         return (
           <div key={date}>
             {showMonth && (
-              <p className="mb-1 mt-4 text-xs font-semibold uppercase tracking-wide text-text-faint first:mt-0">{monthLabel}</p>
+              <p className="mb-1 mt-4 text-xs font-semibold text-text-faint first:mt-0">{monthLabel}</p>
             )}
             <div className="flex gap-3 border-b border-border py-2.5 last:border-0">
-              <span className="w-11 shrink-0 pt-1 text-center text-[11px] capitalize text-text-faint">{dayLabel}</span>
+              <span className="w-11 shrink-0 pt-1 text-center text-xs capitalize text-text-faint">{dayLabel}</span>
               <div className="flex flex-1 flex-col gap-1.5">
                 {entries.map(({ item, action, count }) => (
                   <button
@@ -311,7 +311,7 @@ export function DiaryTab({ items, openItem }: { items: Item[]; openItem: (item: 
                     <PosterArt item={item} size="sm" showTitle={false} className="w-8 shrink-0" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-text">{item.title}</p>
-                      <p className="text-[11px] text-text-faint">
+                      <p className="text-xs text-text-faint">
                         {action === "watched" && "Completato"}
                         {action === "episode" && `${count} episod${count === 1 ? "io" : "i"}`}
                         {action === "rewatch" && "Rivisto"}
@@ -356,7 +356,7 @@ export function AchievementsTab({ items }: { items: Item[] }) {
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-text">{a.title}</p>
               <p className="mt-0.5 text-xs text-text-faint">{a.description}</p>
-              <p className="mt-1 text-[11px] font-medium" style={{ color: a.earned ? "var(--accent-text)" : "var(--text-faint)" }}>
+              <p className="mt-1 text-xs font-medium" style={{ color: a.earned ? "var(--accent-text)" : "var(--text-faint)" }}>
                 {a.earned ? "Sbloccato" : a.progress}
               </p>
             </div>

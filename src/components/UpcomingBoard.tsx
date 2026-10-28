@@ -72,7 +72,7 @@ function EntryRow({ entry }: { entry: UpcomingEntry }) {
                 : "Nuovo episodio"
               : "Uscita del film"}
           </p>
-          <p className="mt-0.5 font-mono tabular text-[11px]" style={{ color: imminent ? "var(--accent-text)" : "var(--text-faint)" }}>
+          <p className="mt-0.5 font-mono tabular text-xs" style={{ color: imminent ? "var(--accent-text)" : "var(--text-faint)" }}>
             {dayLabel(date)} · {countdown(date)}
           </p>
         </div>

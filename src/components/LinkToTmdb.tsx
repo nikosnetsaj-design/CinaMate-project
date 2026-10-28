@@ -58,7 +58,7 @@ export function LinkToTmdb({ item }: { item: Item }) {
 
   if (err === "missing-key") {
     return (
-      <div className="mt-4 rounded-md border border-dashed border-border-strong p-4 text-center">
+      <div className="mt-4 rounded-md p-4 text-center bg-surface-2">
         <p className="text-xs text-text-muted">
           Aggiungi una chiave TMDB gratuita per recuperare copertina, trama e dove guardarlo.
         </p>
@@ -79,7 +79,7 @@ export function LinkToTmdb({ item }: { item: Item }) {
         type="button"
         onClick={link}
         disabled={busy}
-        className="w-full rounded-md border border-dashed px-4 py-3 text-sm font-medium disabled:opacity-60"
+        className="w-full rounded-md px-4 py-3 text-sm font-medium disabled:opacity-60 bg-surface-2"
         style={{ borderColor: "color-mix(in srgb, var(--accent) 45%, transparent)", color: "var(--accent-text)" }}
       >
         {busy ? "Cerco su TMDB…" : "Recupera copertina e dati da TMDB"}

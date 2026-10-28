@@ -158,13 +158,13 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
         type="button"
         onClick={close}
         aria-label="Torna indietro"
-        className="tap-target fixed left-3.5 top-3.5 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-md"
+        className="icon-btn fixed left-3 top-3 z-20 bg-black/45 text-white backdrop-blur-md hover:bg-black/65 hover:text-white"
       >
         <BackIcon />
       </button>
 
       <div className="mx-auto max-w-3xl px-4 pb-28 pt-4 sm:px-6">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--accent-text)" }}>
+        <span className="text-xs font-semibold" style={{ color: "var(--accent-text)" }}>
           {isSeries ? "Serie · non in libreria" : "Film · non in libreria"}
         </span>
 
@@ -189,7 +189,7 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
               <span key={String(value)} className="flex items-center gap-2">
                 {i > 0 && <span aria-hidden="true" className="text-text-faint">·</span>}
                 {value === item.certification ? (
-                  <span className="rounded-xs border border-border-strong px-1.5 py-px font-mono text-[11px]">{value}</span>
+                  <span className="rounded-xs border border-border-strong px-1.5 py-px font-mono text-xs">{value}</span>
                 ) : (
                   value
                 )}
@@ -207,12 +207,7 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
               close();
               openItem(owned);
             }}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-md border py-3.5 text-sm font-semibold"
-            style={{
-              borderColor: "color-mix(in srgb, var(--accent) 45%, transparent)",
-              background: "color-mix(in srgb, var(--accent) 14%, transparent)",
-              color: "var(--accent-text)",
-            }}
+            className="btn btn-secondary btn-lg mt-4 w-full"
           >
             Ce l'hai già — apri la tua scheda
             <ChevronRightIcon />

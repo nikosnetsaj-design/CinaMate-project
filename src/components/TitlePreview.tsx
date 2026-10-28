@@ -92,7 +92,7 @@ export function TitlePreview({
             </p>
           )}
           {alreadyInLibrary && (
-            <p className="mt-2 inline-block rounded-full px-2 py-0.5 text-[11px] font-medium" style={{ background: "color-mix(in srgb, var(--accent) 18%, transparent)", color: "var(--accent-text)" }}>
+            <p className="mt-2 inline-block rounded-full px-2 py-0.5 text-xs font-medium" style={{ background: "color-mix(in srgb, var(--accent) 18%, transparent)", color: "var(--accent-text)" }}>
               È già nella tua libreria
             </p>
           )}

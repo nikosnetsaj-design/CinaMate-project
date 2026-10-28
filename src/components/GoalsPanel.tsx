@@ -18,7 +18,7 @@ function GoalCard({
   const colour = done ? "var(--status-done)" : "var(--accent)";
 
   return (
-    <div className="rounded-md border border-border bg-surface-2 p-4">
+    <div className="rounded-lg bg-surface-2 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-display text-base font-semibold text-text">
@@ -75,7 +75,7 @@ function NewGoalForm({ genres, onDone }: { genres: string[]; onDone: () => void 
 
   return (
     <form
-      className="flex flex-col gap-3 rounded-md border border-border bg-surface-2 p-4"
+      className="flex flex-col gap-3 rounded-lg bg-surface-2 p-4"
       onSubmit={(e) => {
         e.preventDefault();
         if (target > 0) add({ metric, period, target, genre: genre || undefined });
@@ -84,7 +84,7 @@ function NewGoalForm({ genres, onDone }: { genres: string[]; onDone: () => void 
     >
       <div className="grid grid-cols-2 gap-3">
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Cosa</span>
+          <span className="text-xs font-medium text-text-faint">Cosa</span>
           <select value={metric} onChange={(e) => setMetric(e.target.value as GoalMetric)} className={selectCls}>
             {GOAL_METRICS.map((m) => (
               <option key={m.value} value={m.value}>
@@ -94,7 +94,7 @@ function NewGoalForm({ genres, onDone }: { genres: string[]; onDone: () => void 
           </select>
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Ogni</span>
+          <span className="text-xs font-medium text-text-faint">Ogni</span>
           <select value={period} onChange={(e) => setPeriod(e.target.value as GoalPeriod)} className={selectCls}>
             {GOAL_PERIODS.map((p) => (
               <option key={p.value} value={p.value}>
@@ -104,7 +104,7 @@ function NewGoalForm({ genres, onDone }: { genres: string[]; onDone: () => void 
           </select>
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Quanti</span>
+          <span className="text-xs font-medium text-text-faint">Quanti</span>
           <input
             type="number"
             min={1}
@@ -114,7 +114,7 @@ function NewGoalForm({ genres, onDone }: { genres: string[]; onDone: () => void 
           />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Solo genere</span>
+          <span className="text-xs font-medium text-text-faint">Solo genere</span>
           <select value={genre} onChange={(e) => setGenre(e.target.value)} className={selectCls}>
             <option value="">Tutti</option>
             {genres.map((g) => (

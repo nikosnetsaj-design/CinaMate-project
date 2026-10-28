@@ -35,13 +35,13 @@ export function WatchButton({ item, onNavigate }: { item: Item; onNavigate?: () 
           onNavigate?.();
           openSettings();
         }}
-        className="mt-4 flex w-full flex-col items-center gap-0.5 rounded-md border border-dashed border-border-strong py-3 text-sm font-semibold text-text-muted"
+        className="btn btn-secondary btn-lg mt-6 w-full flex-col gap-0.5"
       >
         <span className="flex items-center gap-2">
           <PlayIcon size={17} />
           Guarda
         </span>
-        <span className="text-xs font-normal text-text-faint">
+        <span className="text-sm font-normal text-text-muted">
           Dimmi una volta sola dov'è il tuo server
         </span>
       </button>
@@ -60,7 +60,7 @@ export function WatchButton({ item, onNavigate }: { item: Item; onNavigate?: () 
         // The player reads this and starts on the title straight away.
         navigate(`/player?titolo=${encodeURIComponent(item.id)}`);
       }}
-      className="btn btn-primary btn-lg mt-4 w-full"
+      className="btn btn-primary btn-lg mt-6 w-full"
     >
       <PlayIcon size={17} />
       Guarda

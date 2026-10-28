@@ -32,7 +32,7 @@ function CrewCard({ person }: { person: TmdbCrewCredit }) {
         openPerson(person.name);
       }}
       aria-label={`Apri la scheda di ${person.name}`}
-      className="flex items-center gap-3 rounded-md border border-border bg-surface-2 p-2.5 text-left transition-colors hover:bg-surface-hover"
+      className="flex items-center gap-3 rounded-lg bg-surface-2 p-2.5 text-left transition-colors hover:bg-surface-hover"
     >
       <span className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-surface-hover">
         {photo ? (
@@ -81,7 +81,7 @@ function MoneyPanel({ budget, revenue }: { budget: number; revenue: number }) {
   return (
     <section className="mt-5">
       <h3 className="font-display text-lg font-semibold text-text">Dati finanziari</h3>
-      <div className="mt-2.5 rounded-md border border-border bg-surface-2 p-4">
+      <div className="mt-2.5 rounded-lg bg-surface-2 p-4">
         <div className="flex flex-col gap-3">
           {[
             { label: "Budget", value: budget, color: "var(--text-muted)" },
@@ -91,7 +91,7 @@ function MoneyPanel({ budget, revenue }: { budget: number; revenue: number }) {
             .map((r) => (
               <div key={r.label}>
                 <div className="flex items-baseline justify-between gap-3">
-                  <span className="text-xs font-medium uppercase tracking-wide text-text-faint">{r.label}</span>
+                  <span className="text-xs font-medium text-text-faint">{r.label}</span>
                   <span className="font-mono tabular text-base font-semibold text-text" title={formatUsd(r.value)}>
                     {formatUsd(r.value)}
                   </span>
@@ -111,7 +111,7 @@ function MoneyPanel({ budget, revenue }: { budget: number; revenue: number }) {
             {verdict.text}
           </p>
         )}
-        <p className="mt-2 text-[11px] text-text-faint">
+        <p className="mt-2 text-xs text-text-faint">
           Cifre in dollari come le pubblica TMDB, non aggiustate per l'inflazione.
           {revenue > 0 && budget > 0 && ` Differenza: ${formatUsdShort(revenue - budget)}.`}
         </p>
@@ -155,7 +155,7 @@ function StudioRow({ companies }: { companies: TmdbCompany[] }) {
         {withoutLogo.map((c) => (
           <span
             key={c.id || c.name}
-            className="flex h-16 items-center rounded-md border border-border bg-surface-2 px-3.5 text-xs font-medium text-text-muted"
+            className="flex h-16 items-center rounded-lg bg-surface-2 px-3.5 text-xs font-medium text-text-muted"
           >
             {c.name}
           </span>
@@ -180,7 +180,7 @@ function SoundtrackLink({ title, composer }: { title: string; composer?: string 
   const url = `https://open.spotify.com/search/${encodeURIComponent(query)}`;
 
   return (
-    <div className="mt-4 flex items-center gap-3 rounded-md border border-border bg-surface-2 p-3.5">
+    <div className="mt-4 flex items-center gap-3 rounded-lg bg-surface-2 p-3.5">
       <span className="shrink-0 text-text-muted">
         <MusicIcon size={20} />
       </span>

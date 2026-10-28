@@ -59,7 +59,7 @@ export function CatalogNote({ what = WHAT }: { what?: string }) {
 export function CatalogBlock() {
   const turnOn = useTurnOn();
   return (
-    <div className="flex flex-col items-center gap-3.5 rounded-lg border border-dashed border-border-strong px-6 py-10 text-center">
+    <div className="flex flex-col items-center gap-3.5 rounded-lg px-6 py-10 text-center bg-surface-2">
       <div className="flex flex-col gap-1.5">
         <h3 className="t-section text-text">Il catalogo è spento.</h3>
         <p className="mx-auto max-w-sm t-body text-text-muted">

@@ -24,20 +24,20 @@ import { useAppReady } from "../lib/useAppReady";
 import { useVisibleItems } from "../lib/useVisibleItems";
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`rounded-md border border-border bg-surface-2 p-4 ${className}`}>{children}</div>;
+  return <div className={`rounded-lg bg-surface-2 p-4 ${className}`}>{children}</div>;
 }
 
 function Label({ children }: { children: string }) {
-  return <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">{children}</span>;
+  return <span className="mb-2 block text-xs font-medium text-text-faint">{children}</span>;
 }
 
 function Tile({ value, label, color }: { value: string; label: string; color?: string }) {
   return (
-    <div className="rounded-md border border-border bg-surface-2 p-3.5 text-center">
+    <div className="rounded-lg bg-surface-2 p-3.5 text-center">
       <div className="font-mono tabular text-2xl font-semibold" style={{ color: color ?? "var(--text)" }}>
         {value}
       </div>
-      <div className="mt-0.5 text-[11px] text-text-faint">{label}</div>
+      <div className="mt-0.5 text-xs text-text-faint">{label}</div>
     </div>
   );
 }
@@ -120,7 +120,7 @@ export function ProfileHeader() {
   const displayName = usePlayerPrefs((s) => s.displayName);
   const { level } = useLevelSummary();
   return (
-    <header className="flex items-center gap-4 rounded-md border border-border bg-surface-2 p-4">
+    <header className="flex items-center gap-4 rounded-lg bg-surface-2 p-4">
       <LevelRing pct={level.pct}>
         <span className="t-numeral text-xl font-semibold" style={{ color: "var(--accent-text)" }}>
           {level.level}
@@ -177,8 +177,8 @@ export function ProfileSummary() {
       ) : (
         <>
           {/* --- Total hours ---------------------------------------------- */}
-          <div className="rounded-md border border-border bg-surface-2 p-6 text-center">
-            <span className="text-xs uppercase tracking-[0.14em] text-text-faint">Ore totali</span>
+          <div className="rounded-lg bg-surface-2 p-6 text-center">
+            <span className="text-xs text-text-faint">Ore totali</span>
             <div className="mt-1.5 font-mono tabular text-5xl font-semibold" style={{ color: "var(--accent-text)" }}>
               {totalHours}
               <span className="text-2xl">h</span>
@@ -200,7 +200,7 @@ export function ProfileSummary() {
           {/* --- Activity chart ------------------------------------------- */}
           <Card>
             <div className="mb-3 flex items-center justify-between gap-3">
-              <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Attività</span>
+              <span className="text-xs font-medium text-text-faint">Attività</span>
               <div className="flex gap-1" role="tablist" aria-label="Periodo del grafico">
                 {ACTIVITY_RANGES.map((r) => (
                   <button
@@ -209,7 +209,7 @@ export function ProfileSummary() {
                     role="tab"
                     aria-selected={range === r.id}
                     onClick={() => setRange(r.id)}
-                    className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                    className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
                       range === r.id
                         ? "border-accent text-text"
                         : "border-border-strong text-text-faint hover:text-text-muted"
@@ -278,7 +278,7 @@ export function ProfileSummary() {
                           style={{ width: `${Math.max(pct, 2)}%`, background: "var(--status-watching)" }}
                         />
                       </span>
-                      <span className="shrink-0 font-mono tabular text-[10px] text-text-faint">
+                      <span className="shrink-0 font-mono tabular text-xs text-text-faint">
                         {episodes}
                         {item.episodes ? `/${item.episodes}` : ""} ep · {formatRuntime(mins)}
                       </span>
@@ -292,7 +292,7 @@ export function ProfileSummary() {
           {/* --- Library shortcut ------------------------------------------ */}
           <Card>
             <div className="mb-2 flex items-center justify-between gap-3">
-              <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Libreria completata</span>
+              <span className="text-xs font-medium text-text-faint">Libreria completata</span>
               <Link to="/libreria" className="shrink-0 text-sm font-medium text-accent-text">
                 apri
               </Link>

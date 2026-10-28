@@ -348,7 +348,7 @@ function ViewerFrame({
             un sito che rifiuta di essere incorniciato non ha nessun livello di
             blocco che lo salvi — quindi sta per prima. */}
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Mostra</span>
+          <span className="text-xs font-medium text-text-faint">Mostra</span>
           <button
             type="button"
             onClick={() => setMode("sito")}
@@ -379,7 +379,7 @@ function ViewerFrame({
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Blocco</span>
+          <span className="text-xs font-medium text-text-faint">Blocco</span>
           {LEVELS.map((l) => (
             <button
               key={l.id}
@@ -450,7 +450,7 @@ function ViewerFrame({
 
         {found && (
           <div className="flex flex-wrap items-center gap-2 rounded-sm border border-border-strong bg-surface p-2.5">
-            <span className="min-w-0 flex-1 break-all font-mono text-[11px] text-text-muted">{found}</span>
+            <span className="min-w-0 flex-1 break-all font-mono text-xs text-text-muted">{found}</span>
             {context && (
               <button
                 type="button"
@@ -510,7 +510,7 @@ function ViewerFrame({
         )}
       </div>
 
-      <p className="border-t border-border bg-surface-2 px-3 py-2 text-[11px] leading-relaxed text-text-faint">
+      <p className="border-t border-border bg-surface-2 px-3 py-2 text-xs leading-relaxed text-text-faint">
         {mode === "letta" ? (
           <>
             Quello che vedi è il sorgente della pagina ridisegnato qui, non il sito dentro un

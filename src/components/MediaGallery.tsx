@@ -153,7 +153,7 @@ export function MediaGallery({
                   : { color: "var(--text-muted)", background: "var(--surface-2)" }
               }
             >
-              {t.label} <span className="font-mono tabular text-[11px] opacity-70">{t.count}</span>
+              {t.label} <span className="font-mono tabular text-xs opacity-70">{t.count}</span>
             </button>
           );
         })}
@@ -179,7 +179,7 @@ export function MediaGallery({
                   </span>
                 </span>
                 <span className="mt-1.5 block line-clamp-2 text-xs font-medium leading-snug text-text">{v.name}</span>
-                <span className="mt-0.5 block text-[11px] text-text-faint">
+                <span className="mt-0.5 block text-xs text-text-faint">
                   {v.kind}
                   {v.language === "it" && " · in italiano"}
                 </span>

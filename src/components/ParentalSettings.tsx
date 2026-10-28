@@ -18,7 +18,7 @@ function PinInput({
 }) {
   return (
     <label className="flex flex-col gap-1.5" htmlFor={id}>
-      <span className="text-xs font-medium uppercase tracking-wide text-text-faint">{label}</span>
+      <span className="text-xs font-medium text-text-faint">{label}</span>
       <input
         id={id}
         // `password` rather than `number`: it hides the PIN from anyone looking
@@ -82,7 +82,7 @@ export function ParentalSettings() {
 
   return (
     <div>
-      <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">
+      <span className="mb-2 block text-xs font-medium text-text-faint">
         Controllo genitori
       </span>
       <p className="mb-3 text-xs leading-relaxed text-text-faint">
@@ -110,7 +110,7 @@ export function ParentalSettings() {
           {state.unlocked ? (
             <>
               <div className="flex flex-col gap-2">
-                <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Limite di età</span>
+                <span className="text-xs font-medium text-text-faint">Limite di età</span>
                 <div className="flex flex-wrap gap-2">
                   {AGE_LEVELS.map((level) => (
                     <button
@@ -178,7 +178,7 @@ export function ParentalSettings() {
       ) : (
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-2">
-            <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Limite di età</span>
+            <span className="text-xs font-medium text-text-faint">Limite di età</span>
             <div className="flex flex-wrap gap-2">
               {AGE_LEVELS.map((level) => (
                 <button

@@ -49,7 +49,7 @@ function SuggestionRow({ item, reason }: { item: Item; reason?: string }) {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-medium text-text">{item.title}</span>
-          {reason && <span className="block truncate text-[11px] text-text-faint">{reason}</span>}
+          {reason && <span className="block truncate text-xs text-text-faint">{reason}</span>}
         </span>
       </button>
       <button
@@ -113,7 +113,7 @@ function PersonResults({ query }: { query: string }) {
           </span>
           <span className="mt-1.5 block line-clamp-2 text-xs font-medium text-text">{person.name}</span>
           {person.knownFor.length > 0 && (
-            <span className="mt-0.5 block line-clamp-2 text-[11px] leading-snug text-text-faint">
+            <span className="mt-0.5 block line-clamp-2 text-xs leading-snug text-text-faint">
               {person.knownFor.join(" · ")}
             </span>
           )}
@@ -219,7 +219,7 @@ function TitleResults({ query }: { query: string }) {
 
       {mine.length > 0 && (
         <section>
-          <h2 className="mb-2.5 text-xs font-medium uppercase tracking-wide text-text-faint">
+          <h2 className="mb-2.5 text-xs font-medium text-text-faint">
             Nella tua libreria · {mine.length}
           </h2>
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
@@ -241,7 +241,7 @@ function TitleResults({ query }: { query: string }) {
 
       {tmdbApiKey ? (
         <section>
-          <h2 className="mb-2.5 text-xs font-medium uppercase tracking-wide text-text-faint">Su TMDB</h2>
+          <h2 className="mb-2.5 text-xs font-medium text-text-faint">Su TMDB</h2>
           {corrected && (
             <p className="mb-2 text-xs text-text-faint">
               Niente per «{query}»: questi sono i risultati per «{corrected}».
@@ -280,7 +280,7 @@ function TitleResults({ query }: { query: string }) {
                       />
                       {owned && (
                         <span
-                          className="absolute right-1 top-1 flex items-center justify-center rounded-full px-1.5 py-1 text-[10px] font-semibold"
+                          className="absolute right-1 top-1 flex items-center justify-center rounded-full px-1.5 py-1 text-xs font-semibold"
                           style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
                         >
                           <CheckIcon size={11} />
@@ -288,7 +288,7 @@ function TitleResults({ query }: { query: string }) {
                       )}
                     </div>
                     <p className="mt-1.5 line-clamp-2 text-xs font-medium text-text">{result.title}</p>
-                    <p className="font-mono tabular text-[10px] text-text-faint">
+                    <p className="font-mono tabular text-xs text-text-faint">
                       {result.year ?? ""}
                     </p>
                   </button>

@@ -176,7 +176,7 @@ export function NaturalSearch() {
       )}
 
       {query && (
-        <div className="flex flex-col gap-2 rounded-md border border-border bg-surface-2 p-3.5">
+        <div className="flex flex-col gap-2 rounded-lg bg-surface-2 p-3.5">
           <p className="text-sm text-text">{query.explanation || "Ecco cosa ho cercato."}</p>
           <QueryChips query={query} />
         </div>
@@ -210,7 +210,7 @@ export function NaturalSearch() {
                   />
                   {owned && (
                     <span
-                      className="absolute right-1 top-1 flex items-center justify-center rounded-full px-1.5 py-1 text-[10px] font-semibold"
+                      className="absolute right-1 top-1 flex items-center justify-center rounded-full px-1.5 py-1 text-xs font-semibold"
                       style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
                     >
                       <CheckIcon size={11} />
@@ -218,7 +218,7 @@ export function NaturalSearch() {
                   )}
                 </div>
                 <p className="mt-1.5 line-clamp-2 text-xs font-medium text-text">{r.title}</p>
-                <p className="font-mono tabular text-[10px] text-text-faint">
+                <p className="font-mono tabular text-xs text-text-faint">
                   {picking === r.tmdbId ? "…" : (r.year ?? "")}
                 </p>
               </button>

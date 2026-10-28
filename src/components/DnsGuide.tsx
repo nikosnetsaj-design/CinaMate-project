@@ -56,7 +56,7 @@ function Lookup() {
 
   return (
     <section>
-      <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-text-faint">
+      <h3 className="mb-2 text-xs font-medium text-text-faint">
         Prova un nome
       </h3>
       <p className="mb-2 text-xs leading-relaxed text-text-faint">
@@ -93,14 +93,14 @@ function Lookup() {
       {results && (
         <ul className="mt-2 flex flex-col gap-1.5">
           {results.map((r) => (
-            <li key={r.resolver} className="rounded-sm border border-border bg-surface-2 p-2.5">
+            <li key={r.resolver} className="rounded-sm bg-surface-2 p-2.5">
               <p className="text-xs text-text">
                 <span className="font-medium">{r.resolver}</span>{" "}
                 <span className="text-text-faint">— {DOH_LABEL[r.verdict]}</span>
                 {r.ms > 0 && <span className="text-text-faint"> · {r.ms} ms</span>}
               </p>
               {r.addresses.length > 0 && (
-                <p className="mt-0.5 break-all font-mono text-[11px] text-text-muted">
+                <p className="mt-0.5 break-all font-mono text-xs text-text-muted">
                   {r.addresses.join(", ")}
                 </p>
               )}
@@ -145,7 +145,7 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
         <Lookup />
 
         <section>
-          <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-text-faint">
+          <h3 className="mb-2 text-xs font-medium text-text-faint">
             Resolver pubblici
           </h3>
           <p className="mb-2 text-xs leading-relaxed text-text-faint">
@@ -173,16 +173,16 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
                         {/* Chi manda gli header CORS sulla variante JSON, cioè
                             chi la casella qui sopra può davvero interrogare. */}
                         {JSON_CAPABLE.has(r.name) && (
-                          <span className="ml-1 text-[10px] font-normal" style={{ color: "var(--accent-text)" }}>
+                          <span className="ml-1 text-xs font-normal" style={{ color: "var(--accent-text)" }}>
                             interrogabile da qui
                           </span>
                         )}
                       </span>
-                      <span className="mt-0.5 block max-w-[14rem] text-[11px] leading-relaxed text-text-faint">
+                      <span className="mt-0.5 block max-w-[14rem] text-xs leading-relaxed text-text-faint">
                         {r.note}
                       </span>
                     </td>
-                    <td className="py-2 pr-3 font-mono text-[11px] text-text-muted">
+                    <td className="py-2 pr-3 font-mono text-xs text-text-muted">
                       {r.ipv4.map((ip) => (
                         <button
                           key={ip}
@@ -195,7 +195,7 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
                         </button>
                       ))}
                       {r.ipv6 && (
-                        <span className="mt-1 block break-all text-[10px] text-text-faint">
+                        <span className="mt-1 block break-all text-xs text-text-faint">
                           {r.ipv6.join(" · ")}
                         </span>
                       )}
@@ -205,7 +205,7 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
                         type="button"
                         onClick={() => copy(r.doh)}
                         title="Copia"
-                        className="break-all text-left font-mono text-[11px] text-text-muted hover:underline"
+                        className="break-all text-left font-mono text-xs text-text-muted hover:underline"
                       >
                         {r.doh}
                       </button>
@@ -215,7 +215,7 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
                         type="button"
                         onClick={() => copy(r.dot)}
                         title="Copia"
-                        className="break-all text-left font-mono text-[11px] text-text-muted hover:underline"
+                        className="break-all text-left font-mono text-xs text-text-muted hover:underline"
                       >
                         {r.dot}
                       </button>
@@ -225,18 +225,18 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
               </tbody>
             </table>
           </div>
-          <p className="mt-2 text-[11px] text-text-faint">Tocca un valore per copiarlo.</p>
+          <p className="mt-2 text-xs text-text-faint">Tocca un valore per copiarlo.</p>
         </section>
 
         <section>
-          <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-text-faint">
+          <h3 className="mb-2 text-xs font-medium text-text-faint">
             Dove si scrivono
           </h3>
           <div className="flex flex-col gap-2.5">
             {PLATFORM_STEPS.map((p) => (
-              <div key={p.name} className="rounded-sm border border-border bg-surface-2 p-3">
+              <div key={p.name} className="rounded-sm bg-surface-2 p-3">
                 <p className="text-sm font-medium text-text">{p.name}</p>
-                <p className="mt-0.5 text-[11px] text-text-faint">{p.supports}</p>
+                <p className="mt-0.5 text-xs text-text-faint">{p.supports}</p>
                 <ol className="mt-1.5 list-decimal pl-4 text-xs leading-relaxed text-text-muted">
                   {p.steps.map((step) => (
                     <li key={step}>{step}</li>
@@ -248,7 +248,7 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
         </section>
 
         <section>
-          <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-text-faint">
+          <h3 className="mb-2 text-xs font-medium text-text-faint">
             Domande che tornano
           </h3>
           <dl className="flex flex-col gap-2.5">

@@ -32,7 +32,7 @@ export function SagaTimeline({
           <li key={entry.part.tmdbId} className="relative flex gap-3.5 pb-4 last:pb-0">
             <span
               aria-hidden="true"
-              className="relative z-10 mt-2 flex h-[27px] w-[27px] shrink-0 items-center justify-center rounded-full border-2 text-[11px] font-semibold"
+              className="relative z-10 mt-2 flex h-[27px] w-[27px] shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold"
               style={{
                 background: watched ? meta.color : "var(--bg)",
                 borderColor: entry.item ? meta.color : "var(--border-strong)",
@@ -55,7 +55,7 @@ export function SagaTimeline({
               />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-display text-sm font-semibold text-text">{entry.part.title}</p>
-                <p className="mt-0.5 font-mono tabular text-[11px] text-text-faint">
+                <p className="mt-0.5 font-mono tabular text-xs text-text-faint">
                   {entry.part.year ?? "in arrivo"} · {meta.label}
                 </p>
               </div>

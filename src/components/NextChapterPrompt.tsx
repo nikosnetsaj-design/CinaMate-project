@@ -84,11 +84,11 @@ function Prompt({ finishedTitle, entry, onDismiss }: {
           className="w-12 shrink-0"
         />
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-text-faint">
+          <p className="text-xs text-text-faint">
             Capitolo {entry.number}
           </p>
           <p className="truncate font-display text-sm font-semibold text-text">{entry.part.title}</p>
-          <p className="font-mono tabular text-[11px] text-text-faint">{entry.part.year ?? "in arrivo"}</p>
+          <p className="font-mono tabular text-xs text-text-faint">{entry.part.year ?? "in arrivo"}</p>
         </div>
       </div>
 

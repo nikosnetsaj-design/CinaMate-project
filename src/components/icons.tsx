@@ -32,6 +32,7 @@ import {
   List,
   ListTree,
   MessageSquareQuote,
+  Minus,
   Moon,
   Music,
   Play,
@@ -108,6 +109,9 @@ export function PulseIcon({ size = 18 }: IconProps) {
  */
 export function SparkleIcon({ size = 18 }: IconProps) {
   return <Glyph icon={MessageSquareQuote} size={size} />;
+}
+export function MinusIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Minus} size={size} />;
 }
 export function PlusIcon({ size = 18 }: IconProps) {
   return <Glyph icon={Plus} size={size} />;

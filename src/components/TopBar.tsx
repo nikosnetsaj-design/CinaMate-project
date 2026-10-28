@@ -71,7 +71,7 @@ function MenuItem({
         <span className="block truncate text-sm font-medium text-text" style={danger ? { color: "var(--danger)" } : undefined}>
           {label}
         </span>
-        {hint && <span className="block truncate text-[11px] text-text-faint">{hint}</span>}
+        {hint && <span className="block truncate text-xs text-text-faint">{hint}</span>}
       </span>
     </button>
   );
@@ -161,7 +161,7 @@ function GenreMenu() {
                 className="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left text-sm text-text transition-colors hover:bg-surface-hover"
               >
                 <span className="truncate">{genre}</span>
-                <span className="font-mono tabular text-[11px] text-text-faint">{count}</span>
+                <span className="font-mono tabular text-xs text-text-faint">{count}</span>
               </button>
             ))}
             </div>
@@ -244,12 +244,12 @@ export function AlertsBell() {
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-text">{entry.item.title}</span>
-                    <span className="block truncate text-[11px] text-text-faint">
+                    <span className="block truncate text-xs text-text-faint">
                       {entry.season != null && entry.episode != null ? `S${entry.season}E${entry.episode} · ` : ""}
                       {dayLabel(entry.date)}
                     </span>
                   </span>
-                  <span className="shrink-0 font-mono tabular text-[11px]" style={{ color: "var(--accent-text)" }}>
+                  <span className="shrink-0 font-mono tabular text-xs" style={{ color: "var(--accent-text)" }}>
                     {countdown(entry.date)}
                   </span>
                 </button>

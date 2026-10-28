@@ -56,7 +56,7 @@ function AppearanceSettings() {
 
   return (
     <div>
-      <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Aspetto</span>
+      <span className="mb-2 block text-xs font-medium text-text-faint">Aspetto</span>
 
       <div className="mb-3 flex gap-2" role="radiogroup" aria-label="Tema">
         {(["dark", "light"] as const).map((value) => (
@@ -136,7 +136,7 @@ function TvSettings() {
 
   return (
     <div>
-      <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Televisore</span>
+      <span className="mb-2 block text-xs font-medium text-text-faint">Televisore</span>
       <div className="mb-2 flex gap-2" role="radiogroup" aria-label="Modalità televisore">
         {options.map((option) => (
           <button
@@ -189,7 +189,7 @@ function HomeLayoutSettings() {
 
   return (
     <div>
-      <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Home</span>
+      <span className="mb-2 block text-xs font-medium text-text-faint">Home</span>
       <p className="mb-2 text-xs leading-relaxed text-text-faint">
         Cosa vedi appena apri l'app, e in che ordine. Una riga spenta non sparisce dai dati: resta
         dove è sempre stata, semplicemente non occupa la prima schermata.
@@ -281,7 +281,7 @@ function SourceTemplates() {
 
   return (
     <div>
-      <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">
+      <span className="mb-1.5 block text-xs font-medium text-text-faint">
         Indirizzi delle tue sorgenti
       </span>
       <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
@@ -317,7 +317,7 @@ function SourceTemplates() {
                 className="field w-full font-mono"
               />
               {preview && (
-                <p className="mt-1 break-all px-1 font-mono text-[10px] leading-relaxed text-text-faint">
+                <p className="mt-1 break-all px-1 font-mono text-xs leading-relaxed text-text-faint">
                   Per «Il Padrino» prova {preview}
                   {others > 0 && (
                     <span className="font-sans"> e altri {others} indirizzi, finché uno risponde</span>
@@ -339,7 +339,7 @@ function SourceTemplates() {
       </button>
 
       {showHelp && (
-        <dl className="mt-2 flex flex-col gap-1.5 rounded-sm border border-border bg-surface-2 p-3">
+        <dl className="mt-2 flex flex-col gap-1.5 rounded-sm bg-surface-2 p-3">
           {TEMPLATE_FIELDS.map((f) => (
             <div key={f.token} className="flex flex-wrap items-baseline gap-x-2">
               <dt className="font-mono text-xs text-accent-text">{f.token}</dt>
@@ -464,7 +464,7 @@ function PageReaderSetting() {
 
   return (
     <div>
-      <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">
+      <span className="mb-1.5 block text-xs font-medium text-text-faint">
         Lettore di pagine
       </span>
       <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
@@ -488,7 +488,7 @@ function PageReaderSetting() {
         className="field w-full font-mono"
       />
       {pageReader.trim() && (
-        <p className="mt-1 break-all px-1 font-mono text-[10px] leading-relaxed text-text-faint">
+        <p className="mt-1 break-all px-1 font-mono text-xs leading-relaxed text-text-faint">
           {preview ? `Per una pagina chiederà ${preview}` : "Quell'indirizzo non è utilizzabile."}
         </p>
       )}
@@ -513,7 +513,7 @@ function PageReaderSetting() {
       </div>
 
       {showRecipe && (
-        <div className="mt-2 flex flex-col gap-2 rounded-sm border border-border bg-surface-2 p-3 text-xs leading-relaxed text-text-faint">
+        <div className="mt-2 flex flex-col gap-2 rounded-sm bg-surface-2 p-3 text-xs leading-relaxed text-text-faint">
           <p className="text-text-muted">
             Due cose da incollare, niente da scrivere. Un Cloudflare Worker: piano gratuito,
             nessuna carta, niente da tenere acceso.
@@ -524,7 +524,7 @@ function PageReaderSetting() {
             Create → Start with Hello World → Deploy. Poi «Edit code», cancella tutto e incolla
             questo:
           </p>
-          <pre className="max-h-52 overflow-auto rounded-sm border border-border bg-surface p-2 font-mono text-[10px] leading-relaxed text-text-muted">
+          <pre className="max-h-52 overflow-auto rounded-sm border border-border bg-surface p-2 font-mono text-xs leading-relaxed text-text-muted">
             {snippet}
           </pre>
           <button
@@ -573,7 +573,7 @@ function PageReaderSetting() {
       )}
 
       {showHelp && (
-        <div className="mt-2 flex flex-col gap-1.5 rounded-sm border border-border bg-surface-2 p-3 text-xs leading-relaxed text-text-faint">
+        <div className="mt-2 flex flex-col gap-1.5 rounded-sm bg-surface-2 p-3 text-xs leading-relaxed text-text-faint">
           <p>
             <span className="font-mono text-accent-text">{"{url}"}</span> è l'indirizzo da leggere,
             codificato: la forma giusta per chi lo mette in un parametro —{" "}
@@ -666,8 +666,8 @@ function SettingsRow({
 function SettingsGroup({ label, children }: { label: string; children: ReactNode }) {
   return (
     <section>
-      <h3 className="mb-1.5 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-text-faint">{label}</h3>
-      <div className="divide-y divide-border overflow-hidden rounded-md border border-border bg-surface-2">
+      <h3 className="mb-1.5 px-1 text-xs font-semibold text-text-faint">{label}</h3>
+      <div className="divide-y divide-border overflow-hidden rounded-lg bg-surface-2">
         {children}
       </div>
     </section>
@@ -692,7 +692,7 @@ function AboutPanel() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-md border border-border bg-surface-2 p-4">
+      <div className="rounded-lg bg-surface-2 p-4">
         <h4 className="mb-2 text-sm font-semibold text-text">I tuoi dati</h4>
         <p className="text-xs leading-relaxed text-text-faint">
           Libreria, diario, voti, sorgenti e chiavi vivono solo in questo browser: non c'è nessun
@@ -706,13 +706,13 @@ function AboutPanel() {
       <div className="overflow-hidden rounded-md border border-border">
         {rows.map((row) => (
           <div key={row.label} className="border-b border-border px-3.5 py-3 last:border-b-0">
-            <span className="block text-xs font-medium uppercase tracking-wide text-text-faint">{row.label}</span>
+            <span className="block text-xs font-medium text-text-faint">{row.label}</span>
             <span className="mt-0.5 block text-sm text-text">{row.value}</span>
           </div>
         ))}
       </div>
 
-      <p className="text-[11px] leading-relaxed text-text-faint">
+      <p className="text-xs leading-relaxed text-text-faint">
         Questo prodotto usa l'API TMDB ma non è approvato né certificato da TMDB. CineMate non
         ospita né fornisce contenuti: riproduce le sorgenti che indichi tu.
       </p>
@@ -949,7 +949,7 @@ function SettingsForm() {
         {panel === "chiavi" && (
           <>
         <div>
-          <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">
+          <span className="mb-1.5 block text-xs font-medium text-text-faint">
             Chiave API Anthropic
           </span>
           <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
@@ -1003,7 +1003,7 @@ function SettingsForm() {
         </div>
 
         <div>
-          <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">Chiave API TMDB</span>
+          <span className="mb-1.5 block text-xs font-medium text-text-faint">Chiave API TMDB</span>
           <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
             Per copertine reali, trama, cast, trailer e disponibilità streaming legale. Gratuita — la ottieni in
             pochi minuti creando un account su themoviedb.org (Impostazioni → API). Resta anch'essa solo su questo
@@ -1054,14 +1054,14 @@ function SettingsForm() {
               </button>
             )}
           </div>
-          <p className="mt-2.5 text-[11px] text-text-faint">
+          <p className="mt-2.5 text-xs text-text-faint">
             Questo prodotto usa l'API TMDB ma non è approvato né certificato da TMDB. Dati streaming forniti da
             JustWatch.
           </p>
         </div>
 
         <div>
-          <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Modello</span>
+          <span className="mb-2 block text-xs font-medium text-text-faint">Modello</span>
           <div className="flex flex-col gap-1.5" role="radiogroup" aria-label="Modello Claude">
             {MODELS.map((m) => (
               <button
@@ -1094,7 +1094,7 @@ function SettingsForm() {
         <PageReaderSetting />
 
         <div>
-          <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">
+          <span className="mb-1.5 block text-xs font-medium text-text-faint">
             Quando un indirizzo non si risolve
           </span>
           <p className="mb-2 text-xs leading-relaxed text-text-faint">
@@ -1116,7 +1116,7 @@ function SettingsForm() {
 
         {panel === "dati" && (
         <div>
-          <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Dati locali</span>
+          <span className="mb-2 block text-xs font-medium text-text-faint">Dati locali</span>
           <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
             Tutto vive solo in questo browser. Esporta ogni tanto un backup: è anche il modo per portare la libreria
             su un altro dispositivo.

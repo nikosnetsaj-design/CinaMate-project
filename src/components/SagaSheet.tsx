@@ -106,7 +106,7 @@ function EntryRow({ entry, onOpen, onAdd, adding }: {
           />
           <div className="min-w-0 flex-1">
             <p className="truncate font-display text-sm font-semibold text-text">{entry.part.title}</p>
-            <p className="mt-0.5 font-mono tabular text-[11px] text-text-faint">
+            <p className="mt-0.5 font-mono tabular text-xs text-text-faint">
               {entry.part.year ?? "in arrivo"}
               {entry.item?.vote != null ? ` · ${entry.item.vote}/10` : ""}
             </p>
@@ -251,7 +251,7 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
         type="button"
         onClick={close}
         aria-label="Torna indietro"
-        className="tap-target fixed left-3.5 top-3.5 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-md"
+        className="icon-btn fixed left-3 top-3 z-20 bg-black/45 text-white backdrop-blur-md hover:bg-black/65 hover:text-white"
       >
         <BackIcon />
       </button>
@@ -269,7 +269,7 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
             />
           )}
           <div className="min-w-0 flex-1 pb-1">
-            <p className="text-xs uppercase tracking-[0.18em] text-text-faint">
+            <p className="text-xs text-text-faint">
               {view?.isUniverse ? "Universo" : "Saga"}
             </p>
             <h1 id={titleId} className="mt-0.5 font-display text-2xl font-semibold leading-tight text-text">
@@ -296,7 +296,7 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
 
             {/* Ordine di visione */}
             <div className="mt-5">
-              <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">
+              <span className="mb-2 block text-xs font-medium text-text-faint">
                 Ordine di visione
               </span>
               <div className="flex flex-wrap gap-2">
@@ -332,12 +332,7 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
                   type="button"
                   onClick={computeOrders}
                   disabled={computing}
-                  className="mt-2.5 w-full rounded-md border py-2.5 text-sm font-semibold disabled:opacity-60"
-                  style={{
-                    borderColor: "color-mix(in srgb, var(--cyan) 35%, transparent)",
-                    background: "color-mix(in srgb, var(--cyan) 12%, transparent)",
-                    color: "var(--cyan)",
-                  }}
+                  className="btn btn-secondary mt-2.5 w-full"
                 >
                   {computing ? "Claude sta ordinando la saga…" : "Calcola l'ordine con Claude"}
                 </button>
@@ -366,7 +361,7 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
 
             {/* Lista / timeline */}
             <div className="mt-6 flex items-center justify-between">
-              <span className="text-xs font-medium uppercase tracking-wide text-text-faint">
+              <span className="text-xs font-medium text-text-faint">
                 {progress.total} capitoli
               </span>
               <div className="flex gap-1.5">

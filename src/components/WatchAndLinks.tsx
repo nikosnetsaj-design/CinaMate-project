@@ -76,7 +76,7 @@ function ProviderGroup({
   if (providers.length === 0) return null;
   return (
     <div>
-      <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--accent-text)" }}>
+      <span className="mb-1.5 block text-xs font-medium text-text-muted">
         {label}
       </span>
       <div className="flex flex-wrap gap-2">
@@ -99,7 +99,7 @@ const EMPTY_WATCH: TmdbWatchInfo = { streaming: [], free: [], rent: [], buy: [],
  */
 export function WatchProvidersBlock({ item }: { item: Item }) {
   return (
-    <div className="mt-4 rounded-md border border-border bg-surface-2 p-4">
+    <div className="mt-4 rounded-lg bg-surface-2 p-4">
       <WatchProviders item={item} />
     </div>
   );
@@ -244,7 +244,7 @@ function LinkHostSearch({ item }: { item: Item }) {
 
   return (
     <div>
-      <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">
+      <span className="mb-2 block text-xs font-medium text-text-faint">
         Cerca sui tuoi siti
       </span>
       <div className="flex flex-wrap gap-1.5">
@@ -285,7 +285,7 @@ export function WatchAndLinks({ item }: { item: Item }) {
   if (!item.tmdbId && !item.trailerUrl && !hasLinks && !hasPlatformLink && !hasLinkHosts) return null;
 
   return (
-    <div className="mt-4 flex flex-col gap-3.5 rounded-md border border-border bg-surface-2 p-4">
+    <div className="mt-4 flex flex-col gap-3.5 rounded-lg bg-surface-2 p-4">
       <WatchProviders item={item} />
       <LinkHostSearch item={item} />
       {(item.trailerUrl || hasLinks) && (

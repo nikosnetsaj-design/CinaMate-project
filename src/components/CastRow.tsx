@@ -43,9 +43,9 @@ function CastCircle({ member }: { member: TmdbCastMember }) {
           </span>
         )}
       </span>
-      <span className="mt-1.5 block line-clamp-2 text-[11px] font-medium leading-snug text-text">{member.name}</span>
+      <span className="mt-1.5 block line-clamp-2 text-xs font-medium leading-snug text-text">{member.name}</span>
       {member.character && (
-        <span className="mt-0.5 block line-clamp-2 text-[10px] leading-snug text-text-faint">{member.character}</span>
+        <span className="mt-0.5 block line-clamp-2 text-xs leading-snug text-text-faint">{member.character}</span>
       )}
     </button>
   );
@@ -117,7 +117,7 @@ export function CastRow({ item }: { item: Item }) {
       {hasCircles && (
         <>
           <div className="flex items-baseline justify-between gap-3">
-            <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Cast</span>
+            <span className="text-xs font-medium text-text-faint">Cast</span>
             {cast.length > 6 && (
               <button
                 type="button"

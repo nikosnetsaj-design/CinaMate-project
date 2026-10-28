@@ -64,7 +64,7 @@ function EditItemForm() {
         </h2>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Titolo</span>
+          <span className="text-xs font-medium text-text-faint">Titolo</span>
           <input
             autoFocus
             value={draft.title}
@@ -76,7 +76,7 @@ function EditItemForm() {
 
         <div className="grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Tipo</span>
+            <span className="text-xs font-medium text-text-faint">Tipo</span>
             <select
               value={draft.kind}
               onChange={(e) => patch({ kind: e.target.value as Kind })}
@@ -90,7 +90,7 @@ function EditItemForm() {
             </select>
           </label>
           <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Anno</span>
+            <span className="text-xs font-medium text-text-faint">Anno</span>
             <input
               type="number"
               value={draft.year}
@@ -102,7 +102,7 @@ function EditItemForm() {
 
         <div className="grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Genere</span>
+            <span className="text-xs font-medium text-text-faint">Genere</span>
             <input
               value={draft.genre}
               onChange={(e) => patch({ genre: e.target.value })}
@@ -111,7 +111,7 @@ function EditItemForm() {
             />
           </label>
           <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium uppercase tracking-wide text-text-faint">
+            <span className="text-xs font-medium text-text-faint">
               {draft.kind === "film" ? "Durata (min)" : "Min / episodio"}
             </span>
             <input
@@ -125,7 +125,7 @@ function EditItemForm() {
         </div>
 
         <div>
-          <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Stato</span>
+          <span className="mb-2 block text-xs font-medium text-text-faint">Stato</span>
           <div className="flex flex-wrap gap-2">
             {STATUSES.map((s) => (
               <Pill key={s} active={draft.status === s} onClick={() => patch({ status: s })}>
@@ -136,7 +136,7 @@ function EditItemForm() {
         </div>
 
         <div>
-          <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Dove</span>
+          <span className="mb-2 block text-xs font-medium text-text-faint">Dove</span>
           <div className="flex flex-wrap gap-2">
             {PLATFORMS.map((p) => (
               <Pill key={p} active={draft.platform === p} onClick={() => patch({ platform: p })}>
@@ -147,7 +147,7 @@ function EditItemForm() {
         </div>
 
         <div>
-          <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Qualità</span>
+          <span className="mb-2 block text-xs font-medium text-text-faint">Qualità</span>
           <div className="flex flex-wrap gap-2">
             {QUALITIES.map((quality) => (
               <Pill
@@ -170,7 +170,7 @@ function EditItemForm() {
         {draft.kind !== "film" && (
           <div className="grid grid-cols-3 gap-3">
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Ep. visti</span>
+              <span className="text-xs font-medium text-text-faint">Ep. visti</span>
               <input
                 type="number"
                 value={draft.seen || 0}
@@ -179,7 +179,7 @@ function EditItemForm() {
               />
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Ep. totali</span>
+              <span className="text-xs font-medium text-text-faint">Ep. totali</span>
               <input
                 type="number"
                 value={draft.episodes ?? ""}
@@ -189,7 +189,7 @@ function EditItemForm() {
               />
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Stagioni</span>
+              <span className="text-xs font-medium text-text-faint">Stagioni</span>
               <input
                 type="number"
                 value={draft.seasons ?? ""}
@@ -202,12 +202,12 @@ function EditItemForm() {
         )}
 
         <div>
-          <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">Il tuo voto</span>
+          <span className="mb-1.5 block text-xs font-medium text-text-faint">Il tuo voto</span>
           <VotePicker value={draft.vote} onChange={(vote) => patch({ vote })} />
         </div>
 
         <div>
-          <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">
+          <span className="mb-1.5 block text-xs font-medium text-text-faint">
             Link personalizzati
           </span>
           <p className="mb-2 text-xs text-text-faint">
@@ -235,21 +235,21 @@ function EditItemForm() {
             sigla della classificazione. A mano perché nessun catalogo pubblico
             le espone in modo affidabile: meglio vuoto che inventato. */}
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Avvertenze</span>
+          <span className="text-xs font-medium text-text-faint">Avvertenze</span>
           <input
             value={draft.contentWarnings ?? ""}
             onChange={(e) => patch({ contentWarnings: e.target.value })}
             placeholder="linguaggio forte, consumo di tabacco"
             className={inputCls}
           />
-          <span className="text-[11px] text-text-faint">
+          <span className="text-xs text-text-faint">
             Separate da virgola. Compaiono all'avvio del player accanto alla classificazione
             {draft.certification ? ` (${draft.certification})` : ""}.
           </span>
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Note personali</span>
+          <span className="text-xs font-medium text-text-faint">Note personali</span>
           <textarea
             value={draft.notes}
             onChange={(e) => patch({ notes: e.target.value })}

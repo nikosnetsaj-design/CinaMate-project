@@ -43,7 +43,7 @@ function EpisodeRow({
   const unreleased = episode.airDate != null && daysBetweenToday(episode.airDate) > 0;
 
   return (
-    <li className="flex items-center gap-3 rounded-md border border-border bg-surface-2 p-2 transition-colors hover:bg-surface-hover">
+    <li className="flex items-center gap-3 rounded-lg bg-surface-2 p-2 transition-colors hover:bg-surface-hover">
       <div className="relative aspect-video w-28 shrink-0 overflow-hidden rounded-sm bg-surface sm:w-36">
         {still ? (
           <img
@@ -81,7 +81,7 @@ function EpisodeRow({
           <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-text-muted">{episode.overview}</p>
         )}
 
-        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[11px] text-text-faint">
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-xs text-text-faint">
           {episode.rating != null && (
             <span className="flex items-center gap-1">
               <span className="flex" style={{ color: "var(--yellow)" }}><StarIcon size={11} filled /></span>
@@ -107,12 +107,7 @@ function EpisodeRow({
             {...prefetchHandlers("/player")}
             aria-label={`Riproduci episodio ${episode.episodeNumber}, ${episode.title}`}
             title="Riproduci"
-            className="flex h-10 w-12 items-center justify-center rounded-sm border transition-transform hover:scale-105"
-            style={{
-              borderColor: "color-mix(in srgb, var(--accent) 45%, transparent)",
-              background: "color-mix(in srgb, var(--accent) 18%, transparent)",
-              color: "var(--accent-text)",
-            }}
+            className="icon-btn icon-btn-filled text-accent-text hover:text-accent-text"
           >
             <PlayIcon size={16} />
           </button>
@@ -190,7 +185,7 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
 
   if (!tmdbApiKey || item.tmdbId == null) {
     return (
-      <div className="rounded-md border border-dashed border-border-strong p-4 text-xs leading-relaxed text-text-faint">
+      <div className="rounded-md p-4 text-xs leading-relaxed text-text-faint bg-surface-2">
         {tmdbApiKey
           ? "Questo titolo non è collegato a TMDB, quindi non so quali episodi abbia. Collegalo dalla scheda e l'elenco compare da solo."
           : "Gli episodi arrivano da TMDB: serve la tua chiave."}

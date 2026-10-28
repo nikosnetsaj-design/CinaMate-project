@@ -84,7 +84,7 @@ export function ShareSheet({ target, onClose }: { target: Target; onClose: () =>
           </Suspense>
         )}
 
-        <p className="w-full break-all rounded-sm border border-border bg-surface-2 px-3 py-2 font-mono text-[11px] leading-relaxed text-text-muted">
+        <p className="w-full break-all rounded-sm bg-surface-2 px-3 py-2 font-mono text-xs leading-relaxed text-text-muted">
           {url}
         </p>
 
