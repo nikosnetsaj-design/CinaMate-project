@@ -28,7 +28,7 @@ import { getDailySeconds, restoreDailySeconds } from "../player/services/statsAn
 import { useWatchProgress } from "../store/useWatchProgress";
 import { buildBackup, parseBackup, BackupParseError } from "../lib/backup";
 import { resetAutoLinkAttempts } from "../lib/useAutoLinkTmdb";
-import { BookIcon, CompassIcon, HomeIcon, PersonIcon, PlayIcon, PulseIcon, ReelMark, SparkleIcon, StackIcon, SunIcon } from "./icons";
+import { BackIcon, BookIcon, CompassIcon, HomeIcon, PersonIcon, PlayIcon, PulseIcon, ReelMark, SparkleIcon, StackIcon, SunIcon } from "./icons";
 
 /**
  * Where your own sources live, written once instead of pasted per title.
@@ -847,7 +847,7 @@ function SettingsForm() {
               aria-label="Torna alle impostazioni"
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border-strong text-text-muted"
             >
-              ←
+              <BackIcon size={16} />
             </button>
           )}
           <h2 id={titleId} className="font-display text-xl font-semibold text-text">

@@ -9,6 +9,7 @@ import { withProtocol } from "../lib/linkHost";
 import { hasPageReader, readableDocument } from "../lib/pageReader";
 import { bestStreamConfirmed, readPage, titleLinksIn } from "../lib/streamExtract";
 import type { FetchFailure, FoundLink } from "../lib/streamExtract";
+import { BackIcon, CloseIcon, ExternalIcon } from "./icons";
 
 /**
  * Il **Web Viewer**: una finestra su una pagina, con tutto quello che una
@@ -298,7 +299,7 @@ function ViewerFrame({
             aria-label="Indietro"
             className="rounded-sm border border-border-strong px-2.5 py-1.5 text-xs text-text-muted disabled:opacity-40"
           >
-            ←
+            <BackIcon size={16} />
           </button>
           <form
             className="flex flex-1 gap-2"
@@ -332,7 +333,7 @@ function ViewerFrame({
             title="Apri in una scheda del browser"
             className="rounded-sm border border-border-strong px-2.5 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
           >
-            ↗
+            <ExternalIcon size={16} />
           </a>
           <button
             type="button"
@@ -340,7 +341,7 @@ function ViewerFrame({
             aria-label="Chiudi il Web Viewer"
             className="rounded-sm border border-border-strong px-2.5 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
           >
-            ✕
+            <CloseIcon size={16} />
           </button>
         </div>
 

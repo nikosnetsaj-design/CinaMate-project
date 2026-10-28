@@ -7,6 +7,7 @@ import { useCriticDraft } from "../store/useCriticDraft";
 import { askCritic, ClaudeApiError, MissingApiKeyError } from "../lib/anthropic";
 import { voteColor } from "../lib/vote";
 import type { Item } from "../types";
+import { ArrowRightIcon, BackIcon } from "../components/icons";
 
 const PROMPTS = [
   "Cosa guardo stasera?",
@@ -112,7 +113,7 @@ export function Critic() {
           className="min-w-14 rounded-sm px-4 text-lg font-bold disabled:opacity-50"
           style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
         >
-          {busy ? "…" : "→"}
+          {busy ? "…" : <ArrowRightIcon />}
         </button>
       </div>
 
@@ -173,8 +174,9 @@ export function Critic() {
         )}
       </div>
 
-      <button type="button" onClick={() => navigate("/libreria")} className="text-xs text-text-faint underline-offset-2 hover:underline">
-        ← Torna alla libreria
+      <button type="button" onClick={() => navigate("/libreria")} className="inline-flex items-center gap-1 text-xs text-text-faint underline-offset-2 hover:underline">
+        <BackIcon size={14} />
+        Torna alla libreria
       </button>
     </div>
   );

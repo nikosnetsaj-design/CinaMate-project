@@ -1,5 +1,6 @@
 import { PART_STATE_META, type SagaEntry } from "../lib/sagas";
 import { PosterArt } from "./PosterArt";
+import { CheckIcon } from "./icons";
 
 /**
  * The same chapters as the list, drawn as one thread instead of rows. It exists
@@ -38,7 +39,7 @@ export function SagaTimeline({
                 color: watched ? "var(--accent-contrast)" : meta.color,
               }}
             >
-              {watched ? "✓" : entry.number}
+              {watched ? <CheckIcon size={13} /> : entry.number}
             </span>
             <button
               type="button"

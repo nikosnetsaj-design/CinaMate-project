@@ -18,6 +18,7 @@ import {
 } from "../lib/linkHost";
 import { REDIRECT_HINT, REDIRECT_LABEL, findMirrors, probeRedirect } from "../lib/hostRedirect";
 import type { MirrorCandidate, RedirectStatus } from "../lib/hostRedirect";
+import { ChevronDownIcon, ChevronUpIcon, WarningIcon } from "./icons";
 
 /**
  * Il pannello dei Link Host in Impostazioni.
@@ -167,7 +168,7 @@ function HowItWorks() {
         }}
       >
         <h4 className="mb-1.5 flex items-center gap-2 text-sm font-semibold" style={{ color: "var(--danger)" }}>
-          <span aria-hidden="true">⚠</span>
+          <WarningIcon />
           Attenzione
         </h4>
         <p className="text-xs leading-relaxed text-text-muted">
@@ -285,7 +286,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
             aria-label={`Sposta ${host.name} in alto`}
             className="rounded-sm border border-border-strong px-1.5 text-[10px] text-text-muted disabled:opacity-30"
           >
-            ↑
+            <ChevronUpIcon />
           </button>
           <button
             type="button"
@@ -294,7 +295,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
             aria-label={`Sposta ${host.name} in basso`}
             className="rounded-sm border border-border-strong px-1.5 text-[10px] text-text-muted disabled:opacity-30"
           >
-            ↓
+            <ChevronDownIcon />
           </button>
         </div>
 

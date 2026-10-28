@@ -11,6 +11,7 @@ import { VoteBadge } from "../components/VoteBadge";
 import { EmptyState } from "../components/EmptyState";
 import { Nastro } from "../components/Nastro";
 import type { Item } from "../types";
+import { AchievementIcon } from "../components/AchievementIcon";
 
 const KIND_LABELS: Record<string, string> = { film: "Film", serie: "Serie TV", anime: "Anime", doc: "Documentario" };
 const KIND_COLORS = ["var(--accent)", "var(--status-watching)", "var(--danger)", "var(--status-done)"];
@@ -349,12 +350,14 @@ export function AchievementsTab({ items }: { items: Item[] }) {
               opacity: a.earned ? 1 : 0.65,
             }}
           >
-            <span className="text-2xl leading-none">{a.icon}</span>
+            <span className="shrink-0" style={{ color: a.earned ? "var(--accent-text)" : "var(--text-faint)" }}>
+              <AchievementIcon id={a.id} />
+            </span>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-text">{a.title}</p>
               <p className="mt-0.5 text-xs text-text-faint">{a.description}</p>
               <p className="mt-1 text-[11px] font-medium" style={{ color: a.earned ? "var(--accent-text)" : "var(--text-faint)" }}>
-                {a.earned ? "✓ Sbloccato" : a.progress}
+                {a.earned ? "Sbloccato" : a.progress}
               </p>
             </div>
           </div>

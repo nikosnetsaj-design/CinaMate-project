@@ -9,6 +9,7 @@ import { EmptyState } from "../components/EmptyState";
 import { parseNaturalQuery, MissingApiKeyError, ClaudeApiError, type ParsedQuery } from "../lib/anthropic";
 import { discoverTitles, MOVIE_GENRES, TV_GENRES, type TmdbSearchResult } from "../lib/tmdb";
 import { draftFromTmdb } from "../lib/addFromTmdb";
+import { CheckIcon } from "./icons";
 
 const EXAMPLES = [
   "film di fantascienza anni '90",
@@ -211,10 +212,10 @@ export function NaturalSearch() {
                   />
                   {owned && (
                     <span
-                      className="absolute right-1 top-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+                      className="absolute right-1 top-1 flex items-center justify-center rounded-full px-1.5 py-1 text-[10px] font-semibold"
                       style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
                     >
-                      ✓
+                      <CheckIcon size={11} />
                     </span>
                   )}
                 </div>

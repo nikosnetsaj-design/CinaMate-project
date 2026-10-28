@@ -10,7 +10,7 @@ import { useEditSheet } from "../store/useEditSheet";
 import { buildEntries, nextChapterAfter, orderParts, type SagaEntry } from "../lib/sagas";
 import { draftFromTmdb } from "../lib/addFromTmdb";
 import { PosterArt } from "./PosterArt";
-import { PlayIcon } from "./icons";
+import { CloseIcon, PlayIcon } from "./icons";
 
 /**
  * "Continua la storia": the moment a chapter is finished, the next one in its
@@ -72,7 +72,7 @@ function Prompt({ finishedTitle, entry, onDismiss }: {
           aria-label="Chiudi il suggerimento"
           className="-mt-1 shrink-0 px-1 text-text-faint hover:text-text"
         >
-          ✕
+          <CloseIcon size={16} />
         </button>
       </div>
 

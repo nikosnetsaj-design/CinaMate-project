@@ -18,6 +18,7 @@ import { STATUSES } from "../lib/status";
 import { useAppReady } from "../lib/useAppReady";
 import { useVisibleItems } from "../lib/useVisibleItems";
 import type { Kind, Status } from "../types";
+import { GridIcon, ListIcon } from "../components/icons";
 
 /** I tipi che un indirizzo può nominare: di ciò che arriva scritto lì non ci si fida. */
 const KIND_IDS: Kind[] = ["film", "serie", "anime", "doc"];
@@ -163,7 +164,7 @@ export function Library() {
             aria-label={grid ? "Vista elenco" : "Vista griglia"}
             className="rounded-sm border border-border-strong px-2 py-1 text-xs text-text-muted"
           >
-            {grid ? "☰" : "▦"}
+            {grid ? <ListIcon size={16} /> : <GridIcon size={16} />}
           </button>
           <select
             value={sort}

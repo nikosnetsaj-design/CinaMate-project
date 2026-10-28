@@ -1,3 +1,5 @@
+import { CloseIcon } from "./icons";
+
 export function SearchBar({
   value,
   onChange,
@@ -41,7 +43,7 @@ export function SearchBar({
           aria-label="Cancella ricerca"
           className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-faint hover:text-text"
         >
-          ✕
+          <CloseIcon size={16} />
         </button>
       )}
     </div>

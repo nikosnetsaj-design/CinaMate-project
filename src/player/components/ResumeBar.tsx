@@ -1,4 +1,5 @@
 import { formatClock } from '../clock';
+import { CloseIcon } from './Icons';
 
 type Props = {
   /** Second the player jumped to. */
@@ -29,7 +30,7 @@ export default function ResumeBar({ positionSec, onRestart, onDismiss }: Props) 
         Ricomincia da capo
       </button>
       <button type="button" className="pv-icon-btn pv-resume-close" aria-label="Chiudi" onClick={onDismiss}>
-        ✕
+        <CloseIcon />
       </button>
     </div>
   );

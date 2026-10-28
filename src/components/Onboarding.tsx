@@ -8,7 +8,7 @@ import { useFocusTrap } from "../lib/useFocusTrap";
 import { TASTE_PICKS, seedDraft, type SeedPick } from "../lib/seedShelf";
 import { searchTitles } from "../lib/tmdb";
 import { PosterArt } from "./PosterArt";
-import { CheckIcon, ReelMark } from "./icons";
+import { CheckIcon, ExternalIcon, ReelMark } from "./icons";
 
 /**
  * Il primo minuto.
@@ -266,9 +266,10 @@ function Catalogue({ onDone, onSkip }: { onDone: () => void; onSkip: () => void 
         href="https://www.themoviedb.org/settings/api"
         target="_blank"
         rel="noreferrer"
-        className="rounded-sm border border-border-strong px-4 py-2.5 text-center text-sm font-medium text-text transition-colors hover:bg-surface-hover"
+        className="inline-flex items-center justify-center gap-1.5 rounded-sm border border-border-strong px-4 py-2.5 text-center text-sm font-medium text-text transition-colors hover:bg-surface-hover"
       >
-        Apri TMDB per prenderla ↗
+        Apri TMDB per prenderla
+        <ExternalIcon />
       </a>
 
       <div className="flex flex-col gap-2">

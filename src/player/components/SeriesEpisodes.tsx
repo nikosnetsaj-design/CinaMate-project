@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PlayIcon } from './Icons';
+import { CheckIcon, PlayIcon } from './Icons';
 
 /**
  * Le puntate della serie che stai guardando, dentro il lettore.
@@ -68,7 +68,8 @@ export default function SeriesEpisodes({
                       setMenu(false);
                     }}
                   >
-                    {s === season ? '✓ ' : ''}Stagione {s}
+                    {s === season && <CheckIcon />}
+                    Stagione {s}
                   </button>
                 </li>
               ))}

@@ -10,6 +10,7 @@ import type {
   HostSpeedSample,
 } from '../types';
 import { getHostHistory } from '../services/hostStore';
+import { StarIcon } from '../../components/icons';
 
 type Props = {
   hostMonitor: ReturnType<typeof useHostMonitor>;
@@ -26,12 +27,17 @@ const INTERVAL_OPTIONS: { value: MonitorIntervalMs; label: string }[] = [
 const TIMEOUT_OPTIONS = [3000, 5000, 8000, 15000];
 
 const ROLE_LABEL: Record<StreamHost['role'], string> = {
-  primary: '⭐ Principale',
-  secondary: '⭐ Secondario',
-  backup: '⭐ Backup',
+  primary: 'Principale',
+  secondary: 'Secondario',
+  backup: 'Backup',
 };
 
-const STATUS_DOT: Record<HostStatus, string> = { online: '🟢', slow: '🟠', offline: '🔴', unknown: '⚪' };
+/* Lo stato di un host in un punto colorato, non in un'emoji: le emoji tonde
+   cambiano colore e misura da un telefono all'altro, e «sconosciuto» era un
+   cerchio bianco che sul fondo scuro sembrava una luce accesa. */
+function StatusDot({ status }: { status: HostStatus }) {
+  return <span className={`pv-dot pv-dot--${status}`} aria-hidden="true" />;
+}
 const STATUS_LABEL: Record<HostStatus, string> = { online: 'Online', slow: 'Lento', offline: 'Offline', unknown: 'Sconosciuto' };
 const REASON_LABEL: Record<HostSwitchReason, string> = {
   offline: 'host offline',
@@ -201,7 +207,7 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
         <div className="pv-host-active-card">
           <span className="pv-host-active-label">Host Attivo</span>
           <div className="pv-host-active-name">
-            {STATUS_DOT[activeResult?.status ?? 'unknown']} {activeHost.name}
+            <StatusDot status={activeResult?.status ?? 'unknown'} /> {activeHost.name}
           </div>
           <div className="pv-host-active-metrics">
             <span>Ping: {activeResult?.pingMs ?? '—'} ms</span>
@@ -221,11 +227,14 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
             <span>Punteggio: {activeStats ? `${activeStats.score}/100` : '—'}</span>
           </div>
           <div className="pv-host-stars" aria-label={`Velocità: ${activeStars} su 5`}>
-            {'★'.repeat(activeStars)}
-            <span className="pv-host-stars-dim">{'★'.repeat(5 - activeStars)}</span>
+            {Array.from({ length: 5 }, (_, i) => (
+              <span key={i} className={i < activeStars ? undefined : 'pv-host-stars-dim'}>
+                <StarIcon size={12} filled />
+              </span>
+            ))}
           </div>
           <div className={`pv-host-status-chip pv-host-status-chip--${activeResult?.status ?? 'unknown'}`}>
-            {STATUS_DOT[activeResult?.status ?? 'unknown']} {STATUS_LABEL[activeResult?.status ?? 'unknown']}
+            <StatusDot status={activeResult?.status ?? 'unknown'} /> {STATUS_LABEL[activeResult?.status ?? 'unknown']}
           </div>
         </div>
       )}
@@ -332,7 +341,7 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
                 ) : (
                   <>
                     <div className="pv-host-row-title">
-                      <span>{STATUS_DOT[result?.status ?? 'unknown']}</span>
+                      <StatusDot status={result?.status ?? 'unknown'} />
                       <span className="pv-host-row-name">{host.name}</span>
                       <span className="pv-host-role-badge">{ROLE_LABEL[host.role]}</span>
                       {isActive && <span className="pv-badge pv-badge-active">Attivo</span>}
@@ -380,7 +389,7 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
                       <div className="pv-host-test-history">
                         {getHostHistory(host.id, 5).map((r, i) => (
                           <div key={i} className="pv-host-test-history-row">
-                            <span>{STATUS_DOT[r.status]}</span>
+                            <StatusDot status={r.status} />
                             <span>{timeAgo(r.checkedAt)}</span>
                             <span>{r.pingMs ?? '—'} ms</span>
                           </div>

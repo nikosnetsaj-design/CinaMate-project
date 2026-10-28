@@ -4,6 +4,7 @@ import { useLibrary } from "../store/useLibrary";
 import { DNS_FAQ, PLATFORM_STEPS, PORTS, RESOLVERS } from "../lib/dnsGuide";
 import { DOH_LABEL, JSON_CAPABLE, resolveEverywhere } from "../lib/doh";
 import type { DohResult } from "../lib/doh";
+import { ChevronRightIcon } from "./icons";
 
 /**
  * La scheda di riferimento sul DNS cifrato.
@@ -20,10 +21,11 @@ export function DnsGuideButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-xs underline-offset-2 hover:underline"
+        className="inline-flex items-center gap-0.5 text-xs underline-offset-2 hover:underline"
         style={{ color: "var(--accent-text)" }}
       >
-        DNS cifrato: DoH, DoT e i resolver pubblici →
+        DNS cifrato: DoH, DoT e i resolver pubblici
+        <ChevronRightIcon size={14} />
       </button>
       {open && <DnsGuideSheet onClose={() => setOpen(false)} />}
     </>

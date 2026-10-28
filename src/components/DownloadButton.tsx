@@ -9,6 +9,7 @@ import { resolvePlayable, hasAnySource } from "../player/resolveSource";
 import { startDownload } from "../player/services/downloadService";
 import type { DownloadQuality } from "../player/types";
 import type { Item } from "../types";
+import { DownloadIcon } from "./icons";
 
 /**
  * «Scarica» dalla scheda del titolo, senza passare dal player.
@@ -78,9 +79,10 @@ export function DownloadButton({ item }: { item: Item }) {
       <button
         type="button"
         onClick={() => openSettings()}
-        className="mt-2.5 w-full rounded-md border border-dashed border-border-strong py-2.5 text-sm font-medium text-text-muted"
+        className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border-strong py-2.5 text-sm font-medium text-text-muted"
       >
-        ↓ Scarica — prima dimmi dov'è il tuo server
+        <DownloadIcon />
+        Scarica — prima dimmi dov'è il tuo server
       </button>
     );
   }
@@ -94,7 +96,8 @@ export function DownloadButton({ item }: { item: Item }) {
         aria-expanded={picking}
         className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-md border border-border-strong bg-surface-hover py-2.5 text-sm font-semibold text-text disabled:opacity-60"
       >
-        ↓ {busy ? "Preparo il download…" : "Scarica"}
+        <DownloadIcon />
+        {busy ? "Preparo il download…" : "Scarica"}
       </button>
 
       {picking && (

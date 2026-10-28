@@ -12,7 +12,7 @@ import { useCatalogPreview } from "../store/useCatalogPreview";
 import { useCriticDraft } from "../store/useCriticDraft";
 import { useNavigate } from "react-router-dom";
 import { PosterArt } from "./PosterArt";
-import { PersonIcon } from "./icons";
+import { BackIcon, CheckIcon, ClockIcon, PersonIcon } from "./icons";
 import type { Item } from "../types";
 
 /** Long filmographies are the norm; the tail is noise until it is asked for. */
@@ -42,13 +42,13 @@ function CreditCard({ credit, owned, onOpen, onAdd, adding }: {
         />
         {owned && (
           <span
-            className="absolute right-1 top-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+            className="absolute right-1 top-1 flex items-center justify-center rounded-full px-1.5 py-1 text-[10px] font-semibold"
             style={{
               background: owned.status === "Visto" ? "var(--status-done)" : "var(--accent)",
               color: "var(--accent-contrast)",
             }}
           >
-            {owned.status === "Visto" ? "✓" : "◷"}
+            {owned.status === "Visto" ? <CheckIcon size={11} /> : <ClockIcon size={11} />}
           </span>
         )}
       </div>
@@ -189,7 +189,7 @@ function PersonDetail({ name }: { name: string }) {
         aria-label="Torna indietro"
         className="tap-target fixed left-3.5 top-3.5 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-md"
       >
-        ←
+        <BackIcon />
       </button>
 
       {/* `relative` so this paints above the positioned banner it overlaps:

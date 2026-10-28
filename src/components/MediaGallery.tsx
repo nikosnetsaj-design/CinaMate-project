@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { backdropUrl, posterUrl, youtubeThumb, youtubeWatchUrl, type TmdbVideo } from "../lib/tmdb";
-import { PlayIcon } from "./icons";
+import { CloseIcon, ExternalIcon, PlayIcon } from "./icons";
 
 /**
  * Il materiale del titolo: video, locandine, sfondi.
@@ -54,7 +54,7 @@ function Lightbox({
         aria-label="Chiudi"
         className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/60 text-lg text-white"
       >
-        ✕
+        <CloseIcon size={18} />
       </button>
 
       {content.kind === "video" ? (
@@ -76,9 +76,10 @@ function Lightbox({
               href={youtubeWatchUrl(content.key)}
               target="_blank"
               rel="noopener noreferrer"
-              className="shrink-0 text-xs text-white/60 underline-offset-2 hover:underline"
+              className="inline-flex shrink-0 items-center gap-1 text-xs text-white/60 underline-offset-2 hover:underline"
             >
-              Apri su YouTube ↗
+              Apri su YouTube
+              <ExternalIcon size={12} />
             </a>
           </div>
         </div>
@@ -93,9 +94,10 @@ function Lightbox({
             href={content.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-white/60 underline-offset-2 hover:underline"
+            className="inline-flex items-center gap-1 text-xs text-white/60 underline-offset-2 hover:underline"
           >
-            Apri l'immagine intera ↗
+            Apri l'immagine intera
+            <ExternalIcon size={12} />
           </a>
         </div>
       )}

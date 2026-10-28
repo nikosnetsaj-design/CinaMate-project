@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { useFocusTrap } from "../lib/useFocusTrap";
+import { CloseIcon } from "./icons";
 
 export function Sheet({
   onClose,
@@ -44,7 +45,7 @@ export function Sheet({
           aria-label="Chiudi"
           className="absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white backdrop-blur-sm hover:scale-110"
         >
-          ✕
+          <CloseIcon size={16} />
         </button>
         {children}
       </motion.div>

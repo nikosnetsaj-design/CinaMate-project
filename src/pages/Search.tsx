@@ -15,7 +15,7 @@ import { continueWatching, lastSeenDates } from "../lib/continueWatching";
 import { forYou } from "../lib/recommend";
 import { prefetchHandlers } from "../lib/prefetch";
 import { PosterArt } from "../components/PosterArt";
-import { PlayIcon, SearchIcon } from "../components/icons";
+import { CheckIcon, CloseIcon, PlayIcon, SearchIcon } from "../components/icons";
 import type { Item } from "../types";
 
 /**
@@ -280,10 +280,10 @@ function TitleResults({ query }: { query: string }) {
                       />
                       {owned && (
                         <span
-                          className="absolute right-1 top-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+                          className="absolute right-1 top-1 flex items-center justify-center rounded-full px-1.5 py-1 text-[10px] font-semibold"
                           style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
                         >
-                          ✓
+                          <CheckIcon size={11} />
                         </span>
                       )}
                     </div>
@@ -385,7 +385,7 @@ export function Search() {
               aria-label="Cancella la ricerca"
               className="text-text-faint hover:text-text"
             >
-              ✕
+              <CloseIcon size={16} />
             </button>
           )}
         </label>

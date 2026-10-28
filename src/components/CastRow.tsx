@@ -4,6 +4,7 @@ import { useSelectedItem } from "../store/useSelectedItem";
 import { useSelectedPerson } from "../store/useSelectedPerson";
 import { getCast, profileUrl, type TmdbCastMember } from "../lib/tmdb";
 import type { Item } from "../types";
+import { ChevronRightIcon } from "./icons";
 
 /**
  * Il cast con le facce e i personaggi, e la regia accanto.
@@ -121,10 +122,11 @@ export function CastRow({ item }: { item: Item }) {
               <button
                 type="button"
                 onClick={() => setAll((v) => !v)}
-                className="text-xs font-medium"
+                className="inline-flex items-center gap-0.5 text-xs font-medium"
                 style={{ color: "var(--accent-text)" }}
               >
-                {all ? "mostra meno" : "mostra tutti →"}
+                {all ? "mostra meno" : "mostra tutti"}
+                {!all && <ChevronRightIcon size={14} />}
               </button>
             )}
           </div>

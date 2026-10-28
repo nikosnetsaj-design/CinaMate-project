@@ -13,7 +13,7 @@ import { useUpcoming } from "../lib/useUpcoming";
 import { effectiveUrl, hostLabel, withProtocol } from "../lib/linkHost";
 import { clearTmdbCaches } from "../lib/tmdb";
 import { countdown, dayLabel } from "../lib/format";
-import { BellIcon, DotsIcon, GearIcon, GlobeIcon, LinkIcon, MoonIcon, PersonIcon, PlusIcon, PulseIcon, RefreshIcon, SunIcon } from "./icons";
+import { BellIcon, ChevronRightIcon, DotsIcon, GearIcon, GlobeIcon, LinkIcon, MoonIcon, PersonIcon, PlusIcon, PulseIcon, RefreshIcon, SunIcon } from "./icons";
 
 /**
  * I tre controlli in cima: i generi, le novità, il menu.
@@ -262,10 +262,11 @@ export function AlertsBell() {
                 setOpen(false);
                 navigate("/scopri");
               }}
-              className="block w-full border-t border-border px-3.5 py-2.5 text-left text-xs font-medium"
+              className="flex w-full items-center justify-between border-t border-border px-3.5 py-2.5 text-left text-xs font-medium"
               style={{ color: "var(--accent-text)" }}
             >
-              Apri il calendario →
+              Apri il calendario
+              <ChevronRightIcon size={14} />
             </button>
           </div>
         </>

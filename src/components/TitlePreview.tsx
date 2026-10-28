@@ -3,6 +3,7 @@ import { PosterArt } from "./PosterArt";
 import { getDetails, TmdbApiError, type TmdbDetails, type TmdbSearchResult } from "../lib/tmdb";
 import { formatRuntime } from "../lib/format";
 import { serviceLinkFor } from "../lib/deepLinks";
+import { BackIcon, ExternalIcon } from "./icons";
 
 /**
  * The full card of a title you have not added — and may decide not to.
@@ -58,9 +59,10 @@ export function TitlePreview({
       <button
         type="button"
         onClick={onBack}
-        className="-ml-1 w-fit rounded-sm px-1 py-0.5 text-sm text-text-muted hover:text-text"
+        className="-ml-1 inline-flex w-fit items-center gap-1 rounded-sm px-1 py-0.5 text-sm text-text-muted hover:text-text"
       >
-        ← Torna ai risultati
+        <BackIcon size={16} />
+        Torna ai risultati
       </button>
 
       <div className="flex gap-4">
@@ -143,10 +145,11 @@ export function TitlePreview({
                 target="_blank"
                 rel="noopener noreferrer"
                 title={`Apri ${details.title} su ${link.service}`}
-                className="rounded-full border border-border-strong px-2.5 py-1 text-xs font-medium hover:bg-surface-hover"
+                className="inline-flex items-center gap-1 rounded-full border border-border-strong px-2.5 py-1 text-xs font-medium hover:bg-surface-hover"
                 style={{ color: "var(--accent-text)" }}
               >
-                {p.name} ↗
+                {p.name}
+                <ExternalIcon size={12} />
               </a>
             ) : (
               <span key={p.name} className="rounded-full bg-surface-hover px-2.5 py-1 text-xs text-text">

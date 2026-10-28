@@ -8,6 +8,7 @@ import { useLinkHosts } from "../store/useLinkHosts";
 import { useWebViewer } from "../store/useWebViewer";
 import { buildQuery, effectiveUrl, hostLabel, searchUrlsFor } from "../lib/linkHost";
 import type { Item } from "../types";
+import { ChevronRightIcon, ExternalIcon, LinkIcon, PlayIcon } from "./icons";
 
 function linkLabel(url: string): string {
   try {
@@ -190,10 +191,11 @@ function WatchProviders({ item }: { item: Item }) {
           target="_blank"
           rel="noopener noreferrer"
           title={`Apri ${item.title} su ${own.service}`}
-          className={`${CHIP} mt-1.5 inline-block border border-border-strong font-medium hover:bg-surface-hover`}
+          className={`${CHIP} mt-1.5 inline-flex items-center gap-1 border border-border-strong font-medium hover:bg-surface-hover`}
           style={{ color: "var(--accent-text)" }}
         >
-          Apri su {own.service} ↗
+          Apri su {own.service}
+          <ExternalIcon size={12} />
         </a>
       )}
 
@@ -213,10 +215,11 @@ function WatchProviders({ item }: { item: Item }) {
           onClick={() => startWatching(item.id)}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-1.5 inline-block text-xs underline-offset-2 hover:underline"
+          className="mt-1.5 inline-flex items-center gap-0.5 text-xs underline-offset-2 hover:underline"
           style={{ color: "var(--accent-text)" }}
         >
-          Vedi tutte le opzioni su JustWatch →
+          Vedi tutte le opzioni su JustWatch
+          <ChevronRightIcon size={14} />
         </a>
       )}
     </div>
@@ -292,9 +295,10 @@ export function WatchAndLinks({ item }: { item: Item }) {
               href={item.trailerUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-full border border-border-strong px-3 py-1.5 text-xs font-medium text-text hover:bg-surface-hover"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border-strong px-3 py-1.5 text-xs font-medium text-text hover:bg-surface-hover"
             >
-              ▶ Trailer
+              <PlayIcon size={12} />
+              Trailer
             </a>
           )}
           {item.links.map((l) => (
@@ -304,9 +308,10 @@ export function WatchAndLinks({ item }: { item: Item }) {
               onClick={() => startWatching(item.id)}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-full border border-border-strong px-3 py-1.5 text-xs font-medium text-text hover:bg-surface-hover"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border-strong px-3 py-1.5 text-xs font-medium text-text hover:bg-surface-hover"
             >
-              🔗 {linkLabel(l)}
+              <LinkIcon size={13} />
+              {linkLabel(l)}
             </a>
           ))}
         </div>

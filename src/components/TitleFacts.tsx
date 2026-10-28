@@ -6,6 +6,7 @@ import { formatUsd, formatUsdShort } from "../lib/format";
 import { profileUrl, providerLogoUrl, type TmdbCompany, type TmdbCrewCredit } from "../lib/tmdb";
 import { MediaGallery } from "./MediaGallery";
 import type { Item } from "../types";
+import { ChevronRightIcon, MusicIcon } from "./icons";
 
 /**
  * I dati del titolo che non stanno nella libreria: chi l'ha fatto, quanto è
@@ -180,8 +181,8 @@ function SoundtrackLink({ title, composer }: { title: string; composer?: string 
 
   return (
     <div className="mt-4 flex items-center gap-3 rounded-md border border-border bg-surface-2 p-3.5">
-      <span aria-hidden="true" className="text-xl leading-none">
-        ♫
+      <span className="shrink-0 text-text-muted">
+        <MusicIcon size={20} />
       </span>
       <p className="min-w-0 flex-1 text-sm leading-snug text-text-muted">
         Trova la colonna sonora su Spotify
@@ -241,10 +242,11 @@ export function TitleFacts({ item }: { item: Item }) {
               <button
                 type="button"
                 onClick={() => setAllCrew((v) => !v)}
-                className="text-xs font-medium"
+                className="inline-flex items-center gap-0.5 text-xs font-medium"
                 style={{ color: "var(--accent-text)" }}
               >
-                {allCrew ? "mostra meno" : "mostra tutti →"}
+                {allCrew ? "mostra meno" : "mostra tutti"}
+                {!allCrew && <ChevronRightIcon size={14} />}
               </button>
             )}
           </div>

@@ -1,11 +1,13 @@
+import type { ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLibrary } from "../store/useLibrary";
 import type { ToastKind } from "../types";
+import { CloseIcon, ErrorIcon, InfoIcon, SuccessIcon } from "./icons";
 
-const KIND_STYLES: Record<ToastKind, { bg: string; text: string; icon: string }> = {
-  success: { bg: "var(--cyan)", text: "var(--cyan-contrast)", icon: "✓" },
-  error: { bg: "var(--danger)", text: "var(--danger-contrast)", icon: "!" },
-  info: { bg: "var(--surface-2)", text: "var(--text)", icon: "•" },
+const KIND_STYLES: Record<ToastKind, { bg: string; text: string; icon: ReactNode }> = {
+  success: { bg: "var(--cyan)", text: "var(--cyan-contrast)", icon: <SuccessIcon /> },
+  error: { bg: "var(--danger)", text: "var(--danger-contrast)", icon: <ErrorIcon /> },
+  info: { bg: "var(--surface-2)", text: "var(--text)", icon: <InfoIcon size={16} /> },
 };
 
 export function ToastStack() {
@@ -46,7 +48,7 @@ export function ToastStack() {
                 aria-label="Chiudi notifica"
                 className="shrink-0 text-sm opacity-70 transition-opacity hover:opacity-100"
               >
-                ✕
+                <CloseIcon size={14} />
               </button>
             </motion.div>
           );

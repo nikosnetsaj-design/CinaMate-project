@@ -11,6 +11,7 @@ import { EmptyState } from "../components/EmptyState";
 import { UpcomingBoard } from "../components/UpcomingBoard";
 import { NaturalSearch } from "../components/NaturalSearch";
 import { MoodPicker } from "../components/MoodPicker";
+import { CheckIcon } from "../components/icons";
 
 const FEEDS: { id: DiscoverFeed; title: string; why: string }[] = [
   { id: "trending", title: "Di cosa si parla", why: "I film più visti questa settimana nel mondo" },
@@ -90,10 +91,10 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
                     <PosterArt item={{ title: r.title, kind: r.kind, posterPath: r.posterPath }} size="sm" className="w-28" showTitle={!r.posterPath} />
                     {owned && (
                       <span
-                        className="absolute right-1 top-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+                        className="absolute right-1 top-1 flex items-center justify-center rounded-full px-1.5 py-1 text-[10px] font-semibold"
                         style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
                       >
-                        ✓
+                        <CheckIcon size={11} />
                       </span>
                     )}
                   </div>

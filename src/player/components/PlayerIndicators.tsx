@@ -17,7 +17,9 @@ type Props = {
   sleepAtEnd?: boolean;
 };
 
-const NETWORK_DOT: Record<NetworkQuality, string> = { excellent: '🟢', good: '🟢', poor: '🟠', offline: '🔴' };
+/* La qualità della rete come il punto di stato degli host: stesso disegno,
+   stessi colori di esito. */
+const NETWORK_DOT: Record<NetworkQuality, string> = { excellent: 'online', good: 'online', poor: 'slow', offline: 'offline' };
 const NETWORK_LABEL: Record<NetworkQuality, string> = { excellent: 'Ottima', good: 'Buona', poor: 'Debole', offline: 'Assente' };
 
 export default function PlayerIndicators({
@@ -45,7 +47,7 @@ export default function PlayerIndicators({
       {castDeviceName && <span className="pv-badge pv-badge-active">In riproduzione su {castDeviceName}</span>}
       {hostName && <span className="pv-badge pv-badge-warn">Host: {hostName}</span>}
       {showNetworkBadge && networkQuality && (
-        <span className="pv-badge pv-badge-warn">{NETWORK_DOT[networkQuality]} Rete {NETWORK_LABEL[networkQuality]}</span>
+        <span className="pv-badge pv-badge-warn"><span className={`pv-dot pv-dot--${NETWORK_DOT[networkQuality]}`} aria-hidden="true" /> Rete {NETWORK_LABEL[networkQuality]}</span>
       )}
     </div>
   );

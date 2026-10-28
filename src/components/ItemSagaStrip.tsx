@@ -3,7 +3,7 @@ import { useSagas, sagaKey } from "../store/useSagas";
 import { useSelectedSaga } from "../store/useSelectedSaga";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { buildEntries, orderParts, sagaProgress } from "../lib/sagas";
-import { StackIcon } from "./icons";
+import { ChevronRightIcon, StackIcon } from "./icons";
 import type { Item } from "../types";
 
 /**
@@ -58,7 +58,7 @@ export function ItemSagaStrip({ item }: { item: Item }) {
           </span>
         </div>
       </div>
-      <span className="shrink-0 text-text-faint">→</span>
+      <span className="shrink-0 text-text-faint"><ChevronRightIcon /></span>
     </button>
   );
 }

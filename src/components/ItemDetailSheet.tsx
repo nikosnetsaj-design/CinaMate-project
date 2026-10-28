@@ -22,7 +22,7 @@ import { ShareSheet } from "./ShareSheet";
 import { EpisodeList } from "./EpisodeList";
 import { DownloadButton } from "./DownloadButton";
 import { SpoilerFreeRecap, TranslateOverview } from "./AiItemExtras";
-import { HeartIcon, InfoIcon, PlayIcon } from "./icons";
+import { BackIcon, EyeIcon, HeartIcon, InfoIcon, PlayIcon, ShareIcon, StarIcon } from "./icons";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useLibrary } from "../store/useLibrary";
 import { useEditSheet } from "../store/useEditSheet";
@@ -167,7 +167,7 @@ function ItemDetail({ item }: { item: Item }) {
         aria-label="Torna indietro"
         className="tap-target fixed left-3.5 top-3.5 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-md"
       >
-        ←
+        <BackIcon />
       </button>
 
       <div className="mx-auto max-w-3xl px-4 pb-28 pt-4 sm:px-6">
@@ -232,7 +232,7 @@ function ItemDetail({ item }: { item: Item }) {
             <HeartIcon size={17} filled={item.fav} />
           </RoundAction>
           <RoundAction label="Voto" active={item.vote != null} onClick={() => openEdit(item)}>
-            <span className="text-base leading-none">★</span>
+            <StarIcon size={17} filled={item.vote != null} />
           </RoundAction>
           <RoundAction
             label="Guardato"
@@ -241,10 +241,10 @@ function ItemDetail({ item }: { item: Item }) {
             // fra cui questo pulsante può spostarti senza inventare nulla.
             onClick={() => setStatus(item.id, item.status === "Visto" ? "Da vedere" : "Visto")}
           >
-            <span className="text-base leading-none">👁</span>
+            <EyeIcon size={17} />
           </RoundAction>
           <RoundAction label="Condividi" onClick={() => setSharing(true)}>
-            <span className="text-base leading-none">↗</span>
+            <ShareIcon size={17} />
           </RoundAction>
         </div>
 
@@ -256,7 +256,7 @@ function ItemDetail({ item }: { item: Item }) {
         {item.tmdbRating != null && (
           <p className="mt-2.5 flex items-center gap-2 text-sm text-text-muted">
             <span className="text-base leading-none" style={{ color: "var(--accent-text)" }}>
-              ★
+              <StarIcon size={14} filled />
             </span>
             <span className="font-mono tabular font-semibold text-text">{item.tmdbRating.toFixed(1)}</span>
             <span className="text-text-faint">/10 · media di TMDB</span>
@@ -409,9 +409,10 @@ function ItemDetail({ item }: { item: Item }) {
                   <button
                     type="button"
                     onClick={() => openEdit(item)}
-                    className="flex-1 rounded-md border border-dashed border-border-strong text-xs text-text-muted"
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-dashed border-border-strong text-xs text-text-muted"
                   >
-                    ★ Dai un voto
+                    <StarIcon size={14} />
+                    Dai un voto
                   </button>
                 )}
               </div>

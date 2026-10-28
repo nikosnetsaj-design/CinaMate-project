@@ -11,6 +11,7 @@ import {
   buildEntries,
   orderParts,
   sagaProgress,
+  type PartState,
   type SagaEntry,
   type WatchOrder,
 } from "../lib/sagas";
@@ -24,8 +25,16 @@ import { useMarathon } from "../store/useMarathon";
 import { useSagas, type SagaKey } from "../store/useSagas";
 import { PosterArt } from "./PosterArt";
 import { SagaTimeline } from "./SagaTimeline";
-import { ListIcon, PlayIcon, TimelineIcon } from "./icons";
+import { BackIcon, CheckIcon, ClockIcon, ListIcon, PlayIcon, PlusIcon, TimelineIcon } from "./icons";
 
+
+/** Lo stato di un capitolo, in un'icona: visto, in corso, in libreria, assente. */
+function PartStateIcon({ state }: { state: PartState }) {
+  if (state === "visto") return <CheckIcon size={14} />;
+  if (state === "in-visione") return <PlayIcon size={12} />;
+  if (state === "in-libreria") return <ClockIcon size={13} />;
+  return <PlusIcon size={14} />;
+}
 function ProgressRing({ pct, color }: { pct: number; color: string }) {
   const radius = 26;
   const circumference = 2 * Math.PI * radius;
@@ -120,7 +129,7 @@ function EntryRow({ entry, onOpen, onAdd, adding }: {
             color: meta.color,
           }}
         >
-          {adding ? "…" : meta.icon}
+          {adding ? "…" : <PartStateIcon state={entry.state} />}
         </span>
       </div>
     </li>
@@ -244,7 +253,7 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
         aria-label="Torna indietro"
         className="tap-target fixed left-3.5 top-3.5 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-md"
       >
-        ←
+        <BackIcon />
       </button>
 
       {/* `relative` so this paints above the positioned banner it overlaps:

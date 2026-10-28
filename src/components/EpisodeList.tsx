@@ -7,7 +7,7 @@ import { usePlayerSources } from "../store/usePlayerSources";
 import { getSeason, stillUrl, type TmdbEpisode } from "../lib/tmdb";
 import { countdown, daysBetweenToday } from "../lib/format";
 import { prefetchHandlers } from "../lib/prefetch";
-import { PlayIcon, CheckIcon } from "./icons";
+import { CheckIcon, PlayIcon, StarIcon } from "./icons";
 import type { Item } from "../types";
 
 /**
@@ -84,7 +84,7 @@ function EpisodeRow({
         <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[11px] text-text-faint">
           {episode.rating != null && (
             <span className="flex items-center gap-1">
-              <span style={{ color: "var(--yellow)" }}>★</span>
+              <span className="flex" style={{ color: "var(--yellow)" }}><StarIcon size={11} filled /></span>
               <span className="font-semibold text-text">{episode.rating.toFixed(1)}</span>
             </span>
           )}
@@ -265,7 +265,7 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
                       className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-sm text-text hover:bg-surface-hover"
                     >
                       <span className="w-4 shrink-0" style={{ color: "var(--accent-text)" }}>
-                        {s === season ? "✓" : ""}
+                        {s === season ? <CheckIcon size={14} /> : null}
                       </span>
                       Stagione {s}
                     </button>

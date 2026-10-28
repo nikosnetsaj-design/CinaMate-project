@@ -5,7 +5,7 @@ import { useFocusTrap } from "../lib/useFocusTrap";
 import { useLibrary } from "../store/useLibrary";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { PosterArt } from "./PosterArt";
-import { DiceIcon } from "./icons";
+import { CloseIcon, DiceIcon } from "./icons";
 import type { Item } from "../types";
 
 function pickRandom(items: Item[], exclude?: Item | null): Item | null {
@@ -57,7 +57,7 @@ function PickerModal({ onClose }: { onClose: () => void }) {
           aria-label="Chiudi"
           className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-border-strong text-text-muted"
         >
-          ✕
+          <CloseIcon size={16} />
         </button>
         <h2 id={titleId} className="font-display text-lg font-semibold text-text">
           Cosa guardo stasera?

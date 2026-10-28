@@ -7,6 +7,7 @@ import { useCatalogPreview } from "../store/useCatalogPreview";
 import { posterUrl } from "../lib/tmdb";
 import { paletteFor } from "../lib/palette";
 import type { Item } from "../types";
+import { CheckIcon } from "./icons";
 
 /**
  * Prequel e sequel come una linea da percorrere, non come un elenco.
@@ -91,7 +92,7 @@ function Chapter({ entry, current, onOpen }: { entry: SagaEntry; current: boolea
               className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold"
               style={{ background: "var(--status-done)", color: "var(--accent-contrast)" }}
             >
-              ✓
+              <CheckIcon size={12} />
             </span>
           )}
           {state === "assente" && (

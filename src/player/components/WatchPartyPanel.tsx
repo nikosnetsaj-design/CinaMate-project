@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { useWatchParty } from '../hooks/useWatchParty';
 import { CloseIcon } from './Icons';
+import { CrownIcon } from '../../components/icons';
 
 type Props = { watchParty: ReturnType<typeof useWatchParty> };
 
@@ -42,7 +43,10 @@ export default function WatchPartyPanel({ watchParty }: Props) {
       <ul className="pv-participants">
         {participants.map(p => (
           <li key={p.id}>
-            <span>{p.role === 'host' && '👑 '}{p.name}</span>
+            <span className="pv-participant-name">
+              {p.role === 'host' && <CrownIcon size={14} />}
+              {p.name}
+            </span>
             {role === 'host' && p.role !== 'host' && (
               <button className="pv-btn-tiny" onClick={() => kickParticipant(p.id)}>Rimuovi</button>
             )}

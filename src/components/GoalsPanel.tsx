@@ -4,6 +4,7 @@ import { GOAL_METRICS, GOAL_PERIODS, useGoals, type GoalMetric, type GoalPeriod 
 import { computeGoalProgress } from "../lib/goals";
 import { EmptyState } from "./EmptyState";
 import type { Item } from "../types";
+import { CloseIcon } from "./icons";
 
 function GoalCard({
   progress,
@@ -34,7 +35,7 @@ function GoalCard({
           aria-label="Elimina obiettivo"
           className="shrink-0 rounded-sm border border-border-strong px-2 py-1 text-xs text-text-muted hover:bg-surface-hover"
         >
-          ✕
+          <CloseIcon size={14} />
         </button>
       </div>
 

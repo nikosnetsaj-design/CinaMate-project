@@ -16,7 +16,7 @@ import { CastRow } from "./CastRow";
 import { TitleFacts } from "./TitleFacts";
 import { RelatedRow } from "./RelatedRow";
 import { WatchProvidersBlock } from "./WatchAndLinks";
-import { PlayIcon, PlusIcon } from "./icons";
+import { BackIcon, ChevronRightIcon, PlayIcon, PlusIcon, StarIcon } from "./icons";
 import type { Item } from "../types";
 
 /**
@@ -160,7 +160,7 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
         aria-label="Torna indietro"
         className="tap-target fixed left-3.5 top-3.5 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-md"
       >
-        ←
+        <BackIcon />
       </button>
 
       <div className="mx-auto max-w-3xl px-4 pb-28 pt-4 sm:px-6">
@@ -214,7 +214,8 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
               color: "var(--accent-text)",
             }}
           >
-            Ce l'hai già — apri la tua scheda →
+            Ce l'hai già — apri la tua scheda
+            <ChevronRightIcon />
           </button>
         ) : (
           <button
@@ -262,7 +263,7 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
         {item.tmdbRating != null && (
           <p className="mt-2.5 flex items-center gap-2 text-sm text-text-muted">
             <span className="text-base leading-none" style={{ color: "var(--accent-text)" }}>
-              ★
+              <StarIcon size={14} filled />
             </span>
             <span className="font-mono tabular font-semibold text-text">{item.tmdbRating.toFixed(1)}</span>
             <span className="text-text-faint">/10 · media di TMDB</span>
