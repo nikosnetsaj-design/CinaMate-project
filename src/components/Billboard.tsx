@@ -180,7 +180,9 @@ export function Billboard() {
 
           {featured.length > 1 && (
             <div className="mt-2 flex items-center justify-center gap-3 sm:justify-start">
-              <div className="flex items-center gap-2" role="tablist" aria-label="Proposte in vetrina">
+              {/* Il punto si vede da 8 px, si tocca da 24: il bersaglio è il
+                  bottone, il punto è solo il suo disegno. */}
+              <div className="-mx-2 flex items-center" role="tablist" aria-label="Proposte in vetrina">
                 {featured.map((entry, i) => (
                   <button
                     key={entry.item.id}
@@ -189,12 +191,17 @@ export function Billboard() {
                     aria-selected={i === index}
                     aria-label={`Vetrina ${i + 1} di ${featured.length}: ${entry.item.title}`}
                     onClick={() => setIndex(i)}
-                    className="h-2 rounded-full transition-all"
-                    style={{
-                      width: i === index ? 22 : 8,
-                      background: i === index ? "#fff" : "rgba(255,255,255,0.45)",
-                    }}
-                  />
+                    className="flex h-6 min-w-6 items-center justify-center rounded-full px-1"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="block h-2 rounded-full transition-all duration-300"
+                      style={{
+                        width: i === index ? 22 : 8,
+                        background: i === index ? "#fff" : "rgba(255,255,255,0.45)",
+                      }}
+                    />
+                  </button>
                 ))}
               </div>
 

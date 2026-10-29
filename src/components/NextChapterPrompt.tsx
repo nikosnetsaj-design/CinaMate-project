@@ -59,12 +59,11 @@ function Prompt({ finishedTitle, entry, onDismiss }: {
       exit={{ opacity: 0, y: 16 }}
       transition={{ type: "spring", stiffness: 340, damping: 30 }}
       role="status"
-      className="fixed inset-x-3 bottom-20 z-60 mx-auto max-w-md rounded-md border bg-surface p-3.5 shadow-[var(--shadow-lg)] sm:inset-x-6 lg:bottom-6 lg:left-auto lg:right-6"
-      style={{ borderColor: "color-mix(in srgb, var(--accent) 40%, transparent)" }}
+      className="fixed inset-x-3 bottom-20 z-60 mx-auto max-w-md rounded-lg bg-surface p-4 shadow-[var(--shadow-lg),0_0_0_1px_var(--separator)] sm:inset-x-6 lg:bottom-6 lg:left-auto lg:right-6"
     >
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs text-text-faint">
-          Hai finito <span className="font-semibold text-text-muted">{finishedTitle}</span>
+        <p className="text-xs text-text-muted">
+          Hai finito <span className="font-semibold text-text">{finishedTitle}</span>
         </p>
         <button
           type="button"

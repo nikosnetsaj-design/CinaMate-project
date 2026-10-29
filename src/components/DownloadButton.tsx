@@ -101,13 +101,13 @@ export function DownloadButton({ item }: { item: Item }) {
       </button>
 
       {picking && (
-        <div className="absolute inset-x-0 top-full z-10 mt-1 overflow-hidden rounded-md border border-border-strong bg-surface shadow-[var(--shadow-md)]">
+        <div className="absolute inset-x-0 top-full z-10 mt-1 overflow-hidden rounded-md bg-surface shadow-[var(--shadow-md),0_0_0_1px_var(--separator)]">
           {QUALITIES.map((q) => (
             <button
               key={q.id}
               type="button"
               onClick={() => void download(q.id)}
-              className="block w-full border-b border-border px-3.5 py-2.5 text-left text-sm text-text last:border-b-0 hover:bg-surface-hover"
+              className="block min-h-11 w-full px-4 py-2.5 text-left text-sm text-text hover:bg-surface-hover [&+&]:shadow-[inset_0_1px_0_var(--separator)]"
             >
               {q.label}
             </button>

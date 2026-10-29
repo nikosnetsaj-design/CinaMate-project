@@ -122,11 +122,11 @@ function EpisodeRow({
               : `Segna la serie come vista fino all'episodio ${episode.episodeNumber}`
           }
           title="Segna visto fino a qui"
-          className="flex h-8 w-8 items-center justify-center rounded-full border transition-colors"
+          className="icon-btn icon-btn-sm"
           style={
             watched
-              ? { borderColor: "var(--accent)", background: "var(--accent)", color: "var(--accent-contrast)" }
-              : { borderColor: "var(--border-strong)", color: "var(--text-faint)" }
+              ? { background: "var(--accent)", color: "var(--accent-contrast)" }
+              : { background: "var(--surface-2)", color: "var(--text-muted)" }
           }
         >
           <CheckIcon size={15} />
@@ -245,7 +245,7 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
               <ul
                 role="listbox"
                 aria-label="Stagioni"
-                className="absolute left-0 top-full z-40 mt-1 max-h-64 min-w-44 overflow-y-auto rounded-md border border-border-strong bg-surface py-1 shadow-[var(--shadow-md)]"
+                className="absolute left-0 top-full z-40 mt-1 max-h-64 min-w-44 overflow-y-auto rounded-md bg-surface py-1 shadow-[var(--shadow-md),0_0_0_1px_var(--separator)]"
               >
                 {seasons.map((s) => (
                   <li key={s}>

@@ -73,17 +73,12 @@ function EntryRow({ entry, onOpen, onAdd, adding }: {
   return (
     <li>
       <div
-        className="flex items-center gap-3 rounded-md border p-2.5 transition-colors"
-        style={{
-          // Watched chapters are lit rather than dimmed: the point of the list
-          // is to see how much of the saga is already behind you.
-          borderColor: watched ? "color-mix(in srgb, var(--status-done) 34%, transparent)" : "var(--border)",
-          background: watched ? "color-mix(in srgb, var(--status-done) 9%, transparent)" : "var(--surface)",
-        }}
+        className="flex items-center gap-3 rounded-md bg-surface-2 p-2.5 transition-colors"
       >
+        {/* Il capitolo visto si riconosce dal suo segno, a destra, e dal
+            numero pieno: non da una scheda verde fra schede grigie. */}
         <span
-          className="w-6 shrink-0 text-center font-mono tabular text-base font-semibold"
-          style={{ color: watched ? "var(--status-done)" : "var(--text-faint)" }}
+          className={`w-6 shrink-0 text-center tabular text-base font-semibold ${watched ? "text-text" : "text-text-faint"}`}
         >
           {entry.number}
         </span>
@@ -328,12 +323,7 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
                       onClick={() => setPreferredOrder(sagaKey, o.id)}
                       aria-pressed={active}
                       title={o.hint}
-                      className="rounded-full border px-3 py-1.5 text-xs font-medium transition-colors"
-                      style={
-                        active
-                          ? { borderColor: "transparent", background: accent, color: "var(--accent-contrast)" }
-                          : { borderColor: "var(--border-strong)", color: "var(--text-muted)" }
-                      }
+                      className="chip"
                     >
                       {o.label}
                     </button>

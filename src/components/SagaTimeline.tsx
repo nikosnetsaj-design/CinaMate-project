@@ -45,7 +45,7 @@ export function SagaTimeline({
               type="button"
               onClick={() => onSelect(entry)}
               aria-label={entry.item ? `Apri dettagli di ${entry.part.title}` : `Aggiungi ${entry.part.title} alla libreria`}
-              className="flex min-w-0 flex-1 items-center gap-3 rounded-md border border-border bg-surface p-2.5 text-left transition-colors hover:bg-surface-hover"
+              className="flex min-w-0 flex-1 items-center gap-3 rounded-md bg-surface-2 p-2.5 text-left transition-colors hover:bg-surface-hover"
             >
               <PosterArt
                 item={{ title: entry.part.title, kind: "film", posterPath: entry.part.posterPath }}
@@ -54,8 +54,8 @@ export function SagaTimeline({
                 className="w-9 shrink-0"
               />
               <div className="min-w-0 flex-1">
-                <p className="truncate font-display text-sm font-semibold text-text">{entry.part.title}</p>
-                <p className="mt-0.5 font-mono tabular text-xs text-text-faint">
+                <p className="truncate text-sm font-medium text-text">{entry.part.title}</p>
+                <p className="mt-0.5 tabular text-xs text-text-muted">
                   {entry.part.year ?? "in arrivo"} · {meta.label}
                 </p>
               </div>

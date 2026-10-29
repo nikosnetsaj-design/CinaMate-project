@@ -49,7 +49,7 @@ function PickerModal({ onClose }: { onClose: () => void }) {
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.96 }}
         transition={{ type: "spring", stiffness: 320, damping: 28 }}
-        className="relative z-10 w-full max-w-xs rounded-lg border border-border bg-surface p-6 text-center shadow-[var(--shadow-lg)]"
+        className="relative z-10 w-full max-w-xs rounded-lg bg-surface p-6 text-center shadow-[var(--shadow-lg)]"
       >
         <button
           type="button"

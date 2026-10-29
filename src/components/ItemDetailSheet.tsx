@@ -272,9 +272,11 @@ function ItemDetail({ item }: { item: Item }) {
           Maggiori informazioni
         </button>
 
+        {/* Gli stessi segmenti di Tu, Cerca e Scopri: un modo solo, in tutta
+            l'app, di dire in quale parte di una cosa ti trovi. */}
         <div
           ref={tabsRef}
-          className="mt-5 flex gap-1 border-b border-border scroll-mt-4"
+          className="no-scrollbar mt-6 flex scroll-mt-4 gap-2 overflow-x-auto"
           role="tablist"
           aria-label="Sezioni del titolo"
         >
@@ -285,17 +287,14 @@ function ItemDetail({ item }: { item: Item }) {
               role="tab"
               aria-selected={tab === t.id}
               onClick={() => setTab(t.id)}
-              className={`-mb-px rounded-t-sm border-b-2 px-3.5 py-2 text-sm font-medium transition-colors ${
-                tab === t.id ? "text-text" : "border-transparent text-text-faint hover:text-text-muted"
-              }`}
-              style={tab === t.id ? { borderColor: "var(--accent)" } : undefined}
+              className="chip"
             >
               {t.label}
             </button>
           ))}
         </div>
 
-        <div className="mt-4">
+        <div className="mt-5">
           {tab === "episodi" && (
             <div className="flex flex-col gap-4">
               <EpisodeList item={item} onNavigate={close} />
@@ -366,7 +365,7 @@ function ItemDetail({ item }: { item: Item }) {
               </div>
 
               <div className="mt-4 flex gap-3">
-                <div className="flex flex-1 items-center justify-between gap-3 rounded-lg bg-surface p-3.5 pl-4 shadow-[var(--shadow-sm)]">
+                <div className="flex flex-1 items-center justify-between gap-3 rounded-lg bg-surface-2 p-3 pl-4">
                   <div>
                     <span className="block text-sm font-medium text-text">Rivisto</span>
                     <span className="tabular text-sm text-text-muted">
@@ -379,7 +378,7 @@ function ItemDetail({ item }: { item: Item }) {
                       onClick={() => setRewatch(item.id, (item.rewatch || 0) - 1)}
                       aria-label="Una volta in meno"
                       disabled={(item.rewatch || 0) === 0}
-                      className="icon-btn icon-btn-filled disabled:opacity-40"
+                      className="icon-btn bg-surface-hover disabled:opacity-40"
                     >
                       <MinusIcon />
                     </button>
@@ -387,7 +386,7 @@ function ItemDetail({ item }: { item: Item }) {
                       type="button"
                       onClick={() => setRewatch(item.id, (item.rewatch || 0) + 1)}
                       aria-label="Una volta in più"
-                      className="icon-btn icon-btn-filled"
+                      className="icon-btn bg-surface-hover"
                     >
                       <PlusIcon />
                     </button>

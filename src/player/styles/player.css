@@ -915,6 +915,13 @@
 }
 .pv-icon-btn:hover { background: rgba(245, 241, 232, 0.1); }
 .pv-icon-btn.active { color: var(--pv-accent); }
+/* Sul telefono i comandi si stringono a 28 px per stare in una riga: il
+   bersaglio si allunga in verticale fino a 44, dove c'è spazio, senza
+   sovrapporsi ai vicini di lato. */
+.pv-icon-btn,
+.pv-action { position: relative; }
+.pv-icon-btn::after,
+.pv-action::after { content: ""; position: absolute; inset: -8px 0; }
 
 .pv-volume { display: flex; align-items: center; gap: 4px; }
 .pv-volume input[type='range'] { width: 70px; accent-color: var(--pv-accent); }

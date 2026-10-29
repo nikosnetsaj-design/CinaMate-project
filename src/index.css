@@ -320,14 +320,18 @@
 }
 
 /*
- * Fuori dai livelli, quindi batte ogni classe `border-…`: è il motivo per cui
- * i bordi colorati dell'app sono scritti in `style`. Resta qui finché i
- * componenti non hanno perso le cornici che non servono — le 137
- * `border-border-strong` scritte in giro non si sono mai viste, e liberarle
- * tutte insieme renderebbe l'app più bordata, non meno.
+ * Il colore di partenza dei bordi, dentro `@layer base`: viene dopo il
+ * preflight di Tailwind (che lo rimetterebbe a `currentColor`) e prima delle
+ * classi, che così tornano a valere. Stava fuori dai livelli e batteva ogni
+ * `border-…`: le 137 `border-border-strong` sparse non si erano mai viste.
+ * Adesso le cornici che non servivano non ci sono più, e quelle rimaste — il
+ * cerchio bianco del play sopra un'immagine, l'anello dell'avatar — hanno
+ * finalmente il colore che dichiarano.
  */
-* {
-  border-color: var(--border);
+@layer base {
+  * {
+    border-color: var(--border);
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -941,19 +945,6 @@ h1, h2, h3, .font-display {
   outline: none;
 }
 
-/*
- * …e il contenitore che quel fuoco lo mostra al posto suo.
- *
- * Anche questa sta fuori dai layer, e per la stessa ragione della regola qui
- * sopra: `* { border-color: var(--border) }` è dichiarata fuori da ogni layer
- * e per la cascata batte qualunque utility `border-…`, che sta invece dentro
- * `@layer utilities`. È il motivo per cui in tutta l'app i bordi colorati si
- * scrivono in `style`, e perché questa riga non poteva essere una classe
- * Tailwind.
- */
-.focus-shell:focus-within {
-  border-color: var(--accent);
-}
 
 /*
  * Modalità televisore: si guarda da tre metri, non da cinquanta centimetri.

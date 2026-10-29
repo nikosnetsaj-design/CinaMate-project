@@ -18,8 +18,6 @@ function linkLabel(url: string): string {
   }
 }
 
-const CHIP = "rounded-full px-2.5 py-1 text-xs";
-
 /**
  * L'icona del servizio, grande abbastanza da riconoscerla senza leggerla.
  *
@@ -41,7 +39,7 @@ function ProviderTile({ provider, title, onOpen }: { provider: TmdbWatchProvider
   );
 
   const shell =
-    "block h-14 w-14 shrink-0 overflow-hidden rounded-[14px] border border-border-strong bg-surface-2 transition-transform";
+    "block h-14 w-14 shrink-0 overflow-hidden rounded-[14px] border bg-surface-2 transition-transform";
 
   return link ? (
     <a
@@ -191,8 +189,7 @@ function WatchProviders({ item }: { item: Item }) {
           target="_blank"
           rel="noopener noreferrer"
           title={`Apri ${item.title} su ${own.service}`}
-          className={`${CHIP} mt-1.5 inline-flex items-center gap-1 border border-border-strong font-medium hover:bg-surface-hover`}
-          style={{ color: "var(--accent-text)" }}
+          className="chip mt-1.5 text-accent-text"
         >
           Apri su {own.service}
           <ExternalIcon size={12} />
@@ -260,10 +257,9 @@ function LinkHostSearch({ item }: { item: Item }) {
                 openViewer(url, { itemId: item.id, title: item.title });
               }}
               title={url}
-              className={`${CHIP} border border-border-strong font-medium hover:bg-surface-hover`}
-              style={{ color: "var(--accent-text)" }}
+              className="chip text-accent-text"
             >
-              {hostLabel(effectiveUrl(host))} ⧉
+              {hostLabel(effectiveUrl(host))}
             </button>
           );
         })}
