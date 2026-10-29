@@ -3,7 +3,7 @@ import { useTheme } from "../store/useTheme";
 import { useCommandPalette } from "../store/useCommandPalette";
 import { useAddSheet } from "../store/useAddSheet";
 import { useSettingsSheet } from "../store/useSettingsSheet";
-import { prefetchHandlers } from "../lib/prefetch";
+import { prefetchHandlers, settingsPrefetchHandlers } from "../lib/prefetch";
 import { AlertsBell, QuickMenu } from "./TopBar";
 import { CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, PersonIcon, PlusIcon, ReelMark, SearchIcon, SparkleIcon, StackIcon, SunIcon } from "./icons";
 
@@ -160,6 +160,7 @@ export function Nav() {
           <button
             type="button"
             onClick={() => openSettings()}
+            {...settingsPrefetchHandlers()}
             aria-label="Impostazioni"
             className="icon-btn icon-btn-filled icon-btn-sm"
           >

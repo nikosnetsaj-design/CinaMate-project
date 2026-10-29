@@ -14,6 +14,7 @@ import { effectiveUrl, hostLabel, withProtocol } from "../lib/linkHost";
 import { clearTmdbCaches } from "../lib/tmdb";
 import { countdown, dayLabel } from "../lib/format";
 import { BellIcon, ChevronRightIcon, DotsIcon, GearIcon, GlobeIcon, LinkIcon, MoonIcon, PersonIcon, PlusIcon, PulseIcon, RefreshIcon, SunIcon } from "./icons";
+import { settingsPrefetchHandlers } from "../lib/prefetch";
 
 /**
  * I tre controlli in cima: i generi, le novità, il menu.
@@ -300,6 +301,9 @@ export function QuickMenu() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
+        // Il menu porta alle Impostazioni: aprirlo è l'intenzione che basta
+        // per cominciare a scaricarle, prima ancora di sceglierle.
+        {...settingsPrefetchHandlers()}
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label="Altro"

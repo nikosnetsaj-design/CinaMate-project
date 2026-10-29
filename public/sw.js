@@ -90,6 +90,7 @@ self.addEventListener('message', (event) => {
    * The page knows precisely what it loaded, so it sends the list.
    */
   if (event.data && event.data.type === 'cache-assets' && Array.isArray(event.data.urls)) {
+    const keep = Array.isArray(event.data.keep) ? event.data.keep : null;
     event.waitUntil(
       caches.open(ASSET_CACHE).then(async (cache) => {
         await Promise.all(
@@ -102,6 +103,32 @@ self.addEventListener('message', (event) => {
             }
           }),
         );
+        /*
+         * La pulizia delle versioni passate. Ogni rilascio porta file con un
+         * hash nuovo, e quelli vecchi restavano in questa cache per sempre:
+         * un mega a versione, nello stesso spazio in cui vivono i video
+         * scaricati. La pagina manda l'elenco completo dei file della sua
+         * versione (`offline-assets.json`, scritto dal build) e qui si toglie
+         * tutto ciò che non ci compare — solo i file del build: le copertine
+         * stanno in un'altra cache.
+         */
+        if (keep) {
+          const wanted = new Set(
+            [...keep, ...event.data.urls].map((url) => {
+              const u = new URL(url, SCOPE);
+              return u.origin + u.pathname;
+            }),
+          );
+          const entries = await cache.keys();
+          await Promise.all(
+            entries
+              .filter((request) => {
+                const url = new URL(request.url);
+                return url.origin === SCOPE.origin && !wanted.has(url.origin + url.pathname);
+              })
+              .map((request) => cache.delete(request)),
+          );
+        }
       }),
     );
   }
@@ -126,6 +153,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(networkFirst(request));
     return;
   }
+
+  // L'elenco dei file della versione corrente: da cache sarebbe sempre quello
+  // della prima versione vista, e la pulizia butterebbe via i file giusti.
+  if (url.origin === SCOPE.origin && url.pathname.endsWith('/offline-assets.json')) return;
 
   if (url.hostname === 'image.tmdb.org') {
     event.respondWith(cacheFirst(request, IMAGE_CACHE, MAX_IMAGES));
