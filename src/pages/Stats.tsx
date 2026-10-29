@@ -12,15 +12,91 @@ import { EmptyState } from "../components/EmptyState";
 import { Nastro } from "../components/Nastro";
 import type { Item } from "../types";
 import { AchievementIcon } from "../components/AchievementIcon";
+import { RowHeader } from "../components/RowHeader";
+import { StatusMark } from "../components/StatusChip";
+import { CheckIcon } from "../components/icons";
 
 const KIND_LABELS: Record<string, string> = { film: "Film", serie: "Serie TV", anime: "Anime", doc: "Documentario" };
-const KIND_COLORS = ["var(--accent)", "var(--status-watching)", "var(--danger)", "var(--status-done)"];
+/*
+ * I formati in una barra sola: l'accento al più frequente, poi neutri che
+ * schiariscono. Quattro colori diversi — accento, verde, rosso, blu — dicevano
+ * quattro cose diverse, e il rosso in questa app vuol dire «attenzione».
+ */
+const KIND_COLORS = [
+  "var(--accent)",
+  "color-mix(in srgb, var(--accent) 45%, var(--surface-2))",
+  "var(--text-muted)",
+  "color-mix(in srgb, var(--text-faint) 45%, var(--surface-2))",
+];
 
-function Card({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-lg bg-surface-2 p-4">{children}</div>;
+/** A titled block of the tab: the heading, then whatever it holds. */
+function Section({ title, trailing, children }: { title: string; trailing?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <section className="flex flex-col gap-4">
+      <RowHeader title={title} trailing={trailing} />
+      {children}
+    </section>
+  );
 }
-function Label({ children }: { children: string }) {
-  return <span className="mb-2 block text-xs font-medium text-text-faint">{children}</span>;
+
+/** One surface, the content directly on it — never a card inside a card. */
+function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <div className={`rounded-lg bg-surface p-4 shadow-[var(--shadow-sm)] ${className}`}>{children}</div>;
+}
+
+/** Una cifra della fascia: etichetta prima nel codice, numero prima a vista. */
+function Figure({
+  value,
+  label,
+  mark,
+  className = "",
+}: {
+  value: React.ReactNode;
+  label: string;
+  mark?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`flex min-w-0 flex-col-reverse justify-end gap-0.5 px-4 py-3.5 ${className}`}>
+      <dt className="flex min-w-0 items-center gap-1.5 text-xs text-text-muted">
+        {mark}
+        <span>{label}</span>
+      </dt>
+      <dd className="t-figure truncate text-text">{value}</dd>
+    </div>
+  );
+}
+
+/*
+ * La fascia di cifre: una superficie sola, un filo fra le colonne e, quando
+ * va a capo, uno fra le righe. I fili si calcolano dalla posizione perché il
+ * numero di celle cambia (il genere e il mese più visti possono mancare).
+ */
+const FIGURES = "rounded-lg bg-surface shadow-[var(--shadow-sm)]";
+const LEFT = "shadow-[inset_1px_0_0_var(--separator)]";
+const TOP = "shadow-[inset_0_1px_0_var(--separator)]";
+const BOTH = "shadow-[inset_1px_0_0_var(--separator),inset_0_1px_0_var(--separator)]";
+const SM_LEFT = "sm:shadow-[inset_1px_0_0_var(--separator)]";
+
+function hairline(index: number, cols: number) {
+  const left = index % cols !== 0;
+  const top = index >= cols;
+  return left && top ? BOTH : left ? LEFT : top ? TOP : "";
+}
+
+/** A ranked bar: the label, the count, and how it compares with the first. */
+function RankBar({ label, n, max }: { label: string; n: number; max: number }) {
+  return (
+    <>
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="truncate text-sm text-text">{label}</span>
+        <span className="shrink-0 text-xs tabular text-text-faint">{n}</span>
+      </div>
+      <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-surface-2">
+        <div className="h-full rounded-full bg-text-muted" style={{ width: `${(n / max) * 100}%` }} />
+      </div>
+    </>
+  );
 }
 
 /** Ranked list of people, each a way into their filmography. */
@@ -30,26 +106,21 @@ function PeopleCard({ title, rows }: { title: string; rows: [string, number][] }
   const max = rows[0][1];
 
   return (
-    <Card>
-      <Label>{title}</Label>
-      {rows.slice(0, 6).map(([name, n]) => (
-        <button
-          key={name}
-          type="button"
-          onClick={() => openPerson(name)}
-          aria-label={`Apri la scheda di ${name}`}
-          className="mb-2 block w-full text-left last:mb-0"
-        >
-          <div className="mb-1 flex justify-between gap-3">
-            <span className="truncate text-xs text-text">{name}</span>
-            <span className="shrink-0 font-mono tabular text-xs text-text-faint">{n}</span>
-          </div>
-          <div className="h-1 overflow-hidden rounded-full bg-surface-hover">
-            <div className="h-full rounded-full opacity-90" style={{ width: `${(n / max) * 100}%`, background: "var(--cyan)" }} />
-          </div>
-        </button>
-      ))}
-    </Card>
+    <Section title={title}>
+      <Panel className="flex flex-col gap-1 py-2">
+        {rows.slice(0, 6).map(([name, n]) => (
+          <button
+            key={name}
+            type="button"
+            onClick={() => openPerson(name)}
+            aria-label={`Apri la scheda di ${name}`}
+            className="-mx-2 block rounded-sm px-2 py-2 text-left transition-colors hover:bg-surface-2"
+          >
+            <RankBar label={name} n={n} max={max} />
+          </button>
+        ))}
+      </Panel>
+    </Section>
   );
 }
 
@@ -62,30 +133,31 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
   const yir = computeYearInReview(items, history, year);
 
   return (
-    <div className="flex flex-col gap-4">
-      <Card>
-        <Label>Il nastro</Label>
-        {/* La finestra è l'anno scelto qui sotto, non "gli ultimi 365 giorni":
-            la didascalia diceva «del 2026» sopra un nastro che a febbraio era
-            per tre quarti 2025, e il riquadro accanto contava l'anno solare.
-            Due numeri diversi con la stessa etichetta. */}
-        <Nastro
-          from={`${year}-01-01`}
-          to={`${year}-12-31`}
-          height={72}
-          caption={`Un filo per ogni sessione del ${year}`}
-        />
-      </Card>
+    <div className="flex flex-col gap-10">
+      <Section title="Il nastro">
+        <Panel>
+          {/* La finestra è l'anno scelto qui sotto, non "gli ultimi 365 giorni":
+              la didascalia diceva «del 2026» sopra un nastro che a febbraio era
+              per tre quarti 2025, e il riquadro accanto contava l'anno solare.
+              Due numeri diversi con la stessa etichetta. */}
+          <Nastro
+            from={`${year}-01-01`}
+            to={`${year}-12-31`}
+            height={72}
+            caption={`Un filo per ogni sessione del ${year}`}
+          />
+        </Panel>
+      </Section>
 
-      <Card>
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <span className="text-xs font-medium text-text-faint">Il tuo anno</span>
-          {years.length > 1 && (
+      <Section
+        title="Il tuo anno"
+        trailing={
+          years.length > 1 && (
             <select
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
               aria-label="Anno da mostrare"
-              className="field field-sm w-auto font-mono tabular"
+              className="field field-sm w-auto shrink-0 tabular"
             >
               {years.map((y) => (
                 <option key={y} value={y}>
@@ -93,178 +165,146 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
                 </option>
               ))}
             </select>
-          )}
-        </div>
+          )
+        }
+      >
         {yir.watchedCount === 0 ? (
           <p className="text-sm text-text-muted">Nessuna attività registrata nel {year}.</p>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="text-center">
-              <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--accent-text)" }}>
-                {yir.watchedCount}
-              </div>
-              <div className="text-xs text-text-faint">titoli completati</div>
-            </div>
-            <div className="text-center">
-              <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--status-watching)" }}>
-                {yir.hours}h
-              </div>
-              <div className="text-xs text-text-faint">ore guardate</div>
-            </div>
-            {yir.topGenre && (
-              <div className="text-center">
-                <div className="font-display text-lg font-bold text-text">{yir.topGenre}</div>
-                <div className="text-xs text-text-faint">genere top</div>
-              </div>
-            )}
-            {yir.busiestMonth && (
-              <div className="text-center">
-                <div className="font-display text-lg font-bold text-text">{yir.busiestMonth}</div>
-                <div className="text-xs text-text-faint">mese più attivo</div>
-              </div>
-            )}
-          </div>
+          <dl className={`${FIGURES} grid grid-cols-2 sm:grid-cols-4`}>
+            {[
+              { value: yir.watchedCount, label: "titoli completati" },
+              { value: `${yir.hours} h`, label: "ore guardate" },
+              ...(yir.topGenre ? [{ value: yir.topGenre, label: "genere più visto" }] : []),
+              ...(yir.busiestMonth ? [{ value: yir.busiestMonth, label: "mese più attivo" }] : []),
+            ].map((f, i) => (
+              // Due colonne sul telefono, una riga sola da 640 px.
+              <Figure key={f.label} value={f.value} label={f.label} className={`${hairline(i, 2)} ${i > 0 ? SM_LEFT : ""}`} />
+            ))}
+          </dl>
         )}
-      </Card>
+      </Section>
 
-      <div className="rounded-lg bg-surface-2 p-6 text-center">
-        <span className="text-xs text-text-faint">Tempo totale davanti allo schermo</span>
-        <div className="mt-1.5 font-mono tabular text-5xl font-semibold" style={{ color: "var(--accent-text)" }}>
+      <section>
+        <p className="text-sm text-text-muted">Tempo totale davanti allo schermo</p>
+        <p className="t-stat mt-1 text-text">
           {stats.hours}
-          <span className="text-2xl">h</span>
-        </div>
-        <p className="mt-1.5 text-sm text-text-muted">circa {stats.days} giorni pieni</p>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2.5">
-        <div className="rounded-lg bg-surface-2 p-3.5 text-center">
-          <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--status-done)" }}>
-            {stats.byStatus.Visto}
-          </div>
-          <div className="mt-0.5 text-xs text-text-faint">visti</div>
-        </div>
-        <div className="rounded-lg bg-surface-2 p-3.5 text-center">
-          <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--status-watching)" }}>
-            {stats.byStatus["In visione"]}
-          </div>
-          <div className="mt-0.5 text-xs text-text-faint">in corso</div>
-        </div>
-        <div className="rounded-lg bg-surface-2 p-3.5 text-center">
-          <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--accent-text)" }}>
-            {stats.byStatus["Da vedere"]}
-          </div>
-          <div className="mt-0.5 text-xs text-text-faint">da vedere</div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2.5">
-        <div className="rounded-lg bg-surface-2 p-3.5 text-center">
-          <div className="font-mono tabular text-2xl font-semibold text-text">{stats.filmsCompleted}</div>
-          <div className="mt-0.5 text-xs text-text-faint">film completati</div>
-        </div>
-        <div className="rounded-lg bg-surface-2 p-3.5 text-center">
-          <div className="font-mono tabular text-2xl font-semibold text-text">{stats.seriesCompleted}</div>
-          <div className="mt-0.5 text-xs text-text-faint">serie completate</div>
-        </div>
-        <div className="rounded-lg bg-surface-2 p-3.5 text-center">
-          <div className="font-mono tabular text-2xl font-semibold text-text">{stats.episodesWatched}</div>
-          <div className="mt-0.5 text-xs text-text-faint">episodi visti</div>
-        </div>
-      </div>
-
-      <Card>
-        <Label>Come voti</Label>
-        <div className="flex h-20 items-end gap-1">
-          {stats.voteDist.map(({ v, n }) => (
-            <div key={v} className="flex flex-1 flex-col items-center gap-1">
-              {n > 0 && <span className="text-[9px] text-text-faint">{n}</span>}
-              <div
-                className="w-full rounded-t-xs"
-                style={{ height: `${Math.max((n / maxVoteCount) * 48, n > 0 ? 3 : 0)}px`, background: voteColor(v) }}
-              />
-              <span className="text-[9px] text-text-faint">{v}</span>
-            </div>
-          ))}
-        </div>
-        <p className="mt-3 text-center text-xs text-text-muted">
-          Media {stats.avgVote != null ? stats.avgVote.toFixed(1) : "—"} su {items.filter((i) => i.vote != null).length} titoli votati
+          <span className="ml-1 text-[0.5em] font-medium text-text-faint">h</span>
         </p>
-      </Card>
+        <p className="mt-2 text-sm text-text-muted">circa {stats.days} giorni pieni</p>
+      </section>
 
-      <Card>
-        <Label>Formati</Label>
-        <div className="mb-2.5 flex h-2.5 overflow-hidden rounded-full">
-          {stats.byKind.map(([k, n], idx) => (
-            <div key={k} style={{ width: `${(n / stats.total) * 100}%`, background: KIND_COLORS[idx % KIND_COLORS.length] }} />
-          ))}
-        </div>
-        <div className="flex flex-wrap gap-3">
-          {stats.byKind.map(([k, n], idx) => (
-            <div key={k} className="flex items-center gap-1.5 text-xs text-text-muted">
-              <span className="h-2 w-2 rounded-xs" style={{ background: KIND_COLORS[idx % KIND_COLORS.length] }} />
-              {KIND_LABELS[k]} {n}
-            </div>
-          ))}
-        </div>
-      </Card>
+      {/* Sei totali, una fascia: gli stati sopra (con il loro segno, lo
+          stesso delle copertine), i completamenti sotto. */}
+      <dl className={`${FIGURES} grid grid-cols-3`}>
+        {[
+          { value: stats.byStatus.Visto, label: "visti", mark: <StatusMark status="Visto" /> },
+          { value: stats.byStatus["In visione"], label: "in corso", mark: <StatusMark status="In visione" /> },
+          { value: stats.byStatus["Da vedere"], label: "da vedere", mark: <StatusMark status="Da vedere" /> },
+          { value: stats.filmsCompleted, label: "film completati" },
+          { value: stats.seriesCompleted, label: "serie completate" },
+          { value: stats.episodesWatched, label: "episodi visti" },
+        ].map((f, i) => (
+          <Figure key={f.label} value={f.value} label={f.label} mark={f.mark} className={hairline(i, 3)} />
+        ))}
+      </dl>
+
+      <Section title="Come voti">
+        <Panel>
+          <p className="text-xs text-text-muted">
+            Media su {items.filter((i) => i.vote != null).length} titoli votati
+          </p>
+          <p className="t-figure text-text">{stats.avgVote != null ? stats.avgVote.toFixed(1) : "—"}</p>
+          {/* I colori dei voti sono gli stessi del selettore: qui raccontano
+              la stessa scala, quindi è l'unico posto dove li si vede. */}
+          <div className="mt-4 flex h-24 items-end gap-1">
+            {stats.voteDist.map(({ v, n }) => (
+              <div key={v} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
+                <span className="h-4 text-xs tabular text-text-faint">{n > 0 ? n : ""}</span>
+                <div
+                  className="w-full max-w-7 rounded-t-[4px]"
+                  style={{
+                    height: `${n > 0 ? Math.max((n / maxVoteCount) * 52, 3) : 2}px`,
+                    background: n > 0 ? voteColor(v) : "var(--surface-2)",
+                  }}
+                />
+                <span className="text-xs tabular text-text-faint">{v}</span>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      </Section>
+
+      <Section title="Formati">
+        <Panel>
+          <div className="flex h-2.5 gap-0.5 overflow-hidden rounded-full">
+            {stats.byKind.map(([k, n], idx) => (
+              <div key={k} style={{ width: `${(n / stats.total) * 100}%`, background: KIND_COLORS[idx % KIND_COLORS.length] }} />
+            ))}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+            {stats.byKind.map(([k, n], idx) => (
+              <div key={k} className="flex items-center gap-1.5 text-sm text-text-muted">
+                <span className="h-2 w-2 rounded-full" style={{ background: KIND_COLORS[idx % KIND_COLORS.length] }} />
+                {KIND_LABELS[k]}
+                <span className="tabular text-text">{n}</span>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      </Section>
 
       {stats.byGenre.length > 0 && (
-        <Card>
-          <Label>Generi più frequenti</Label>
-          {stats.byGenre.slice(0, 6).map(([g, n]) => (
-            <div key={g} className="mb-2 last:mb-0">
-              <div className="mb-1 flex justify-between">
-                <span className="text-xs text-text">{g}</span>
-                <span className="text-xs text-text-faint">{n}</span>
+        <Section title="Generi più frequenti">
+          <Panel className="flex flex-col gap-1 py-2">
+            {stats.byGenre.slice(0, 6).map(([g, n]) => (
+              <div key={g} className="py-2">
+                <RankBar label={g} n={n} max={stats.byGenre[0][1]} />
               </div>
-              <div className="h-1 overflow-hidden rounded-full bg-surface-hover">
-                <div className="h-full rounded-full opacity-90" style={{ width: `${(n / stats.byGenre[0][1]) * 100}%`, background: "var(--accent)" }} />
-              </div>
-            </div>
-          ))}
-        </Card>
+            ))}
+          </Panel>
+        </Section>
       )}
 
       <PeopleCard title="Attori più visti" rows={stats.byActor} />
       <PeopleCard title="Registi più visti" rows={stats.byDirector} />
 
-      <Card>
-        <Label>Piattaforme</Label>
+      <Section title="Piattaforme">
         <div className="flex flex-wrap gap-2">
           {stats.byPlatform.map(([p, n]) => (
-            <div key={p} className="flex items-center gap-1.5 rounded-full bg-surface-hover px-2.5 py-1 text-xs">
-              <span className="text-text-muted">{p}</span>
-              <span className="font-semibold text-text">{n}</span>
+            <div key={p} className="flex h-9 items-center gap-2 rounded-full bg-surface-2 px-3.5 text-sm">
+              <span className="text-text">{p}</span>
+              <span className="tabular text-text-muted">{n}</span>
             </div>
           ))}
         </div>
-      </Card>
+      </Section>
 
       {stats.top.length > 0 && (
-        <Card>
-          <Label>La tua top 5</Label>
-          {stats.top.map((item, idx) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => openItem(item)}
-              aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
-              className="mb-2.5 flex w-full items-center gap-2.5 text-left last:mb-0"
-            >
-              <span className="w-4 font-mono tabular text-base font-semibold" style={{ color: idx === 0 ? "var(--accent-text)" : "var(--text-faint)" }}>
-                {idx + 1}
-              </span>
-              <PosterArt item={item} size="sm" showTitle={false} className="w-8 shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold text-text">{item.title}</div>
-                <div className="text-xs text-text-faint">
-                  {item.year} · {item.genre}
-                </div>
-              </div>
-              <VoteBadge vote={item.vote} />
-            </button>
-          ))}
-        </Card>
+        <Section title="La tua top 5">
+          <ol className="list-group" style={{ "--row-inset": "92px" } as React.CSSProperties}>
+            {stats.top.map((item, idx) => (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  onClick={() => openItem(item)}
+                  aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
+                  className="list-row"
+                >
+                  <span className="w-5 shrink-0 text-center text-sm font-medium tabular text-text-faint">{idx + 1}</span>
+                  <PosterArt item={item} size="sm" showTitle={false} className="w-8 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-text">{item.title}</div>
+                    <div className="truncate text-xs text-text-muted">
+                      {item.year} · {item.genre}
+                    </div>
+                  </div>
+                  <VoteBadge vote={item.vote} />
+                </button>
+              </li>
+            ))}
+          </ol>
+        </Section>
       )}
     </div>
   );
@@ -285,41 +325,47 @@ export function DiaryTab({ items, openItem }: { items: Item[]; openItem: (item: 
 
   let lastMonth = "";
   return (
-    <div className="flex flex-col gap-1">
-      {days.map(({ date, entries }) => {
+    <div className="flex flex-col">
+      {days.map(({ date, entries }, index) => {
         const d = new Date(`${date}T00:00:00`);
         const monthLabel = new Intl.DateTimeFormat("it-IT", { month: "long", year: "numeric" }).format(d);
         const showMonth = monthLabel !== lastMonth;
         lastMonth = monthLabel;
-        const dayLabel = new Intl.DateTimeFormat("it-IT", { weekday: "short", day: "numeric" }).format(d);
+        const weekday = new Intl.DateTimeFormat("it-IT", { weekday: "short" }).format(d);
         return (
           <div key={date}>
             {showMonth && (
-              <p className="mb-1 mt-4 text-xs font-semibold text-text-faint first:mt-0">{monthLabel}</p>
+              <h2 className={`t-title mb-2 text-text first-letter:uppercase ${index === 0 ? "" : "mt-8"}`}>{monthLabel}</h2>
             )}
-            <div className="flex gap-3 border-b border-border py-2.5 last:border-0">
-              <span className="w-11 shrink-0 pt-1 text-center text-xs capitalize text-text-faint">{dayLabel}</span>
-              <div className="flex flex-1 flex-col gap-1.5">
-                {entries.map(({ item, action, count }) => (
-                  <button
-                    key={`${item.id}-${action}`}
-                    type="button"
-                    onClick={() => openItem(item)}
-                    aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
-                    className="flex items-center gap-2.5 text-left"
-                  >
-                    <PosterArt item={item} size="sm" showTitle={false} className="w-8 shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-text">{item.title}</p>
-                      <p className="text-xs text-text-faint">
-                        {action === "watched" && "Completato"}
-                        {action === "episode" && `${count} episod${count === 1 ? "io" : "i"}`}
-                        {action === "rewatch" && "Rivisto"}
-                      </p>
-                    </div>
-                  </button>
-                ))}
+            {/* Il giorno come su un calendario: la cifra grande, il nome
+                piccolo sopra. Un filo fra i giorni dello stesso mese. */}
+            <div className={`flex gap-4 py-3 ${showMonth ? "" : "shadow-[inset_0_1px_0_var(--separator)]"}`}>
+              <div className="w-10 shrink-0 pt-0.5 text-center">
+                <p className="text-xs text-text-faint">{weekday}</p>
+                <p className="t-figure text-text">{d.getDate()}</p>
               </div>
+              <ul className="flex min-w-0 flex-1 flex-col gap-2">
+                {entries.map(({ item, action, count }) => (
+                  <li key={`${item.id}-${action}`}>
+                    <button
+                      type="button"
+                      onClick={() => openItem(item)}
+                      aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
+                      className="flex w-full items-center gap-3 rounded-sm text-left transition-transform duration-200 active:scale-[0.99]"
+                    >
+                      <PosterArt item={item} size="sm" showTitle={false} className="w-10 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-text">{item.title}</p>
+                        <p className="text-xs text-text-muted">
+                          {action === "watched" && "Completato"}
+                          {action === "episode" && `${count} episod${count === 1 ? "io" : "i"}`}
+                          {action === "rewatch" && "Rivisto"}
+                        </p>
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         );
@@ -335,35 +381,42 @@ export function AchievementsTab({ items }: { items: Item[] }) {
   const earnedCount = achievements.filter((a) => a.earned).length;
 
   return (
-    <div className="flex flex-col gap-3">
-      <p className="text-sm text-text-muted">
-        {earnedCount} su {achievements.length} traguardi sbloccati
-      </p>
-      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+    <section className="flex flex-col gap-4">
+      <RowHeader title="Traguardi" note={`${earnedCount} su ${achievements.length} sbloccati`} />
+      {/* Un elenco, non quindici riquadri uguali: si scorre con l'occhio
+          come un elenco, e quelli già presi si riconoscono dall'icona accesa
+          invece che da una cornice colorata. */}
+      <ul className="list-group" style={{ "--row-inset": "64px" } as React.CSSProperties}>
         {achievements.map((a) => (
-          <div
-            key={a.id}
-            className="flex items-start gap-3 rounded-md border p-3.5"
-            style={{
-              borderColor: a.earned ? "color-mix(in srgb, var(--accent) 40%, transparent)" : "var(--border)",
-              background: a.earned ? "color-mix(in srgb, var(--accent) 8%, transparent)" : "var(--surface-2)",
-              opacity: a.earned ? 1 : 0.65,
-            }}
-          >
-            <span className="shrink-0" style={{ color: a.earned ? "var(--accent-text)" : "var(--text-faint)" }}>
-              <AchievementIcon id={a.id} />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-text">{a.title}</p>
-              <p className="mt-0.5 text-xs text-text-faint">{a.description}</p>
-              <p className="mt-1 text-xs font-medium" style={{ color: a.earned ? "var(--accent-text)" : "var(--text-faint)" }}>
-                {a.earned ? "Sbloccato" : a.progress}
-              </p>
+          <li key={a.id}>
+            <div className="list-row items-start">
+              <span
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+                style={
+                  a.earned
+                    ? { background: "color-mix(in srgb, var(--accent) 16%, transparent)", color: "var(--accent-text)" }
+                    : { background: "var(--surface-2)", color: "var(--text-faint)" }
+                }
+              >
+                <AchievementIcon id={a.id} size={18} />
+              </span>
+              <div className="min-w-0 flex-1 pt-0.5">
+                <p className="text-sm font-medium text-text">{a.title}</p>
+                <p className="mt-0.5 text-xs text-text-muted">{a.description}</p>
+              </div>
+              {a.earned ? (
+                <span className="flex shrink-0 items-center gap-1 pt-0.5 text-xs font-medium text-accent-text">
+                  <CheckIcon size={14} />
+                  Sbloccato
+                </span>
+              ) : (
+                <span className="shrink-0 pt-0.5 text-xs tabular text-text-faint">{a.progress}</span>
+              )}
             </div>
-          </div>
+          </li>
         ))}
-      </div>
-    </div>
+      </ul>
+    </section>
   );
 }
 

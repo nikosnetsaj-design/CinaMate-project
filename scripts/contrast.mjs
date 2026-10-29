@@ -135,6 +135,9 @@ function pairs(vars) {
     });
   }
 
+  // Il cursore del controllo segmentato porta la voce scelta.
+  add("text", "thumb", AA_TEXT, "voce scelta");
+
   // Il bordo forte è un componente, non testo: deve staccarsi dal fondo.
   add("border-strong", "bg", AA_UI, "bordo");
   add("border-strong", "surface-2", AA_UI, "bordo");

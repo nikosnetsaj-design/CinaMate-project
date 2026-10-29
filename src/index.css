@@ -33,6 +33,9 @@
   --text-faint: #a19a8f;
   /* Il filo che separa le voci di un elenco, e il bordo che si vede appena. */
   --separator: rgba(243, 239, 231, 0.08);
+  /* Il cursore del controllo segmentato: più chiaro della sua guida anche
+     al buio, come la levetta di un interruttore. */
+  --thumb: #3b3935;
   --border: rgba(243, 239, 231, 0.1);
   /* Il bordo che deve staccarsi 3:1 dal fondo: campi, interruttori spenti. */
   --border-strong: rgba(243, 239, 231, 0.4);
@@ -101,6 +104,7 @@
   --text-muted: #57524a;
   --text-faint: #645e54;
   --separator: rgba(28, 26, 23, 0.09);
+  --thumb: #fdfcfa;
   --border: rgba(28, 26, 23, 0.1);
   --border-strong: rgba(28, 26, 23, 0.5);
 
@@ -250,6 +254,25 @@
   font-weight: 500;
 }
 .t-numeral {
+  font-variant-numeric: tabular-nums;
+}
+/* Le cifre. Stessi corpi di `t-display` e `t-title` — la scala resta di
+   cinque — ma nel sans, con le cifre a larghezza fissa: un numero si legge
+   come un numero, non come un titolo, e cambiando non fa ballare la riga. */
+.t-stat {
+  font-family: var(--font-sans);
+  font-size: clamp(2.125rem, 1.75rem + 1.6vw, 2.75rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+  font-variant-numeric: tabular-nums;
+}
+.t-figure {
+  font-family: var(--font-sans);
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  line-height: 1.75rem;
   font-variant-numeric: tabular-nums;
 }
 
@@ -474,6 +497,43 @@
     .chip:not([aria-pressed="true"]):not([aria-selected="true"]):not([data-active="true"]):hover { background: var(--surface-hover); }
   }
 
+  /* Il controllo segmentato: due o tre modi di guardare la stessa cosa —
+     settimana, mese, anno. Non è un filtro, quindi non si inverte come una
+     pastiglia: un cursore chiaro scivola sotto la voce scelta. */
+  .segmented {
+    display: inline-flex;
+    flex: none;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    background: var(--surface-2);
+  }
+  .segmented > button {
+    position: relative;
+    min-height: 30px;
+    padding: 0 12px;
+    border-radius: 999px;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition:
+      background-color var(--dur-state) var(--ease-out),
+      color var(--dur-state) var(--ease-out),
+      box-shadow var(--dur-state) var(--ease-out);
+  }
+  /* 30 px a vista, 44 al dito. */
+  .segmented > button::after { content: ""; position: absolute; inset: -7px 0; }
+  .segmented > button[aria-selected="true"],
+  .segmented > button[aria-pressed="true"] {
+    background: var(--thumb);
+    color: var(--text);
+    box-shadow: var(--shadow-sm);
+  }
+  @media (hover: hover) {
+    .segmented > button:not([aria-selected="true"]):not([aria-pressed="true"]):hover { color: var(--text); }
+  }
+
   /* La riga che scorre di lato: arriva fino al bordo dello schermo — si vede
      che continua — ma la prima copertina resta allineata al testo, e lo
      scorrimento si ferma sulle copertine invece che a metà di una. */
@@ -514,7 +574,9 @@
     position: absolute;
     top: 0;
     right: 0;
-    left: 52px;
+    /* Il filo parte dove parte il testo: chi ha un'immagine più larga a
+       sinistra lo sposta con `--row-inset` sul gruppo. */
+    left: var(--row-inset, 52px);
     height: 1px;
     background: var(--separator);
   }
@@ -547,7 +609,7 @@ input[type="search"]::-webkit-search-decoration {
   position: absolute;
   top: 0;
   right: 0;
-  left: 76px;
+  left: var(--row-inset, 76px);
   height: 1px;
   background: var(--separator);
 }

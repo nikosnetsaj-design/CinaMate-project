@@ -18,6 +18,7 @@ export function RowHeader({
   to,
   action = "Vedi tutti",
   id,
+  trailing,
 }: {
   title: ReactNode;
   count?: number;
@@ -25,6 +26,8 @@ export function RowHeader({
   to?: string;
   action?: string;
   id?: string;
+  /** Al posto del link, un controllo che cambia la riga: il periodo, l'anno. */
+  trailing?: ReactNode;
 }) {
   return (
     <div className="flex items-end justify-between gap-3">
@@ -35,6 +38,7 @@ export function RowHeader({
         </h2>
         {note && <p className="mt-1 text-sm text-text-muted">{note}</p>}
       </div>
+      {trailing}
       {to && (
         <Link to={to} viewTransition className="btn btn-plain btn-sm -mr-3 shrink-0 gap-0.5 font-medium">
           {action}

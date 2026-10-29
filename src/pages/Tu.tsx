@@ -56,12 +56,10 @@ export function Tu() {
   }).format(new Date());
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6 sm:px-6 sm:py-10">
-      <div>
-        <p className="t-label text-text-faint">
-          {greeting()} · <span className="capitalize">{today}</span>
-        </p>
-      </div>
+    <div className="mx-auto flex max-w-3xl flex-col gap-6 px-[var(--gutter)] py-6 sm:py-10">
+      <p className="text-sm text-text-muted">
+        {greeting()} · {today}
+      </p>
 
       <ProfileHeader />
 
@@ -72,7 +70,8 @@ export function Tu() {
         />
       ) : (
         <>
-          <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-border" role="tablist" aria-label="Sezioni del profilo">
+          {/* Gli stessi segmenti di Cerca e Scopri. */}
+          <div className="shelf gap-2" role="tablist" aria-label="Sezioni del profilo">
             {TABS.map((t) => (
               <button
                 key={t.id}
@@ -80,10 +79,7 @@ export function Tu() {
                 role="tab"
                 aria-selected={tab === t.id}
                 onClick={() => setTab(t.id)}
-                className={`-mb-px shrink-0 rounded-t-sm border-b-2 px-3.5 py-2 text-sm font-medium transition-colors ${
-                  tab === t.id ? "text-text" : "border-transparent text-text-faint hover:text-text-muted"
-                }`}
-                style={tab === t.id ? { borderColor: "var(--accent)" } : undefined}
+                className="chip"
               >
                 {t.label}
               </button>
@@ -94,7 +90,7 @@ export function Tu() {
           {tab === "diario" && <DiaryTab items={items} openItem={openItem} />}
           {tab === "gusti" && <TasteTab items={items} openItem={openItem} />}
           {tab === "traguardi" && (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-10">
               <AchievementsTab items={items} />
               <GoalsPanel items={items} />
             </div>
