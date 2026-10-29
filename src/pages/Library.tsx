@@ -18,6 +18,7 @@ import { STATUSES } from "../lib/status";
 import { useAppReady } from "../lib/useAppReady";
 import { useVisibleItems } from "../lib/useVisibleItems";
 import type { Kind, Status } from "../types";
+import { GridIcon, ListIcon, ShareIcon } from "../components/icons";
 
 /** I tipi che un indirizzo può nominare: di ciò che arriva scritto lì non ci si fida. */
 const KIND_IDS: Kind[] = ["film", "serie", "anime", "doc"];
@@ -107,10 +108,10 @@ export function Library() {
     q.trim() || (filterCount > 0 ? "Selezione dalla mia libreria" : "La mia libreria");
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 sm:px-6 sm:py-10">
+    <div className="mx-auto flex max-w-6xl flex-col gap-5 px-[var(--gutter)] py-6 sm:py-10">
       <div>
-        <h1 className="font-display text-3xl font-semibold text-text">Libreria</h1>
-        <p className="mt-1 text-sm text-text-muted">{items.length} titoli in totale.</p>
+        <h1 className="t-display text-text">Libreria</h1>
+        <p className="mt-1 text-sm tabular text-text-muted">{items.length} titoli in totale</p>
       </div>
 
       <SearchBar value={q} onChange={setQ} placeholder="Cerca per titolo, regista, genere, attore…" />
@@ -121,8 +122,7 @@ export function Library() {
           <button
             type="button"
             onClick={() => setQ(suggestion)}
-            className="font-medium underline underline-offset-2"
-            style={{ color: "var(--accent-text)" }}
+            className="font-medium text-accent-text underline underline-offset-2"
           >
             {suggestion}
           </button>
@@ -130,21 +130,42 @@ export function Library() {
         </p>
       )}
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-2">
         <button
           type="button"
           onClick={() => setFiltersOpen(true)}
-          className={`flex shrink-0 items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
-            filterCount > 0 ? "border-transparent" : "border-border-strong text-text-muted hover:bg-surface-hover"
-          }`}
-          style={filterCount > 0 ? { background: "var(--accent)", color: "var(--accent-contrast)" } : undefined}
+          className="chip"
+          data-active={filterCount > 0}
         >
           Filtri
-          {filterCount > 0 && <span className="font-mono">{filterCount}</span>}
+          {filterCount > 0 && <span className="tabular">{filterCount}</span>}
         </button>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-text-faint">{list.length} titoli</span>
+        <div className="flex min-w-0 items-center gap-1">
+          {/* Il conteggio compare solo quando dice qualcosa di nuovo: senza filtri
+              né ricerca ripeteva i «titoli in totale» scritti appena sopra. */}
+          {list.length !== items.length && (
+            <span className="mr-1 whitespace-nowrap text-xs text-text-faint tabular">{list.length} titoli</span>
+          )}
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as Sort)}
+            aria-label="Ordina per"
+            className="field field-sm w-auto"
+          >
+            <option value="recenti">Recenti</option>
+            <option value="voto">Voto</option>
+            <option value="titolo">A–Z</option>
+            <option value="anno">Anno</option>
+          </select>
+          <button
+            type="button"
+            onClick={() => setGrid((g) => !g)}
+            aria-label={grid ? "Vista elenco" : "Vista griglia"}
+            className="icon-btn"
+          >
+            {grid ? <ListIcon size={20} /> : <GridIcon size={20} />}
+          </button>
           {/* Shares exactly what is on screen, filters and search included —
               that is what makes it a *list* rather than an export: "gli horror
               che ho visto" is a query, and the query's result is the list. */}
@@ -153,41 +174,25 @@ export function Library() {
             onClick={() => setSharing(true)}
             disabled={list.length === 0}
             aria-label="Condividi questa lista"
-            className="rounded-sm border border-border-strong px-2 py-1 text-xs text-text-muted disabled:opacity-40"
+            className="icon-btn disabled:opacity-40"
           >
-            Condividi
+            <ShareIcon size={20} />
           </button>
-          <button
-            type="button"
-            onClick={() => setGrid((g) => !g)}
-            aria-label={grid ? "Vista elenco" : "Vista griglia"}
-            className="rounded-sm border border-border-strong px-2 py-1 text-xs text-text-muted"
-          >
-            {grid ? "☰" : "▦"}
-          </button>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as Sort)}
-            aria-label="Ordina per"
-            className="rounded-sm border border-border-strong bg-surface px-2 py-1 text-xs text-text-muted"
-          >
-            <option value="recenti">Recenti</option>
-            <option value="voto">Voto</option>
-            <option value="titolo">A–Z</option>
-            <option value="anno">Anno</option>
-          </select>
         </div>
       </div>
 
       {!ready ? (
         <PosterGridSkeleton count={8} />
       ) : list.length === 0 ? (
+        /* Due situazioni, due frasi: la libreria vuota usa le stesse parole della
+           Home — era una delle quattro frasi diverse per dire «non c'è niente» —
+           e quella filtrata dice cosa fare invece di constatare. */
         <EmptyState
-          title={items.length === 0 ? "La tua libreria è vuota" : "Nessun risultato"}
+          title={items.length === 0 ? "Lo scaffale è tuo da riempire." : "Niente con questi filtri"}
           description={
             items.length === 0
-              ? "Aggiungi il tuo primo titolo per iniziare a costruire la tua collezione."
-              : "Nessun titolo corrisponde ai filtri attuali."
+              ? "Cerca un film o una serie che hai visto: copertina, trama, cast e durata arrivano da soli."
+              : "Prova a toglierne uno, o a cercare con un'altra parola."
           }
           action={
             <button
@@ -200,35 +205,35 @@ export function Library() {
                 setQ("");
                 setFilters({});
               }}
-              className="rounded-sm border border-border-strong px-4 py-2 text-sm font-medium text-text hover:bg-surface-hover"
+              className={items.length === 0 ? "btn btn-primary" : "btn btn-secondary"}
             >
-              {items.length === 0 ? "Aggiungi un titolo" : "Azzera filtri"}
+              {items.length === 0 ? "Aggiungi il primo titolo" : "Togli filtri e ricerca"}
             </button>
           }
         />
       ) : grid ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {list.map((item) => (
             <PosterCard key={item.id} item={item} onOpen={openItem} progress />
           ))}
         </div>
       ) : (
-        <ul className="flex flex-col gap-2.5">
+        <ul className="list-group">
           {list.map((item) => (
             <li key={item.id}>
               <button
                 type="button"
                 onClick={() => openItem(item)}
                 aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
-                className="flex w-full items-center gap-3.5 rounded-md border border-border bg-surface p-3 text-left transition-colors hover:bg-surface-hover"
+                className="list-row gap-4"
               >
-                <PosterArt item={item} size="sm" className="w-12 shrink-0" />
+                <PosterArt item={item} size="sm" showTitle={false} className="w-12 shrink-0 rounded-xs" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-display text-sm font-semibold text-text">{item.title}</p>
-                  <p className="mt-0.5 truncate text-xs text-text-faint">
+                  <p className="truncate text-base font-medium text-text">{item.title}</p>
+                  <p className="mt-0.5 truncate text-sm tabular text-text-muted">
                     {[item.year, item.genre, item.platform].filter(Boolean).join(" · ")}
                   </p>
-                  <div className="mt-1">
+                  <div className="mt-1.5">
                     <StatusChip status={item.status} size="sm" />
                   </div>
                 </div>

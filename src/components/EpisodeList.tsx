@@ -7,7 +7,7 @@ import { usePlayerSources } from "../store/usePlayerSources";
 import { getSeason, stillUrl, type TmdbEpisode } from "../lib/tmdb";
 import { countdown, daysBetweenToday } from "../lib/format";
 import { prefetchHandlers } from "../lib/prefetch";
-import { PlayIcon, CheckIcon } from "./icons";
+import { CheckIcon, PlayIcon, StarIcon } from "./icons";
 import type { Item } from "../types";
 
 /**
@@ -43,7 +43,7 @@ function EpisodeRow({
   const unreleased = episode.airDate != null && daysBetweenToday(episode.airDate) > 0;
 
   return (
-    <li className="flex items-center gap-3 rounded-md border border-border bg-surface-2 p-2 transition-colors hover:bg-surface-hover">
+    <li className="flex items-center gap-3 rounded-lg bg-surface-2 p-2 transition-colors hover:bg-surface-hover">
       <div className="relative aspect-video w-28 shrink-0 overflow-hidden rounded-sm bg-surface sm:w-36">
         {still ? (
           <img
@@ -81,10 +81,10 @@ function EpisodeRow({
           <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-text-muted">{episode.overview}</p>
         )}
 
-        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[11px] text-text-faint">
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-xs text-text-faint">
           {episode.rating != null && (
             <span className="flex items-center gap-1">
-              <span style={{ color: "var(--yellow)" }}>★</span>
+              <span className="flex" style={{ color: "var(--yellow)" }}><StarIcon size={11} filled /></span>
               <span className="font-semibold text-text">{episode.rating.toFixed(1)}</span>
             </span>
           )}
@@ -107,12 +107,7 @@ function EpisodeRow({
             {...prefetchHandlers("/player")}
             aria-label={`Riproduci episodio ${episode.episodeNumber}, ${episode.title}`}
             title="Riproduci"
-            className="flex h-10 w-12 items-center justify-center rounded-sm border transition-transform hover:scale-105"
-            style={{
-              borderColor: "color-mix(in srgb, var(--accent) 45%, transparent)",
-              background: "color-mix(in srgb, var(--accent) 18%, transparent)",
-              color: "var(--accent-text)",
-            }}
+            className="icon-btn icon-btn-filled text-accent-text hover:text-accent-text"
           >
             <PlayIcon size={16} />
           </button>
@@ -127,11 +122,11 @@ function EpisodeRow({
               : `Segna la serie come vista fino all'episodio ${episode.episodeNumber}`
           }
           title="Segna visto fino a qui"
-          className="flex h-8 w-8 items-center justify-center rounded-full border transition-colors"
+          className="icon-btn icon-btn-sm"
           style={
             watched
-              ? { borderColor: "var(--accent)", background: "var(--accent)", color: "var(--accent-contrast)" }
-              : { borderColor: "var(--border-strong)", color: "var(--text-faint)" }
+              ? { background: "var(--accent)", color: "var(--accent-contrast)" }
+              : { background: "var(--surface-2)", color: "var(--text-muted)" }
           }
         >
           <CheckIcon size={15} />
@@ -190,7 +185,7 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
 
   if (!tmdbApiKey || item.tmdbId == null) {
     return (
-      <div className="rounded-md border border-dashed border-border-strong p-4 text-xs leading-relaxed text-text-faint">
+      <div className="rounded-md p-4 text-xs leading-relaxed text-text-faint bg-surface-2">
         {tmdbApiKey
           ? "Questo titolo non è collegato a TMDB, quindi non so quali episodi abbia. Collegalo dalla scheda e l'elenco compare da solo."
           : "Gli episodi arrivano da TMDB: serve la tua chiave."}
@@ -231,7 +226,7 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
             onClick={() => setSeasonMenu((v) => !v)}
             aria-expanded={seasonMenu}
             aria-haspopup="listbox"
-            className="flex items-center gap-2 rounded-sm border border-border-strong bg-surface-2 px-3.5 py-2 text-sm font-medium text-text"
+            className="btn btn-secondary"
           >
             Stagione {season}
             <span aria-hidden="true" className="text-text-faint">
@@ -250,7 +245,7 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
               <ul
                 role="listbox"
                 aria-label="Stagioni"
-                className="absolute left-0 top-full z-40 mt-1 max-h-64 min-w-44 overflow-y-auto rounded-md border border-border-strong bg-surface py-1 shadow-[var(--shadow-md)]"
+                className="absolute left-0 top-full z-40 mt-1 max-h-64 min-w-44 overflow-y-auto rounded-md bg-surface py-1 shadow-[var(--shadow-md),0_0_0_1px_var(--separator)]"
               >
                 {seasons.map((s) => (
                   <li key={s}>
@@ -265,7 +260,7 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
                       className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-sm text-text hover:bg-surface-hover"
                     >
                       <span className="w-4 shrink-0" style={{ color: "var(--accent-text)" }}>
-                        {s === season ? "✓" : ""}
+                        {s === season ? <CheckIcon size={14} /> : null}
                       </span>
                       Stagione {s}
                     </button>

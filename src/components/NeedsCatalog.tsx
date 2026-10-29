@@ -59,7 +59,7 @@ export function CatalogNote({ what = WHAT }: { what?: string }) {
 export function CatalogBlock() {
   const turnOn = useTurnOn();
   return (
-    <div className="flex flex-col items-center gap-3.5 rounded-lg border border-dashed border-border-strong px-6 py-10 text-center">
+    <div className="flex flex-col items-center gap-3.5 rounded-lg px-6 py-10 text-center bg-surface-2">
       <div className="flex flex-col gap-1.5">
         <h3 className="t-section text-text">Il catalogo è spento.</h3>
         <p className="mx-auto max-w-sm t-body text-text-muted">
@@ -70,8 +70,7 @@ export function CatalogBlock() {
       <button
         type="button"
         onClick={turnOn}
-        className="rounded-sm px-4 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
-        style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+        className="btn btn-primary"
       >
         Accendi il catalogo
       </button>
@@ -114,7 +113,7 @@ export function CatalogStrip() {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md border border-border bg-surface-2 px-4 py-3">
+    <div className="flex flex-col gap-3 rounded-lg bg-surface px-4 py-3.5 shadow-[var(--shadow-sm)] sm:flex-row sm:items-center">
       <p className="min-w-0 flex-1 t-caption text-text-muted">
         <strong className="font-semibold text-text">Le copertine mancano.</strong> {WHAT}
       </p>
@@ -122,8 +121,7 @@ export function CatalogStrip() {
         <button
           type="button"
           onClick={turnOn}
-          className="rounded-sm px-3 py-1.5 text-xs font-semibold transition-opacity hover:opacity-90"
-          style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+          className="btn btn-primary btn-sm"
         >
           Accendilo
         </button>
@@ -131,7 +129,7 @@ export function CatalogStrip() {
           type="button"
           onClick={dismiss}
           aria-label="Nascondi l'avviso sul catalogo"
-          className="tap-target rounded-sm px-2 py-1.5 text-xs font-medium text-text-faint transition-colors hover:text-text"
+          className="btn btn-plain btn-sm font-medium text-text-muted"
         >
           Non ora
         </button>

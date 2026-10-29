@@ -15,7 +15,7 @@ import { continueWatching, lastSeenDates } from "../lib/continueWatching";
 import { forYou } from "../lib/recommend";
 import { prefetchHandlers } from "../lib/prefetch";
 import { PosterArt } from "../components/PosterArt";
-import { PlayIcon, SearchIcon } from "../components/icons";
+import { CheckIcon, CloseIcon, PlayIcon, SearchIcon } from "../components/icons";
 import type { Item } from "../types";
 
 /**
@@ -49,7 +49,7 @@ function SuggestionRow({ item, reason }: { item: Item; reason?: string }) {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-medium text-text">{item.title}</span>
-          {reason && <span className="block truncate text-[11px] text-text-faint">{reason}</span>}
+          {reason && <span className="block truncate text-xs text-text-faint">{reason}</span>}
         </span>
       </button>
       <button
@@ -57,7 +57,7 @@ function SuggestionRow({ item, reason }: { item: Item; reason?: string }) {
         {...prefetchHandlers("/player")}
         onClick={() => navigate(`/player?titolo=${encodeURIComponent(item.id)}`)}
         aria-label={`Riproduci ${item.title}`}
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border-strong text-text transition-colors hover:bg-surface-hover"
+        className="icon-btn icon-btn-filled shrink-0"
       >
         <PlayIcon size={18} />
       </button>
@@ -83,7 +83,7 @@ function PersonResults({ query }: { query: string }) {
   if (!query) return <p className="text-sm text-text-faint">Scrivi il nome di un attore o di un regista.</p>;
   if (people === null) {
     return (
-      <div className="grid grid-cols-3 gap-4 sm:grid-cols-5">
+      <div className="grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-5 lg:grid-cols-7">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="skeleton aspect-square rounded-full" aria-hidden="true" />
         ))}
@@ -93,7 +93,7 @@ function PersonResults({ query }: { query: string }) {
   if (people.length === 0) return <p className="text-sm text-text-faint">Nessuna persona con questo nome.</p>;
 
   return (
-    <div className="grid grid-cols-3 gap-4 sm:grid-cols-5">
+    <div className="grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-5 lg:grid-cols-7">
       {people.map((person) => (
         <button key={person.id} type="button" onClick={() => openPerson(person.name)} className="text-center">
           <span className="block aspect-square overflow-hidden rounded-full bg-surface-2">
@@ -111,9 +111,9 @@ function PersonResults({ query }: { query: string }) {
               </span>
             )}
           </span>
-          <span className="mt-1.5 block line-clamp-2 text-xs font-medium text-text">{person.name}</span>
+          <span className="mt-2 block line-clamp-2 text-sm font-medium text-text">{person.name}</span>
           {person.knownFor.length > 0 && (
-            <span className="mt-0.5 block line-clamp-2 text-[11px] leading-snug text-text-faint">
+            <span className="mt-0.5 block line-clamp-2 text-xs leading-snug text-text-faint">
               {person.knownFor.join(" · ")}
             </span>
           )}
@@ -219,7 +219,7 @@ function TitleResults({ query }: { query: string }) {
 
       {mine.length > 0 && (
         <section>
-          <h2 className="mb-2.5 text-xs font-medium uppercase tracking-wide text-text-faint">
+          <h2 className="mb-2.5 text-xs font-medium text-text-faint">
             Nella tua libreria · {mine.length}
           </h2>
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
@@ -241,7 +241,7 @@ function TitleResults({ query }: { query: string }) {
 
       {tmdbApiKey ? (
         <section>
-          <h2 className="mb-2.5 text-xs font-medium uppercase tracking-wide text-text-faint">Su TMDB</h2>
+          <h2 className="mb-2.5 text-xs font-medium text-text-faint">Su TMDB</h2>
           {corrected && (
             <p className="mb-2 text-xs text-text-faint">
               Niente per «{query}»: questi sono i risultati per «{corrected}».
@@ -280,15 +280,14 @@ function TitleResults({ query }: { query: string }) {
                       />
                       {owned && (
                         <span
-                          className="absolute right-1 top-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
-                          style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+                          className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/65 text-white backdrop-blur-sm"
                         >
-                          ✓
+                          <CheckIcon size={11} />
                         </span>
                       )}
                     </div>
-                    <p className="mt-1.5 line-clamp-2 text-xs font-medium text-text">{result.title}</p>
-                    <p className="font-mono tabular text-[10px] text-text-faint">
+                    <p className="mt-2 line-clamp-2 text-sm font-medium leading-snug text-text">{result.title}</p>
+                    <p className="font-mono tabular text-xs text-text-faint">
                       {result.year ?? ""}
                     </p>
                   </button>
@@ -329,12 +328,12 @@ export function Search() {
   }, [items, progress, history]);
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-6 sm:px-6 sm:py-10">
-      <h1 className="font-display text-3xl font-semibold text-text">Cerca</h1>
+    <div className="mx-auto flex max-w-6xl flex-col gap-5 px-[var(--gutter)] py-6 sm:py-10">
+      <h1 className="t-display text-text">Cerca</h1>
 
       {/* La casella resta appesa in alto mentre la griglia scorre: su un
           telefono, correggere una parola non deve costare una risalita. */}
-      <div className="sticky top-14 z-20 -mx-4 bg-bg px-4 py-2 md:top-0 sm:-mx-6 sm:px-6">
+      <div className="sticky top-14 z-20 -mx-[var(--gutter)] bg-bg/85 px-[var(--gutter)] py-2 backdrop-blur-xl backdrop-saturate-150 lg:top-0">
         {/*
           Una `label` e non un `div`: prima il bersaglio era la sola riga di
           testo, così un tocco sulla lente o sul bordo della pillola non apriva
@@ -349,7 +348,7 @@ export function Search() {
           somiglia a niente e sembra un errore di disegno. `focus-within`
           sposta l'evidenza sul contenitore, che è la forma che si tocca.
         */}
-        <label className="focus-shell flex cursor-text items-center gap-2.5 rounded-full border border-border-strong bg-surface-2 px-4 py-2.5 transition-colors">
+        <label className="search-pill flex h-11 cursor-text items-center gap-2.5 rounded-full bg-surface-2 pl-4 pr-1.5 text-text-faint">
           <SearchIcon size={18} />
           <input
             ref={inputRef}
@@ -373,7 +372,7 @@ export function Search() {
              * niente finché non lo tocchi. Meglio nessuna promessa.
              */
             autoFocus={typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches}
-            className="no-focus-ring min-w-0 flex-1 bg-transparent text-sm text-text outline-none placeholder:text-text-faint [&::-webkit-search-cancel-button]:hidden"
+            className="no-focus-ring min-w-0 flex-1 bg-transparent text-base text-text outline-none placeholder:text-text-faint"
           />
           {query && (
             <button
@@ -383,14 +382,14 @@ export function Search() {
                 inputRef.current?.focus();
               }}
               aria-label="Cancella la ricerca"
-              className="text-text-faint hover:text-text"
+              className="icon-btn icon-btn-sm"
             >
-              ✕
+              <CloseIcon size={16} />
             </button>
           )}
         </label>
 
-        <div className="mt-2 flex gap-2" role="tablist" aria-label="Cosa cercare">
+        <div className="mt-3 flex gap-2" role="tablist" aria-label="Cosa cercare">
           {([
             { id: "titoli", label: "Film & TV" },
             { id: "persone", label: "Persone" },
@@ -401,10 +400,7 @@ export function Search() {
               role="tab"
               aria-selected={tab === t.id}
               onClick={() => setTab(t.id)}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                tab === t.id ? "" : "border border-border-strong text-text-muted hover:bg-surface-hover"
-              }`}
-              style={tab === t.id ? { background: "var(--accent)", color: "var(--accent-contrast)" } : undefined}
+              className="chip"
             >
               {t.label}
             </button>
@@ -415,7 +411,7 @@ export function Search() {
       {!query && tab === "titoli" ? (
         suggestions.length > 0 ? (
           <section>
-            <h2 className="mb-3 font-display text-xl font-semibold text-text">Da riprendere e da provare</h2>
+            <h2 className="t-title mb-4 text-text">Da riprendere e da provare</h2>
             <ul className="flex flex-col gap-3">
               {suggestions.map(({ item, reason }) => (
                 <SuggestionRow key={item.id} item={item} reason={reason} />

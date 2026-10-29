@@ -5,7 +5,7 @@ import { useFocusTrap } from "../lib/useFocusTrap";
 import { useLibrary } from "../store/useLibrary";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { PosterArt } from "./PosterArt";
-import { DiceIcon } from "./icons";
+import { CloseIcon, DiceIcon } from "./icons";
 import type { Item } from "../types";
 
 function pickRandom(items: Item[], exclude?: Item | null): Item | null {
@@ -49,15 +49,15 @@ function PickerModal({ onClose }: { onClose: () => void }) {
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.96 }}
         transition={{ type: "spring", stiffness: 320, damping: 28 }}
-        className="relative z-10 w-full max-w-xs rounded-lg border border-border bg-surface p-6 text-center shadow-[var(--shadow-lg)]"
+        className="relative z-10 w-full max-w-xs rounded-lg bg-surface p-6 text-center shadow-[var(--shadow-lg)]"
       >
         <button
           type="button"
           onClick={onClose}
           aria-label="Chiudi"
-          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-border-strong text-text-muted"
+          className="icon-btn icon-btn-filled icon-btn-sm absolute right-3 top-3"
         >
-          ✕
+          <CloseIcon size={16} />
         </button>
         <h2 id={titleId} className="font-display text-lg font-semibold text-text">
           Cosa guardo stasera?
@@ -87,7 +87,7 @@ function PickerModal({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               onClick={respin}
-              className="flex-1 rounded-sm border border-border-strong py-2.5 text-sm text-text-muted"
+              className="btn btn-secondary flex-1"
             >
               Un altro
             </button>
@@ -97,8 +97,7 @@ function PickerModal({ onClose }: { onClose: () => void }) {
                 openItem(pick);
                 onClose();
               }}
-              className="flex-1 rounded-sm py-2.5 text-sm font-semibold"
-              style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+              className="btn btn-primary flex-1"
             >
               Guarda ora
             </button>
@@ -117,7 +116,7 @@ export function NightPickerButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 rounded-full border border-border-strong px-3 py-1.5 text-xs font-medium text-text-muted transition-colors hover:text-text"
+        className="chip gap-1.5"
       >
         <DiceIcon size={14} />
         Cosa guardo stasera?

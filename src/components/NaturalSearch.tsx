@@ -9,6 +9,7 @@ import { EmptyState } from "../components/EmptyState";
 import { parseNaturalQuery, MissingApiKeyError, ClaudeApiError, type ParsedQuery } from "../lib/anthropic";
 import { discoverTitles, MOVIE_GENRES, TV_GENRES, type TmdbSearchResult } from "../lib/tmdb";
 import { draftFromTmdb } from "../lib/addFromTmdb";
+import { CheckIcon } from "./icons";
 
 const EXAMPLES = [
   "film di fantascienza anni '90",
@@ -39,7 +40,7 @@ function QueryChips({ query }: { query: ParsedQuery }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {chips.map((chip) => (
-        <span key={chip} className="rounded-full border border-border-strong px-2.5 py-0.5 text-xs text-text-muted">
+        <span key={chip} className="rounded-full bg-surface px-2.5 py-1 text-xs text-text-muted">
           {chip}
         </span>
       ))}
@@ -116,8 +117,7 @@ export function NaturalSearch() {
           <button
             type="button"
             onClick={() => openSettings()}
-            className="rounded-sm px-4 py-2 text-sm font-semibold"
-            style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+            className="btn btn-primary"
           >
             Aggiungi la chiave
           </button>
@@ -140,13 +140,12 @@ export function NaturalSearch() {
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="film di fantascienza anni '90"
           aria-label="Descrivi cosa cerchi"
-          className="min-w-0 flex-1 rounded-sm border border-border-strong bg-surface px-3 py-2.5 text-sm text-text"
+          className="field min-w-0 flex-1"
         />
         <button
           type="submit"
           disabled={busy || !question.trim()}
-          className="shrink-0 rounded-sm px-4 py-2.5 text-sm font-semibold disabled:opacity-40"
-          style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+          className="btn btn-primary shrink-0"
         >
           {busy ? "Cerco…" : "Cerca"}
         </button>
@@ -162,7 +161,7 @@ export function NaturalSearch() {
                 setQuestion(example);
                 void run(example);
               }}
-              className="rounded-full border border-border-strong px-3 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
+              className="chip chip-wrap"
             >
               {example}
             </button>
@@ -177,7 +176,7 @@ export function NaturalSearch() {
       )}
 
       {query && (
-        <div className="flex flex-col gap-2 rounded-md border border-border bg-surface-2 p-3.5">
+        <div className="flex flex-col gap-2 rounded-lg bg-surface-2 p-3.5">
           <p className="text-sm text-text">{query.explanation || "Ecco cosa ho cercato."}</p>
           <QueryChips query={query} />
         </div>
@@ -211,15 +210,14 @@ export function NaturalSearch() {
                   />
                   {owned && (
                     <span
-                      className="absolute right-1 top-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
-                      style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+                      className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/65 text-white backdrop-blur-sm"
                     >
-                      ✓
+                      <CheckIcon size={11} />
                     </span>
                   )}
                 </div>
                 <p className="mt-1.5 line-clamp-2 text-xs font-medium text-text">{r.title}</p>
-                <p className="font-mono tabular text-[10px] text-text-faint">
+                <p className="font-mono tabular text-xs text-text-faint">
                   {picking === r.tmdbId ? "…" : (r.year ?? "")}
                 </p>
               </button>

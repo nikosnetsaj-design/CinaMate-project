@@ -81,9 +81,9 @@ export function PosterCard({
             onOpen(item);
           }
         }}
-        whileHover={{ y: -4 }}
+        whileHover={{ y: -2 }}
         whileTap={{ scale: 0.98 }}
-        transition={{ type: "spring", stiffness: 380, damping: 26 }}
+        transition={{ type: "spring", stiffness: 420, damping: 36 }}
         className="relative cursor-pointer overflow-hidden rounded-sm shadow-[var(--shadow-sm)] transition-shadow duration-200 group-hover:shadow-[var(--shadow-md)]"
       >
         <PosterArt item={item} size="sm" badge={badge} />
@@ -103,23 +103,27 @@ export function PosterCard({
           )}
         </AnimatePresence>
       </motion.div>
-      <div className="flex flex-col gap-1 px-0.5">
-        <div className="flex items-center gap-1">
-          <p className="truncate font-display text-sm font-medium text-text" title={item.title}>
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-1.5">
+          <p className="truncate text-sm font-medium text-text" title={item.title}>
             {item.title}
           </p>
-          {item.fav && <HeartIcon size={11} filled />}
+          {item.fav && (
+            <span className="shrink-0 text-accent-text" aria-label="Preferito">
+              <HeartIcon size={12} filled />
+            </span>
+          )}
         </div>
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex h-5 items-center justify-between gap-2">
           <StatusChip status={item.status} size="sm" />
           <VoteBadge vote={item.vote} size="sm" />
         </div>
         {progress && pct !== null && (
           <div className="mt-0.5">
             <div className="h-[3px] overflow-hidden rounded-full bg-surface-hover">
-              <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--status-watching)" }} />
+              <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--accent)" }} />
             </div>
-            <div className="mt-1 text-[10px] text-text-faint">
+            <div className="mt-1 text-xs tabular text-text-faint">
               {item.seen || 0}/{item.episodes} episodi
             </div>
           </div>

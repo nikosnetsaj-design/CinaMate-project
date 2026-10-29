@@ -106,6 +106,16 @@ function pairs(vars) {
     add(tone, "surface-2", AA_LARGE, "testo grande / icona");
   }
 
+  // Gli esiti si scrivono anche in corpo normale: «Chiave verificata»,
+  // «Mancano dei caratteri», «In pausa». Lì la soglia è quella del testo.
+  for (const tone of ["success", "warning", "danger"]) {
+    for (const surface of ["bg", "surface", "surface-2"]) add(tone, surface, AA_TEXT, "testo di esito");
+  }
+
+  // L'accento come riempimento deve staccarsi dal fondo: è un componente.
+  add("accent", "bg", AA_UI, "riempimento");
+  add("accent", "surface", AA_UI, "riempimento");
+
   // Testo scritto *sopra* un riempimento pieno.
   add("accent-contrast", "accent", AA_TEXT);
   add("cyan-contrast", "cyan", AA_TEXT);
@@ -125,10 +135,43 @@ function pairs(vars) {
     });
   }
 
+  // Il cursore del controllo segmentato porta la voce scelta.
+  add("text", "thumb", AA_TEXT, "voce scelta");
+
   // Il bordo forte è un componente, non testo: deve staccarsi dal fondo.
   add("border-strong", "bg", AA_UI, "bordo");
   add("border-strong", "surface-2", AA_UI, "bordo");
+  add("border-strong", "surface", AA_UI, "bordo");
 
+  return out;
+}
+
+/*
+ * Gli accenti che si scelgono nelle Impostazioni. Stavano in un file a parte
+ * e nessuno li controllava: la promessa «ogni scelta regge AA» era scritta in
+ * un commento. Si leggono da `src/lib/accents.ts` com'è scritto, senza un
+ * elenco parallelo da tenere allineato.
+ */
+const accentsSource = readFileSync(new URL("../src/lib/accents.ts", import.meta.url), "utf8");
+const ACCENT_RE =
+  /id:\s*"([^"]+)"[\s\S]*?dark:\s*\{\s*accent:\s*"(#[0-9a-f]{6})",\s*accentText:\s*"(#[0-9a-f]{6})",\s*accentContrast:\s*"(#[0-9a-f]{6})"\s*\}[\s\S]*?light:\s*\{\s*accent:\s*"(#[0-9a-f]{6})",\s*accentText:\s*"(#[0-9a-f]{6})",\s*accentContrast:\s*"(#[0-9a-f]{6})"\s*\}/gi;
+const accents = [...accentsSource.matchAll(ACCENT_RE)].map((m) => ({
+  id: m[1],
+  dark: { accent: m[2], text: m[3], contrast: m[4] },
+  light: { accent: m[5], text: m[6], contrast: m[7] },
+}));
+if (accents.length === 0) throw new Error("Nessun accento letto da src/lib/accents.ts");
+
+function accentPairs(themeVars, theme) {
+  const out = [];
+  for (const a of accents) {
+    const v = a[theme];
+    for (const surface of SURFACES) {
+      out.push({ fg: `${a.id}·testo`, bg: surface, min: AA_TEXT, value: ratio(v.text, themeVars[surface]) });
+    }
+    out.push({ fg: `${a.id}·sopra`, bg: `${a.id}·riempimento`, min: AA_TEXT, value: ratio(v.contrast, v.accent) });
+    out.push({ fg: `${a.id}·riempimento`, bg: "bg", min: AA_UI, note: "riempimento", value: ratio(v.accent, themeVars.bg) });
+  }
   return out;
 }
 
@@ -136,8 +179,8 @@ let failures = 0;
 let checked = 0;
 const showAll = process.argv.includes("--all");
 
-for (const [name, vars] of [["scuro", dark], ["chiaro", light]]) {
-  const rows = pairs(vars);
+for (const [name, vars, theme] of [["scuro", dark, "dark"], ["chiaro", light, "light"]]) {
+  const rows = [...pairs(vars), ...accentPairs(vars, theme)];
   checked += rows.length;
   const bad = rows.filter((r) => r.value < r.min);
   failures += bad.length;

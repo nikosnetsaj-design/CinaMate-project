@@ -4,6 +4,7 @@ import { useCatalogPreview } from "../store/useCatalogPreview";
 import { useTitleExtras } from "../lib/useTitleExtras";
 import { PosterArt } from "./PosterArt";
 import type { Item } from "../types";
+import { CheckIcon, ClockIcon } from "./icons";
 
 /**
  * «Se ti è piaciuto questo» — con le locandine, non con i nomi.
@@ -39,7 +40,7 @@ export function RelatedRow({ item }: { item: Item }) {
 
   return (
     <section>
-      <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">
+      <span className="mb-2 block text-xs font-medium text-text-faint">
         {item.kind === "film" || item.kind === "doc" ? "Film correlati" : "Serie correlate"}
       </span>
       <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1">
@@ -76,22 +77,18 @@ export function RelatedRow({ item }: { item: Item }) {
                 />
                 {owned ? (
                   <span
-                    className="absolute right-1 top-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
-                    style={{
-                      background: owned.status === "Visto" ? "var(--status-done)" : "var(--accent)",
-                      color: "var(--accent-contrast)",
-                    }}
+                    className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/65 text-white backdrop-blur-sm"
                   >
-                    {owned.status === "Visto" ? "✓" : "◷"}
+                    {owned.status === "Visto" ? <CheckIcon size={11} /> : <ClockIcon size={11} />}
                   </span>
                 ) : (
-                  <span className="absolute inset-x-0 bottom-0 bg-black/60 py-1 text-center text-[10px] font-semibold text-white">
+                  <span className="absolute inset-x-0 bottom-0 bg-black/60 py-1 text-center text-xs font-semibold text-white">
                     Vedi scheda
                   </span>
                 )}
               </span>
               <p className="mt-1.5 line-clamp-2 text-xs font-medium text-text">{r.title}</p>
-              <p className="font-mono tabular text-[10px] text-text-faint">{r.year ?? ""}</p>
+              <p className="font-mono tabular text-xs text-text-faint">{r.year ?? ""}</p>
             </button>
           );
         })}

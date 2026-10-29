@@ -18,6 +18,7 @@ import {
 } from "../lib/linkHost";
 import { REDIRECT_HINT, REDIRECT_LABEL, findMirrors, probeRedirect } from "../lib/hostRedirect";
 import type { MirrorCandidate, RedirectStatus } from "../lib/hostRedirect";
+import { ChevronDownIcon, ChevronUpIcon, InfoIcon, WarningIcon } from "./icons";
 
 /**
  * Il pannello dei Link Host in Impostazioni.
@@ -30,7 +31,7 @@ import type { MirrorCandidate, RedirectStatus } from "../lib/hostRedirect";
  */
 
 const INPUT =
-  "w-full rounded-sm border border-border-strong bg-surface px-3 py-2 font-mono text-xs text-text placeholder:text-text-faint focus:border-accent";
+  "field field-sm w-full font-mono";
 
 export function LinkHostSettings() {
   const hosts = useLinkHosts((s) => s.hosts);
@@ -55,7 +56,7 @@ export function LinkHostSettings() {
 
   return (
     <div>
-      <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">
+      <span className="mb-3 block text-base font-semibold text-text">
         {hosts.length > 0 ? "I tuoi siti" : "Nessun sito configurato"}
       </span>
 
@@ -82,8 +83,7 @@ export function LinkHostSettings() {
           <button
             type="submit"
             disabled={!url.trim()}
-            className="shrink-0 rounded-sm px-3.5 py-2 text-xs font-semibold disabled:opacity-50"
-            style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+            className="btn btn-primary btn-sm shrink-0"
           >
             Aggiungi
           </button>
@@ -91,7 +91,7 @@ export function LinkHostSettings() {
       </form>
 
       {hosts.length === 0 ? (
-        <p className="rounded-sm border border-dashed border-border-strong px-3 py-3 text-xs leading-relaxed text-text-faint">
+        <p className="rounded-md bg-surface-2 px-4 py-3 text-sm text-text-muted">
           Nessun Link Host. Basta l'indirizzo nudo del sito: i percorsi di ricerca soliti li prova
           lui, uno dopo l'altro, finché uno risponde.
         </p>
@@ -107,8 +107,7 @@ export function LinkHostSettings() {
         type="button"
         onClick={() => setShowHelp((v) => !v)}
         aria-expanded={showHelp}
-        className="mt-2.5 text-xs underline-offset-2 hover:underline"
-        style={{ color: "var(--accent-text)" }}
+        className="btn btn-plain btn-sm -ml-3 mt-2"
       >
         {showHelp ? "Nascondi i segnaposto" : "Come si scrive un percorso di ricerca"}
       </button>
@@ -132,18 +131,14 @@ export function LinkHostSettings() {
 function HowItWorks() {
   return (
     <div className="mt-4 flex flex-col gap-3">
-      <div className="rounded-md border border-border bg-surface-2 p-4">
-        <h4 className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-text">
-          <span
-            aria-hidden="true"
-            className="flex h-5 w-5 items-center justify-center rounded-full text-[11px]"
-            style={{ border: "1.5px solid var(--accent)", color: "var(--accent-text)" }}
-          >
-            ?
+      <div className="rounded-lg bg-surface-2 p-4">
+        <h4 className="mb-2 flex items-center gap-2 text-base font-semibold text-text">
+          <span aria-hidden="true" className="text-text-muted">
+            <InfoIcon />
           </span>
           Come funziona?
         </h4>
-        <p className="text-xs leading-relaxed text-text-faint">
+        <p className="text-sm text-text-muted">
           CineMate non ospita né fornisce alcun contenuto. Un Link Host è l'indirizzo di un{" "}
           <strong className="font-medium text-text-muted">sito</strong> che indichi tu, usato come
           punto di partenza tecnico per la ricerca: quando premi{" "}
@@ -153,24 +148,22 @@ function HowItWorks() {
           <span className="font-mono">.m3u8</span>, lo manda al lettore. Se non ci arriva, resta il
           Web Viewer per cercare a mano.
         </p>
-        <p className="mt-2 text-xs leading-relaxed text-text-faint">
+        <p className="mt-2 text-sm text-text-muted">
           L'app non conosce nessun sito e non ne propone: la lista è vuota finché non ci scrivi
           qualcosa tu, e quello che ci scrivi resta su questo dispositivo.
         </p>
       </div>
 
-      <div
-        className="rounded-md border p-4"
-        style={{
-          borderColor: "color-mix(in srgb, var(--danger) 40%, transparent)",
-          background: "color-mix(in srgb, var(--danger) 8%, transparent)",
-        }}
-      >
-        <h4 className="mb-1.5 flex items-center gap-2 text-sm font-semibold" style={{ color: "var(--danger)" }}>
-          <span aria-hidden="true">⚠</span>
+      {/* Un avviso, non un errore: il colore dell'attenzione sta sull'icona,
+          non su una cornice rossa intorno a un paragrafo. */}
+      <div className="rounded-lg bg-surface-2 p-4">
+        <h4 className="mb-2 flex items-center gap-2 text-base font-semibold text-text">
+          <span aria-hidden="true" style={{ color: "var(--warning)" }}>
+            <WarningIcon />
+          </span>
           Attenzione
         </h4>
-        <p className="text-xs leading-relaxed text-text-muted">
+        <p className="text-sm text-text-muted">
           Accedere a materiale protetto da copyright senza autorizzazione viola i termini di
           servizio dei siti e le leggi vigenti. CineMate non è affiliata a nessun Link Host e non
           verifica cosa ci sia dietro l'indirizzo che scrivi: quello che ci metti, e cosa ne fai, è
@@ -183,8 +176,8 @@ function HowItWorks() {
 
 function PatternHelp() {
   return (
-    <div className="mt-2 rounded-sm border border-border bg-surface-2 p-3">
-      <p className="mb-2 text-xs leading-relaxed text-text-faint">
+    <div className="mt-3 rounded-md bg-surface-2 p-4">
+      <p className="mb-3 text-sm text-text-muted">
         Se sai già com'è fatta la ricerca del sito, scrivila e sarà l'unica provata. Altrimenti si
         provano queste, in ordine — prima la ricerca, che perdona uno slug approssimativo, poi i
         percorsi diretti, più veloci quando indovinano e muti quando no:
@@ -195,14 +188,14 @@ function PatternHelp() {
         { label: "Percorso diretto — episodi", list: EPISODE_PATH_LAYOUTS },
       ].map((group) => (
         <div key={group.label} className="mb-2">
-          <span className="mb-1 block text-[10px] uppercase tracking-wide text-text-faint">
+          <span className="mb-1.5 block text-xs font-medium text-text-muted">
             {group.label}
           </span>
           <ul className="flex flex-wrap gap-1.5">
             {group.list.map((layout) => (
               <li
                 key={layout}
-                className="rounded-full bg-surface-hover px-2 py-0.5 font-mono text-[10px] text-text-muted"
+                className="rounded-full bg-surface-hover px-2 py-0.5 font-mono text-xs text-text-muted"
               >
                 {layout}
               </li>
@@ -210,7 +203,7 @@ function PatternHelp() {
           </ul>
         </div>
       ))}
-      <p className="mb-3 mt-2 text-xs leading-relaxed text-text-faint">
+      <p className="mb-3 mt-2 text-sm text-text-muted">
         La stagione vale 1 se non la scrivi: la libreria conta gli episodi visti come un totale, non
         per stagione, e da «visti: 27» non si ricava se sia S02E03. Il pannello{" "}
         <strong className="font-medium text-text-muted">Siti</strong> del player ha due caselle per
@@ -220,7 +213,7 @@ function PatternHelp() {
         {LINK_HOST_TOKENS.map((t) => (
           <div key={t.token} className="flex flex-wrap items-baseline gap-x-2 text-xs">
             <dt className="font-mono text-text-muted">{t.token}</dt>
-            <dd className="text-text-faint">
+            <dd className="text-text-muted">
               {t.label} — <span className="font-mono">{t.example}</span>
             </dd>
           </div>
@@ -275,7 +268,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
   }
 
   return (
-    <li className="rounded-sm border border-border bg-surface-2 p-3">
+    <li className="rounded-md bg-surface-2 p-3">
       <div className="flex items-start gap-2">
         <div className="flex shrink-0 flex-col gap-0.5">
           <button
@@ -283,18 +276,18 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
             onClick={() => move(host.id, -1)}
             disabled={index === 0}
             aria-label={`Sposta ${host.name} in alto`}
-            className="rounded-sm border border-border-strong px-1.5 text-[10px] text-text-muted disabled:opacity-30"
+            className="flex h-7 w-9 items-center justify-center rounded-xs text-text-muted transition-colors hover:text-text disabled:opacity-25"
           >
-            ↑
+            <ChevronUpIcon size={16} />
           </button>
           <button
             type="button"
             onClick={() => move(host.id, 1)}
             disabled={index === total - 1}
             aria-label={`Sposta ${host.name} in basso`}
-            className="rounded-sm border border-border-strong px-1.5 text-[10px] text-text-muted disabled:opacity-30"
+            className="flex h-7 w-9 items-center justify-center rounded-xs text-text-muted transition-colors hover:text-text disabled:opacity-25"
           >
-            ↓
+            <ChevronDownIcon size={16} />
           </button>
         </div>
 
@@ -302,17 +295,21 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
           <p className={`truncate text-sm ${host.enabled ? "text-text" : "text-text-faint line-through"}`}>
             {host.name}
           </p>
-          <p className="truncate font-mono text-[11px] text-text-faint">{hostLabel(effectiveUrl(host))}</p>
+          <p className="truncate font-mono text-xs text-text-faint">{hostLabel(effectiveUrl(host))}</p>
         </div>
 
-        <label className="flex shrink-0 items-center gap-1.5 text-xs text-text-faint">
-          <input type="checkbox" checked={host.enabled} onChange={() => toggle(host.id)} />
-          Attivo
-        </label>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={host.enabled}
+          aria-label={`${host.name} attivo`}
+          onClick={() => toggle(host.id)}
+          className="switch mt-0.5"
+        />
       </div>
 
       {host.movedTo && (
-        <div className="mt-2 rounded-sm border border-accent/50 bg-surface p-2.5">
+        <div className="mt-3 rounded-sm bg-surface p-3">
           <p className="text-xs leading-relaxed text-text-muted">
             Ha traslocato: <span className="font-mono">{hostLabel(host.url)}</span> ora rimanda a{" "}
             <span className="font-mono">{hostLabel(host.movedTo)}</span>.
@@ -321,15 +318,14 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
             <button
               type="button"
               onClick={() => acceptMove(host.id)}
-              className="rounded-sm px-3 py-1.5 text-xs font-semibold"
-              style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+              className="btn btn-primary btn-sm"
             >
               Aggiorna l'indirizzo
             </button>
             <button
               type="button"
               onClick={() => dismissMove(host.id)}
-              className="rounded-sm border border-border-strong px-3 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
+              className="btn btn-secondary btn-sm bg-surface-hover"
             >
               Lascia com'è
             </button>
@@ -338,15 +334,15 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
       )}
 
       {preview && (
-        <p className="mt-2 break-all font-mono text-[10px] leading-relaxed text-text-faint">
+        <p className="mt-2 break-all font-mono text-xs leading-relaxed text-text-muted">
           Cerca {preview}
           {others > 0 && <span className="font-sans"> e altri {others} percorsi, finché uno risponde</span>}
         </p>
       )}
 
       {status && (
-        <p className="mt-1.5 text-[11px] leading-relaxed text-text-faint">
-          <span className="text-text-muted">{REDIRECT_LABEL[status]}.</span> {REDIRECT_HINT[status]}
+        <p className="mt-1.5 text-xs text-text-muted">
+          <span className="text-text">{REDIRECT_LABEL[status]}.</span> {REDIRECT_HINT[status]}
           {addresses.length > 0 && (
             <span className="font-mono"> Risolve in {addresses.join(", ")}.</span>
           )}
@@ -354,21 +350,21 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
       )}
 
       {mirrors && mirrors.length > 0 && (
-        <div className="mt-2 rounded-sm border border-border-strong bg-surface p-2.5">
-          <p className="mb-1.5 text-[11px] leading-relaxed text-text-faint">
+        <div className="mt-3 rounded-sm bg-surface p-3">
+          <p className="mb-2 text-xs text-text-muted">
             Lo stesso nome risolve anche sotto queste estensioni. Che un dominio esista non dice
             chi ci sia dietro: guardalo prima di adottarlo.
           </p>
           <div className="flex flex-col gap-1">
             {mirrors.map((m) => (
               <div key={m.url} className="flex flex-wrap items-center gap-1.5">
-                <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-text-muted">
+                <span className="min-w-0 flex-1 truncate font-mono text-xs text-text-muted">
                   {hostLabel(m.url)} {m.answers ? "· risponde" : "· non risponde"}
                 </span>
                 <button
                   type="button"
                   onClick={() => openViewer(m.url)}
-                  className="rounded-sm border border-border-strong px-2 py-0.5 text-[10px] text-text-muted hover:bg-surface-hover"
+                  className="btn btn-secondary btn-sm bg-surface-hover"
                 >
                   Guarda
                 </button>
@@ -379,7 +375,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
                     setMirrors(null);
                     pushToast("success", `Indirizzo aggiornato a ${hostLabel(m.url)}.`);
                   }}
-                  className="rounded-sm border border-border-strong px-2 py-0.5 text-[10px] text-text-muted hover:bg-surface-hover"
+                  className="btn btn-secondary btn-sm bg-surface-hover"
                 >
                   Usa questo
                 </button>
@@ -394,7 +390,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="rounded-sm border border-border-strong px-2.5 py-1 text-[11px] text-text-muted hover:bg-surface-hover"
+          className="btn btn-secondary btn-sm bg-surface-hover"
         >
           {open ? "Chiudi" : "Modifica"}
         </button>
@@ -402,7 +398,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
           type="button"
           onClick={check}
           disabled={checking}
-          className="rounded-sm border border-border-strong px-2.5 py-1 text-[11px] text-text-muted hover:bg-surface-hover disabled:opacity-50"
+          className="btn btn-secondary btn-sm bg-surface-hover disabled:opacity-50"
         >
           {checking ? "Controllo…" : "Controlla l'indirizzo"}
         </button>
@@ -411,29 +407,29 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
           onClick={hunt}
           disabled={hunting}
           title="Cerca lo stesso nome sotto altre estensioni di dominio"
-          className="rounded-sm border border-border-strong px-2.5 py-1 text-[11px] text-text-muted hover:bg-surface-hover disabled:opacity-50"
+          className="btn btn-secondary btn-sm bg-surface-hover disabled:opacity-50"
         >
           {hunting ? "Cerco…" : "Cerca un nome alternativo"}
         </button>
         <button
           type="button"
           onClick={() => openViewer(effectiveUrl(host))}
-          className="rounded-sm border border-border-strong px-2.5 py-1 text-[11px] text-text-muted hover:bg-surface-hover"
+          className="btn btn-secondary btn-sm bg-surface-hover"
         >
           Apri nel Web Viewer
         </button>
         <button
           type="button"
           onClick={() => remove(host.id)}
-          className="rounded-sm border border-border-strong px-2.5 py-1 text-[11px] text-text-faint hover:bg-surface-hover"
+          className="btn btn-secondary btn-sm bg-surface-hover"
         >
           Rimuovi
         </button>
       </div>
 
       {open && (
-        <div className="mt-2.5 flex flex-col gap-2 border-t border-border pt-2.5">
-          <label className="flex flex-col gap-1 text-xs text-text-faint">
+        <div className="mt-3 flex flex-col gap-3 pt-3 shadow-[inset_0_1px_0_var(--separator)]">
+          <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
             Nome
             <input
               value={host.name}
@@ -441,7 +437,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
               className={`${INPUT} font-sans`}
             />
           </label>
-          <label className="flex flex-col gap-1 text-xs text-text-faint">
+          <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
             Indirizzo
             <input
               value={host.url}
@@ -453,7 +449,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
               className={INPUT}
             />
           </label>
-          <label className="flex flex-col gap-1 text-xs text-text-faint">
+          <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
             Percorso di ricerca — vuoto significa «provali tu»
             <input
               value={host.searchPattern}
@@ -466,8 +462,8 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
             />
           </label>
           <fieldset className="flex flex-col gap-1">
-            <legend className="mb-1 text-xs text-text-faint">Com'è fatto il sito</legend>
-            <div className="flex flex-wrap gap-1.5">
+            <legend className="mb-1.5 text-xs font-medium text-text-muted">Com'è fatto il sito</legend>
+            <div className="flex flex-wrap gap-2">
               {LAYOUT_FAMILIES.map((l) => (
                 <button
                   key={l.id}
@@ -475,23 +471,19 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
                   onClick={() => update(host.id, { layout: l.id as LayoutFamily })}
                   aria-pressed={(host.layout ?? "entrambi") === l.id}
                   title={l.hint}
-                  className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
-                    (host.layout ?? "entrambi") === l.id
-                      ? "border-accent text-text"
-                      : "border-border-strong text-text-muted hover:bg-surface-hover"
-                  }`}
+                  className="chip bg-surface aria-pressed:bg-text aria-pressed:text-bg"
                 >
                   {l.label}
                 </button>
               ))}
             </div>
-            <p className="mt-1 text-[11px] text-text-faint">
+            <p className="mt-1.5 text-xs text-text-muted">
               {LAYOUT_FAMILIES.find((l) => l.id === (host.layout ?? "entrambi"))?.hint}
             </p>
           </fieldset>
           <fieldset className="flex flex-col gap-1">
-            <legend className="mb-1 text-xs text-text-faint">Cosa finisce nella domanda</legend>
-            <div className="flex flex-wrap gap-1.5">
+            <legend className="mb-1.5 text-xs font-medium text-text-muted">Cosa finisce nella domanda</legend>
+            <div className="flex flex-wrap gap-2">
               {QUERY_RECIPES.map((r) => (
                 <button
                   key={r.id}
@@ -499,17 +491,13 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
                   onClick={() => update(host.id, { recipe: r.id as QueryRecipe })}
                   aria-pressed={host.recipe === r.id}
                   title={r.hint}
-                  className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
-                    host.recipe === r.id
-                      ? "border-accent text-text"
-                      : "border-border-strong text-text-muted hover:bg-surface-hover"
-                  }`}
+                  className="chip bg-surface aria-pressed:bg-text aria-pressed:text-bg"
                 >
                   {r.label}
                 </button>
               ))}
             </div>
-            <p className="mt-1 text-[11px] text-text-faint">
+            <p className="mt-1.5 text-xs text-text-muted">
               {QUERY_RECIPES.find((r) => r.id === host.recipe)?.hint}
             </p>
           </fieldset>

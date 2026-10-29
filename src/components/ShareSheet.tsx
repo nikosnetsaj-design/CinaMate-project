@@ -67,14 +67,14 @@ export function ShareSheet({ target, onClose }: { target: Target; onClose: () =>
     <Sheet onClose={onClose} titleId="share-title" maxWidthClass="max-w-sm">
       <div className="flex flex-col items-center gap-4 p-5 pt-8 sm:p-6">
         <div className="text-center">
-          <h2 id="share-title" className="font-display text-xl font-semibold text-text">
+          <h2 id="share-title" className="t-title text-text">
             Condividi «{title}»
           </h2>
-          <p className="mt-1 text-xs leading-relaxed text-text-faint">{subtitle}</p>
+          <p className="mt-1 text-sm text-text-muted">{subtitle}</p>
         </div>
 
         {tooLongForQr ? (
-          <p className="rounded-sm border border-border-strong px-3 py-2.5 text-center text-xs leading-relaxed text-text-muted">
+          <p className="rounded-md bg-surface-2 px-4 py-3 text-center text-sm text-text-muted">
             Questa lista è troppo lunga per un codice QR: il link resta valido, ma va inviato come
             link. Per il QR, condividi una lista più corta.
           </p>
@@ -84,15 +84,14 @@ export function ShareSheet({ target, onClose }: { target: Target; onClose: () =>
           </Suspense>
         )}
 
-        <p className="w-full break-all rounded-sm border border-border bg-surface-2 px-3 py-2 font-mono text-[11px] leading-relaxed text-text-muted">
+        <p className="w-full break-all rounded-md bg-surface-2 px-4 py-3 font-mono text-xs leading-relaxed text-text-muted">
           {url}
         </p>
 
         <button
           type="button"
           onClick={handleShare}
-          className="w-full rounded-sm py-2.5 text-sm font-semibold"
-          style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+          className="btn btn-primary w-full"
         >
           {copied ? "Copia di nuovo" : "Condividi o copia"}
         </button>

@@ -1,186 +1,281 @@
+import {
+  Activity,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpRight,
+  Bell,
+  ChartNoAxesColumn,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  CircleAlert,
+  CircleCheck,
+  CirclePlay,
+  CircleUser,
+  Clock,
+  Compass,
+  Crown,
+  Dice5,
+  Download,
+  EllipsisVertical,
+  Eye,
+  Film,
+  Globe,
+  Heart,
+  House,
+  Info,
+  LayoutGrid,
+  Layers,
+  LibraryBig,
+  Link,
+  List,
+  ListTree,
+  MessageSquareQuote,
+  Minus,
+  Moon,
+  Music,
+  Play,
+  Plus,
+  RefreshCw,
+  Search,
+  Settings,
+  Share,
+  Star,
+  Sun,
+  TriangleAlert,
+  Trash2,
+  Tv,
+  Upload,
+  X,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
+/*
+ * Le icone dell'app, tutte dallo stesso disegno: Lucide, griglia 24,
+ * estremità tonde.
+ *
+ * Erano trenta tracciati scritti a mano con otto spessori diversi su tre
+ * griglie, più una ventina di caratteri Unicode usati come icone: accanto,
+ * non sembravano della stessa famiglia perché non lo erano. Da una libreria
+ * arrivano solo le icone importate qui — poche centinaia di byte l'una — non
+ * le duemila del catalogo.
+ *
+ * I nomi e le props restano quelli di prima (`size`, `filled`), così nessun
+ * file che le usa ha dovuto cambiare.
+ */
+
 type IconProps = { size?: number };
 
+/**
+ * Il tratto resta otticamente uguale a ogni misura: in piccolo si ispessisce
+ * un poco, altrimenti un'icona da 14 px avrebbe un filo da un pixel scarso
+ * accanto a una da 20 che ne ha uno e mezzo.
+ */
+function stroke(size: number) {
+  return size <= 16 ? 2 : 1.75;
+}
+
+function Glyph({ icon: Icon, size }: { icon: LucideIcon; size: number }) {
+  return <Icon size={size} strokeWidth={stroke(size)} aria-hidden="true" />;
+}
+
 export function HomeIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M3 9.5 10 3l7 6.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M5 8.5V16a1 1 0 0 0 1 1h3v-4.5h2V17h3a1 1 0 0 0 1-1V8.5" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-    </svg>
-  );
+  return <Glyph icon={House} size={size} />;
 }
-
 export function CompassIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <circle cx="10" cy="10" r="7.25" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M12.6 7.4 11 11l-3.6 1.6L9 9l3.6-1.6Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-    </svg>
-  );
+  return <Glyph icon={Compass} size={size} />;
 }
-
 export function BookIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M4 4.2c1.6-.7 3.6-.7 6 .3v11.3c-2.4-1-4.4-1-6-.3V4.2Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-      <path d="M16 4.2c-1.6-.7-3.6-.7-6 .3v11.3c2.4-1 4.4-1 6-.3V4.2Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-    </svg>
-  );
+  return <Glyph icon={LibraryBig} size={size} />;
 }
-
 export function SunIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <circle cx="10" cy="10" r="3.6" stroke="currentColor" strokeWidth="1.6" />
-      <path
-        d="M10 2.5v2M10 15.5v2M17.5 10h-2M4.5 10h-2M15.3 4.7l-1.4 1.4M6.1 13.9l-1.4 1.4M15.3 15.3l-1.4-1.4M6.1 6.1 4.7 4.7"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <Glyph icon={Sun} size={size} />;
 }
-
 export function MoonIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path
-        d="M16.5 12.3A7 7 0 0 1 7.7 3.5a7 7 0 1 0 8.8 8.8Z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <Glyph icon={Moon} size={size} />;
+}
+export function SearchIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Search} size={size} />;
+}
+export function ChartIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={ChartNoAxesColumn} size={size} />;
+}
+/** A heartbeat trace: the page you open when you want to know if it's alive. */
+export function PulseIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Activity} size={size} />;
+}
+/**
+ * Il Critico. Era una scintilla, il segno di ogni prodotto «con l'IA»; qui
+ * l'assistente è un critico che scrive, quindi una citazione.
+ */
+export function SparkleIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={MessageSquareQuote} size={size} />;
+}
+export function MinusIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Minus} size={size} />;
+}
+export function PlusIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Plus} size={size} />;
+}
+export function GearIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Settings} size={size} />;
+}
+export function FilmKindIcon({ size = 14 }: IconProps) {
+  return <Glyph icon={Film} size={size} />;
+}
+export function SerieKindIcon({ size = 14 }: IconProps) {
+  return <Glyph icon={Tv} size={size} />;
+}
+export function DocKindIcon({ size = 14 }: IconProps) {
+  return <Glyph icon={CirclePlay} size={size} />;
+}
+export function DiceIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Dice5} size={size} />;
+}
+export function StackIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Layers} size={size} />;
+}
+export function PersonIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={CircleUser} size={size} />;
+}
+export function TimelineIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={ListTree} size={size} />;
+}
+export function CheckIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Check} size={size} />;
+}
+export function InfoIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Info} size={size} />;
+}
+export function DotsIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={EllipsisVertical} size={size} />;
+}
+export function ListIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={List} size={size} />;
+}
+export function LinkIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Link} size={size} />;
+}
+export function GlobeIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Globe} size={size} />;
+}
+export function RefreshIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={RefreshCw} size={size} />;
+}
+export function CloseIcon({ size = 16 }: IconProps) {
+  return <Glyph icon={X} size={size} />;
+}
+export function BackIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={ArrowLeft} size={size} />;
+}
+export function ArrowRightIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={ArrowRight} size={size} />;
+}
+export function ExternalIcon({ size = 14 }: IconProps) {
+  return <Glyph icon={ArrowUpRight} size={size} />;
+}
+export function ChevronUpIcon({ size = 14 }: IconProps) {
+  return <Glyph icon={ChevronUp} size={size} />;
+}
+export function ChevronDownIcon({ size = 14 }: IconProps) {
+  return <Glyph icon={ChevronDown} size={size} />;
+}
+export function ChevronRightIcon({ size = 16 }: IconProps) {
+  return <Glyph icon={ChevronRight} size={size} />;
+}
+export function ClockIcon({ size = 12 }: IconProps) {
+  return <Glyph icon={Clock} size={size} />;
+}
+export function EyeIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Eye} size={size} />;
+}
+export function ShareIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Share} size={size} />;
+}
+export function MusicIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Music} size={size} />;
+}
+export function DownloadIcon({ size = 16 }: IconProps) {
+  return <Glyph icon={Download} size={size} />;
+}
+export function UploadIcon({ size = 16 }: IconProps) {
+  return <Glyph icon={Upload} size={size} />;
+}
+export function TrashIcon({ size = 16 }: IconProps) {
+  return <Glyph icon={Trash2} size={size} />;
+}
+export function GridIcon({ size = 16 }: IconProps) {
+  return <Glyph icon={LayoutGrid} size={size} />;
+}
+export function CrownIcon({ size = 14 }: IconProps) {
+  return <Glyph icon={Crown} size={size} />;
+}
+export function WarningIcon({ size = 14 }: IconProps) {
+  return <Glyph icon={TriangleAlert} size={size} />;
+}
+export function SuccessIcon({ size = 16 }: IconProps) {
+  return <Glyph icon={CircleCheck} size={size} />;
+}
+export function ErrorIcon({ size = 16 }: IconProps) {
+  return <Glyph icon={CircleAlert} size={size} />;
 }
 
-export function SearchIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <circle cx="9" cy="9" r="6" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M13.5 13.5 17.5 17.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
+export function StarIcon({ size = 14, filled = false }: IconProps & { filled?: boolean }) {
+  return <Star size={size} strokeWidth={stroke(size)} fill={filled ? "currentColor" : "none"} aria-hidden="true" />;
+}
+
+export function PlayIcon({ size = 18 }: IconProps) {
+  return <Play size={size} strokeWidth={stroke(size)} fill="currentColor" aria-hidden="true" />;
 }
 
 export function HeartIcon({ size = 18, filled = false }: IconProps & { filled?: boolean }) {
+  return <Heart size={size} strokeWidth={stroke(size)} fill={filled ? "currentColor" : "none"} aria-hidden="true" />;
+}
+
+export function BellIcon({ size = 18, filled = false }: IconProps & { filled?: boolean }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-      <path
-        d="M10 17s-6.2-3.9-8.2-7.7C.6 6.9 1.6 4 4.4 3.4c1.7-.4 3.4.4 4.4 1.9l1.2 1.8 1.2-1.8c1-1.5 2.7-2.3 4.4-1.9 2.8.6 3.8 3.5 2.6 5.9C16.2 13.1 10 17 10 17Z"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <Bell
+      size={size}
+      strokeWidth={stroke(size)}
+      fill={filled ? "currentColor" : "none"}
+      fillOpacity={filled ? 0.28 : 0}
+      aria-hidden="true"
+    />
   );
 }
 
-export function ChartIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M4 16V8M10 16V4M16 16v-6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M3 17h14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-/** A heartbeat trace: the page you open when you want to know if it's alive. */
-export function PulseIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path
-        d="M2 10h3.2l1.9-4.6 2.7 9.2 2.1-6.1 1.4 1.5H18"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-export function SparkleIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path
-        d="M10 2.5 11.4 7.4 16.3 8.8 11.4 10.2 10 15.1 8.6 10.2 3.7 8.8 8.6 7.4 10 2.5Z"
-        fill="currentColor"
-      />
-      <path d="M16 12.5 16.6 14.6 18.7 15.2 16.6 15.8 16 17.9 15.4 15.8 13.3 15.2 15.4 14.6 16 12.5Z" fill="currentColor" />
-    </svg>
-  );
-}
-
-export function PlusIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M10 3.5v13M3.5 10h13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-export function GearIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <circle cx="10" cy="10" r="2.6" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M10 2.8v2M10 15.2v2M17.2 10h-2M4.8 10h-2M15 5l-1.4 1.4M6.4 13.6 5 15M15 15l-1.4-1.4M6.4 6.4 5 5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-export function FilmKindIcon({ size = 14 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <rect x="1.5" y="3" width="13" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
-      <path d="M1.5 6h13M5 3v3M11 3v3" stroke="currentColor" strokeWidth="1.1" />
-    </svg>
-  );
-}
-
-export function SerieKindIcon({ size = 14 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
-      <path d="M5.5 15h5M8 12.5v2.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
-    </svg>
-  );
-}
-
+/**
+ * L'anime: un torii. Lucide non ne ha uno, quindi è disegnato qui con le sue
+ * stesse regole — griglia 24, estremità e angoli tondi, lo stesso tratto —
+ * perché accanto al film e alla serie sembri della stessa mano.
+ */
 export function AnimeKindIcon({ size = 14 }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path d="M1.5 5.5h13M3 5.5V14M13 5.5V14" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-      <path d="M1.5 2.8c1.6.9 11.4.9 13 0" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={stroke(size)}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 4.5c3.5 1.4 14.5 1.4 18 0" />
+      <path d="M4.5 9.5h15" />
+      <path d="M6.5 6.2V20M17.5 6.2V20" />
+      <path d="M12 6.6v2.9" />
     </svg>
   );
 }
 
-export function DocKindIcon({ size = 14 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.3" />
-      <path d="M6.8 5.6v4.8L10.2 8 6.8 5.6Z" fill="currentColor" />
-    </svg>
-  );
-}
-
-export function DiceIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" strokeWidth="1.6" />
-      <circle cx="7" cy="7" r="1.1" fill="currentColor" />
-      <circle cx="13" cy="7" r="1.1" fill="currentColor" />
-      <circle cx="10" cy="10" r="1.1" fill="currentColor" />
-      <circle cx="7" cy="13" r="1.1" fill="currentColor" />
-      <circle cx="13" cy="13" r="1.1" fill="currentColor" />
-    </svg>
-  );
-}
-
+/**
+ * Il marchio: la pizza della pellicola sulla tessera dell'accento. È il logo,
+ * non un'icona d'interfaccia, quindi resta disegnato a mano e segue il colore
+ * scelto nelle Impostazioni.
+ */
 export function ReelMark({ size = 26 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 26 26" fill="none" aria-hidden="true">
@@ -197,126 +292,3 @@ export function ReelMark({ size = 26 }: IconProps) {
   );
 }
 
-export function StackIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="m10 2.6 7 3.6-7 3.6-7-3.6 7-3.6Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-      <path d="m3 10.2 7 3.6 7-3.6M3 13.9l7 3.6 7-3.6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-export function PlayIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M7.2 5.2 14.6 10l-7.4 4.8V5.2Z" fill="currentColor" />
-    </svg>
-  );
-}
-
-export function PersonIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <circle cx="10" cy="6.8" r="3.1" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M3.9 16.6c.6-3 3.1-4.7 6.1-4.7s5.5 1.7 6.1 4.7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-export function BellIcon({ size = 18, filled = false }: IconProps & { filled?: boolean }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path
-        d="M10 3.2c-2.4 0-4.1 1.8-4.1 4.2 0 3.4-1.1 4.3-1.1 5 0 .5.4.8 1 .8h8.4c.6 0 1-.3 1-.8 0-.7-1.1-1.6-1.1-5 0-2.4-1.7-4.2-4.1-4.2Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-        fill={filled ? "currentColor" : "none"}
-        fillOpacity={filled ? 0.28 : 0}
-      />
-      <path d="M8.4 15.4a1.8 1.8 0 0 0 3.2 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-export function TimelineIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M6 3.4v13.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="6" cy="6.4" r="1.9" stroke="currentColor" strokeWidth="1.5" />
-      <circle cx="6" cy="13.6" r="1.9" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M10.4 6.4H17M10.4 13.6H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-export function CheckIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M4.5 10.4 8.2 14l7.3-8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-export function InfoIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <circle cx="10" cy="10" r="7.4" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M10 9.2v4.4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-      <circle cx="10" cy="6.6" r="0.95" fill="currentColor" />
-    </svg>
-  );
-}
-
-export function DotsIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <circle cx="10" cy="4.6" r="1.35" fill="currentColor" />
-      <circle cx="10" cy="10" r="1.35" fill="currentColor" />
-      <circle cx="10" cy="15.4" r="1.35" fill="currentColor" />
-    </svg>
-  );
-}
-
-export function ListIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M7 5.4h9M7 10h9M7 14.6h9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-      <circle cx="4" cy="5.4" r="1" fill="currentColor" />
-      <circle cx="4" cy="10" r="1" fill="currentColor" />
-      <circle cx="4" cy="14.6" r="1" fill="currentColor" />
-    </svg>
-  );
-}
-
-/* Le tre icone del menu in cima: un anello di catena, un mappamondo, due
-   frecce che girano. Disegnate qui come tutte le altre invece di arrivare da
-   una libreria: sono nove righe di SVG, e un pacchetto di duemila icone per
-   usarne tre è peso che l'utente scarica e non vede mai. */
-export function LinkIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true">
-      <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5" />
-      <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5" />
-    </svg>
-  );
-}
-
-export function GlobeIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18-2.5-2.7-2.5-15.3 0-18Z" />
-    </svg>
-  );
-}
-
-export function RefreshIcon({ size = 18 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M20 11a8 8 0 0 0-13.7-5.3L3 9" />
-      <path d="M4 13a8 8 0 0 0 13.7 5.3L21 15" />
-      <path d="M3 4v5h5M21 20v-5h-5" />
-    </svg>
-  );
-}

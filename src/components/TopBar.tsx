@@ -13,7 +13,7 @@ import { useUpcoming } from "../lib/useUpcoming";
 import { effectiveUrl, hostLabel, withProtocol } from "../lib/linkHost";
 import { clearTmdbCaches } from "../lib/tmdb";
 import { countdown, dayLabel } from "../lib/format";
-import { BellIcon, DotsIcon, GearIcon, GlobeIcon, LinkIcon, MoonIcon, PersonIcon, PlusIcon, PulseIcon, RefreshIcon, SunIcon } from "./icons";
+import { BellIcon, ChevronRightIcon, DotsIcon, GearIcon, GlobeIcon, LinkIcon, MoonIcon, PersonIcon, PlusIcon, PulseIcon, RefreshIcon, SunIcon } from "./icons";
 
 /**
  * I tre controlli in cima: i generi, le novità, il menu.
@@ -25,10 +25,10 @@ import { BellIcon, DotsIcon, GearIcon, GlobeIcon, LinkIcon, MoonIcon, PersonIcon
  * Nessuna funzione nuova: le stesse, dove si cercano.
  */
 
+/* I menu sono superfici sollevate: ombra e un filo, nessuna cornice. */
 const PANEL =
-  "absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md border border-border-strong bg-surface shadow-[var(--shadow-md)]";
-const ROUND =
-  "relative flex h-9 w-9 items-center justify-center rounded-full border border-border-strong text-text-muted transition-colors hover:text-text";
+  "absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md bg-surface shadow-[var(--shadow-md),0_0_0_1px_var(--separator)]";
+const ROUND = "icon-btn relative";
 
 /**
  * Lo sfondo invisibile che chiude il menu al primo tocco fuori — e Esc, che è
@@ -71,15 +71,14 @@ function MenuItem({
         <span className="block truncate text-sm font-medium text-text" style={danger ? { color: "var(--danger)" } : undefined}>
           {label}
         </span>
-        {hint && <span className="block truncate text-[11px] text-text-faint">{hint}</span>}
+        {hint && <span className="block truncate text-xs text-text-faint">{hint}</span>}
       </span>
     </button>
   );
 }
 
 /** La forma delle pastiglie della riga di scorciatoie: bordo sottile, testo pieno. */
-const CHIP =
-  "flex shrink-0 items-center gap-1.5 rounded-full border border-border-strong bg-surface-2 px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-surface-hover";
+const CHIP = "chip";
 
 /**
  * I generi che hai davvero.
@@ -146,7 +145,7 @@ function GenreMenu() {
           <>
             <Backdrop onClose={() => setOpen(false)} />
             <div
-              className="fixed z-50 max-h-80 w-56 overflow-y-auto rounded-md border border-border-strong bg-surface shadow-[var(--shadow-md)]"
+              className="fixed z-50 max-h-80 w-56 overflow-y-auto rounded-md bg-surface shadow-[var(--shadow-md),0_0_0_1px_var(--separator)]"
               style={{ top: at.top, left: at.left }}
               role="menu"
             >
@@ -162,7 +161,7 @@ function GenreMenu() {
                 className="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left text-sm text-text transition-colors hover:bg-surface-hover"
               >
                 <span className="truncate">{genre}</span>
-                <span className="font-mono tabular text-[11px] text-text-faint">{count}</span>
+                <span className="font-mono tabular text-xs text-text-faint">{count}</span>
               </button>
             ))}
             </div>
@@ -223,7 +222,7 @@ export function AlertsBell() {
         <>
           <Backdrop onClose={() => setOpen(false)} />
           <div className={`${PANEL} w-72`} role="menu">
-            <p className="border-b border-border px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-text-faint">
+            <p className="px-3.5 pb-1.5 pt-3 text-xs font-medium text-text-faint">
               In arrivo
             </p>
             {soon.length === 0 ? (
@@ -245,12 +244,12 @@ export function AlertsBell() {
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-text">{entry.item.title}</span>
-                    <span className="block truncate text-[11px] text-text-faint">
+                    <span className="block truncate text-xs text-text-faint">
                       {entry.season != null && entry.episode != null ? `S${entry.season}E${entry.episode} · ` : ""}
                       {dayLabel(entry.date)}
                     </span>
                   </span>
-                  <span className="shrink-0 font-mono tabular text-[11px]" style={{ color: "var(--accent-text)" }}>
+                  <span className="shrink-0 font-mono tabular text-xs" style={{ color: "var(--accent-text)" }}>
                     {countdown(entry.date)}
                   </span>
                 </button>
@@ -262,10 +261,11 @@ export function AlertsBell() {
                 setOpen(false);
                 navigate("/scopri");
               }}
-              className="block w-full border-t border-border px-3.5 py-2.5 text-left text-xs font-medium"
+              className="flex w-full items-center justify-between border-t border-border px-3.5 py-2.5 text-left text-xs font-medium"
               style={{ color: "var(--accent-text)" }}
             >
-              Apri il calendario →
+              Apri il calendario
+              <ChevronRightIcon size={14} />
             </button>
           </div>
         </>
@@ -418,7 +418,7 @@ export function BrowseChips() {
   ].filter((s) => s.show);
 
   return (
-    <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6">
+    <div className="shelf gap-2">
       {shortcuts.map((s) => (
         <button key={s.to} type="button" onClick={() => navigate(s.to)} className={CHIP}>
           {s.label}

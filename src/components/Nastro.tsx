@@ -93,11 +93,7 @@ export function Nastro({
   if (stripes.length === 0) {
     return (
       <div className="flex flex-col gap-2">
-        <div
-          className="w-full rounded-sm border border-dashed border-border-strong"
-          style={{ height }}
-          aria-hidden="true"
-        />
+        <div className="w-full rounded-sm bg-surface-2" style={{ height }} aria-hidden="true" />
         <p className="text-xs text-text-faint">
           Il nastro si tesse da solo: segna un titolo come visto e comparirà il primo filo.
         </p>
@@ -117,7 +113,7 @@ export function Nastro({
         style={{ height, transformOrigin: "left center" }}
         initial={reduceMotion ? false : { scaleX: 0 }}
         animate={{ scaleX: 1 }}
-        transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       >
         {stripes.map((s) => (
           <div
@@ -127,19 +123,11 @@ export function Nastro({
             style={{ flexGrow: s.minutes, flexBasis: 0, minWidth: 2, background: s.color }}
           />
         ))}
-        {/* Velvet sheen: the band reads as fabric rather than as a chart bar. */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(to bottom, rgba(255,255,255,0.16), transparent 42%, rgba(0,0,0,0.28))",
-          }}
-        />
+
       </motion.div>
       <figcaption className="flex items-baseline justify-between gap-3 text-xs text-text-faint">
         <span>{fellBack ? "Le tue ultime sessioni" : (caption ?? `Ultimi ${days} giorni`)}</span>
-        <span className="font-mono tabular">
+        <span className="tabular">
           {stripes.length} sessioni · {hours}h
         </span>
       </figcaption>

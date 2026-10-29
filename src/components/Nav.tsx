@@ -58,13 +58,15 @@ const SECONDARY = [
 // Stessa barra sulle due sponde: si impara una interfaccia, non due.
 const MOBILE_ITEMS = NAV_ITEMS;
 
+/* La voce attiva ha un fondo, non un pallino d'accento: si vede dove sei
+   senza che la colonna abbia un punto acceso in più. */
 function linkClasses(isActive: boolean) {
-  return `flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm font-medium transition-colors ${
-    isActive ? "text-text" : "text-text-muted hover:text-text hover:bg-surface-hover"
+  return `flex h-10 items-center gap-3 rounded-sm px-3 text-sm font-medium transition-colors ${
+    isActive ? "bg-surface-2 text-text" : "text-text-muted hover:bg-surface-2 hover:text-text"
   }`;
 }
 
-function ThemeToggle({ compact = false }: { compact?: boolean }) {
+function ThemeToggle() {
   const theme = useTheme((s) => s.theme);
   const toggle = useTheme((s) => s.toggle);
   return (
@@ -72,7 +74,7 @@ function ThemeToggle({ compact = false }: { compact?: boolean }) {
       type="button"
       onClick={toggle}
       aria-label={theme === "dark" ? "Attiva tema chiaro" : "Attiva tema scuro"}
-      className={`flex items-center justify-center rounded-full border border-border-strong text-text-muted transition-colors hover:text-text ${compact ? "h-9 w-9" : "h-9 w-9"}`}
+      className="icon-btn icon-btn-sm"
     >
       {theme === "dark" ? <SunIcon /> : <MoonIcon />}
     </button>
@@ -87,30 +89,34 @@ export function Nav() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-border bg-surface px-4 py-5 md:flex">
-        <div className="flex items-center gap-2.5 px-1 pb-6">
+      {/* Da 1024 px. Prima compariva a 768: su un iPad in verticale la colonna
+          da 240 px si prendeva un terzo dello schermo, e sotto quella misura
+          la barra in basso fa lo stesso lavoro occupando una riga. */}
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col bg-surface px-3 py-5 lg:flex">
+        <div className="flex items-center gap-2.5 px-2 pb-6">
           <ReelMark />
-          <span className="font-display text-lg font-semibold text-text">CineMate</span>
+          <span className="font-display text-xl text-text">CineMate</span>
         </div>
 
         <button
           type="button"
           onClick={() => openAddSheet()}
-          className="mb-2.5 flex items-center justify-center gap-2 rounded-sm px-3 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
-          style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+          className="btn btn-primary mb-2.5"
         >
           <PlusIcon size={16} />
           Aggiungi titolo
         </button>
 
+        {/* Ha la forma di un campo perché si comporta come un campo: si tocca e
+            si scrive. Il segnaposto dice tutto quello che la palette cerca. */}
         <button
           type="button"
           onClick={openPalette}
-          className="mb-5 flex items-center gap-2 rounded-sm border border-border-strong px-3 py-2 text-sm text-text-faint transition-colors hover:text-text-muted"
+          className="mb-5 flex h-10 items-center gap-2 rounded-sm bg-surface-2 px-3 text-sm text-text-faint transition-colors hover:text-text-muted"
         >
           <SearchIcon size={16} />
-          <span className="flex-1 text-left">Cerca nella libreria…</span>
-          <kbd className="rounded-xs border border-border-strong px-1.5 py-0.5 font-sans text-[10px]">⌘K</kbd>
+          <span className="min-w-0 flex-1 truncate text-left">Titolo, persona, saga</span>
+          <kbd className="rounded-xs bg-surface px-1.5 py-0.5 font-sans text-xs">⌘K</kbd>
         </button>
 
         <nav aria-label="Navigazione principale" className="flex flex-1 flex-col gap-1">
@@ -123,22 +129,15 @@ export function Nav() {
               viewTransition
               className={({ isActive }) => linkClasses(isActive)}
             >
-              {({ isActive }) => (
-                <>
-                  <Icon />
-                  {label}
-                  {isActive && (
-                    <span className="ml-auto h-1.5 w-1.5 rounded-full" style={{ background: "var(--accent)" }} />
-                  )}
-                </>
-              )}
+              <Icon />
+              {label}
             </NavLink>
           ))}
 
           {/* Le scorciatoie: stessa raggiungibilità, peso minore. Sul telefono
               queste stanno nel menu dei tre puntini — qui c'è la colonna, e
               una colonna vuota non è una virtù. */}
-          <span className="mt-4 px-3 pb-1 t-label text-text-faint">Altro</span>
+          <span className="mt-5 px-3 pb-1 t-label text-text-faint">Altro</span>
           {SECONDARY.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
@@ -146,8 +145,8 @@ export function Nav() {
               {...prefetchHandlers(to)}
               viewTransition
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-sm px-3 py-2 text-[13px] transition-colors ${
-                  isActive ? "text-text" : "text-text-faint hover:bg-surface-hover hover:text-text-muted"
+                `flex h-9 items-center gap-3 rounded-sm px-3 text-sm transition-colors ${
+                  isActive ? "bg-surface-2 text-text" : "text-text-muted hover:bg-surface-2 hover:text-text"
                 }`
               }
             >
@@ -157,12 +156,12 @@ export function Nav() {
           ))}
         </nav>
 
-        <div className="flex items-center justify-between px-1 pt-4">
+        <div className="flex items-center justify-between px-1 pt-4 text-text-muted">
           <button
             type="button"
             onClick={() => openSettings()}
             aria-label="Impostazioni"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border-strong text-text-muted transition-colors hover:text-text"
+            className="icon-btn icon-btn-filled icon-btn-sm"
           >
             <GearIcon size={16} />
           </button>
@@ -180,12 +179,18 @@ export function Nav() {
           fanno all'app. Qui resta solo quello: il modo di *guardare la
           libreria* — tipi, stati, generi — è sceso in cima alla Home, sopra la
           vetrina, dove il pollice arriva senza attraversare lo schermo. */}
-      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-surface/95 px-4 backdrop-blur-sm md:hidden">
+      {/* Vetro e un filo, non una barra piena con il bordo: il contenuto
+          scorre sotto e si intravede, che è il modo in cui una barra dice di
+          stare sopra e non accanto. */}
+      <header
+        className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between bg-material px-4 backdrop-blur-xl backdrop-saturate-150 lg:hidden"
+        style={{ boxShadow: "inset 0 -1px 0 var(--separator)" }}
+      >
         <div className="flex min-w-0 items-center gap-2">
           <ReelMark size={22} />
-          <span className="font-display text-base font-semibold text-text">CineMate</span>
+          <span className="font-display text-xl text-text">CineMate</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="-mr-2 flex items-center">
           <AlertsBell />
           <QuickMenu />
         </div>
@@ -198,7 +203,8 @@ export function Nav() {
           sceso dove stanno le altre azioni sull'app: il menu in cima. */}
       <nav
         aria-label="Navigazione principale"
-        className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around bg-material pb-[env(safe-area-inset-bottom)] backdrop-blur-xl backdrop-saturate-150 lg:hidden"
+        style={{ boxShadow: "inset 0 1px 0 var(--separator)" }}
       >
         {MOBILE_ITEMS.map(({ to, label, icon: Icon, end }) => (
           <NavLink
@@ -208,12 +214,12 @@ export function Nav() {
             {...prefetchHandlers(to)}
             viewTransition
             className={({ isActive }) =>
-              `flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium ${
+              `flex h-[var(--tabbar-h)] flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors ${
                 isActive ? "text-accent-text" : "text-text-faint"
               }`
             }
           >
-            <Icon size={20} />
+            <Icon size={24} />
             {label}
           </NavLink>
         ))}

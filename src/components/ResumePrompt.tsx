@@ -5,6 +5,7 @@ import { useLibrary } from "../store/useLibrary";
 import { useWatchSession } from "../store/useWatchSession";
 import { useFocusTrap } from "../lib/useFocusTrap";
 import { PosterArt } from "./PosterArt";
+import { MinusIcon, PlusIcon } from "./icons";
 import type { Item } from "../types";
 
 // Ask only once enough time has passed to plausibly have watched something.
@@ -47,7 +48,7 @@ function Prompt({ item, minutes }: { item: Item; minutes: number }) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 16 }}
         transition={{ type: "spring", stiffness: 340, damping: 30 }}
-        className="w-full max-w-md rounded-lg border border-border bg-surface p-4 shadow-[var(--shadow-lg)]"
+        className="w-full max-w-md rounded-lg bg-surface p-4 shadow-[var(--shadow-lg)]"
       >
         <div className="flex items-start gap-3.5">
           <PosterArt item={item} size="sm" showTitle={false} className="w-12 shrink-0" />
@@ -69,21 +70,20 @@ function Prompt({ item, minutes }: { item: Item; minutes: number }) {
               type="button"
               onClick={() => setCount((c) => Math.max(1, c - 1))}
               aria-label="Un episodio in meno"
-              className="h-9 w-9 rounded-sm border border-border-strong text-text-muted"
+              className="icon-btn icon-btn-filled"
             >
-              −
+              <MinusIcon size={18} />
             </button>
-            <span className="font-mono tabular text-2xl font-semibold text-text" aria-live="polite">
+            <span className="t-figure min-w-8 text-center text-text" aria-live="polite">
               {count}
             </span>
             <button
               type="button"
               onClick={() => setCount((c) => Math.min((item.episodes ?? c) - (item.seen || 0), c + 1))}
               aria-label="Un episodio in più"
-              className="h-9 w-9 rounded-sm border text-text"
-              style={{ borderColor: "color-mix(in srgb, var(--accent) 45%, transparent)" }}
+              className="icon-btn icon-btn-filled"
             >
-              +
+              <PlusIcon size={18} />
             </button>
           </div>
         )}
@@ -92,15 +92,14 @@ function Prompt({ item, minutes }: { item: Item; minutes: number }) {
           <button
             type="button"
             onClick={clear}
-            className="flex-1 rounded-sm border border-border-strong py-2.5 text-sm text-text-muted"
+            className="btn btn-secondary flex-1"
           >
             Non ancora
           </button>
           <button
             type="button"
             onClick={confirm}
-            className="flex-[2] rounded-sm py-2.5 text-sm font-semibold"
-            style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+            className="btn btn-primary flex-[2]"
           >
             {isSeries ? `Segna ${count} episod${count === 1 ? "io" : "i"}` : "Sì, visto"}
           </button>

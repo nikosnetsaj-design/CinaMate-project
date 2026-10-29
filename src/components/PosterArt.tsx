@@ -26,32 +26,20 @@ function Sprockets({ side }: { side: "left" | "right" }) {
 }
 
 /**
- * La pastiglia in fondo alla copertina: perché questo titolo vale uno sguardo
- * adesso. Due toni — la riga forte sull'accento, il contorno su fondo chiaro —
- * perché "Nuova stagione" e "prossimamente" non hanno lo stesso peso e in una
- * riga scorrevole si legge solo la prima.
+ * La pastiglia sulla copertina: perché questo titolo vale uno sguardo adesso.
+ *
+ * Era una fascia piena d'accento larga quanto la locandina, più una seconda
+ * fascia bianca sotto: su una riga di cinque titoli, cinque bande colorate
+ * sopra le immagini che dovevano essere guardate. Ora è un'etichetta di vetro
+ * in un angolo — si legge, e lascia la copertina alla copertina.
  */
 function StatusRibbon({ badge }: { badge: PosterBadge }) {
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col text-center text-[10px] font-semibold leading-tight">
-      <span className="px-1 py-1 truncate" style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}>
+    <div className="pointer-events-none absolute inset-x-1.5 bottom-1.5 flex">
+      <span className="max-w-full truncate rounded-xs bg-black/65 px-1.5 py-0.5 text-xs font-semibold text-white backdrop-blur-sm">
         {badge.label}
+        {badge.detail && <span className="font-medium text-white/75"> · {badge.detail}</span>}
       </span>
-      {badge.detail && (
-        <span className="truncate bg-white px-1 py-1 text-black">{badge.detail}</span>
-      )}
-    </div>
-  );
-}
-
-function KindBadge({ kind, size }: { kind: Kind; size: "sm" | "md" | "lg" }) {
-  const Icon = KIND_ICON[kind];
-  return (
-    <div
-      className="absolute left-1.5 top-1.5 flex items-center justify-center rounded-xs bg-black/45 p-1 text-white/90 backdrop-blur-sm"
-      aria-hidden="true"
-    >
-      <Icon size={size === "sm" ? 10 : 13} />
     </div>
   );
 }
@@ -117,7 +105,9 @@ export function PosterArt({
           onError={() => setImgFailed(true)}
           className="h-full w-full object-cover"
         />
-        <KindBadge kind={item.kind} size={size} />
+        {/* Niente icona del tipo sopra una copertina vera: la locandina dice
+            già se è un film o una serie, e un'icona in ogni angolo di una
+            griglia è rumore ripetuto ventiquattro volte. */}
         {badge && <StatusRibbon badge={badge} />}
       </div>
     );
@@ -163,14 +153,6 @@ export function PosterArt({
         </div>
       )}
       {badge && <StatusRibbon badge={badge} />}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.07] mix-blend-overlay"
-        style={{
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
-        }}
-      />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { formatUsd, formatUsdShort } from "../lib/format";
 import { profileUrl, providerLogoUrl, type TmdbCompany, type TmdbCrewCredit } from "../lib/tmdb";
 import { MediaGallery } from "./MediaGallery";
 import type { Item } from "../types";
+import { ChevronRightIcon, MusicIcon } from "./icons";
 
 /**
  * I dati del titolo che non stanno nella libreria: chi l'ha fatto, quanto è
@@ -31,7 +32,7 @@ function CrewCard({ person }: { person: TmdbCrewCredit }) {
         openPerson(person.name);
       }}
       aria-label={`Apri la scheda di ${person.name}`}
-      className="flex items-center gap-3 rounded-md border border-border bg-surface-2 p-2.5 text-left transition-colors hover:bg-surface-hover"
+      className="flex items-center gap-3 rounded-lg bg-surface-2 p-2.5 text-left transition-colors hover:bg-surface-hover"
     >
       <span className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-surface-hover">
         {photo ? (
@@ -80,7 +81,7 @@ function MoneyPanel({ budget, revenue }: { budget: number; revenue: number }) {
   return (
     <section className="mt-5">
       <h3 className="font-display text-lg font-semibold text-text">Dati finanziari</h3>
-      <div className="mt-2.5 rounded-md border border-border bg-surface-2 p-4">
+      <div className="mt-2.5 rounded-lg bg-surface-2 p-4">
         <div className="flex flex-col gap-3">
           {[
             { label: "Budget", value: budget, color: "var(--text-muted)" },
@@ -90,7 +91,7 @@ function MoneyPanel({ budget, revenue }: { budget: number; revenue: number }) {
             .map((r) => (
               <div key={r.label}>
                 <div className="flex items-baseline justify-between gap-3">
-                  <span className="text-xs font-medium uppercase tracking-wide text-text-faint">{r.label}</span>
+                  <span className="text-xs font-medium text-text-faint">{r.label}</span>
                   <span className="font-mono tabular text-base font-semibold text-text" title={formatUsd(r.value)}>
                     {formatUsd(r.value)}
                   </span>
@@ -110,7 +111,7 @@ function MoneyPanel({ budget, revenue }: { budget: number; revenue: number }) {
             {verdict.text}
           </p>
         )}
-        <p className="mt-2 text-[11px] text-text-faint">
+        <p className="mt-2 text-xs text-text-faint">
           Cifre in dollari come le pubblica TMDB, non aggiustate per l'inflazione.
           {revenue > 0 && budget > 0 && ` Differenza: ${formatUsdShort(revenue - budget)}.`}
         </p>
@@ -154,7 +155,7 @@ function StudioRow({ companies }: { companies: TmdbCompany[] }) {
         {withoutLogo.map((c) => (
           <span
             key={c.id || c.name}
-            className="flex h-16 items-center rounded-md border border-border bg-surface-2 px-3.5 text-xs font-medium text-text-muted"
+            className="flex h-16 items-center rounded-lg bg-surface-2 px-3.5 text-xs font-medium text-text-muted"
           >
             {c.name}
           </span>
@@ -179,9 +180,9 @@ function SoundtrackLink({ title, composer }: { title: string; composer?: string 
   const url = `https://open.spotify.com/search/${encodeURIComponent(query)}`;
 
   return (
-    <div className="mt-4 flex items-center gap-3 rounded-md border border-border bg-surface-2 p-3.5">
-      <span aria-hidden="true" className="text-xl leading-none">
-        ♫
+    <div className="mt-4 flex items-center gap-3 rounded-lg bg-surface-2 p-3.5">
+      <span className="shrink-0 text-text-muted">
+        <MusicIcon size={20} />
       </span>
       <p className="min-w-0 flex-1 text-sm leading-snug text-text-muted">
         Trova la colonna sonora su Spotify
@@ -191,8 +192,7 @@ function SoundtrackLink({ title, composer }: { title: string; composer?: string 
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="shrink-0 rounded-full px-4 py-2 text-sm font-semibold"
-        style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+        className="btn btn-primary shrink-0"
       >
         Apri
       </a>
@@ -241,10 +241,11 @@ export function TitleFacts({ item }: { item: Item }) {
               <button
                 type="button"
                 onClick={() => setAllCrew((v) => !v)}
-                className="text-xs font-medium"
+                className="inline-flex items-center gap-0.5 text-xs font-medium"
                 style={{ color: "var(--accent-text)" }}
               >
-                {allCrew ? "mostra meno" : "mostra tutti →"}
+                {allCrew ? "mostra meno" : "mostra tutti"}
+                {!allCrew && <ChevronRightIcon size={14} />}
               </button>
             )}
           </div>

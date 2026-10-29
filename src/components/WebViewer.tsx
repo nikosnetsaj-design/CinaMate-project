@@ -9,6 +9,7 @@ import { withProtocol } from "../lib/linkHost";
 import { hasPageReader, readableDocument } from "../lib/pageReader";
 import { bestStreamConfirmed, readPage, titleLinksIn } from "../lib/streamExtract";
 import type { FetchFailure, FoundLink } from "../lib/streamExtract";
+import { BackIcon, CloseIcon, ExternalIcon } from "./icons";
 
 /**
  * Il **Web Viewer**: una finestra su una pagina, con tutto quello che una
@@ -103,9 +104,10 @@ function sandboxFor(level: BlockLevel, url: string): string {
   return (sameOrigin ? tokens.filter((t) => t !== "allow-same-origin") : tokens).join(" ");
 }
 
-const CHIP = "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors";
-const CHIP_ON = "border-accent text-text";
-const CHIP_OFF = "border-border-strong text-text-muted hover:bg-surface-hover";
+// Le pastiglie del sistema: la scelta si inverte da sé con `aria-pressed`.
+const CHIP = "chip";
+const CHIP_ON = "";
+const CHIP_OFF = "";
 
 export function WebViewer() {
   const url = useWebViewer((s) => s.url);
@@ -288,7 +290,7 @@ function ViewerFrame({
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col gap-2.5 border-b border-border bg-surface-2 p-3"
+        className="flex flex-col gap-2.5 bg-surface p-3 shadow-[inset_0_-1px_0_var(--separator)]"
       >
         <div className="flex items-center gap-2">
           <button
@@ -296,9 +298,9 @@ function ViewerFrame({
             onClick={back}
             disabled={history.length < 2}
             aria-label="Indietro"
-            className="rounded-sm border border-border-strong px-2.5 py-1.5 text-xs text-text-muted disabled:opacity-40"
+            className="icon-btn icon-btn-filled icon-btn-sm shrink-0 disabled:opacity-40"
           >
-            ←
+            <BackIcon size={16} />
           </button>
           <form
             className="flex flex-1 gap-2"
@@ -315,12 +317,11 @@ function ViewerFrame({
               autoCapitalize="off"
               spellCheck={false}
               aria-label="Indirizzo"
-              className="min-w-0 flex-1 rounded-sm border border-border-strong bg-surface px-3 py-1.5 font-mono text-xs text-text focus:border-accent"
+              className="field field-sm min-w-0 flex-1 font-mono"
             />
             <button
               type="submit"
-              className="rounded-sm px-3 py-1.5 text-xs font-semibold"
-              style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+              className="btn btn-primary btn-sm"
             >
               Vai
             </button>
@@ -330,17 +331,17 @@ function ViewerFrame({
             target="_blank"
             rel="noopener noreferrer nofollow"
             title="Apri in una scheda del browser"
-            className="rounded-sm border border-border-strong px-2.5 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
+            className="btn btn-secondary btn-sm"
           >
-            ↗
+            <ExternalIcon size={16} />
           </a>
           <button
             type="button"
             onClick={onClose}
             aria-label="Chiudi il Web Viewer"
-            className="rounded-sm border border-border-strong px-2.5 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
+            className="btn btn-secondary btn-sm"
           >
-            ✕
+            <CloseIcon size={16} />
           </button>
         </div>
 
@@ -348,7 +349,7 @@ function ViewerFrame({
             un sito che rifiuta di essere incorniciato non ha nessun livello di
             blocco che lo salvi — quindi sta per prima. */}
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Mostra</span>
+          <span className="text-xs font-medium text-text-faint">Mostra</span>
           <button
             type="button"
             onClick={() => setMode("sito")}
@@ -379,7 +380,7 @@ function ViewerFrame({
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Blocco</span>
+          <span className="text-xs font-medium text-text-faint">Blocco</span>
           {LEVELS.map((l) => (
             <button
               key={l.id}
@@ -428,7 +429,7 @@ function ViewerFrame({
             pagina di risultati alla scheda, senza dover leggere l'elenco a
             occhio e senza clic dentro al riquadro. */}
         {links.length > 0 && (
-          <div className="flex flex-col gap-1.5 rounded-sm border border-border-strong bg-surface p-2.5">
+          <div className="flex flex-col gap-2 rounded-md bg-surface-2 p-3">
             <span className="text-xs font-medium text-text-muted">
               Collegamenti che sembrano «{context?.title}»
             </span>
@@ -439,7 +440,7 @@ function ViewerFrame({
                   type="button"
                   onClick={() => go(l.url)}
                   title={l.url}
-                  className={`${CHIP} ${CHIP_OFF} max-w-full truncate`}
+                  className={`${CHIP} ${CHIP_OFF} max-w-full truncate bg-surface`}
                 >
                   {l.label || l.url}
                 </button>
@@ -449,14 +450,13 @@ function ViewerFrame({
         )}
 
         {found && (
-          <div className="flex flex-wrap items-center gap-2 rounded-sm border border-border-strong bg-surface p-2.5">
-            <span className="min-w-0 flex-1 break-all font-mono text-[11px] text-text-muted">{found}</span>
+          <div className="flex flex-wrap items-center gap-2 rounded-md bg-surface-2 p-3">
+            <span className="min-w-0 flex-1 break-all font-mono text-xs text-text-muted">{found}</span>
             {context && (
               <button
                 type="button"
                 onClick={useForTitle}
-                className="rounded-sm px-3 py-1.5 text-xs font-semibold"
-                style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+                className="btn btn-primary btn-sm"
               >
                 Usa per «{context.title}»
               </button>
@@ -464,7 +464,7 @@ function ViewerFrame({
             <button
               type="button"
               onClick={copyFound}
-              className="rounded-sm border border-border-strong px-3 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
+              className="btn btn-secondary btn-sm"
             >
               Copia
             </button>
@@ -511,7 +511,7 @@ function ViewerFrame({
         )}
       </div>
 
-      <p className="border-t border-border bg-surface-2 px-3 py-2 text-[11px] leading-relaxed text-text-faint">
+      <p className="bg-surface px-3 py-2 text-xs leading-relaxed text-text-muted shadow-[inset_0_1px_0_var(--separator)]">
         {mode === "letta" ? (
           <>
             Quello che vedi è il sorgente della pagina ridisegnato qui, non il sito dentro un

@@ -12,7 +12,7 @@ export default function MarathonBar({ marathon, onJumpTo }: Props) {
         <div className="pv-marathon-fill" style={{ width: `${completionPercent}%` }} />
       </div>
       <div className="pv-marathon-info">
-        <span className="pv-mono">Maratona · {completionPercent.toFixed(0)}%</span>
+        <span className="pv-num">Maratona · {completionPercent.toFixed(0)}%</span>
         <span className="pv-dim">Rimangono {formatDuration(remainingSec)}</span>
         {hasNext && (
           <button className="pv-btn-tiny" onClick={() => { next(); onJumpTo(index + 1); }}>

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
 import { PosterArt } from "./PosterArt";
 import { VoteBadge } from "./VoteBadge";
+import { RowHeader } from "./RowHeader";
 import { useSelectedItem } from "../store/useSelectedItem";
 import type { Item } from "../types";
 import type { Suggestion } from "../lib/recommend";
@@ -34,32 +34,26 @@ export function PosterRow({
   if (entries.length === 0) return null;
 
   return (
-    <section className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="section-mark font-display text-xl font-semibold text-text">
-          {title}
-          {count !== undefined && <span className="text-sm font-normal text-text-faint"> · {count}</span>}
-        </h2>
-        {moreHref && (
-          <Link to={moreHref} className="shrink-0 text-sm font-medium text-accent-text">
-            tutti
-          </Link>
-        )}
-      </div>
-      {note && <p className="-mt-1 text-xs text-text-faint">{note}</p>}
-      <div className="no-scrollbar flex gap-3.5 overflow-x-auto pb-1">
+    <section className="flex flex-col gap-4">
+      <RowHeader title={title} count={count} note={note} to={moreHref} />
+      <div className="shelf">
         {entries.map(({ item, reason }) => (
           <button
             key={item.id}
             type="button"
             onClick={() => openItem(item)}
             aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
-            className="w-28 shrink-0 text-left"
+            className="group w-32 text-left sm:w-36"
           >
-            <PosterArt item={item} size="sm" className="w-28" badge={badges?.[item.id]} />
-            <p className="mt-1.5 line-clamp-2 text-xs font-medium text-text">{item.title}</p>
+            <PosterArt
+              item={item}
+              size="sm"
+              className="w-full transition-transform duration-200 group-active:scale-[0.98]"
+              badge={badges?.[item.id]}
+            />
+            <p className="mt-2 line-clamp-2 text-sm font-medium leading-snug text-text">{item.title}</p>
             {reason ? (
-              <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-text-faint">{reason}</p>
+              <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-text-faint">{reason}</p>
             ) : (
               <VoteBadge vote={item.vote} size="sm" />
             )}

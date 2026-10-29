@@ -8,6 +8,7 @@ import { useLinkHosts } from "../store/useLinkHosts";
 import { useWebViewer } from "../store/useWebViewer";
 import { buildQuery, effectiveUrl, hostLabel, searchUrlsFor } from "../lib/linkHost";
 import type { Item } from "../types";
+import { ChevronRightIcon, ExternalIcon, LinkIcon, PlayIcon } from "./icons";
 
 function linkLabel(url: string): string {
   try {
@@ -16,8 +17,6 @@ function linkLabel(url: string): string {
     return url;
   }
 }
-
-const CHIP = "rounded-full px-2.5 py-1 text-xs";
 
 /**
  * L'icona del servizio, grande abbastanza da riconoscerla senza leggerla.
@@ -40,7 +39,7 @@ function ProviderTile({ provider, title, onOpen }: { provider: TmdbWatchProvider
   );
 
   const shell =
-    "block h-14 w-14 shrink-0 overflow-hidden rounded-[14px] border border-border-strong bg-surface-2 transition-transform";
+    "block h-14 w-14 shrink-0 overflow-hidden rounded-[14px] border bg-surface-2 transition-transform";
 
   return link ? (
     <a
@@ -75,7 +74,7 @@ function ProviderGroup({
   if (providers.length === 0) return null;
   return (
     <div>
-      <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--accent-text)" }}>
+      <span className="mb-1.5 block text-xs font-medium text-text-muted">
         {label}
       </span>
       <div className="flex flex-wrap gap-2">
@@ -98,7 +97,7 @@ const EMPTY_WATCH: TmdbWatchInfo = { streaming: [], free: [], rent: [], buy: [],
  */
 export function WatchProvidersBlock({ item }: { item: Item }) {
   return (
-    <div className="mt-4 rounded-md border border-border bg-surface-2 p-4">
+    <div className="mt-4 rounded-lg bg-surface-2 p-4">
       <WatchProviders item={item} />
     </div>
   );
@@ -190,10 +189,10 @@ function WatchProviders({ item }: { item: Item }) {
           target="_blank"
           rel="noopener noreferrer"
           title={`Apri ${item.title} su ${own.service}`}
-          className={`${CHIP} mt-1.5 inline-block border border-border-strong font-medium hover:bg-surface-hover`}
-          style={{ color: "var(--accent-text)" }}
+          className="chip mt-1.5 text-accent-text"
         >
-          Apri su {own.service} ↗
+          Apri su {own.service}
+          <ExternalIcon size={12} />
         </a>
       )}
 
@@ -213,10 +212,11 @@ function WatchProviders({ item }: { item: Item }) {
           onClick={() => startWatching(item.id)}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-1.5 inline-block text-xs underline-offset-2 hover:underline"
+          className="mt-1.5 inline-flex items-center gap-0.5 text-xs underline-offset-2 hover:underline"
           style={{ color: "var(--accent-text)" }}
         >
-          Vedi tutte le opzioni su JustWatch →
+          Vedi tutte le opzioni su JustWatch
+          <ChevronRightIcon size={14} />
         </a>
       )}
     </div>
@@ -241,7 +241,7 @@ function LinkHostSearch({ item }: { item: Item }) {
 
   return (
     <div>
-      <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">
+      <span className="mb-2 block text-xs font-medium text-text-faint">
         Cerca sui tuoi siti
       </span>
       <div className="flex flex-wrap gap-1.5">
@@ -257,10 +257,9 @@ function LinkHostSearch({ item }: { item: Item }) {
                 openViewer(url, { itemId: item.id, title: item.title });
               }}
               title={url}
-              className={`${CHIP} border border-border-strong font-medium hover:bg-surface-hover`}
-              style={{ color: "var(--accent-text)" }}
+              className="chip text-accent-text"
             >
-              {hostLabel(effectiveUrl(host))} ⧉
+              {hostLabel(effectiveUrl(host))}
             </button>
           );
         })}
@@ -282,7 +281,7 @@ export function WatchAndLinks({ item }: { item: Item }) {
   if (!item.tmdbId && !item.trailerUrl && !hasLinks && !hasPlatformLink && !hasLinkHosts) return null;
 
   return (
-    <div className="mt-4 flex flex-col gap-3.5 rounded-md border border-border bg-surface-2 p-4">
+    <div className="mt-4 flex flex-col gap-3.5 rounded-lg bg-surface-2 p-4">
       <WatchProviders item={item} />
       <LinkHostSearch item={item} />
       {(item.trailerUrl || hasLinks) && (
@@ -292,9 +291,10 @@ export function WatchAndLinks({ item }: { item: Item }) {
               href={item.trailerUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-full border border-border-strong px-3 py-1.5 text-xs font-medium text-text hover:bg-surface-hover"
+              className="chip gap-1.5"
             >
-              ▶ Trailer
+              <PlayIcon size={12} />
+              Trailer
             </a>
           )}
           {item.links.map((l) => (
@@ -304,9 +304,10 @@ export function WatchAndLinks({ item }: { item: Item }) {
               onClick={() => startWatching(item.id)}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-full border border-border-strong px-3 py-1.5 text-xs font-medium text-text hover:bg-surface-hover"
+              className="chip gap-1.5"
             >
-              🔗 {linkLabel(l)}
+              <LinkIcon size={13} />
+              {linkLabel(l)}
             </a>
           ))}
         </div>

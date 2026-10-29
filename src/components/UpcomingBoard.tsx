@@ -36,11 +36,10 @@ function ReminderToggle({ itemId, title }: { itemId: string; title: string }) {
       onClick={onClick}
       aria-pressed={enabled}
       aria-label={enabled ? `Togli il promemoria per ${title}` : `Avvisami quando esce ${title}`}
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors"
+      className="icon-btn icon-btn-sm shrink-0"
       style={{
-        borderColor: enabled ? "color-mix(in srgb, var(--accent) 45%, transparent)" : "var(--border-strong)",
-        background: enabled ? "color-mix(in srgb, var(--accent) 14%, transparent)" : "transparent",
-        color: enabled ? "var(--accent-text)" : "var(--text-faint)",
+        background: enabled ? "color-mix(in srgb, var(--accent) 16%, transparent)" : "var(--surface-2)",
+        color: enabled ? "var(--accent-text)" : "var(--text-muted)",
       }}
     >
       <BellIcon size={15} filled={enabled} />
@@ -55,7 +54,7 @@ function EntryRow({ entry }: { entry: UpcomingEntry }) {
   const imminent = days <= 7;
 
   return (
-    <li className="flex items-center gap-3 rounded-md border border-border bg-surface p-2.5">
+    <li className="list-row gap-3 py-2.5">
       <button
         type="button"
         onClick={() => openItem(item)}
@@ -64,15 +63,15 @@ function EntryRow({ entry }: { entry: UpcomingEntry }) {
       >
         <PosterArt item={item} size="sm" showTitle={false} className="w-11 shrink-0" />
         <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-sm font-semibold text-text">{item.title}</p>
-          <p className="mt-0.5 truncate text-xs text-text-faint">
+          <p className="truncate text-sm font-medium text-text">{item.title}</p>
+          <p className="mt-0.5 truncate text-xs text-text-muted">
             {type === "episodio"
               ? season != null && episode != null
                 ? `Nuovo episodio · S${season}E${episode}`
                 : "Nuovo episodio"
               : "Uscita del film"}
           </p>
-          <p className="mt-0.5 font-mono tabular text-[11px]" style={{ color: imminent ? "var(--accent-text)" : "var(--text-faint)" }}>
+          <p className="mt-0.5 font-mono tabular text-xs" style={{ color: imminent ? "var(--accent-text)" : "var(--text-faint)" }}>
             {dayLabel(date)} · {countdown(date)}
           </p>
         </div>
@@ -129,7 +128,7 @@ export function UpcomingBoard() {
               new Date(`${month}-01T00:00:00`),
             )}
           </h2>
-          <ul className="flex flex-col gap-2.5">
+          <ul className="list-group" style={{ "--row-inset": "72px" } as React.CSSProperties}>
             {monthEntries.map((entry) => (
               <EntryRow key={`${entry.item.id}-${entry.date}`} entry={entry} />
             ))}

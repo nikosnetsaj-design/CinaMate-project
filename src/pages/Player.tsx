@@ -5,6 +5,8 @@ import { useSagas } from "../store/useSagas";
 import { usePlayerSources } from "../store/usePlayerSources";
 import { usePlayerPrefs } from "../store/usePlayerPrefs";
 import { EmptyState } from "../components/EmptyState";
+import { ErrorIcon } from "../components/icons";
+import { useSettingsSheet } from "../store/useSettingsSheet";
 import VideoPlayer from "../player/components/VideoPlayer";
 import DownloadManagerUI from "../player/components/DownloadManagerUI";
 import WatchPartyPanel from "../player/components/WatchPartyPanel";
@@ -99,6 +101,7 @@ function useStableId(): string {
 }
 
 export function Player() {
+  const openSettings = useSettingsSheet((s) => s.open);
   const items = useVisibleItems();
   const sources = usePlayerSources((s) => s.sources);
   const patchSource = usePlayerSources((s) => s.patch);
@@ -477,9 +480,9 @@ export function Player() {
   );
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-4 px-4 py-6 sm:px-6 sm:py-10">
+    <div className="mx-auto flex max-w-4xl flex-col gap-6 px-[var(--gutter)] py-6 sm:py-10">
       <header className="flex flex-col gap-1.5">
-        <h1 className="font-display text-3xl font-semibold text-text">Player</h1>
+        <h1 className="t-display text-text">Player</h1>
         <p className="text-sm text-text-muted">
           Riproduce le sorgenti HLS che indichi tu. Scrivi l'indirizzo del tuo server una volta
           sola in Impostazioni, oppure incollane uno per il singolo titolo.
@@ -489,31 +492,31 @@ export function Player() {
       {!hasOwnSources && (
         <EmptyState
           title="Nessuna sorgente sul tuo scaffale"
-          description="Scrivi l'indirizzo del tuo server una volta sola in Impostazioni → Indirizzi delle tue sorgenti — basta l'indirizzo nudo, tipo https://mio-server.com, il file lo cerca lui — e ogni titolo avrà il suo pulsante Guarda. Vale anche per gli host del pannello qui sotto. Intanto c'è lo stream di test, per vedere come si comporta il player."
+          description="Scrivi una volta sola l'indirizzo del tuo server — basta quello nudo, tipo https://mio-server.com — e ogni titolo avrà il suo pulsante Guarda. Intanto qui sotto c'è uno stream di prova."
+          action={
+            <button type="button" onClick={() => openSettings("sorgenti")} className="btn btn-secondary">
+              Scrivi l'indirizzo
+            </button>
+          }
         />
       )}
 
       {/* What the player is doing about the address, so a title that won't
           start says why instead of sitting on a black rectangle. */}
       {resolving && (
-        <p className="flex items-center gap-2 text-xs text-text-faint">
-          <span
-            className="spinner h-3 w-3 rounded-full border-2"
-            style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }}
-          />
+        <p role="status" className="text-sm text-text-muted">
           Cerco «{baseContent.title}» sui tuoi indirizzi
           {linkHosts.some((h) => h.enabled) ? " e sui siti che hai indicato" : ""}…
         </p>
       )}
       {!resolving && resolvedUrl === null && (
-        <div
-          role="alert"
-          className="rounded-sm border px-3 py-2 text-xs leading-relaxed"
-          style={{
-            borderColor: "color-mix(in srgb, var(--danger) 45%, transparent)",
-            color: "var(--danger)",
-          }}
-        >
+        <div role="alert" className="rounded-md bg-surface px-4 py-3 text-sm text-text-muted shadow-[var(--shadow-sm)]">
+          {/* Il rosso sta sul titoletto e sull'icona: il paragrafo che spiega
+              cosa fare si legge nel tono del testo, non come un allarme. */}
+          <p className="mb-1 flex items-center gap-2 font-medium" style={{ color: "var(--danger)" }}>
+            <ErrorIcon size={16} />
+            Non trovato
+          </p>
           <p>
             «{baseContent.title}» non si trova su nessuno dei tuoi indirizzi: ho provato i nomi
             soliti e ho letto le cartelle che li pubblicano. Controlla gli indirizzi in Impostazioni
@@ -526,7 +529,7 @@ export function Player() {
               lasciato leggere la risposta — e solo la seconda si risolve
               aprendo il Web Viewer. */}
           {siteOutcome && siteOutcome.kind !== "niente-host" && (
-            <p className="mt-1.5 border-t border-current/25 pt-1.5">
+            <p className="mt-3 pt-3 shadow-[inset_0_1px_0_var(--separator)]">
               {outcomeMessage(siteOutcome)}
               {(siteOutcome.kind === "solo-pagina" ||
                 siteOutcome.kind === "bloccato" ||
@@ -539,7 +542,7 @@ export function Player() {
                       targetItem ? { itemId: targetItem.id, title: targetItem.title } : undefined,
                     )
                   }
-                  className="ml-1.5 underline underline-offset-2"
+                  className="ml-1.5 font-medium text-accent-text underline-offset-2 hover:underline"
                 >
                   Apri nel Web Viewer
                 </button>

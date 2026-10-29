@@ -1,3 +1,8 @@
+/*
+ * Gli scheletri hanno la forma esatta di quello che arriva — stessa proporzione
+ * della locandina, stesse righe di testo — così quando arriva non salta niente.
+ */
+
 export function PosterSkeleton() {
   return (
     <div className="flex flex-col gap-2">
@@ -21,11 +26,34 @@ export function PosterGridSkeleton({ count = 10 }: { count?: number }) {
   );
 }
 
-export function StatCardSkeleton() {
+/**
+ * L'attesa di una pagina che arriva a pezzi (Diagnostica, il lettore): la sua
+ * forma — un titolo e un elenco, o il riquadro del video e due righe — invece
+ * della parola «Caricamento…», che dice solo che si aspetta.
+ */
+export function PageSkeleton({ variant = "list" }: { variant?: "list" | "player" }) {
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-border bg-surface p-4">
-      <div className="skeleton h-3 w-20 rounded-xs" />
-      <div className="skeleton h-7 w-14 rounded-xs" />
+    <div role="status" className="mx-auto max-w-4xl px-[var(--gutter)] py-6 sm:py-10">
+      <span className="sr-only">Caricamento…</span>
+      <div aria-hidden="true" className="flex flex-col gap-4">
+        {variant === "player" ? (
+          <>
+            <div className="skeleton aspect-video w-full rounded-lg" />
+            <div className="skeleton h-6 w-1/2 rounded-xs" />
+            <div className="skeleton h-4 w-1/3 rounded-xs" />
+          </>
+        ) : (
+          <>
+            <div className="skeleton h-10 w-48 rounded-sm" />
+            <div className="skeleton h-4 w-2/3 rounded-xs" />
+            <div className="mt-4 flex flex-col gap-px overflow-hidden rounded-md">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="skeleton h-14 rounded-none" />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

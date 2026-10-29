@@ -14,7 +14,7 @@ export function VotePicker({ value, onChange }: { value: number | null; onChange
               aria-checked={value === n}
               aria-label={`${n} su 10`}
               onClick={() => onChange(value === n ? null : n)}
-              className="flex h-8 items-center justify-center rounded-xs text-[11px] font-bold transition-colors"
+              className="flex h-8 items-center justify-center rounded-xs text-xs font-bold transition-colors"
               style={{
                 background: active && value ? voteFill(value) : "var(--surface-hover)",
                 color: active ? "var(--vote-fill-ink)" : "var(--text-faint)",

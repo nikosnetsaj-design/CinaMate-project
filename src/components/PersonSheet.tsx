@@ -12,7 +12,7 @@ import { useCatalogPreview } from "../store/useCatalogPreview";
 import { useCriticDraft } from "../store/useCriticDraft";
 import { useNavigate } from "react-router-dom";
 import { PosterArt } from "./PosterArt";
-import { PersonIcon } from "./icons";
+import { BackIcon, CheckIcon, ClockIcon, PersonIcon } from "./icons";
 import type { Item } from "../types";
 
 /** Long filmographies are the norm; the tail is noise until it is asked for. */
@@ -42,19 +42,15 @@ function CreditCard({ credit, owned, onOpen, onAdd, adding }: {
         />
         {owned && (
           <span
-            className="absolute right-1 top-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
-            style={{
-              background: owned.status === "Visto" ? "var(--status-done)" : "var(--accent)",
-              color: "var(--accent-contrast)",
-            }}
+            className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/65 text-white backdrop-blur-sm"
           >
-            {owned.status === "Visto" ? "✓" : "◷"}
+            {owned.status === "Visto" ? <CheckIcon size={11} /> : <ClockIcon size={11} />}
           </span>
         )}
       </div>
       <p className="mt-1.5 line-clamp-2 text-xs font-medium text-text">{credit.title}</p>
-      <p className="font-mono tabular text-[10px] text-text-faint">{adding ? "…" : (credit.year ?? "")}</p>
-      {credit.role && <p className="line-clamp-1 text-[10px] text-text-faint">{credit.role}</p>}
+      <p className="font-mono tabular text-xs text-text-faint">{adding ? "…" : (credit.year ?? "")}</p>
+      {credit.role && <p className="line-clamp-1 text-xs text-text-faint">{credit.role}</p>}
     </button>
   );
 }
@@ -187,9 +183,9 @@ function PersonDetail({ name }: { name: string }) {
         type="button"
         onClick={close}
         aria-label="Torna indietro"
-        className="tap-target fixed left-3.5 top-3.5 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-md"
+        className="icon-btn fixed left-3 top-3 z-20 bg-black/45 text-white backdrop-blur-md hover:bg-black/65 hover:text-white"
       >
-        ←
+        <BackIcon />
       </button>
 
       {/* `relative` so this paints above the positioned banner it overlaps:
@@ -206,7 +202,7 @@ function PersonDetail({ name }: { name: string }) {
             )}
           </div>
           <div className="min-w-0 flex-1 pb-1">
-            <p className="text-xs uppercase tracking-[0.18em] text-text-faint">{person?.knownFor || "Persona"}</p>
+            <p className="text-xs text-text-faint">{person?.knownFor || "Persona"}</p>
             <h1 id={titleId} className="mt-0.5 font-display text-2xl font-semibold leading-tight text-text">
               {person?.name ?? name}
             </h1>
@@ -216,8 +212,8 @@ function PersonDetail({ name }: { name: string }) {
         {/* What the library itself knows is rendered first and unconditionally:
             it needs no key, no network, and it is the reason you tapped a name. */}
         {inLibrary.length > 0 && (
-          <div className="mt-4 rounded-md border border-border bg-surface-2 p-3.5">
-            <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Nella tua libreria</span>
+          <div className="mt-4 rounded-lg bg-surface-2 p-3.5">
+            <span className="text-xs font-medium text-text-faint">Nella tua libreria</span>
             <p className="mt-1 text-sm text-text">
               <span className="font-mono tabular font-semibold" style={{ color: "var(--accent-text)" }}>
                 {inLibrary.length}
@@ -245,7 +241,7 @@ function PersonDetail({ name }: { name: string }) {
                   className="w-20 shrink-0 text-left"
                 >
                   <PosterArt item={owned} size="sm" showTitle={!owned.posterPath} className="w-20" />
-                  <p className="mt-1 line-clamp-2 text-[11px] font-medium text-text">{owned.title}</p>
+                  <p className="mt-1 line-clamp-2 text-xs font-medium text-text">{owned.title}</p>
                 </button>
               ))}
             </div>
@@ -253,15 +249,14 @@ function PersonDetail({ name }: { name: string }) {
         )}
 
         {!tmdbApiKey ? (
-          <div className="mt-4 rounded-md border border-border bg-surface-2 p-4">
+          <div className="mt-4 rounded-lg bg-surface-2 p-4">
             <p className="text-sm text-text-muted">
               La filmografia completa arriva da TMDB. La chiave è gratuita e resta su questo dispositivo.
             </p>
             <button
               type="button"
               onClick={() => openSettings()}
-              className="mt-3 rounded-sm px-4 py-2 text-sm font-semibold"
-              style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+              className="btn btn-primary mt-3"
             >
               Aggiungi la chiave
             </button>
@@ -307,14 +302,9 @@ function PersonDetail({ name }: { name: string }) {
                 close();
                 navigate("/critico");
               }}
-              className="mt-6 w-full rounded-md border py-3 text-sm font-semibold"
-              style={{
-                borderColor: "color-mix(in srgb, var(--cyan) 35%, transparent)",
-                background: "color-mix(in srgb, var(--cyan) 12%, transparent)",
-                color: "var(--cyan)",
-              }}
+              className="btn btn-secondary mt-6 w-full"
             >
-              Chiedi al critico IA da dove cominciare
+              Chiedi al critico da dove cominciare
             </button>
           </>
         )}

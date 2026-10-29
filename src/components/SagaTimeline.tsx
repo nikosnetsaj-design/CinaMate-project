@@ -1,5 +1,6 @@
 import { PART_STATE_META, type SagaEntry } from "../lib/sagas";
 import { PosterArt } from "./PosterArt";
+import { CheckIcon } from "./icons";
 
 /**
  * The same chapters as the list, drawn as one thread instead of rows. It exists
@@ -31,20 +32,20 @@ export function SagaTimeline({
           <li key={entry.part.tmdbId} className="relative flex gap-3.5 pb-4 last:pb-0">
             <span
               aria-hidden="true"
-              className="relative z-10 mt-2 flex h-[27px] w-[27px] shrink-0 items-center justify-center rounded-full border-2 text-[11px] font-semibold"
+              className="relative z-10 mt-2 flex h-[27px] w-[27px] shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold"
               style={{
                 background: watched ? meta.color : "var(--bg)",
                 borderColor: entry.item ? meta.color : "var(--border-strong)",
                 color: watched ? "var(--accent-contrast)" : meta.color,
               }}
             >
-              {watched ? "✓" : entry.number}
+              {watched ? <CheckIcon size={13} /> : entry.number}
             </span>
             <button
               type="button"
               onClick={() => onSelect(entry)}
               aria-label={entry.item ? `Apri dettagli di ${entry.part.title}` : `Aggiungi ${entry.part.title} alla libreria`}
-              className="flex min-w-0 flex-1 items-center gap-3 rounded-md border border-border bg-surface p-2.5 text-left transition-colors hover:bg-surface-hover"
+              className="flex min-w-0 flex-1 items-center gap-3 rounded-md bg-surface-2 p-2.5 text-left transition-colors hover:bg-surface-hover"
             >
               <PosterArt
                 item={{ title: entry.part.title, kind: "film", posterPath: entry.part.posterPath }}
@@ -53,8 +54,8 @@ export function SagaTimeline({
                 className="w-9 shrink-0"
               />
               <div className="min-w-0 flex-1">
-                <p className="truncate font-display text-sm font-semibold text-text">{entry.part.title}</p>
-                <p className="mt-0.5 font-mono tabular text-[11px] text-text-faint">
+                <p className="truncate text-sm font-medium text-text">{entry.part.title}</p>
+                <p className="mt-0.5 tabular text-xs text-text-muted">
                   {entry.part.year ?? "in arrivo"} · {meta.label}
                 </p>
               </div>

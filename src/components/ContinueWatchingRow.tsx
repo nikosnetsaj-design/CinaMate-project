@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useLibrary } from "../store/useLibrary";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useWatchProgress } from "../store/useWatchProgress";
@@ -9,6 +9,7 @@ import type { PosterBadge } from "../lib/homeBadges";
 import { formatRuntime } from "../lib/format";
 import { backdropUrl } from "../lib/tmdb";
 import { PosterArt } from "./PosterArt";
+import { RowHeader } from "./RowHeader";
 import { DotsIcon, InfoIcon, PlayIcon } from "./icons";
 
 const MAX_SHOWN = 12;
@@ -44,7 +45,7 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
   const wide = backdropUrl(item.backdropPath, "w780");
 
   return (
-    <div className="group relative w-64 shrink-0 sm:w-72">
+    <div className="group relative w-64 sm:w-72">
       <button
         type="button"
         onClick={() => navigate(`/player?titolo=${encodeURIComponent(item.id)}`)}
@@ -74,8 +75,8 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
               riga esiste per essere toccata, e un telefono il puntatore non
               ce l'ha. */}
           <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-white/85 bg-black/45 text-white shadow-[var(--shadow-md)] backdrop-blur-[1px] transition-transform group-hover:scale-105">
-              <PlayIcon size={20} />
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md transition-transform duration-200 group-hover:scale-105 group-active:scale-95">
+              <PlayIcon size={22} />
             </span>
           </span>
 
@@ -83,7 +84,7 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
               l'anno per un film — e la pastiglia della copertina se ce n'è una
               ("Nuova stagione"), che qui vale più del titolo. */}
           <span className="absolute left-2.5 top-2.5 flex flex-wrap items-center gap-1.5">
-            <span className="rounded-xs bg-black/65 px-1.5 py-0.5 font-mono tabular text-[10px] font-semibold text-white backdrop-blur-sm">
+            <span className="rounded-xs bg-black/65 px-1.5 py-0.5 tabular text-xs font-semibold text-white backdrop-blur-sm">
               {entry.label}
             </span>
             {/* «Da iniziare» invece di una barra dell'avanzamento a zero: una
@@ -92,16 +93,14 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
                 distingue. */}
             {pct <= 0 && (
               <span
-                className="rounded-xs px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em]"
-                style={{ background: "color-mix(in srgb, var(--accent) 22%, rgba(0,0,0,0.65))", color: "var(--accent-text)" }}
+                className="rounded-xs bg-black/65 px-1.5 py-0.5 text-xs font-semibold text-white backdrop-blur-sm"
               >
                 Da iniziare
               </span>
             )}
             {badge && (
               <span
-                className="rounded-xs px-1.5 py-0.5 text-[10px] font-semibold"
-                style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+                className="rounded-xs bg-black/65 px-1.5 py-0.5 text-xs font-semibold text-white backdrop-blur-sm"
               >
                 {badge.label}
                 {badge.detail ? ` · ${badge.detail}` : ""}
@@ -114,7 +113,7 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
               {item.title}
             </span>
             {left && (
-              <span className="mt-0.5 block truncate text-[11px] font-medium text-white/80">{left}</span>
+              <span className="mt-0.5 block truncate text-xs font-medium tabular text-white/80">{left}</span>
             )}
           </span>
 
@@ -136,7 +135,7 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
           type="button"
           onClick={() => openItem(item)}
           aria-label={`Scheda di ${item.title}`}
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm transition-colors hover:bg-black/75"
+          className="icon-btn icon-btn-sm bg-black/45 text-white backdrop-blur-md hover:bg-black/65 hover:text-white"
         >
           <InfoIcon size={16} />
         </button>
@@ -145,7 +144,7 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
           onClick={() => setMenuOpen((v) => !v)}
           aria-label={`Altre azioni per ${item.title}`}
           aria-expanded={menuOpen}
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm transition-colors hover:bg-black/75"
+          className="icon-btn icon-btn-sm bg-black/45 text-white backdrop-blur-md hover:bg-black/65 hover:text-white"
         >
           <DotsIcon size={16} />
         </button>
@@ -160,14 +159,14 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
             className="fixed inset-0 z-40 cursor-default"
             onClick={() => setMenuOpen(false)}
           />
-          <div className="absolute right-2 top-11 z-50 w-56 overflow-hidden rounded-sm border border-border-strong bg-surface shadow-[var(--shadow-md)]">
+          <div className="absolute right-2 top-11 z-50 w-60 overflow-hidden rounded-md bg-surface shadow-[var(--shadow-md),0_0_0_1px_var(--separator)]">
             <button
               type="button"
               onClick={() => {
                 setStatus(item.id, "Visto");
                 setMenuOpen(false);
               }}
-              className="block w-full px-3 py-2.5 text-left text-xs text-text-muted hover:bg-surface-hover hover:text-text"
+              className="list-row min-h-11 py-2 text-sm text-text"
             >
               Segna come visto
             </button>
@@ -178,7 +177,7 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
                   forget(item.id);
                   setMenuOpen(false);
                 }}
-                className="block w-full border-t border-border px-3 py-2.5 text-left text-xs text-text-muted hover:bg-surface-hover hover:text-text"
+                className="list-row min-h-11 py-2 text-sm text-text"
               >
                 Togli da Continua a guardare
               </button>
@@ -210,20 +209,15 @@ export function ContinueWatchingRow({ badges }: { badges?: Record<string, Poster
   if (entries.length === 0) return null;
 
   return (
-    <section className="flex flex-col gap-3">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <h2 className="section-mark font-display text-xl font-semibold text-text">
-            Continua a guardare <span className="text-sm font-normal text-text-faint">· {entries.length}</span>
-          </h2>
-          <p className="mt-0.5 text-xs text-text-faint">Riparte dal punto esatto in cui hai smesso</p>
-        </div>
-        <Link to="/profilo" className="shrink-0 text-sm font-medium text-accent-text">
-          profilo
-        </Link>
-      </div>
+    <section className="flex flex-col gap-4">
+      <RowHeader
+        title="Continua a guardare"
+        count={entries.length}
+        note="Riparte dal punto esatto in cui hai smesso"
+        to="/tu"
+      />
 
-      <div className="no-scrollbar flex gap-3.5 overflow-x-auto pb-1">
+      <div className="shelf">
         {entries.map((entry) => (
           <ContinueWatchingCard key={entry.item.id} entry={entry} badge={badges?.[entry.item.id]} />
         ))}

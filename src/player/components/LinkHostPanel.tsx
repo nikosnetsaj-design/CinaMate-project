@@ -173,7 +173,7 @@ export function LinkHostPanel({
                     <span className="pv-mono pv-dim">{hostLabel(effectiveUrl(host))}</span>
                   </div>
                   {urls[0] && (
-                    <span className="pv-mono pv-dim" style={{ wordBreak: "break-all", fontSize: "0.7rem" }}>
+                    <span className="pv-mono pv-dim" style={{ wordBreak: "break-all", fontSize: "0.75rem" }}>
                       {urls[0]}
                       {urls.length > 1 && (
                         <span className="pv-dim" style={{ fontFamily: "inherit" }}>

@@ -11,6 +11,7 @@ import {
   buildEntries,
   orderParts,
   sagaProgress,
+  type PartState,
   type SagaEntry,
   type WatchOrder,
 } from "../lib/sagas";
@@ -24,8 +25,16 @@ import { useMarathon } from "../store/useMarathon";
 import { useSagas, type SagaKey } from "../store/useSagas";
 import { PosterArt } from "./PosterArt";
 import { SagaTimeline } from "./SagaTimeline";
-import { ListIcon, PlayIcon, TimelineIcon } from "./icons";
+import { BackIcon, CheckIcon, ClockIcon, ListIcon, PlayIcon, PlusIcon, TimelineIcon } from "./icons";
 
+
+/** Lo stato di un capitolo, in un'icona: visto, in corso, in libreria, assente. */
+function PartStateIcon({ state }: { state: PartState }) {
+  if (state === "visto") return <CheckIcon size={14} />;
+  if (state === "in-visione") return <PlayIcon size={12} />;
+  if (state === "in-libreria") return <ClockIcon size={13} />;
+  return <PlusIcon size={14} />;
+}
 function ProgressRing({ pct, color }: { pct: number; color: string }) {
   const radius = 26;
   const circumference = 2 * Math.PI * radius;
@@ -64,17 +73,12 @@ function EntryRow({ entry, onOpen, onAdd, adding }: {
   return (
     <li>
       <div
-        className="flex items-center gap-3 rounded-md border p-2.5 transition-colors"
-        style={{
-          // Watched chapters are lit rather than dimmed: the point of the list
-          // is to see how much of the saga is already behind you.
-          borderColor: watched ? "color-mix(in srgb, var(--status-done) 34%, transparent)" : "var(--border)",
-          background: watched ? "color-mix(in srgb, var(--status-done) 9%, transparent)" : "var(--surface)",
-        }}
+        className="flex items-center gap-3 rounded-md bg-surface-2 p-2.5 transition-colors"
       >
+        {/* Il capitolo visto si riconosce dal suo segno, a destra, e dal
+            numero pieno: non da una scheda verde fra schede grigie. */}
         <span
-          className="w-6 shrink-0 text-center font-mono tabular text-base font-semibold"
-          style={{ color: watched ? "var(--status-done)" : "var(--text-faint)" }}
+          className={`w-6 shrink-0 text-center tabular text-base font-semibold ${watched ? "text-text" : "text-text-faint"}`}
         >
           {entry.number}
         </span>
@@ -97,7 +101,7 @@ function EntryRow({ entry, onOpen, onAdd, adding }: {
           />
           <div className="min-w-0 flex-1">
             <p className="truncate font-display text-sm font-semibold text-text">{entry.part.title}</p>
-            <p className="mt-0.5 font-mono tabular text-[11px] text-text-faint">
+            <p className="mt-0.5 font-mono tabular text-xs text-text-faint">
               {entry.part.year ?? "in arrivo"}
               {entry.item?.vote != null ? ` · ${entry.item.vote}/10` : ""}
             </p>
@@ -120,7 +124,7 @@ function EntryRow({ entry, onOpen, onAdd, adding }: {
             color: meta.color,
           }}
         >
-          {adding ? "…" : meta.icon}
+          {adding ? "…" : <PartStateIcon state={entry.state} />}
         </span>
       </div>
     </li>
@@ -242,9 +246,9 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
         type="button"
         onClick={close}
         aria-label="Torna indietro"
-        className="tap-target fixed left-3.5 top-3.5 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-md"
+        className="icon-btn fixed left-3 top-3 z-20 bg-black/45 text-white backdrop-blur-md hover:bg-black/65 hover:text-white"
       >
-        ←
+        <BackIcon />
       </button>
 
       {/* `relative` so this paints above the positioned banner it overlaps:
@@ -260,17 +264,36 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
             />
           )}
           <div className="min-w-0 flex-1 pb-1">
-            <p className="text-xs uppercase tracking-[0.18em] text-text-faint">
+            <p className="text-xs text-text-faint">
               {view?.isUniverse ? "Universo" : "Saga"}
             </p>
             <h1 id={titleId} className="mt-0.5 font-display text-2xl font-semibold leading-tight text-text">
-              {view?.name ?? "Caricamento…"}
+              {view?.name ?? (
+                <span role="status" className="block">
+                  <span className="sr-only">Caricamento…</span>
+                  <span aria-hidden="true" className="skeleton mt-1 block h-7 w-48 rounded-xs" />
+                </span>
+              )}
             </h1>
           </div>
           {view && <ProgressRing pct={progress.pct} color={accent} />}
         </div>
 
-        {loading && !view && <p className="mt-6 text-sm text-text-faint">Caricamento della raccolta…</p>}
+        {/* L'attesa della raccolta ha la forma dei suoi capitoli. */}
+        {loading && !view && (
+          <div aria-hidden="true" className="mt-6 flex flex-col gap-3">
+            <div className="skeleton h-4 w-2/3 rounded-xs" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="skeleton aspect-2/3 w-10 shrink-0 rounded-xs" />
+                <div className="flex flex-1 flex-col gap-2">
+                  <div className="skeleton h-4 w-1/2 rounded-xs" />
+                  <div className="skeleton h-3 w-1/4 rounded-xs" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         {error && !view && <p className="mt-6 text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
 
         {view && (
@@ -287,7 +310,7 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
 
             {/* Ordine di visione */}
             <div className="mt-5">
-              <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">
+              <span className="mb-2 block text-xs font-medium text-text-faint">
                 Ordine di visione
               </span>
               <div className="flex flex-wrap gap-2">
@@ -300,12 +323,7 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
                       onClick={() => setPreferredOrder(sagaKey, o.id)}
                       aria-pressed={active}
                       title={o.hint}
-                      className="rounded-full border px-3 py-1.5 text-xs font-medium transition-colors"
-                      style={
-                        active
-                          ? { borderColor: "transparent", background: accent, color: "var(--accent-contrast)" }
-                          : { borderColor: "var(--border-strong)", color: "var(--text-muted)" }
-                      }
+                      className="chip"
                     >
                       {o.label}
                     </button>
@@ -323,12 +341,7 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
                   type="button"
                   onClick={computeOrders}
                   disabled={computing}
-                  className="mt-2.5 w-full rounded-md border py-2.5 text-sm font-semibold disabled:opacity-60"
-                  style={{
-                    borderColor: "color-mix(in srgb, var(--cyan) 35%, transparent)",
-                    background: "color-mix(in srgb, var(--cyan) 12%, transparent)",
-                    color: "var(--cyan)",
-                  }}
+                  className="btn btn-secondary mt-2.5 w-full"
                 >
                   {computing ? "Claude sta ordinando la saga…" : "Calcola l'ordine con Claude"}
                 </button>
@@ -357,7 +370,7 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
 
             {/* Lista / timeline */}
             <div className="mt-6 flex items-center justify-between">
-              <span className="text-xs font-medium uppercase tracking-wide text-text-faint">
+              <span className="text-xs font-medium text-text-faint">
                 {progress.total} capitoli
               </span>
               <div className="flex gap-1.5">
@@ -366,7 +379,7 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
                   onClick={() => setMode("lista")}
                   aria-pressed={mode === "lista"}
                   aria-label="Vista elenco"
-                  className="flex h-8 w-8 items-center justify-center rounded-sm border border-border-strong"
+                  className="btn btn-secondary"
                   style={mode === "lista" ? { color: accent, borderColor: accent } : { color: "var(--text-faint)" }}
                 >
                   <ListIcon size={15} />
@@ -376,7 +389,7 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
                   onClick={() => setMode("timeline")}
                   aria-pressed={mode === "timeline"}
                   aria-label="Vista timeline"
-                  className="flex h-8 w-8 items-center justify-center rounded-sm border border-border-strong"
+                  className="btn btn-secondary"
                   style={mode === "timeline" ? { color: accent, borderColor: accent } : { color: "var(--text-faint)" }}
                 >
                   <TimelineIcon size={15} />

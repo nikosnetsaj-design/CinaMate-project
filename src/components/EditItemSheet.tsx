@@ -16,8 +16,7 @@ const KIND_LABELS: Record<Kind, string> = {
   doc: "Documentario",
 };
 
-const inputCls =
-  "w-full rounded-sm border border-border-strong bg-surface px-3 py-2.5 text-sm text-text placeholder:text-text-faint focus:border-accent";
+const inputCls = "field";
 
 function Pill({ children, active, onClick }: { children: string; active: boolean; onClick: () => void }) {
   return (
@@ -25,10 +24,7 @@ function Pill({ children, active, onClick }: { children: string; active: boolean
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-        active ? "border-transparent" : "border-border-strong text-text-muted hover:bg-surface-hover"
-      }`}
-      style={active ? { background: "var(--accent)", color: "var(--accent-contrast)" } : undefined}
+      className="chip"
     >
       {children}
     </button>
@@ -59,12 +55,12 @@ function EditItemForm() {
   return (
     <Sheet onClose={close} titleId={titleId}>
       <div className="flex flex-col gap-5 p-5 pt-8 sm:p-6">
-        <h2 id={titleId} className="font-display text-xl font-semibold text-text">
+        <h2 id={titleId} className="t-title text-text">
           {editingId ? "Modifica titolo" : "Aggiungi alla libreria"}
         </h2>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Titolo</span>
+          <span className="text-sm font-medium text-text-muted">Titolo</span>
           <input
             autoFocus
             value={draft.title}
@@ -76,7 +72,7 @@ function EditItemForm() {
 
         <div className="grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Tipo</span>
+            <span className="text-sm font-medium text-text-muted">Tipo</span>
             <select
               value={draft.kind}
               onChange={(e) => patch({ kind: e.target.value as Kind })}
@@ -90,7 +86,7 @@ function EditItemForm() {
             </select>
           </label>
           <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Anno</span>
+            <span className="text-sm font-medium text-text-muted">Anno</span>
             <input
               type="number"
               value={draft.year}
@@ -102,7 +98,7 @@ function EditItemForm() {
 
         <div className="grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Genere</span>
+            <span className="text-sm font-medium text-text-muted">Genere</span>
             <input
               value={draft.genre}
               onChange={(e) => patch({ genre: e.target.value })}
@@ -111,7 +107,7 @@ function EditItemForm() {
             />
           </label>
           <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium uppercase tracking-wide text-text-faint">
+            <span className="text-sm font-medium text-text-muted">
               {draft.kind === "film" ? "Durata (min)" : "Min / episodio"}
             </span>
             <input
@@ -125,7 +121,7 @@ function EditItemForm() {
         </div>
 
         <div>
-          <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Stato</span>
+          <span className="mb-2 block text-sm font-medium text-text-muted">Stato</span>
           <div className="flex flex-wrap gap-2">
             {STATUSES.map((s) => (
               <Pill key={s} active={draft.status === s} onClick={() => patch({ status: s })}>
@@ -136,7 +132,7 @@ function EditItemForm() {
         </div>
 
         <div>
-          <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Dove</span>
+          <span className="mb-2 block text-sm font-medium text-text-muted">Dove</span>
           <div className="flex flex-wrap gap-2">
             {PLATFORMS.map((p) => (
               <Pill key={p} active={draft.platform === p} onClick={() => patch({ platform: p })}>
@@ -147,7 +143,7 @@ function EditItemForm() {
         </div>
 
         <div>
-          <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Qualità</span>
+          <span className="mb-2 block text-sm font-medium text-text-muted">Qualità</span>
           <div className="flex flex-wrap gap-2">
             {QUALITIES.map((quality) => (
               <Pill
@@ -161,7 +157,7 @@ function EditItemForm() {
               </Pill>
             ))}
           </div>
-          <p className="mt-1.5 text-xs text-text-faint">
+          <p className="mt-2 text-xs text-text-muted">
             La qualità della copia che hai tu. Nessun catalogo la conosce, e un manifest la rivela
             solo quando parte: per questo si dice a mano.
           </p>
@@ -170,7 +166,7 @@ function EditItemForm() {
         {draft.kind !== "film" && (
           <div className="grid grid-cols-3 gap-3">
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Ep. visti</span>
+              <span className="text-sm font-medium text-text-muted">Ep. visti</span>
               <input
                 type="number"
                 value={draft.seen || 0}
@@ -179,7 +175,7 @@ function EditItemForm() {
               />
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Ep. totali</span>
+              <span className="text-sm font-medium text-text-muted">Ep. totali</span>
               <input
                 type="number"
                 value={draft.episodes ?? ""}
@@ -189,7 +185,7 @@ function EditItemForm() {
               />
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Stagioni</span>
+              <span className="text-sm font-medium text-text-muted">Stagioni</span>
               <input
                 type="number"
                 value={draft.seasons ?? ""}
@@ -202,15 +198,15 @@ function EditItemForm() {
         )}
 
         <div>
-          <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">Il tuo voto</span>
+          <span className="mb-2 block text-sm font-medium text-text-muted">Il tuo voto</span>
           <VotePicker value={draft.vote} onChange={(vote) => patch({ vote })} />
         </div>
 
         <div>
-          <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">
+          <span className="mb-2 block text-sm font-medium text-text-muted">
             Link personalizzati
           </span>
-          <p className="mb-2 text-xs text-text-faint">
+          <p className="mb-2 text-xs text-text-muted">
             Aggiungi fino a 2 link tuoi — un trailer, una pagina di uno streaming legale, qualsiasi cosa.
           </p>
           <div className="flex flex-col gap-2">
@@ -235,51 +231,51 @@ function EditItemForm() {
             sigla della classificazione. A mano perché nessun catalogo pubblico
             le espone in modo affidabile: meglio vuoto che inventato. */}
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Avvertenze</span>
+          <span className="text-sm font-medium text-text-muted">Avvertenze</span>
           <input
             value={draft.contentWarnings ?? ""}
             onChange={(e) => patch({ contentWarnings: e.target.value })}
             placeholder="linguaggio forte, consumo di tabacco"
             className={inputCls}
           />
-          <span className="text-[11px] text-text-faint">
+          <span className="text-xs text-text-muted">
             Separate da virgola. Compaiono all'avvio del player accanto alla classificazione
             {draft.certification ? ` (${draft.certification})` : ""}.
           </span>
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Note personali</span>
+          <span className="text-sm font-medium text-text-muted">Note personali</span>
           <textarea
             value={draft.notes}
             onChange={(e) => patch({ notes: e.target.value })}
             placeholder="Cosa ne pensi? Spoiler liberi."
             rows={3}
-            className={`${inputCls} resize-none`}
+            className={`${inputCls} h-auto resize-none py-3`}
           />
         </label>
 
+        {/* Un interruttore con il suo nome: tutta la riga si tocca, e lo
+            stato si legge dal pomello come in ogni impostazione di sistema. */}
         <button
           type="button"
+          role="switch"
           onClick={() => patch({ fav: !draft.fav })}
-          aria-pressed={draft.fav}
-          className="flex items-center gap-2.5 text-sm text-text-muted"
+          aria-checked={draft.fav}
+          className="flex min-h-12 items-center gap-3 rounded-md bg-surface-2 px-4 text-left text-sm font-medium text-text"
         >
-          <span
-            className="flex h-6 w-6 items-center justify-center rounded-md"
-            style={{ background: draft.fav ? "var(--accent)" : "var(--surface-hover)", color: draft.fav ? "var(--accent-contrast)" : "var(--text-faint)" }}
-          >
-            <HeartIcon size={13} filled={draft.fav} />
+          <span className={draft.fav ? "text-accent-text" : "text-text-muted"}>
+            <HeartIcon size={18} filled={draft.fav} />
           </span>
-          Aggiungi ai preferiti
+          <span className="flex-1">Tra i preferiti</span>
+          <span aria-hidden="true" className="switch" data-on={draft.fav} />
         </button>
 
         <button
           type="button"
           onClick={save}
           disabled={!draft.title.trim()}
-          className="rounded-sm px-4 py-3 text-sm font-semibold transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
-          style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+          className="btn btn-primary btn-lg"
         >
           {editingId ? "Salva modifiche" : "Aggiungi alla libreria"}
         </button>

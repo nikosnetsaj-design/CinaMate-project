@@ -67,7 +67,7 @@ export function Billboard() {
     <section
       aria-label="In vetrina"
       aria-roledescription="carosello"
-      className="relative overflow-hidden rounded-md"
+      className="relative overflow-hidden rounded-lg bg-black"
       onTouchStart={(e) => {
         touchX.current = e.touches[0]?.clientX ?? null;
       }}
@@ -85,7 +85,7 @@ export function Billboard() {
       {/* Alta come una locandina sul telefono, larga come una scena sul
           desktop, e mai più di due terzi dello schermo: una vetrina che copre
           tutta la pagina nasconde proprio le righe che deve introdurre. */}
-      <div className="relative aspect-4/5 max-h-[68vh] w-full sm:aspect-video">
+      <div className="relative aspect-4/5 max-h-[68vh] w-full sm:aspect-video lg:aspect-[21/9]">
         {wide ? (
           <img
             src={wide}
@@ -105,34 +105,37 @@ export function Billboard() {
         <div
           aria-hidden="true"
           className="absolute inset-0"
-          style={{ background: "linear-gradient(to top, rgba(0,0,0,0.92) 6%, rgba(0,0,0,0.35) 45%, transparent 78%)" }}
+          style={{
+            background:
+              "linear-gradient(to top, rgba(10,9,8,0.92) 6%, rgba(10,9,8,0.4) 45%, transparent 78%), linear-gradient(to right, rgba(10,9,8,0.45), transparent 60%)",
+          }}
         />
 
-        <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-3 p-4 text-center sm:p-6">
+        <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-3 p-4 text-center sm:items-start sm:p-8 sm:text-left lg:p-10">
           {/* Il logo disegnato del titolo quando TMDB ce l'ha: è metà
               dell'effetto di una vetrina, perché il lettering *è* la locandina
               mentre lo stesso nome nel font dell'app è una didascalia. */}
           <h2
-            className="font-display text-3xl font-semibold leading-[1.05] text-white sm:text-4xl"
+            className="t-display text-white"
             style={{ textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}
           >
             {logo ? (
               <img
                 src={logo}
                 alt={item.title}
-                className="mx-auto max-h-28 w-auto max-w-[85%] object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)]"
+                className="mx-auto max-h-28 w-auto max-w-[85%] object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)] sm:mx-0 sm:max-w-sm"
               />
             ) : (
               item.title
             )}
           </h2>
-          <p className="text-sm font-medium text-white/85">{line}</p>
+          <p className="text-sm font-medium tabular text-white/85">{line}</p>
 
-          <div className="mt-1 flex w-full max-w-md items-stretch gap-2.5">
+          <div className="mt-2 flex w-full max-w-md items-stretch gap-2">
             <button
               type="button"
               onClick={() => navigate(`/player?titolo=${encodeURIComponent(item.id)}`)}
-              className="flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-sm bg-white px-3 py-3 text-[13px] font-semibold text-black transition-opacity hover:opacity-90 sm:text-sm"
+              className="btn flex-1 whitespace-nowrap bg-white px-3 text-sm text-black hover:bg-white/90 sm:text-base"
             >
               <PlayIcon size={17} />
               Riproduci
@@ -146,7 +149,7 @@ export function Billboard() {
               <button
                 type="button"
                 onClick={() => openItem(item)}
-                className="flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-sm bg-white/20 px-3 py-3 text-[13px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/30 sm:text-sm"
+                className="btn flex-1 whitespace-nowrap bg-white/20 px-3 text-sm text-white backdrop-blur-md hover:bg-white/30 sm:text-base"
               >
                 <CheckIcon size={17} />
                 Nella tua lista
@@ -158,7 +161,7 @@ export function Billboard() {
                   setStatus(item.id, "Da vedere");
                   pushToast("success", `«${item.title}» è nella tua lista`);
                 }}
-                className="flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-sm bg-white/20 px-3 py-3 text-[13px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/30 sm:text-sm"
+                className="btn flex-1 whitespace-nowrap bg-white/20 px-3 text-sm text-white backdrop-blur-md hover:bg-white/30 sm:text-base"
               >
                 <PlusIcon size={17} />
                 La mia lista
@@ -169,15 +172,17 @@ export function Billboard() {
               type="button"
               onClick={() => openItem(item)}
               aria-label={`Altre info su ${item.title}`}
-              className="flex w-11 shrink-0 items-center justify-center rounded-sm bg-white/20 text-white backdrop-blur-sm transition-colors hover:bg-white/30"
+              className="icon-btn icon-btn-media"
             >
               <InfoIcon size={19} />
             </button>
           </div>
 
           {featured.length > 1 && (
-            <div className="mt-1 flex items-center justify-center gap-3">
-              <div className="flex items-center gap-2" role="tablist" aria-label="Proposte in vetrina">
+            <div className="mt-2 flex items-center justify-center gap-3 sm:justify-start">
+              {/* Il punto si vede da 8 px, si tocca da 24: il bersaglio è il
+                  bottone, il punto è solo il suo disegno. */}
+              <div className="-mx-2 flex items-center" role="tablist" aria-label="Proposte in vetrina">
                 {featured.map((entry, i) => (
                   <button
                     key={entry.item.id}
@@ -186,12 +191,17 @@ export function Billboard() {
                     aria-selected={i === index}
                     aria-label={`Vetrina ${i + 1} di ${featured.length}: ${entry.item.title}`}
                     onClick={() => setIndex(i)}
-                    className="h-2 rounded-full transition-all"
-                    style={{
-                      width: i === index ? 22 : 8,
-                      background: i === index ? "var(--accent)" : "rgba(255,255,255,0.45)",
-                    }}
-                  />
+                    className="flex h-6 min-w-6 items-center justify-center rounded-full px-1"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="block h-2 rounded-full transition-all duration-300"
+                      style={{
+                        width: i === index ? 22 : 8,
+                        background: i === index ? "#fff" : "rgba(255,255,255,0.45)",
+                      }}
+                    />
+                  </button>
                 ))}
               </div>
 
@@ -213,7 +223,7 @@ export function Billboard() {
               <button
                 type="button"
                 onClick={() => setIndex((i) => (i + 1) % featured.length)}
-                className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/30"
+                className="chip h-8 bg-white/20 px-3 text-xs font-semibold text-white backdrop-blur-md hover:bg-white/30"
               >
                 Un'altra
               </button>

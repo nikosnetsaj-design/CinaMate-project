@@ -82,9 +82,9 @@ export function Sagas() {
   const pendingSagas = items.some((i) => i.collectionId != null) && mine.length === 0;
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-6 sm:px-6 sm:py-10">
+    <div className="mx-auto flex max-w-4xl flex-col gap-10 px-[var(--gutter)] py-6 sm:py-10">
       <div>
-        <h1 className="font-display text-3xl font-semibold text-text">Saghe</h1>
+        <h1 className="t-display text-text">Saghe</h1>
         <p className="mt-1 text-sm text-text-muted">
           I film che hai in libreria, rimessi nell'ordine della loro storia.
         </p>
@@ -102,8 +102,7 @@ export function Sagas() {
             <button
               type="button"
               onClick={() => openSettings()}
-              className="rounded-sm px-4 py-2 text-sm font-semibold"
-              style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+              className="btn btn-primary"
             >
               Aggiungi la chiave
             </button>
@@ -112,13 +111,20 @@ export function Sagas() {
       ) : (
         <>
           <section className="flex flex-col gap-3">
-            <h2 className="font-display text-xl font-semibold text-text">
-              Le tue saghe {mine.length > 0 && <span className="text-sm font-normal text-text-faint">· {mine.length}</span>}
+            <h2 className="t-title text-text">
+              Le tue saghe
+              {mine.length > 0 && <span className="ml-2 font-sans text-sm font-normal text-text-faint tabular">{mine.length}</span>}
             </h2>
             {!ready || pendingSagas ? (
-              <div className="flex flex-col gap-2.5">
+              <div className="list-group" aria-hidden="true">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="skeleton h-[86px] rounded-md" aria-hidden="true" />
+                  <div key={i} className="list-row gap-4">
+                    <div className="skeleton aspect-2/3 w-14 shrink-0 rounded-xs" />
+                    <div className="flex flex-1 flex-col gap-2">
+                      <div className="skeleton h-3.5 w-1/2 rounded-xs" />
+                      <div className="skeleton h-3 w-2/3 rounded-xs" />
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : mine.length === 0 ? (
@@ -127,7 +133,7 @@ export function Sagas() {
                 description="Appena in libreria entra un film che fa parte di una collezione — un capitolo di Alien, un Rocky, un Fast & Furious — la saga completa compare qui da sola."
               />
             ) : (
-              <div className="flex flex-col gap-2.5">
+              <div className="list-group">
                 {mine.map(({ saga }) => (
                   <SagaCard
                     key={saga.id}
@@ -144,12 +150,12 @@ export function Sagas() {
           {visibleUniverses.length > 0 && (
             <section className="flex flex-col gap-3">
               <div>
-                <h2 className="font-display text-xl font-semibold text-text">Universi</h2>
-                <p className="mt-0.5 text-xs text-text-faint">
+                <h2 className="t-title text-text">Universi</h2>
+                <p className="mt-1 text-sm text-text-muted">
                   Storie che attraversano più saghe. Aprine uno per vederne la linea temporale.
                 </p>
               </div>
-              <div className="flex flex-col gap-2.5">
+              <div className="list-group">
                 {visibleUniverses.map((u) => (
                   <SagaCard
                     key={u.id}
@@ -166,7 +172,7 @@ export function Sagas() {
           )}
 
           {!tmdbApiKey && (
-            <p className="text-xs text-text-faint">
+            <p className="text-sm text-text-faint">
               Senza chiave TMDB vedi solo le saghe già scaricate.{" "}
               <button type="button" onClick={() => openSettings()} className="font-medium text-accent-text underline-offset-2 hover:underline">
                 Aggiungi la chiave

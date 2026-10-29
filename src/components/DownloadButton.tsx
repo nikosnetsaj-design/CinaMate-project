@@ -9,6 +9,7 @@ import { resolvePlayable, hasAnySource } from "../player/resolveSource";
 import { startDownload } from "../player/services/downloadService";
 import type { DownloadQuality } from "../player/types";
 import type { Item } from "../types";
+import { DownloadIcon } from "./icons";
 
 /**
  * «Scarica» dalla scheda del titolo, senza passare dal player.
@@ -78,9 +79,10 @@ export function DownloadButton({ item }: { item: Item }) {
       <button
         type="button"
         onClick={() => openSettings()}
-        className="mt-2.5 w-full rounded-md border border-dashed border-border-strong py-2.5 text-sm font-medium text-text-muted"
+        className="btn btn-secondary btn-sm mt-2.5 w-full font-medium text-text-muted"
       >
-        ↓ Scarica — prima dimmi dov'è il tuo server
+        <DownloadIcon />
+        Scarica — prima dimmi dov'è il tuo server
       </button>
     );
   }
@@ -92,19 +94,20 @@ export function DownloadButton({ item }: { item: Item }) {
         onClick={() => setPicking((v) => !v)}
         disabled={busy}
         aria-expanded={picking}
-        className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-md border border-border-strong bg-surface-hover py-2.5 text-sm font-semibold text-text disabled:opacity-60"
+        className="btn btn-secondary mt-2.5 w-full disabled:opacity-60"
       >
-        ↓ {busy ? "Preparo il download…" : "Scarica"}
+        <DownloadIcon />
+        {busy ? "Preparo il download…" : "Scarica"}
       </button>
 
       {picking && (
-        <div className="absolute inset-x-0 top-full z-10 mt-1 overflow-hidden rounded-md border border-border-strong bg-surface shadow-[var(--shadow-md)]">
+        <div className="absolute inset-x-0 top-full z-10 mt-1 overflow-hidden rounded-md bg-surface shadow-[var(--shadow-md),0_0_0_1px_var(--separator)]">
           {QUALITIES.map((q) => (
             <button
               key={q.id}
               type="button"
               onClick={() => void download(q.id)}
-              className="block w-full border-b border-border px-3.5 py-2.5 text-left text-sm text-text last:border-b-0 hover:bg-surface-hover"
+              className="block min-h-11 w-full px-4 py-2.5 text-left text-sm text-text hover:bg-surface-hover [&+&]:shadow-[inset_0_1px_0_var(--separator)]"
             >
               {q.label}
             </button>

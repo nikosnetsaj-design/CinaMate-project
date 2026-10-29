@@ -29,24 +29,24 @@ export function SagaCard({
       type="button"
       onClick={() => open(sagaKey)}
       aria-label={`Apri ${name}, ${progress.watched} di ${progress.total} capitoli visti`}
-      className="flex items-center gap-3.5 rounded-md border border-border bg-surface p-3 text-left transition-colors hover:bg-surface-hover"
+      className="list-row gap-4"
     >
       <PosterArt
         item={{ title: name, kind: "film", posterPath }}
         size="sm"
         showTitle={!posterPath}
-        className="w-14 shrink-0"
+        className="w-14 shrink-0 rounded-xs"
       />
       <div className="min-w-0 flex-1">
-        <p className="truncate font-display text-sm font-semibold text-text">{name}</p>
-        <p className="mt-0.5 truncate text-xs text-text-faint">
+        <p className="truncate text-base font-medium text-text">{name}</p>
+        <p className="mt-0.5 truncate text-sm text-text-muted">
           {subtitle ?? `${progress.owned} in libreria su ${progress.total} capitoli`}
         </p>
         <div className="mt-2 flex items-center gap-2">
           <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-surface-hover">
             <div className="h-full rounded-full" style={{ width: `${progress.pct}%`, background: accent }} />
           </div>
-          <span className="font-mono tabular text-[11px] font-semibold" style={{ color: accent }}>
+          <span className="tabular text-xs font-medium text-text-muted">
             {progress.pct}%
           </span>
         </div>

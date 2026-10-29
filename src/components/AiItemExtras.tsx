@@ -6,12 +6,12 @@ import { getOverviewInEnglish } from "../lib/tmdb";
 import type { Item } from "../types";
 
 function Panel({ children }: { children: React.ReactNode }) {
-  return <div className="mt-4 rounded-md border border-border bg-surface-2 p-4">{children}</div>;
+  return <div className="mt-4 rounded-lg bg-surface-2 p-4">{children}</div>;
 }
 
 function Label({ children }: { children: string }) {
   return (
-    <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">{children}</span>
+    <span className="mb-1.5 block text-xs font-medium text-text-faint">{children}</span>
   );
 }
 
@@ -64,12 +64,7 @@ export function SpoilerFreeRecap({ item }: { item: Item }) {
             type="button"
             onClick={load}
             disabled={busy}
-            className="mt-2.5 w-full rounded-sm border py-2.5 text-sm font-semibold disabled:opacity-50"
-            style={{
-              borderColor: "color-mix(in srgb, var(--cyan) 35%, transparent)",
-              background: "color-mix(in srgb, var(--cyan) 12%, transparent)",
-              color: "var(--cyan)",
-            }}
+            className="btn btn-secondary mt-2.5 w-full"
           >
             {busy ? "Sto ricostruendo…" : "Ricordami dove eravamo"}
           </button>
@@ -130,7 +125,7 @@ export function TranslateOverview({ item }: { item: Item }) {
         type="button"
         onClick={run}
         disabled={busy}
-        className="mt-2.5 w-full rounded-sm border border-border-strong py-2.5 text-sm font-medium text-text disabled:opacity-50"
+        className="btn btn-secondary mt-2.5 w-full disabled:opacity-50"
       >
         {busy ? "Traduco…" : "Traduci la sinossi"}
       </button>

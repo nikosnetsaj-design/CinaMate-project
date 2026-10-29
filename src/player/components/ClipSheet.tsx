@@ -75,7 +75,7 @@ export default function ClipSheet({ startSec, title, onShare, onClose }: Props) 
           </button>
         </div>
 
-        <p className="pv-clip-range pv-mono">
+        <p className="pv-clip-range pv-num">
           {clock(startSec)} → {clock(startSec + length)}
         </p>
         <p className="pv-dim pv-clip-note">
