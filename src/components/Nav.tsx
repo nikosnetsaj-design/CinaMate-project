@@ -1,11 +1,11 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useTheme } from "../store/useTheme";
 import { useCommandPalette } from "../store/useCommandPalette";
 import { useAddSheet } from "../store/useAddSheet";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { prefetchHandlers, settingsPrefetchHandlers } from "../lib/prefetch";
 import { AlertsBell, QuickMenu } from "./TopBar";
-import { CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, PersonIcon, PlusIcon, ReelMark, SearchIcon, SparkleIcon, StackIcon, SunIcon } from "./icons";
+import { CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, PersonIcon, PlusIcon, ReelMark, SearchIcon, SparkleIcon, SunIcon } from "./icons";
 
 /**
  * Quattro destinazioni, le stesse sul telefono e sul desktop.
@@ -37,10 +37,10 @@ import { CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, Per
  *   dove si va quando qualcosa non va, non tre volte al giorno.
  */
 const NAV_ITEMS = [
-  { to: "/", label: "Stasera", icon: HomeIcon, end: true },
-  { to: "/libreria", label: "Libreria", icon: LibraryIcon, end: false },
-  { to: "/cerca", label: "Cerca", icon: SearchIcon, end: false },
-  { to: "/tu", label: "Tu", icon: PersonIcon, end: false },
+  { to: "/", label: "Stasera", icon: HomeIcon },
+  { to: "/libreria", label: "Libreria", icon: LibraryIcon },
+  { to: "/cerca", label: "Cerca", icon: SearchIcon },
+  { to: "/tu", label: "Tu", icon: PersonIcon },
 ] as const;
 
 /**
@@ -50,13 +50,33 @@ const NAV_ITEMS = [
  * far pesare la scelta principale.
  */
 const SECONDARY = [
-  { to: "/saghe", label: "Saghe", icon: StackIcon },
+  // Saghe non c'è più: è la seconda scheda della Libreria (LibraryTabs), e
+  // qui sarebbe stata una seconda voce accesa accanto a «Libreria».
   { to: "/scopri", label: "Scopri", icon: CompassIcon },
   { to: "/critico", label: "Critico", icon: SparkleIcon },
 ] as const;
 
 // Stessa barra sulle due sponde: si impara una interfaccia, non due.
 const MOBILE_ITEMS = NAV_ITEMS;
+
+/** Le pagine che la barra chiama «Libreria»: le tre schede di `LibraryTabs`. */
+const LIBRARY_PATHS = ["/libreria", "/saghe", "/liste"];
+
+/**
+ * Se la voce è accesa. Per «Libreria» non basta l'indirizzo esatto: le saghe e
+ * le liste sono schede della stessa pagina, e uscire dalla voce accesa solo
+ * perché si è cambiata scheda direbbe che si è andati da un'altra parte.
+ *
+ * Calcolato qui e non lasciato a `NavLink`, che sa confrontare un indirizzo
+ * solo: per le tre pagine della Libreria avrebbe acceso il colore ma non
+ * `aria-current`, e un lettore di schermo avrebbe detto che non sei da
+ * nessuna parte.
+ */
+function useActiveFor() {
+  const { pathname } = useLocation();
+  const matches = (p: string) => pathname === p || pathname.startsWith(`${p}/`);
+  return (to: string) => (to === "/" ? pathname === "/" : to === "/libreria" ? LIBRARY_PATHS.some(matches) : matches(to));
+}
 
 /* La voce attiva ha un fondo, non un pallino d'accento: si vede dove sei
    senza che la colonna abbia un punto acceso in più. */
@@ -82,6 +102,7 @@ function ThemeToggle() {
 }
 
 export function Nav() {
+  const activeFor = useActiveFor();
   const openPalette = useCommandPalette((s) => s.open);
   const openAddSheet = useAddSheet((s) => s.open);
   const openSettings = useSettingsSheet((s) => s.open);
@@ -120,18 +141,18 @@ export function Nav() {
         </button>
 
         <nav aria-label="Navigazione principale" className="flex flex-1 flex-col gap-1">
-          {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
-            <NavLink
+          {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+            <Link
               key={to}
               to={to}
-              end={end}
               {...prefetchHandlers(to)}
               viewTransition
-              className={({ isActive }) => linkClasses(isActive)}
+              aria-current={activeFor(to) ? "page" : undefined}
+              className={linkClasses(activeFor(to))}
             >
               <Icon />
               {label}
-            </NavLink>
+            </Link>
           ))}
 
           {/* Le scorciatoie: stessa raggiungibilità, peso minore. Sul telefono
@@ -207,22 +228,20 @@ export function Nav() {
         className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around bg-material pb-[env(safe-area-inset-bottom)] backdrop-blur-xl backdrop-saturate-150 lg:hidden"
         style={{ boxShadow: "inset 0 1px 0 var(--separator)" }}
       >
-        {MOBILE_ITEMS.map(({ to, label, icon: Icon, end }) => (
-          <NavLink
+        {MOBILE_ITEMS.map(({ to, label, icon: Icon }) => (
+          <Link
             key={to}
             to={to}
-            end={end}
             {...prefetchHandlers(to)}
             viewTransition
-            className={({ isActive }) =>
-              `flex h-[var(--tabbar-h)] flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors ${
-                isActive ? "text-accent-text" : "text-text-faint"
-              }`
-            }
+            aria-current={activeFor(to) ? "page" : undefined}
+            className={`flex h-[var(--tabbar-h)] flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors ${
+              activeFor(to) ? "text-accent-text" : "text-text-faint"
+            }`}
           >
             <Icon size={24} />
             {label}
-          </NavLink>
+          </Link>
         ))}
       </nav>
     </>

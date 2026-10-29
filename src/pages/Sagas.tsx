@@ -10,6 +10,7 @@ import { useAppReady } from "../lib/useAppReady";
 import { SagaCard } from "../components/SagaCard";
 import { MarathonCard } from "../components/MarathonCard";
 import { EmptyState } from "../components/EmptyState";
+import { LibraryTabs } from "../components/LibraryTabs";
 
 const FETCH_DELAY_MS = 350;
 
@@ -89,6 +90,8 @@ export function Sagas() {
           I film che hai in libreria, rimessi nell'ordine della loro storia.
         </p>
       </div>
+
+      <LibraryTabs />
 
       <MarathonCard />
 

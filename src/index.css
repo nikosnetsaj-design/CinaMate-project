@@ -512,8 +512,12 @@
     border-radius: 999px;
     background: var(--surface-2);
   }
-  .segmented > button {
+  .segmented > button,
+  .segmented > a {
     position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-height: 30px;
     padding: 0 12px;
     border-radius: 999px;
@@ -527,7 +531,11 @@
       box-shadow var(--dur-state) var(--ease-out);
   }
   /* 30 px a vista, 44 al dito. */
-  .segmented > button::after { content: ""; position: absolute; inset: -7px 0; }
+  .segmented > button::after,
+  .segmented > a::after { content: ""; position: absolute; inset: -7px 0; }
+  /* I segmenti che portano altrove — Titoli, Saghe, Liste — sono
+     collegamenti, e la voce accesa è quella della pagina in cui sei. */
+  .segmented > a[aria-current="page"],
   .segmented > button[aria-selected="true"],
   .segmented > button[aria-pressed="true"],
   .segmented > button[aria-checked="true"] {
@@ -536,11 +544,13 @@
     box-shadow: var(--shadow-sm);
   }
   @media (hover: hover) {
-    .segmented > button:not([aria-selected="true"]):not([aria-pressed="true"]):not([aria-checked="true"]):hover { color: var(--text); }
+    .segmented > button:not([aria-selected="true"]):not([aria-pressed="true"]):not([aria-checked="true"]):hover,
+    .segmented > a:not([aria-current="page"]):hover { color: var(--text); }
   }
   /* A tutta larghezza, quando le voci sono la scelta della schermata. */
   .segmented-full { display: flex; width: 100%; }
-  .segmented-full > button { flex: 1 1 0; min-height: 36px; }
+  .segmented-full > button,
+  .segmented-full > a { flex: 1 1 0; min-height: 36px; }
 
   /* L'interruttore: acceso o spento, e si vede da dove sta il pomello prima
      ancora che dal colore. La guida spenta ha il contrasto di un bordo forte

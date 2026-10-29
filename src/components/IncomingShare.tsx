@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Sheet } from "./Sheet";
 import { useAddSheet } from "../store/useAddSheet";
 import { useLibrary } from "../store/useLibrary";
 import { readSharedList, readSharedTitle, type SharedEntry, type SharedList } from "../lib/share";
-import { CheckIcon, PlusIcon } from "./icons";
+import { CheckIcon, ListPlusIcon, PlusIcon } from "./icons";
+import { useLists } from "../store/useLists";
+import { matchSharedEntries } from "../lib/lists";
 
 /**
  * Handles a link someone sent you, or a QR code you scanned.
@@ -43,6 +46,13 @@ export function IncomingShare() {
   const [title, setTitle] = useState<string | null>(incoming?.title?.title ?? null);
   const openAddSheet = useAddSheet((s) => s.open);
   const items = useLibrary((s) => s.items);
+  const pushToast = useLibrary((s) => s.pushToast);
+  const createList = useLists((s) => s.create);
+  const navigate = useNavigate();
+  // Chi è chi: per id TMDB quando il link lo porta, poi per titolo e anno.
+  // Prima bastava lo stesso nome — e il «Dune» del 1984 risultava già in
+  // libreria a chi aveva quello del 2021.
+  const owned = useMemo(() => (list ? matchSharedEntries(list.e, items) : []), [list, items]);
 
   // A single title needs no sheet of its own: hand it to the add sheet, which
   // already knows how to search TMDB and fill everything in.
@@ -54,7 +64,7 @@ export function IncomingShare() {
 
   if (!list) return null;
 
-  const owned = new Set(items.map((i) => i.title.toLowerCase()));
+  const ownedIds = owned.filter((item): item is NonNullable<typeof item> => !!item).map((item) => item.id);
 
   return (
     <Sheet onClose={() => setList(null)} titleId="incoming-share-title">
@@ -71,7 +81,7 @@ export function IncomingShare() {
 
         <ul className="list-group bg-surface-2 shadow-none" style={{ "--row-inset": "16px" } as React.CSSProperties}>
           {list.e.map((entry: SharedEntry, index) => {
-            const already = owned.has(entry.t.toLowerCase());
+            const already = !!owned[index];
             return (
               <li key={`${entry.t}-${index}`}>
                 <button
@@ -100,6 +110,32 @@ export function IncomingShare() {
             );
           })}
         </ul>
+
+        {/* Le liste tengono titoli dello scaffale: quelli che hai già entrano
+            subito, gli altri restano qui da aggiungere uno per uno. */}
+        {ownedIds.length > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              const id = createList(list.n, ownedIds);
+              setList(null);
+              if (!id) return;
+              pushToast(
+                "success",
+                ownedIds.length === list.e.length
+                  ? `Lista «${list.n}» salvata.`
+                  : `Lista salvata con i ${ownedIds.length} titoli che hai già.`,
+              );
+              navigate(`/liste/${encodeURIComponent(id)}`);
+            }}
+            className="btn btn-primary w-full"
+          >
+            <ListPlusIcon size={18} />
+            {ownedIds.length === list.e.length
+              ? "Salva come lista"
+              : `Salva come lista (${ownedIds.length} ${ownedIds.length === 1 ? "che hai" : "che hai già"})`}
+          </button>
+        )}
 
         <button
           type="button"

@@ -37,6 +37,28 @@ export function activeFilterCount(filters: Filters): number {
   return Object.values(filters).filter((v) => v !== undefined && v !== "" && v !== false).length;
 }
 
+const KIND_PLURAL: Record<Kind, string> = { film: "Film", serie: "Serie", anime: "Anime", doc: "Documentari" };
+
+/**
+ * Il nome di una selezione, detto con i suoi filtri: «Horror · Visto · anni
+ * 1990–1999». Serve quando la selezione diventa una lista o un link: «Selezione
+ * dalla mia libreria» non dice niente a chi la riceve, e niente a te fra un
+ * mese. Restano fuori i filtri che non si dicono in due parole (lingua,
+ * sottotitoli, durata): meglio un nome corto che uno che elenca tutto.
+ */
+export function describeFilters(filters: Filters): string {
+  const parts: string[] = [];
+  if (filters.kind) parts.push(KIND_PLURAL[filters.kind]);
+  if (filters.genre) parts.push(filters.genre);
+  if (filters.status) parts.push(filters.status);
+  if (filters.studio) parts.push(filters.studio);
+  if (filters.yearFrom && filters.yearTo) parts.push(filters.yearFrom === filters.yearTo ? String(filters.yearFrom) : `${filters.yearFrom}–${filters.yearTo}`);
+  else if (filters.yearFrom) parts.push(`dal ${filters.yearFrom}`);
+  else if (filters.yearTo) parts.push(`fino al ${filters.yearTo}`);
+  if (filters.voteMin) parts.push(`voto ${filters.voteMin}+`);
+  return parts.join(" · ");
+}
+
 /**
  * Subtitles are the one filter that cannot be answered from the library record:
  * `.vtt` tracks live in the player's own store, deliberately (see

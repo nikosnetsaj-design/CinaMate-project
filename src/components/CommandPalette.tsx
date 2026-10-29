@@ -8,13 +8,16 @@ import { useSelectedSaga } from "../store/useSelectedSaga";
 import { useSelectedPerson } from "../store/useSelectedPerson";
 import { useFocusTrap } from "../lib/useFocusTrap";
 import { GROUP_LABELS, smartSearch, type SearchGroup, type SearchHit } from "../lib/search";
-import { PersonIcon, SearchIcon, StackIcon } from "./icons";
+import { ListsIcon, PersonIcon, SearchIcon, StackIcon } from "./icons";
+import { useNavigate } from "react-router-dom";
+import { useLists } from "../store/useLists";
 import { useVisibleItems } from "../lib/useVisibleItems";
 
-const GROUP_ORDER: SearchGroup[] = ["titolo", "saga", "persona"];
+const GROUP_ORDER: SearchGroup[] = ["titolo", "lista", "saga", "persona"];
 
 function GroupIcon({ group }: { group: SearchGroup }) {
   if (group === "saga") return <StackIcon size={14} />;
+  if (group === "lista") return <ListsIcon size={14} />;
   if (group === "persona") return <PersonIcon size={14} />;
   return null;
 }
@@ -26,6 +29,8 @@ function PaletteDialog() {
   const openPerson = useSelectedPerson((s) => s.open);
   const items = useVisibleItems();
   const sagas = useSagas((s) => s.sagas);
+  const lists = useLists((s) => s.lists);
+  const navigate = useNavigate();
 
   const [query, setQuery] = useState("");
   const [highlighted, setHighlighted] = useState(0);
@@ -47,8 +52,14 @@ function PaletteDialog() {
         item,
       }));
     }
-    return smartSearch(query, items, sagas);
-  }, [query, items, sagas]);
+    const visible = new Set(items.map((i) => i.id));
+    return smartSearch(
+      query,
+      items,
+      sagas,
+      lists.map((l) => ({ id: l.id, name: l.name, count: l.itemIds.filter((id) => visible.has(id)).length })),
+    );
+  }, [query, items, sagas, lists]);
 
   // Rendered by group, navigated as one flat list: arrow keys should never have
   // to know that a heading sits between two rows.
@@ -64,6 +75,7 @@ function PaletteDialog() {
     if (hit.item) openItem(hit.item);
     else if (hit.sagaKey) openSaga(hit.sagaKey);
     else if (hit.personName) openPerson(hit.personName);
+    else if (hit.listId) navigate(`/liste/${encodeURIComponent(hit.listId)}`, { viewTransition: true });
   }
 
   return createPortal(

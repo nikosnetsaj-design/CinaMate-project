@@ -49,6 +49,8 @@ const Discover = lazy(() => import("./pages/Discover").then((m) => ({ default: m
 const Search = lazy(() => import("./pages/Search").then((m) => ({ default: m.Search })));
 const Tu = lazy(() => import("./pages/Tu").then((m) => ({ default: m.Tu })));
 const Critic = lazy(() => import("./pages/Critic").then((m) => ({ default: m.Critic })));
+const Lists = lazy(() => import("./pages/Lists").then((m) => ({ default: m.Lists })));
+const ListDetail = lazy(() => import("./pages/Lists").then((m) => ({ default: m.ListDetail })));
 
 /*
  * I fogli che si aprono di rado. La scheda del titolo resta nel pacchetto
@@ -301,6 +303,8 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/libreria" element={<Library />} />
             <Route path="/saghe" element={<Sagas />} />
+            <Route path="/liste" element={<Lists />} />
+            <Route path="/liste/:id" element={<ListDetail />} />
             <Route path="/scopri" element={<Discover />} />
             <Route path="/cerca" element={<Search />} />
             <Route path="/tu" element={<Tu />} />

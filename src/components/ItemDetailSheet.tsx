@@ -21,6 +21,7 @@ import { ShareSheet } from "./ShareSheet";
 import { EpisodeList } from "./EpisodeList";
 import { DownloadButton } from "./DownloadButton";
 import { SpoilerFreeRecap, TranslateOverview } from "./AiItemExtras";
+import { ItemListsChips } from "./ListsUI";
 import { BackIcon, EyeIcon, HeartIcon, InfoIcon, MinusIcon, PlayIcon, PlusIcon, ShareIcon, SparkleIcon, StarIcon } from "./icons";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useLibrary } from "../store/useLibrary";
@@ -363,6 +364,8 @@ function ItemDetail({ item }: { item: Item }) {
                   ))}
                 </div>
               </div>
+
+              <ItemListsChips item={item} />
 
               <div className="mt-4 flex gap-3">
                 <div className="flex flex-1 items-center justify-between gap-3 rounded-lg bg-surface-2 p-3 pl-4">

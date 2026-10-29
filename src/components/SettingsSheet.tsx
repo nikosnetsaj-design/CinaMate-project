@@ -12,6 +12,7 @@ import { useReminders } from "../store/useReminders";
 import { usePlayerSources } from "../store/usePlayerSources";
 import { usePlayerPrefs } from "../store/usePlayerPrefs";
 import { useGoals } from "../store/useGoals";
+import { useLists } from "../store/useLists";
 import { useTheme } from "../store/useTheme";
 import { useTvMode, type TvPreference } from "../store/useTvMode";
 import { useHomeLayout, HOME_SECTIONS, MAX_ROWS } from "../store/useHomeLayout";
@@ -775,6 +776,7 @@ function SettingsForm() {
         daily: getDailySeconds(),
       },
       useGoals.getState().goals,
+      useLists.getState().lists,
     );
     downloadFile(`cinemate-libreria-${localDay()}.json`, backup, "application/json");
     pushToast("success", "Libreria esportata.");
@@ -834,6 +836,7 @@ function SettingsForm() {
       }
     }
     if (backup.goals !== undefined) useGoals.getState().restore(backup.goals);
+    if (backup.lists !== undefined) useLists.getState().restore(backup.lists);
   }
 
   return (
@@ -1178,7 +1181,15 @@ function SettingsForm() {
             <div role="alertdialog" aria-labelledby="import-confirm" className="mt-4 rounded-md bg-surface-2 p-4">
               <p id="import-confirm" className="text-sm text-text">
                 Importare {pendingImport.items.length} titoli? La libreria attuale ({items.length} titoli) verrà
-                sostituita{pendingImport.player ? ", insieme alle sorgenti del player e agli host" : ""}.
+                sostituita
+                {pendingImport.lists !== undefined && pendingImport.player
+                  ? ", insieme alle liste, alle sorgenti del player e agli host"
+                  : pendingImport.lists !== undefined
+                    ? ", insieme alle liste"
+                    : pendingImport.player
+                      ? ", insieme alle sorgenti del player e agli host"
+                      : ""}
+                .
               </p>
               <div className="mt-3 flex justify-end gap-2">
                 <button type="button" onClick={() => setPendingImport(null)} className="btn btn-secondary btn-sm">
@@ -1212,6 +1223,7 @@ function SettingsForm() {
                     useSagas.getState().clearAll();
                     useMarathon.getState().stop();
                     useReminders.getState().clearAll();
+                    useLists.getState().clearAll();
                   }}
                   className="btn btn-danger-fill btn-sm"
                 >

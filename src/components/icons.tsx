@@ -4,6 +4,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   Bell,
+  CalendarPlus,
   ChartNoAxesColumn,
   Check,
   ChevronDown,
@@ -20,6 +21,7 @@ import {
   Download,
   EllipsisVertical,
   Eye,
+  FileSpreadsheet,
   Film,
   Globe,
   Heart,
@@ -30,11 +32,14 @@ import {
   LibraryBig,
   Link,
   List,
+  ListPlus,
+  ListVideo,
   ListTree,
   MessageSquareQuote,
   Minus,
   Moon,
   Music,
+  Pencil,
   Play,
   Plus,
   RefreshCw,
@@ -114,6 +119,23 @@ export function SparkleIcon({ size = 18 }: IconProps) {
 }
 export function MinusIcon({ size = 18 }: IconProps) {
   return <Glyph icon={Minus} size={size} />;
+}
+/** Le liste personali: un elenco con il segno di «riproduci», non un indice qualsiasi. */
+export function ListsIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={ListVideo} size={size} />;
+}
+export function ListPlusIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={ListPlus} size={size} />;
+}
+export function PencilIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Pencil} size={size} />;
+}
+export function CalendarPlusIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={CalendarPlus} size={size} />;
+}
+/** Un foglio a righe: il CSV che si porta in un altro servizio. */
+export function SheetFileIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={FileSpreadsheet} size={size} />;
 }
 export function PlusIcon({ size = 18 }: IconProps) {
   return <Glyph icon={Plus} size={size} />;

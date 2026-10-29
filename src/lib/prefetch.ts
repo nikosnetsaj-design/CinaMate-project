@@ -31,6 +31,7 @@ function once(key: string, load: () => Promise<unknown>) {
 const ROUTES: Record<string, () => Promise<unknown>> = {
   player: () => import("../pages/Player"),
   libreria: () => import("../pages/Library"),
+  liste: () => import("../pages/Lists"),
   saghe: () => import("../pages/Sagas"),
   scopri: () => import("../pages/Discover"),
   cerca: () => import("../pages/Search"),

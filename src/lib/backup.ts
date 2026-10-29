@@ -65,9 +65,15 @@ export interface Backup {
    * not here — it is recomputed from the diary, which the file already carries.
    */
   goals?: unknown;
+  /**
+   * Le liste personali. Stessa regola degli obiettivi: le hai fatte tu, e
+   * niente le può ricostruire. Tengono gli id dei titoli, che il file porta
+   * con sé, quindi tornano al loro posto insieme alla libreria.
+   */
+  lists?: unknown;
 }
 
-const CURRENT_VERSION = 5;
+const CURRENT_VERSION = 6;
 
 export function buildBackup(
   items: Item[],
@@ -75,6 +81,7 @@ export function buildBackup(
   sagas?: SagaBackup,
   player?: PlayerBackup,
   goals?: unknown,
+  lists?: unknown,
 ): string {
   return JSON.stringify(
     {
@@ -86,6 +93,7 @@ export function buildBackup(
       sagas,
       player,
       goals,
+      lists,
     },
     null,
     2,
@@ -173,6 +181,7 @@ export function parseBackup(raw: string): Backup {
       sagas?: unknown;
       player?: unknown;
       goals?: unknown;
+      lists?: unknown;
     };
     const items = readItems(record.items);
     if (items.length === 0) throw new BackupParseError("Nessun titolo valido trovato nel file.");
@@ -186,6 +195,7 @@ export function parseBackup(raw: string): Backup {
       player: parsePlayerBackup(record.player),
       // Validated by the store that receives it, like the player sections.
       goals: record.goals,
+      lists: record.lists,
     };
   }
 
