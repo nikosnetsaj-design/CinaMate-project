@@ -3,15 +3,15 @@ import { useLibrary } from "../store/useLibrary";
 import { useSettings } from "../store/useSettings";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { usePlayerSources } from "../store/usePlayerSources";
-import { StatCard } from "../components/StatCard";
+import { FigureBand } from "../components/Figures";
 import { EmptyState } from "../components/EmptyState";
 import { clearErrorLog, getErrorLog, subscribeErrorLog, type LoggedError, type ErrorScope } from "../lib/errorLog";
 import { runSelfTests, type TestResult, type TestStatus } from "../lib/selfTest";
 import { getHosts, computeHostStats, getSwitchLog } from "../player/services/hostStore";
 
 const STATUS_COLOUR: Record<TestStatus, string> = {
-  pass: "var(--status-done)",
-  warn: "var(--yellow)",
+  pass: "var(--success)",
+  warn: "var(--warning)",
   fail: "var(--danger)",
   skip: "var(--text-faint)",
 };
@@ -40,7 +40,7 @@ function Section({ title, children, action }: { title: string; children: React.R
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="font-display text-xl font-semibold text-text">{title}</h2>
+        <h2 className="t-title text-text">{title}</h2>
         {action}
       </div>
       {children}
@@ -50,7 +50,7 @@ function Section({ title, children, action }: { title: string; children: React.R
 
 function TestRow({ result }: { result: TestResult }) {
   return (
-    <div className="flex items-start gap-3 rounded-lg bg-surface-2 p-3.5">
+    <li className="list-row items-start">
       <span
         aria-hidden
         className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
@@ -58,45 +58,45 @@ function TestRow({ result }: { result: TestResult }) {
       />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-text">{result.label}</p>
-        <p className="mt-0.5 text-xs leading-relaxed text-text-faint">{result.detail}</p>
+        <p className="mt-0.5 text-xs text-text-muted">{result.detail}</p>
       </div>
       <span className="shrink-0 text-xs font-medium" style={{ color: STATUS_COLOUR[result.status] }}>
         {STATUS_LABEL[result.status]}
       </span>
-    </div>
+    </li>
   );
 }
 
 function HostSummary() {
   const hosts = getHosts();
   const switches = getSwitchLog(5);
-  if (hosts.length === 0) return <p className="text-sm text-text-faint">Nessun host configurato.</p>;
+  if (hosts.length === 0) return <p className="text-sm text-text-muted">Nessun host configurato.</p>;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
+      <ul className="list-group" style={{ "--row-inset": "16px" } as React.CSSProperties}>
       {[...hosts]
         .sort((a, b) => a.priority - b.priority)
         .map((host) => {
           const stats = computeHostStats(host.id);
           return (
-            <div key={host.id} className="flex items-center justify-between gap-3 rounded-lg bg-surface-2 px-3.5 py-2.5">
+            <li key={host.id} className="list-row justify-between">
               <div className="min-w-0">
-                <p className="truncate text-sm text-text">{host.name}</p>
-                <p className="truncate font-mono text-xs text-text-faint">{host.url}</p>
+                <p className="truncate text-sm font-medium text-text">{host.name}</p>
+                <p className="truncate font-mono text-xs text-text-muted">{host.url}</p>
               </div>
               <div className="shrink-0 text-right">
-                <p className="font-mono tabular text-sm" style={{ color: "var(--accent-text)" }}>
-                  {stats.score}/100
-                </p>
-                <p className="font-mono text-xs text-text-faint">
-                  {stats.reliability30d}% · {stats.avgPingMs ?? "—"}ms
+                <p className="tabular text-sm font-semibold text-text">{stats.score}/100</p>
+                <p className="tabular text-xs text-text-muted">
+                  {stats.reliability30d}% · {stats.avgPingMs ?? "—"} ms
                 </p>
               </div>
-            </div>
+            </li>
           );
         })}
+      </ul>
       {switches.length > 0 && (
-        <p className="text-xs text-text-faint">
+        <p className="text-xs text-text-muted">
           Ultimo cambio host: {when(switches[0].at)} ({switches.length} negli ultimi giorni).
         </p>
       )}
@@ -130,21 +130,26 @@ export function Diagnostics() {
   const withSources = Object.values(sources).filter((s) => s.manifestUrl || s.subtitles.length || s.markers.length).length;
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-6 sm:px-6 sm:py-10">
+    <div className="mx-auto flex max-w-3xl flex-col gap-10 px-[var(--gutter)] py-6 sm:py-10">
       <div>
-        <h1 className="font-display text-3xl font-semibold text-text">Diagnostica</h1>
+        <h1 className="t-display text-text">Diagnostica</h1>
         <p className="mt-1 text-sm text-text-muted">
           Cosa c'è sul dispositivo e cosa sta funzionando. Nessuno di questi dati esce di qui:
           non c'è nessun server a cui mandarli.
         </p>
       </div>
 
-      <section aria-label="Riepilogo" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="titoli" value={String(items.length)} />
-        <StatCard label="voci di diario" value={String(history.length)} />
-        <StatCard label="con sorgente" value={String(withSources)} />
-        <StatCard label="errori registrati" value={String(errors.length)} />
-      </section>
+      <FigureBand
+        label="Riepilogo"
+        cols={2}
+        smCols={4}
+        figures={[
+          { value: items.length, label: "titoli" },
+          { value: history.length, label: "voci di diario" },
+          { value: withSources, label: "con sorgente" },
+          { value: errors.length, label: "errori registrati" },
+        ]}
+      />
 
       <Section
         title="Test automatici"
@@ -160,7 +165,7 @@ export function Diagnostics() {
         }
       >
         {tests === null ? (
-          <p className="text-sm text-text-faint">
+          <p className="text-sm text-text-muted">
             Controlla memoria, chiavi API, host e notifiche. Alcuni test fanno una richiesta di rete
             vera, quindi partono solo quando li chiedi tu.
           </p>
@@ -173,11 +178,11 @@ export function Diagnostics() {
                   ? `Tutto funziona, con ${warnings} ${warnings === 1 ? "avviso" : "avvisi"}.`
                   : "Tutto a posto."}
             </p>
-            <div className="flex flex-col gap-2">
+            <ul className="list-group" style={{ "--row-inset": "36px" } as React.CSSProperties}>
               {tests.map((t) => (
                 <TestRow key={t.id} result={t} />
               ))}
-            </div>
+            </ul>
           </>
         )}
       </Section>
@@ -206,17 +211,17 @@ export function Diagnostics() {
             description="Quando qualcosa va storto — una chiamata a TMDB rifiutata, un host che non risponde — finisce qui invece di sparire con il messaggio a schermo."
           />
         ) : (
-          <ul className="flex flex-col gap-1.5">
+          <ul className="list-group" style={{ "--row-inset": "16px" } as React.CSSProperties}>
             {[...errors].reverse().map((error: LoggedError) => (
-              <li key={error.id} className="rounded-lg bg-surface-2 px-3.5 py-2.5">
+              <li key={error.id} className="list-row flex-col items-stretch gap-0">
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="text-xs font-medium" style={{ color: "var(--danger)" }}>
                     {SCOPE_LABEL[error.scope]}
                   </span>
-                  <span className="shrink-0 font-mono text-xs text-text-faint">{when(error.at)}</span>
+                  <span className="shrink-0 tabular text-xs text-text-muted">{when(error.at)}</span>
                 </div>
                 <p className="mt-1 break-words text-sm text-text">{error.message}</p>
-                {error.source && <p className="mt-0.5 break-all font-mono text-xs text-text-faint">{error.source}</p>}
+                {error.source && <p className="mt-0.5 break-all font-mono text-xs text-text-muted">{error.source}</p>}
               </li>
             ))}
           </ul>
@@ -230,10 +235,10 @@ export function Diagnostics() {
         </p>
         <button
           type="button"
-          onClick={() => openSettings()}
+          onClick={() => openSettings("dati")}
           className="btn btn-secondary self-start"
         >
-          Apri Impostazioni
+          Apri Dati e backup
         </button>
       </Section>
     </div>

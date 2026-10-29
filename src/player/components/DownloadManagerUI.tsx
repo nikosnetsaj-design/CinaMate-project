@@ -55,7 +55,7 @@ export default function DownloadManagerUI({ library, onPlayOffline, offlineConte
 
       <div className="pv-storage-bar">
         <div className="pv-storage-fill" style={{ width: `${usedPct}%` }} />
-        <span className="pv-mono">{formatBytes(storage.usage)} / {formatBytes(storage.quota)}</span>
+        <span className="pv-num">{formatBytes(storage.usage)} / {formatBytes(storage.quota)}</span>
       </div>
 
       {error && <p className="pv-download-error" role="alert">{error}</p>}

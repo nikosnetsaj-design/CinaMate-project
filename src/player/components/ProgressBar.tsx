@@ -95,7 +95,7 @@ export default function ProgressBar({ currentTime, duration, bufferedEnd, skipMa
       {/* Quanto manca alla fine, non quanto è passato. È la domanda che ci si
           fa davvero guardando l'orologio a metà film — "faccio in tempo?" — e
           il tempo trascorso resta comunque leggibile nell'anteprima di scorrimento. */}
-      <span id="pv-remaining" className="pv-remaining pv-mono">
+      <span id="pv-remaining" className="pv-remaining">
         {duration ? formatTime(Math.max(0, duration - currentTime)) : '--:--'}
       </span>
     </div>

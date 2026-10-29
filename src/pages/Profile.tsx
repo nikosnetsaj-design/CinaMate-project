@@ -20,24 +20,9 @@ import { ContinueWatchingCard } from "../components/ContinueWatchingRow";
 import { EmptyState } from "../components/EmptyState";
 import { PosterArt } from "../components/PosterArt";
 import { RowHeader } from "../components/RowHeader";
+import { FigureBand } from "../components/Figures";
 import { useAppReady } from "../lib/useAppReady";
 import { useVisibleItems } from "../lib/useVisibleItems";
-
-/**
- * Una cifra con la sua etichetta. L'etichetta viene prima nel codice — chi
- * legge con lo screen reader sente «film visti, 8» — e dopo a vista, dove il
- * numero deve arrivare per primo.
- */
-function Figure({ value, label }: { value: string; label: string }) {
-  return (
-    // In colonna rovesciata l'inizio è in basso: `justify-end` tiene le cifre
-    // allineate in alto anche quando un'etichetta va a capo.
-    <div className="flex min-w-0 flex-col-reverse justify-end gap-0.5 px-4 py-3.5">
-      <dt className="text-xs text-text-muted">{label}</dt>
-      <dd className="t-figure text-text">{value}</dd>
-    </div>
-  );
-}
 
 /**
  * L'attesa, disegnata come la pagina che sta arrivando.
@@ -190,11 +175,14 @@ export function ProfileSummary() {
 
           {/* Tre totali in una fascia sola, divisi da un filo: sono tre
               risposte alla stessa domanda, non tre schede. */}
-          <dl className="grid grid-cols-3 rounded-lg bg-surface shadow-[var(--shadow-sm)] [&>*+*]:shadow-[inset_1px_0_0_var(--separator)]">
-            <Figure value={String(stats.filmsCompleted)} label="film visti" />
-            <Figure value={String(stats.seriesCompleted)} label="serie completate" />
-            <Figure value={String(stats.episodesWatched)} label="episodi visti" />
-          </dl>
+          <FigureBand
+            cols={3}
+            figures={[
+              { value: stats.filmsCompleted, label: "film visti" },
+              { value: stats.seriesCompleted, label: "serie completate" },
+              { value: stats.episodesWatched, label: "episodi visti" },
+            ]}
+          />
 
           {/* --- Activity chart ------------------------------------------- */}
           <section className="flex flex-col gap-4">

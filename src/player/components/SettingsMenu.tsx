@@ -92,7 +92,7 @@ export default function SettingsMenu(props: Props) {
                 onClick={() => props.onSelectLevel(Number(l.id))}
               >
                 {l.label}
-                {l.bitrate > 0 && <span className="pv-dim pv-mono"> {Math.round(l.bitrate / 1000)} kbps</span>}
+                {l.bitrate > 0 && <span className="pv-dim pv-num"> {Math.round(l.bitrate / 1000)} kbps</span>}
               </button>
             ))}
             <label className="pv-toggle">
@@ -121,8 +121,8 @@ export default function SettingsMenu(props: Props) {
                 invisible tuning knob: how many seconds are already downloaded,
                 and how many it is currently aiming to hold. */}
             <p className="pv-dim pv-buffer-readout">
-              Buffer <span className="pv-mono">{Math.round(props.bufferHealthSec)}s</span> di{' '}
-              <span className="pv-mono">{props.bufferTargetSec}s</span>
+              Buffer <span className="pv-num">{Math.round(props.bufferHealthSec)}s</span> di{' '}
+              <span className="pv-num">{props.bufferTargetSec}s</span>
               {props.dataSaver
                 ? ' · ridotto dal risparmio dati'
                 : ' · si adatta da solo alla qualità della rete'}
@@ -278,7 +278,7 @@ export default function SettingsMenu(props: Props) {
               <span>
                 Spegnimento automatico
                 {props.sleep.remainingSec !== null && (
-                  <span className="pv-dim pv-mono"> · {Math.ceil(props.sleep.remainingSec / 60)} min</span>
+                  <span className="pv-dim pv-num"> · {Math.ceil(props.sleep.remainingSec / 60)} min</span>
                 )}
               </span>
               <div className="pv-field-options">

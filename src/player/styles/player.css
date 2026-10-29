@@ -57,6 +57,10 @@
 
 .pv-dim { color: var(--pv-text-dim); }
 .pv-mono { font-family: var(--pv-font-mono); font-size: 0.85em; }
+/* Le cifre del lettore — tempo, percentuali, byte — nel sans a larghezza
+   fissa, come nel resto dell'app. Il monospazio resta per ciò che è davvero
+   tecnico: tasti, estensioni, indirizzi. */
+.pv-num { font-variant-numeric: tabular-nums; }
 
 /* ===================== Player page shell ===================== */
 .pv-app {
@@ -87,10 +91,9 @@
 .pv-app-toolbar button:hover { border-color: var(--pv-accent); }
 .pv-stat-chip {
   margin-left: auto;
-  font-family: var(--pv-font-mono);
+  font-family: var(--pv-font-body);
   color: var(--pv-text-dim);
-  font-size: 0.85rem;
-}
+  font-size: 0.85rem; font-variant-numeric: tabular-nums; }
 
 /* ===================== Player shell ===================== */
 /*
@@ -211,9 +214,9 @@
   pointer-events: none;
 }
 .pv-gesture-kind {
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 0.75rem;
+  
+  
   color: var(--pv-text-dim);
 }
 .pv-gesture-value {
@@ -288,10 +291,10 @@
 .pv-controls-hidden .pv-topbar { opacity: 0; transform: translateY(-6px); pointer-events: none; }
 
 .pv-topbar-label {
-  font-family: var(--pv-font-display);
-  font-size: 1.05rem;
+  font-family: var(--pv-font-body);
+  font-size: 1rem;
   font-weight: 600;
-  letter-spacing: 0.01em;
+  
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -359,15 +362,14 @@
   flex-wrap: wrap;
 }
 .pv-badge {
-  font-family: var(--pv-font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.03em;
+  font-family: var(--pv-font-body);
+  font-size: 0.75rem;
+  
   padding: 4px 8px;
   border-radius: 999px;
   background: rgba(19, 17, 22, 0.7);
   border: 1px solid var(--pv-border);
-  backdrop-filter: blur(6px);
-}
+  backdrop-filter: blur(6px); font-weight: 600; font-variant-numeric: tabular-nums; }
 .pv-badge-active { border-color: var(--pv-accent); color: var(--pv-accent); }
 .pv-badge-muted { opacity: 0.7; }
 
@@ -570,7 +572,7 @@
 }
 .pv-postplay-next { display: flex; align-items: center; gap: 14px; }
 .pv-postplay-poster { width: 54px; height: 78px; object-fit: cover; border-radius: 4px; border: 1px solid var(--pv-border); }
-.pv-postplay-next .pv-dim { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.1em; }
+.pv-postplay-next .pv-dim { font-size: 0.75rem;   }
 .pv-postplay-next h4 {
   margin: 2px 0 0;
   font-family: var(--pv-font-display);
@@ -643,7 +645,7 @@
 }
 .pv-rec-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; border-radius: 6px; border: 1px solid var(--pv-border); }
 .pv-rec-card span { display: block; margin-top: 6px; font-size: 0.8rem; color: var(--pv-text-dim); }
-.pv-rec-reason { display: block; margin-top: 2px; font-size: 0.68rem; color: var(--pv-text-dim); opacity: 0.8; font-style: normal; }
+.pv-rec-reason { display: block; margin-top: 2px; font-size: 0.75rem; color: var(--pv-text-dim); opacity: 0.8; font-style: normal; }
 .pv-rec-card:not(:disabled) { cursor: pointer; }
 .pv-rec-card:not(:disabled):hover img { border-color: var(--pv-accent); }
 /* A suggestion with no source is still worth showing, but must not look
@@ -733,7 +735,7 @@
 
 .pv-shortcuts-panel { max-width: 460px; }
 .pv-shortcuts-title {
-  font-family: var(--pv-font-display);
+  font-family: var(--pv-font-body);
   font-size: 1rem;
   font-weight: 600;
   padding: 4px 2px;
@@ -858,7 +860,7 @@
   border-radius: 2px;
   border: 1px solid var(--pv-border);
 }
-.pv-scrub-time { font-family: var(--pv-font-mono); font-size: 0.72rem; }
+.pv-scrub-time { font-family: var(--pv-font-body); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
 
 /* ===================== Controls bar ===================== */
 .pv-controls-bar {
@@ -1002,9 +1004,9 @@
 .pv-episode-text .pv-dim { font-size: 0.76rem; }
 .pv-episode-flag {
   flex: 0 0 auto;
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  
+  
   color: var(--pv-accent);
 }
 
@@ -1180,7 +1182,7 @@
   overflow: hidden;
 }
 .pv-storage-fill { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(227, 166, 78, 0.35); }
-.pv-storage-bar span { position: relative; font-size: 0.72rem; }
+.pv-storage-bar span { position: relative; font-size: 0.75rem; }
 
 .pv-download-catalog { display: flex; flex-direction: column; gap: 6px; }
 .pv-download-row { display: flex; align-items: center; gap: 10px; }
@@ -1192,13 +1194,13 @@
   background: var(--pv-bg-elevated); border: 1px solid var(--pv-border-strong);
   border-radius: var(--pv-radius); padding: 18px; display: flex; flex-direction: column; gap: 12px; min-width: 260px;
 }
-.pv-modal h4 { margin: 0; font-family: var(--pv-font-display); font-weight: 400; font-size: 1.1rem; }
+.pv-modal h4 { margin: 0; font-family: var(--pv-font-display); font-weight: 400; font-size: 1.125rem; }
 
 .pv-download-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .pv-download-list li { display: flex; align-items: center; gap: 10px; }
 .pv-download-list img { width: 40px; height: 56px; object-fit: cover; border-radius: 4px; }
 .pv-download-info { flex: 1; display: flex; flex-direction: column; gap: 4px; font-size: 0.82rem; }
-.pv-download-status { font-size: 0.72rem; }
+.pv-download-status { font-size: 0.75rem; }
 
 /* ===================== Watch Party ===================== */
 .pv-join-row, .pv-invite-row { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -1251,7 +1253,7 @@
   flex-direction: column;
   gap: 6px;
 }
-.pv-host-active-label { font-family: var(--pv-font-mono); font-size: 0.7rem; color: var(--pv-text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+.pv-host-active-label { font-family: var(--pv-font-body); font-size: 0.75rem; color: var(--pv-text-dim);   }
 .pv-host-active-name { font-family: var(--pv-font-display); font-size: 1.4rem; letter-spacing: 0.02em; }
 .pv-host-active-metrics { display: flex; gap: 16px; font-size: 0.85rem; color: var(--pv-text-dim); }
 .pv-host-stars { display: inline-flex; gap: 2px; color: var(--pv-accent); }
@@ -1259,16 +1261,15 @@
 .pv-host-stars-dim { color: var(--pv-border-strong); }
 .pv-host-status-chip {
   align-self: flex-start;
-  font-family: var(--pv-font-mono); font-size: 0.75rem; font-weight: 600;
-  padding: 4px 10px; border-radius: 999px; margin-top: 4px;
-}
+  font-family: var(--pv-font-body); font-size: 0.75rem; font-weight: 600;
+  padding: 4px 10px; border-radius: 999px; margin-top: 4px; font-variant-numeric: tabular-nums; }
 .pv-host-status-chip--online { background: rgba(227, 166, 78, 0.15); color: var(--pv-accent); }
 .pv-host-status-chip--slow { background: rgba(224, 152, 92, 0.15); color: #e0985c; }
 .pv-host-status-chip--offline { background: rgba(193, 68, 59, 0.18); color: var(--pv-accent-2-text); }
 .pv-host-status-chip--unknown { background: rgba(245, 241, 232, 0.08); color: var(--pv-text-dim); }
 
 .pv-host-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
-.pv-host-setting { display: flex; flex-direction: column; gap: 3px; font-size: 0.72rem; color: var(--pv-text-dim); }
+.pv-host-setting { display: flex; flex-direction: column; gap: 3px; font-size: 0.75rem; color: var(--pv-text-dim); }
 
 .pv-host-modes { display: flex; flex-wrap: wrap; gap: 6px; }
 .pv-host-mode {
@@ -1282,7 +1283,7 @@
 .pv-host-mode.active { border-color: var(--pv-accent); color: var(--pv-text); }
 .pv-host-mode-hint { margin-top: -2px; }
 .pv-host-speed-note {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   line-height: 1.5;
   color: var(--pv-accent-2-text);
 }
@@ -1301,9 +1302,9 @@
 .pv-host-row-main { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .pv-host-row-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .pv-host-row-name { font-weight: 700; font-size: 0.92rem; }
-.pv-host-role-badge { font-family: var(--pv-font-mono); font-size: 0.68rem; color: var(--pv-text-dim); }
-.pv-host-row-url { font-family: var(--pv-font-mono); font-size: 0.72rem; color: var(--pv-text-dim); word-break: break-all; }
-.pv-host-row-meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.72rem; color: var(--pv-text-dim); }
+.pv-host-role-badge { font-family: var(--pv-font-body); font-size: 0.75rem; color: var(--pv-text-dim); }
+.pv-host-row-url { font-family: var(--pv-font-mono); font-size: 0.75rem; color: var(--pv-text-dim); word-break: break-all; }
+.pv-host-row-meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.75rem; color: var(--pv-text-dim); }
 
 .pv-host-ping-bar {
   position: relative; height: 18px; border-radius: 6px;
@@ -1315,7 +1316,7 @@
 .pv-host-ping-fill--slow { background: rgba(224, 152, 92, 0.4); }
 .pv-host-ping-fill--offline { background: rgba(193, 68, 59, 0.35); }
 .pv-host-ping-fill--unknown { background: rgba(245, 241, 232, 0.15); }
-.pv-host-ping-label { position: relative; font-family: var(--pv-font-mono); font-size: 0.7rem; padding-left: 8px; }
+.pv-host-ping-label { position: relative; font-family: var(--pv-font-body); font-size: 0.75rem; padding-left: 8px; font-variant-numeric: tabular-nums; }
 
 .pv-host-row-actions { display: flex; flex-direction: column; gap: 4px; }
 .pv-host-remove:hover { border-color: var(--pv-accent-2) !important; color: var(--pv-accent-2) !important; }
@@ -1325,7 +1326,7 @@
 .pv-host-add-toggle { align-self: flex-start; background: transparent !important; border: 1px dashed var(--pv-border-strong) !important; color: var(--pv-text-dim) !important; }
 
 .pv-host-test-history { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; padding-top: 6px; border-top: 1px dashed var(--pv-border); }
-.pv-host-test-history-row { display: flex; gap: 10px; font-size: 0.72rem; color: var(--pv-text-dim); font-family: var(--pv-font-mono); }
+.pv-host-test-history-row { display: flex; gap: 10px; font-size: 0.75rem; color: var(--pv-text-dim); font-family: var(--pv-font-body); font-variant-numeric: tabular-nums; }
 
 /* `.pv-panel button` is a filled accent button and outweighs `.pv-icon-btn` on
    specificity, which made every remove-X in a panel look like the primary
@@ -1344,10 +1345,10 @@
 .pv-source-block-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .pv-source-block-head h5 {
   margin: 0;
-  font-family: var(--pv-font-display);
-  font-weight: 400;
+  font-family: var(--pv-font-body);
+  font-weight: 600;
   font-size: 1rem;
-  letter-spacing: 0.02em;
+  
 }
 .pv-source-panel code {
   font-family: var(--pv-font-mono);
@@ -1373,7 +1374,7 @@
   min-width: 0;
   color: var(--pv-text-dim);
   font-family: var(--pv-font-mono);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   overflow-wrap: anywhere;
 }
 .pv-source-add { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -1384,7 +1385,7 @@
   grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
   gap: 8px;
 }
-.pv-source-grid label { display: flex; flex-direction: column; gap: 3px; font-size: 0.72rem; color: var(--pv-text-dim); }
+.pv-source-grid label { display: flex; flex-direction: column; gap: 3px; font-size: 0.75rem; color: var(--pv-text-dim); }
 .pv-clock-field { display: inline-flex; align-items: center; gap: 4px; }
 .pv-clock-field input {
   width: 5.5rem;
@@ -1403,7 +1404,7 @@
 }
 
 .pv-host-history-log { display: flex; flex-direction: column; gap: 6px; }
-.pv-host-history-log h4 { margin: 0; font-family: var(--pv-font-display); font-weight: 400; font-size: 1rem; }
+.pv-host-history-log h4 { margin: 0; font-family: var(--pv-font-body); font-weight: 600; font-size: 1rem; }
 .pv-host-history-row { display: flex; gap: 10px; font-size: 0.75rem; color: var(--pv-text-dim); flex-wrap: wrap; }
 .pv-host-history-reason { color: var(--pv-accent); }
 

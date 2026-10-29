@@ -13,6 +13,7 @@ import { Nastro } from "../components/Nastro";
 import type { Item } from "../types";
 import { AchievementIcon } from "../components/AchievementIcon";
 import { RowHeader } from "../components/RowHeader";
+import { FigureBand } from "../components/Figures";
 import { StatusMark } from "../components/StatusChip";
 import { CheckIcon } from "../components/icons";
 
@@ -42,46 +43,6 @@ function Section({ title, trailing, children }: { title: string; trailing?: Reac
 /** One surface, the content directly on it — never a card inside a card. */
 function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <div className={`rounded-lg bg-surface p-4 shadow-[var(--shadow-sm)] ${className}`}>{children}</div>;
-}
-
-/** Una cifra della fascia: etichetta prima nel codice, numero prima a vista. */
-function Figure({
-  value,
-  label,
-  mark,
-  className = "",
-}: {
-  value: React.ReactNode;
-  label: string;
-  mark?: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={`flex min-w-0 flex-col-reverse justify-end gap-0.5 px-4 py-3.5 ${className}`}>
-      <dt className="flex min-w-0 items-center gap-1.5 text-xs text-text-muted">
-        {mark}
-        <span>{label}</span>
-      </dt>
-      <dd className="t-figure truncate text-text">{value}</dd>
-    </div>
-  );
-}
-
-/*
- * La fascia di cifre: una superficie sola, un filo fra le colonne e, quando
- * va a capo, uno fra le righe. I fili si calcolano dalla posizione perché il
- * numero di celle cambia (il genere e il mese più visti possono mancare).
- */
-const FIGURES = "rounded-lg bg-surface shadow-[var(--shadow-sm)]";
-const LEFT = "shadow-[inset_1px_0_0_var(--separator)]";
-const TOP = "shadow-[inset_0_1px_0_var(--separator)]";
-const BOTH = "shadow-[inset_1px_0_0_var(--separator),inset_0_1px_0_var(--separator)]";
-const SM_LEFT = "sm:shadow-[inset_1px_0_0_var(--separator)]";
-
-function hairline(index: number, cols: number) {
-  const left = index % cols !== 0;
-  const top = index >= cols;
-  return left && top ? BOTH : left ? LEFT : top ? TOP : "";
 }
 
 /** A ranked bar: the label, the count, and how it compares with the first. */
@@ -171,17 +132,16 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
         {yir.watchedCount === 0 ? (
           <p className="text-sm text-text-muted">Nessuna attività registrata nel {year}.</p>
         ) : (
-          <dl className={`${FIGURES} grid grid-cols-2 sm:grid-cols-4`}>
-            {[
+          <FigureBand
+            cols={2}
+            smCols={4}
+            figures={[
               { value: yir.watchedCount, label: "titoli completati" },
               { value: `${yir.hours} h`, label: "ore guardate" },
               ...(yir.topGenre ? [{ value: yir.topGenre, label: "genere più visto" }] : []),
               ...(yir.busiestMonth ? [{ value: yir.busiestMonth, label: "mese più attivo" }] : []),
-            ].map((f, i) => (
-              // Due colonne sul telefono, una riga sola da 640 px.
-              <Figure key={f.label} value={f.value} label={f.label} className={`${hairline(i, 2)} ${i > 0 ? SM_LEFT : ""}`} />
-            ))}
-          </dl>
+            ]}
+          />
         )}
       </Section>
 
@@ -196,18 +156,17 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
 
       {/* Sei totali, una fascia: gli stati sopra (con il loro segno, lo
           stesso delle copertine), i completamenti sotto. */}
-      <dl className={`${FIGURES} grid grid-cols-3`}>
-        {[
+      <FigureBand
+        cols={3}
+        figures={[
           { value: stats.byStatus.Visto, label: "visti", mark: <StatusMark status="Visto" /> },
           { value: stats.byStatus["In visione"], label: "in corso", mark: <StatusMark status="In visione" /> },
           { value: stats.byStatus["Da vedere"], label: "da vedere", mark: <StatusMark status="Da vedere" /> },
           { value: stats.filmsCompleted, label: "film completati" },
           { value: stats.seriesCompleted, label: "serie completate" },
           { value: stats.episodesWatched, label: "episodi visti" },
-        ].map((f, i) => (
-          <Figure key={f.label} value={f.value} label={f.label} mark={f.mark} className={hairline(i, 3)} />
-        ))}
-      </dl>
+        ]}
+      />
 
       <Section title="Come voti">
         <Panel>

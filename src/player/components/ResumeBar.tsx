@@ -24,7 +24,7 @@ export default function ResumeBar({ positionSec, onRestart, onDismiss }: Props) 
   return (
     <div className="pv-resume-bar" role="status">
       <span className="pv-resume-text">
-        Ripreso da <span className="pv-mono">{formatClock(positionSec)}</span>
+        Ripreso da <span className="pv-num">{formatClock(positionSec)}</span>
       </span>
       <button type="button" className="pv-resume-action" onClick={onRestart}>
         Ricomincia da capo

@@ -3,10 +3,10 @@ import type { ReactNode } from "react";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useAddSheet } from "../store/useAddSheet";
 import { useHomeLayout, type HomeSectionId } from "../store/useHomeLayout";
-import { StatCard } from "../components/StatCard";
+import { FigureBand } from "../components/Figures";
 import { PosterCard } from "../components/PosterCard";
 import { EmptyState } from "../components/EmptyState";
-import { PosterGridSkeleton, StatCardSkeleton } from "../components/Skeletons";
+import { PosterGridSkeleton } from "../components/Skeletons";
 import { UpcomingRow } from "../components/UpcomingRow";
 import { CatalogStrip } from "../components/NeedsCatalog";
 import { Nastro } from "../components/Nastro";
@@ -77,12 +77,17 @@ export function Home() {
     maratona: <MarathonCard />,
 
     statistiche: (
-      <section aria-label="Le tue statistiche" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="in libreria" value={String(stats.total)} />
-        <StatCard label="voto medio" value={stats.avgVote != null ? stats.avgVote.toFixed(1) : "—"} />
-        <StatCard label={`${stats.days} giorni`} value={`${stats.hours}h`} />
-        <StatCard label="preferiti" value={String(stats.favs)} />
-      </section>
+      <FigureBand
+        label="Le tue statistiche"
+        cols={2}
+        smCols={4}
+        figures={[
+          { value: stats.total, label: "in libreria" },
+          { value: stats.avgVote != null ? stats.avgVote.toFixed(1) : "—", label: "voto medio" },
+          { value: `${stats.hours} h`, label: `${stats.days} giorni` },
+          { value: stats.favs, label: "preferiti" },
+        ]}
+      />
     ),
 
     // Was a vertical list of series with an episode counter. It is now driven
@@ -160,11 +165,8 @@ export function Home() {
 
       {!ready ? (
         <>
-          <section aria-label="Le tue statistiche" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <StatCardSkeleton key={i} />
-            ))}
-          </section>
+          {/* La forma della Home che arriva: la vetrina, poi una riga. */}
+          <div aria-hidden="true" className="skeleton aspect-4/5 max-h-[68vh] w-full rounded-lg sm:aspect-video lg:aspect-[21/9]" />
           <PosterGridSkeleton count={4} />
         </>
       ) : items.length === 0 ? (

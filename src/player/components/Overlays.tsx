@@ -59,7 +59,7 @@ export function PostPlayOverlay({
               <polygon points="6,4 20,12 6,20" fill="currentColor" />
             </svg>
             Prossimo episodio
-            <span className="pv-mono">{seconds}</span>
+            <span className="pv-num">{seconds}</span>
           </span>
         </button>
       </div>
@@ -86,7 +86,7 @@ export function GestureOverlay({ feedback }: { feedback: GestureFeedback | null 
   return (
     <div className="pv-gesture" role="status" aria-live="polite">
       <span className="pv-gesture-kind">{GESTURE_LABELS[feedback.kind]}</span>
-      <strong className="pv-gesture-value pv-mono">{feedback.label}</strong>
+      <strong className="pv-gesture-value pv-num">{feedback.label}</strong>
       {pct !== null && (
         <div className="pv-gesture-track">
           <div className="pv-gesture-fill" style={{ width: `${Math.min(100, pct)}%` }} />

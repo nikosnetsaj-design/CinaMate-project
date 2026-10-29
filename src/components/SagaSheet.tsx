@@ -273,13 +273,32 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
               {view?.isUniverse ? "Universo" : "Saga"}
             </p>
             <h1 id={titleId} className="mt-0.5 font-display text-2xl font-semibold leading-tight text-text">
-              {view?.name ?? "Caricamento…"}
+              {view?.name ?? (
+                <span role="status" className="block">
+                  <span className="sr-only">Caricamento…</span>
+                  <span aria-hidden="true" className="skeleton mt-1 block h-7 w-48 rounded-xs" />
+                </span>
+              )}
             </h1>
           </div>
           {view && <ProgressRing pct={progress.pct} color={accent} />}
         </div>
 
-        {loading && !view && <p className="mt-6 text-sm text-text-faint">Caricamento della raccolta…</p>}
+        {/* L'attesa della raccolta ha la forma dei suoi capitoli. */}
+        {loading && !view && (
+          <div aria-hidden="true" className="mt-6 flex flex-col gap-3">
+            <div className="skeleton h-4 w-2/3 rounded-xs" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="skeleton aspect-2/3 w-10 shrink-0 rounded-xs" />
+                <div className="flex flex-1 flex-col gap-2">
+                  <div className="skeleton h-4 w-1/2 rounded-xs" />
+                  <div className="skeleton h-3 w-1/4 rounded-xs" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         {error && !view && <p className="mt-6 text-sm" style={{ color: "var(--danger)" }}>{error}</p>}
 
         {view && (
