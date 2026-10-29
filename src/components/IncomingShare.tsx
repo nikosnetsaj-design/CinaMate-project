@@ -3,6 +3,7 @@ import { Sheet } from "./Sheet";
 import { useAddSheet } from "../store/useAddSheet";
 import { useLibrary } from "../store/useLibrary";
 import { readSharedList, readSharedTitle, type SharedEntry, type SharedList } from "../lib/share";
+import { CheckIcon, PlusIcon } from "./icons";
 
 /**
  * Handles a link someone sent you, or a QR code you scanned.
@@ -59,7 +60,7 @@ export function IncomingShare() {
     <Sheet onClose={() => setList(null)} titleId="incoming-share-title">
       <div className="flex flex-col gap-4 p-5 pt-8 sm:p-6">
         <div>
-          <h2 id="incoming-share-title" className="font-display text-xl font-semibold text-text">
+          <h2 id="incoming-share-title" className="t-title text-text">
             {list.n}
           </h2>
           <p className="mt-1 text-sm text-text-muted">
@@ -68,7 +69,7 @@ export function IncomingShare() {
           </p>
         </div>
 
-        <ul className="flex flex-col gap-1.5">
+        <ul className="list-group bg-surface-2 shadow-none" style={{ "--row-inset": "16px" } as React.CSSProperties}>
           {list.e.map((entry: SharedEntry, index) => {
             const already = owned.has(entry.t.toLowerCase());
             return (
@@ -77,15 +78,23 @@ export function IncomingShare() {
                   type="button"
                   disabled={already}
                   onClick={() => openAddSheet(entry.t)}
-                  className="flex w-full items-center justify-between gap-3 rounded-sm border border-border-strong px-3 py-2.5 text-left text-sm text-text disabled:opacity-45"
+                  className="list-row min-h-12 justify-between text-sm text-text hover:bg-surface-hover disabled:cursor-default disabled:hover:bg-transparent"
                 >
                   <span className="min-w-0 truncate">
                     {entry.t}
-                    {entry.y && <span className="text-text-faint"> · {entry.y}</span>}
+                    {entry.y && <span className="tabular text-text-muted"> · {entry.y}</span>}
                   </span>
-                  <span className="shrink-0 text-xs" style={{ color: already ? "var(--text-faint)" : "var(--accent-text)" }}>
-                    {already ? "già in libreria" : "aggiungi"}
-                  </span>
+                  {already ? (
+                    <span className="inline-flex shrink-0 items-center gap-1 text-xs text-text-muted">
+                      <CheckIcon size={14} />
+                      In libreria
+                    </span>
+                  ) : (
+                    <span className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-accent-text">
+                      <PlusIcon size={16} />
+                      Aggiungi
+                    </span>
+                  )}
                 </button>
               </li>
             );

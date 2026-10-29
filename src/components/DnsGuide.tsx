@@ -21,11 +21,10 @@ export function DnsGuideButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-0.5 text-xs underline-offset-2 hover:underline"
-        style={{ color: "var(--accent-text)" }}
+        className="btn btn-plain btn-sm -ml-3 gap-0.5"
       >
         DNS cifrato: DoH, DoT e i resolver pubblici
-        <ChevronRightIcon size={14} />
+        <ChevronRightIcon size={16} />
       </button>
       {open && <DnsGuideSheet onClose={() => setOpen(false)} />}
     </>
@@ -56,10 +55,10 @@ function Lookup() {
 
   return (
     <section>
-      <h3 className="mb-2 text-xs font-medium text-text-faint">
+      <h3 className="mb-1 text-base font-semibold text-text">
         Prova un nome
       </h3>
-      <p className="mb-2 text-xs leading-relaxed text-text-faint">
+      <p className="mb-3 text-sm text-text-muted">
         Chiede a Cloudflare e a Google, via DoH, cosa risponde per un nome. Serve a distinguere due
         guasti che da fuori sembrano lo stesso: un sito spento, e un nome che sulla risoluzione che
         stai usando non diventa un indirizzo. Non cambia il DNS di questo dispositivo.
@@ -91,13 +90,13 @@ function Lookup() {
         </button>
       </form>
       {results && (
-        <ul className="mt-2 flex flex-col gap-1.5">
+        <ul className="mt-3 flex flex-col gap-2">
           {results.map((r) => (
-            <li key={r.resolver} className="rounded-sm bg-surface-2 p-2.5">
-              <p className="text-xs text-text">
+            <li key={r.resolver} className="rounded-md bg-surface-2 px-4 py-3">
+              <p className="text-sm text-text">
                 <span className="font-medium">{r.resolver}</span>{" "}
-                <span className="text-text-faint">— {DOH_LABEL[r.verdict]}</span>
-                {r.ms > 0 && <span className="text-text-faint"> · {r.ms} ms</span>}
+                <span className="text-text-muted">— {DOH_LABEL[r.verdict]}</span>
+                {r.ms > 0 && <span className="tabular text-text-muted"> · {r.ms} ms</span>}
               </p>
               {r.addresses.length > 0 && (
                 <p className="mt-0.5 break-all font-mono text-xs text-text-muted">
@@ -126,12 +125,12 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
 
   return (
     <Sheet onClose={onClose} titleId="dns-guide-title" maxWidthClass="max-w-2xl">
-      <div className="flex flex-col gap-5 p-5 pt-8 sm:p-6">
+      <div className="flex flex-col gap-8 p-5 pt-8 sm:p-6">
         <div>
-          <h2 id="dns-guide-title" className="font-display text-xl font-semibold text-text">
+          <h2 id="dns-guide-title" className="t-title text-text">
             DNS cifrato
           </h2>
-          <p className="mt-1.5 text-xs leading-relaxed text-text-faint">
+          <p className="mt-2 text-sm text-text-muted">
             Il DNS è il passaggio in cui un nome diventa un indirizzo, e per trent'anni è viaggiato
             in chiaro: chiunque sia sul percorso legge cosa stai per aprire, e su una rete che non è
             tua può anche rispondere al posto del resolver.{" "}
@@ -145,10 +144,10 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
         <Lookup />
 
         <section>
-          <h3 className="mb-2 text-xs font-medium text-text-faint">
+          <h3 className="mb-1 text-base font-semibold text-text">
             Resolver pubblici
           </h3>
-          <p className="mb-2 text-xs leading-relaxed text-text-faint">
+          <p className="mb-3 text-sm text-text-muted">
             DoH viaggia sulla porta {PORTS.doh}, la stessa di tutto il traffico HTTPS, quindi non si
             distingue dal resto della navigazione. DoT ha la sua, la {PORTS.dot}: più pulita da
             amministrare, e per lo stesso motivo più facile da bloccare. Sul piano della
@@ -157,7 +156,7 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
           <div className="-mx-1 overflow-x-auto px-1">
             <table className="w-full min-w-[36rem] border-collapse text-left text-xs">
               <thead>
-                <tr className="border-b border-border text-text-faint">
+                <tr className="text-text-muted shadow-[inset_0_-1px_0_var(--separator)]">
                   <th className="py-1.5 pr-3 font-medium">Servizio</th>
                   <th className="py-1.5 pr-3 font-medium">IPv4</th>
                   <th className="py-1.5 pr-3 font-medium">DoH</th>
@@ -166,19 +165,19 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
               </thead>
               <tbody>
                 {RESOLVERS.map((r) => (
-                  <tr key={r.name} className="border-b border-border align-top last:border-0">
+                  <tr key={r.name} className="align-top [&+&]:shadow-[inset_0_1px_0_var(--separator)]">
                     <td className="py-2 pr-3">
                       <span className="block font-medium text-text">
                         {r.name}
                         {/* Chi manda gli header CORS sulla variante JSON, cioè
                             chi la casella qui sopra può davvero interrogare. */}
                         {JSON_CAPABLE.has(r.name) && (
-                          <span className="ml-1 text-xs font-normal" style={{ color: "var(--accent-text)" }}>
+                          <span className="ml-1.5 text-xs font-normal text-text-muted">
                             interrogabile da qui
                           </span>
                         )}
                       </span>
-                      <span className="mt-0.5 block max-w-[14rem] text-xs leading-relaxed text-text-faint">
+                      <span className="mt-0.5 block max-w-[14rem] text-xs leading-relaxed text-text-muted">
                         {r.note}
                       </span>
                     </td>
@@ -225,19 +224,19 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
               </tbody>
             </table>
           </div>
-          <p className="mt-2 text-xs text-text-faint">Tocca un valore per copiarlo.</p>
+          <p className="mt-2 text-xs text-text-muted">Tocca un valore per copiarlo.</p>
         </section>
 
         <section>
-          <h3 className="mb-2 text-xs font-medium text-text-faint">
+          <h3 className="mb-1 text-base font-semibold text-text">
             Dove si scrivono
           </h3>
           <div className="flex flex-col gap-2.5">
             {PLATFORM_STEPS.map((p) => (
-              <div key={p.name} className="rounded-sm bg-surface-2 p-3">
+              <div key={p.name} className="rounded-md bg-surface-2 p-4">
                 <p className="text-sm font-medium text-text">{p.name}</p>
-                <p className="mt-0.5 text-xs text-text-faint">{p.supports}</p>
-                <ol className="mt-1.5 list-decimal pl-4 text-xs leading-relaxed text-text-muted">
+                <p className="mt-0.5 text-xs text-text-muted">{p.supports}</p>
+                <ol className="mt-2 list-decimal pl-4 text-sm text-text-muted">
                   {p.steps.map((step) => (
                     <li key={step}>{step}</li>
                   ))}
@@ -248,14 +247,14 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
         </section>
 
         <section>
-          <h3 className="mb-2 text-xs font-medium text-text-faint">
+          <h3 className="mb-1 text-base font-semibold text-text">
             Domande che tornano
           </h3>
-          <dl className="flex flex-col gap-2.5">
+          <dl className="flex flex-col gap-4">
             {DNS_FAQ.map((f) => (
               <div key={f.q}>
                 <dt className="text-sm font-medium text-text">{f.q}</dt>
-                <dd className="mt-0.5 text-xs leading-relaxed text-text-faint">{f.a}</dd>
+                <dd className="mt-0.5 text-sm text-text-muted">{f.a}</dd>
               </div>
             ))}
           </dl>

@@ -29,7 +29,7 @@ import { CheckIcon, ExternalIcon, ReelMark } from "./icons";
  */
 
 const CARD =
-  "relative z-10 flex w-full flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-[var(--shadow-lg)]";
+  "relative z-10 flex w-full flex-col overflow-hidden rounded-t-lg bg-surface pb-[env(safe-area-inset-bottom)] shadow-[var(--shadow-lg)] sm:rounded-lg sm:pb-0";
 
 /** L'azione piena: una sola per schermata, sempre nello stesso posto. */
 function Primary({
@@ -59,7 +59,7 @@ function Quiet({ children, onClick }: { children: React.ReactNode; onClick: () =
     <button
       type="button"
       onClick={onClick}
-      className="w-full rounded-sm px-4 py-2.5 text-sm font-medium text-text-muted transition-colors hover:text-text"
+      className="btn btn-plain w-full text-text-muted hover:text-text"
     >
       {children}
     </button>
@@ -103,7 +103,7 @@ function Welcome({ onNext, onSkip }: { onNext: () => void; onSkip: () => void })
         <div className="flex flex-col gap-2.5">
           <span className="flex items-center gap-2 text-text-muted">
             <ReelMark size={20} />
-            <span className="t-label text-text-faint">CineMate</span>
+            <span className="text-sm font-medium text-text-muted">CineMate</span>
           </span>
           <h2 className="t-title text-text">Questa è CineMate con la libreria di qualcun altro.</h2>
           <p className="t-body text-text-muted">
@@ -161,21 +161,15 @@ function Taste({ onNext, onSkip }: { onNext: (picked: SeedPick[]) => void; onSki
                   style={{ transform: on ? "scale(0.94)" : undefined }}
                 >
                   <PosterArt item={{ title: pick.title, kind: pick.kind }} size="sm" />
+                  {/* Scelto come in Foto: la copertina si fa un poco più piccola,
+                      un velo la abbassa, il segno di spunta sta nell'angolo.
+                      Niente cornice e niente lavaggio d'accento sull'immagine. */}
                   {on && (
                     <>
+                      <span aria-hidden="true" className="absolute inset-0 rounded-sm bg-black/30" />
                       <span
                         aria-hidden="true"
-                        className="absolute inset-0 rounded-sm"
-                        style={{ background: "color-mix(in srgb, var(--accent) 34%, transparent)" }}
-                      />
-                      <span
-                        aria-hidden="true"
-                        className="absolute inset-0 rounded-sm border-2"
-                        style={{ borderColor: "var(--accent)" }}
-                      />
-                      <span
-                        aria-hidden="true"
-                        className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full"
+                        className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full shadow-[0_0_0_2px_#fff]"
                         style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
                       >
                         <CheckIcon size={14} />
@@ -189,10 +183,10 @@ function Taste({ onNext, onSkip }: { onNext: (picked: SeedPick[]) => void; onSki
         </ul>
       </div>
 
-      <div className="flex flex-col gap-1 border-t border-border p-6 pt-4">
+      <div className="flex flex-col gap-1 p-6 pt-4 shadow-[inset_0_1px_0_var(--separator)]">
         {/* Il conteggio è un fatto, non un rimprovero: dice quanto manca e
             sparisce quando non manca più niente. */}
-        <p aria-live="polite" className="mb-1 text-center t-caption text-text-faint">
+        <p aria-live="polite" className="mb-2 text-center t-caption text-text-muted">
           {enough
             ? `${chosen.size} scelt${chosen.size === 1 ? "o" : "i"} — vanno bene`
             : `Ancora ${MIN_PICKS - chosen.size} per continuare`}
@@ -272,7 +266,7 @@ function Catalogue({ onDone, onSkip }: { onDone: () => void; onSkip: () => void 
       </a>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="onb-key" className="t-label text-text-faint">
+        <label htmlFor="onb-key" className="text-sm font-medium text-text-muted">
           Incolla qui la chiave
         </label>
         <input
@@ -285,9 +279,12 @@ function Catalogue({ onDone, onSkip }: { onDone: () => void; onSkip: () => void 
           className="field w-full font-mono"
         />
         <p aria-live="polite" className="min-h-[1.25rem] t-caption">
-          {state === "checking" && <span className="text-text-faint">Controllo…</span>}
+          {state === "checking" && <span className="text-text-muted">Controllo…</span>}
           {state === "good" && (
-            <span style={{ color: "var(--accent-text)" }}>Funziona. Il catalogo è acceso.</span>
+            <span className="inline-flex items-center gap-1.5" style={{ color: "var(--success)" }}>
+              <CheckIcon size={16} />
+              Funziona. Il catalogo è acceso.
+            </span>
           )}
           {state === "bad" && (
             <span style={{ color: "var(--danger)" }}>
@@ -390,7 +387,8 @@ function OnboardingFlow() {
         aria-hidden="true"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+        className="absolute inset-0 backdrop-blur-sm"
+        style={{ background: "var(--scrim)" }}
       />
       <motion.div
         ref={containerRef}
@@ -411,8 +409,8 @@ function OnboardingFlow() {
             return (
               <span
                 key={s}
-                className="h-0.5 flex-1 rounded-full transition-colors"
-                style={{ background: i <= at ? "var(--accent)" : "var(--border)" }}
+                className="h-1 flex-1 rounded-full transition-colors duration-300"
+                style={{ background: i <= at ? "var(--accent)" : "var(--surface-2)" }}
               />
             );
           })}

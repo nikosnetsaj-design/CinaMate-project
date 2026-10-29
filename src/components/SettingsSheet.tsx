@@ -28,7 +28,7 @@ import { getDailySeconds, restoreDailySeconds } from "../player/services/statsAn
 import { useWatchProgress } from "../store/useWatchProgress";
 import { buildBackup, parseBackup, BackupParseError } from "../lib/backup";
 import { resetAutoLinkAttempts } from "../lib/useAutoLinkTmdb";
-import { BackIcon, BookIcon, CompassIcon, HomeIcon, PersonIcon, PlayIcon, PulseIcon, ReelMark, SparkleIcon, StackIcon, SunIcon } from "./icons";
+import { BackIcon, BookIcon, CheckIcon, ChevronDownIcon, ChevronRightIcon, ChevronUpIcon, CompassIcon, DownloadIcon, HomeIcon, InfoIcon, PersonIcon, PlayIcon, PulseIcon, RefreshIcon, SparkleIcon, StackIcon, SunIcon, TrashIcon, UploadIcon } from "./icons";
 
 /**
  * Where your own sources live, written once instead of pasted per title.
@@ -54,62 +54,63 @@ function AppearanceSettings() {
   const accent = useTheme((s) => s.accent);
   const setAccent = useTheme((s) => s.setAccent);
 
+  const current = ACCENTS.find((option) => option.id === accent);
+
   return (
-    <div>
-      <span className="mb-2 block text-xs font-medium text-text-faint">Aspetto</span>
-
-      <div className="mb-3 flex gap-2" role="radiogroup" aria-label="Tema">
-        {(["dark", "light"] as const).map((value) => (
-          <button
-            key={value}
-            type="button"
-            role="radio"
-            aria-checked={theme === value}
-            onClick={() => {
-              if (theme !== value) toggleTheme();
-            }}
-            className="flex-1 rounded-sm border px-3 py-2.5 text-sm transition-colors"
-            style={
-              theme === value
-                ? {
-                    borderColor: "color-mix(in srgb, var(--accent) 50%, transparent)",
-                    background: "color-mix(in srgb, var(--accent) 12%, transparent)",
-                    color: "var(--text)",
-                  }
-                : { borderColor: "var(--border-strong)", color: "var(--text-muted)" }
-            }
-          >
-            {value === "dark" ? "Scuro" : "Chiaro"}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap gap-2.5" role="radiogroup" aria-label="Colore d'accento">
-        {ACCENTS.map((option) => {
-          const swatch = option[theme].accent;
-          const active = accent === option.id;
-          return (
+    <div className="flex flex-col gap-8">
+      <div>
+        <span className="mb-3 block text-base font-semibold text-text">Tema</span>
+        <div className="segmented segmented-full" role="radiogroup" aria-label="Tema">
+          {(["dark", "light"] as const).map((value) => (
             <button
-              key={option.id}
+              key={value}
               type="button"
               role="radio"
-              aria-checked={active}
-              aria-label={option.name}
-              title={option.name}
-              onClick={() => setAccent(option.id)}
-              className="h-9 w-9 rounded-full border-2 transition-transform hover:scale-110"
-              style={{
-                background: swatch,
-                borderColor: active ? "var(--text)" : "transparent",
+              aria-checked={theme === value}
+              onClick={() => {
+                if (theme !== value) toggleTheme();
               }}
-            />
-          );
-        })}
+            >
+              {value === "dark" ? "Scuro" : "Chiaro"}
+            </button>
+          ))}
+        </div>
       </div>
-      <p className="mt-2 text-xs leading-relaxed text-text-faint">
-        Sei tinte, ognuna con la sua variante chiara e scura: sono scelte perché restino leggibili
-        su entrambi i temi, cosa che un colore qualsiasi preso da una ruota non garantisce.
-      </p>
+
+      <div>
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <span className="text-base font-semibold text-text">Colore d'accento</span>
+          {current && <span className="text-sm text-text-muted">{current.name}</span>}
+        </div>
+        {/* La tinta scelta ha un anello staccato dal bordo, come su iOS: si
+            vede su ogni colore, chiaro o scuro, senza toccarne il riempimento. */}
+        <div className="flex flex-wrap gap-2.5" role="radiogroup" aria-label="Colore d'accento">
+          {ACCENTS.map((option) => {
+            const swatch = option[theme].accent;
+            const active = accent === option.id;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                aria-label={option.name}
+                title={option.name}
+                onClick={() => setAccent(option.id)}
+                className="h-10 w-10 rounded-full transition-transform duration-200 active:scale-95"
+                style={{
+                  background: swatch,
+                  boxShadow: active ? "0 0 0 2px var(--surface), 0 0 0 4px var(--text)" : undefined,
+                }}
+              />
+            );
+          })}
+        </div>
+        <p className="mt-3 text-sm text-text-muted">
+          Sette tinte, ognuna con la sua variante chiara e scura: sono scelte perché restino leggibili
+          su entrambi i temi, cosa che un colore qualsiasi preso da una ruota non garantisce.
+        </p>
+      </div>
     </div>
   );
 }
@@ -136,8 +137,8 @@ function TvSettings() {
 
   return (
     <div>
-      <span className="mb-2 block text-xs font-medium text-text-faint">Televisore</span>
-      <div className="mb-2 flex gap-2" role="radiogroup" aria-label="Modalità televisore">
+      <span className="mb-3 block text-base font-semibold text-text">Modalità televisore</span>
+      <div className="segmented segmented-full mb-3" role="radiogroup" aria-label="Modalità televisore">
         {options.map((option) => (
           <button
             key={option.id}
@@ -145,22 +146,12 @@ function TvSettings() {
             role="radio"
             aria-checked={preference === option.id}
             onClick={() => setPreference(option.id)}
-            className="flex-1 rounded-sm border px-3 py-2.5 text-sm transition-colors"
-            style={
-              preference === option.id
-                ? {
-                    borderColor: "color-mix(in srgb, var(--accent) 50%, transparent)",
-                    background: "color-mix(in srgb, var(--accent) 12%, transparent)",
-                    color: "var(--text)",
-                  }
-                : { borderColor: "var(--border-strong)", color: "var(--text-muted)" }
-            }
           >
             {option.label}
           </button>
         ))}
       </div>
-      <p className="text-xs leading-relaxed text-text-faint">
+      <p className="text-sm text-text-muted">
         Con la modalità attiva le frecce spostano il fuoco fra le copertine invece di scorrere la
         pagina, il bordo di selezione diventa spesso e tutto si ingrandisce per essere letto da
         lontano — quello che serve per usare l'app col telecomando su una TV, un Fire TV o un
@@ -189,8 +180,8 @@ function HomeLayoutSettings() {
 
   return (
     <div>
-      <span className="mb-2 block text-xs font-medium text-text-faint">Home</span>
-      <p className="mb-2 text-xs leading-relaxed text-text-faint">
+      <span className="mb-1 block text-base font-semibold text-text">Righe della Home</span>
+      <p className="mb-3 text-sm text-text-muted">
         Cosa vedi appena apri l'app, e in che ordine. Una riga spenta non sparisce dai dati: resta
         dove è sempre stata, semplicemente non occupa la prima schermata.
       </p>
@@ -204,7 +195,7 @@ function HomeLayoutSettings() {
        * dice che per accenderne un'altra bisogna spegnerne una. È la
        * decisione che la regola voleva far prendere.
        */}
-      <p className="mb-2.5 text-xs leading-relaxed" style={{ color: full ? "var(--accent-text)" : "var(--text-faint)" }}>
+      <p className="mb-3 text-sm" style={{ color: full ? "var(--accent-text)" : "var(--text-muted)" }}>
         <span className="t-numeral">
           {shown} di {MAX_ROWS}
         </span>{" "}
@@ -212,52 +203,52 @@ function HomeLayoutSettings() {
         {full ? "È il massimo: per accenderne una, spegnine un'altra." : "Una Home corta è una Home che si legge."}
       </p>
 
-      <ul className="flex flex-col gap-1.5">
+      {/* Un elenco raggruppato: le frecce a sinistra spostano, l'interruttore
+          a destra accende. Prima erano due triangoli di testo e un bottone che
+          diceva «Mostra» quando la riga era già visibile. */}
+      <ul className="list-group bg-surface-2 shadow-none" style={{ "--row-inset": "60px" } as React.CSSProperties}>
         {order.map((id, index) => {
           const section = byId.get(id);
           if (!section) return null;
           const visible = !hidden.includes(id);
           return (
-            <li
-              key={id}
-              className="flex items-center gap-2 rounded-sm border border-border-strong px-2.5 py-2"
-              style={{ opacity: visible ? 1 : 0.5 }}
-            >
-              <div className="flex shrink-0 flex-col">
+            <li key={id}>
+              <div className="list-row min-h-16 gap-2 py-2.5 pl-1.5">
+                <div className="flex shrink-0 flex-col">
+                  <button
+                    type="button"
+                    onClick={() => move(id, -1)}
+                    disabled={index === 0}
+                    aria-label={`Sposta ${section.label} in alto`}
+                    className="flex h-6 w-10 items-center justify-center rounded-xs text-text-muted transition-colors hover:text-text disabled:opacity-25"
+                  >
+                    <ChevronUpIcon size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => move(id, 1)}
+                    disabled={index === order.length - 1}
+                    aria-label={`Sposta ${section.label} in basso`}
+                    className="flex h-6 w-10 items-center justify-center rounded-xs text-text-muted transition-colors hover:text-text disabled:opacity-25"
+                  >
+                    <ChevronDownIcon size={16} />
+                  </button>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className={`truncate text-sm font-medium ${visible ? "text-text" : "text-text-muted"}`}>{section.label}</p>
+                  <p className="truncate text-xs text-text-muted">{section.description}</p>
+                </div>
                 <button
                   type="button"
-                  onClick={() => move(id, -1)}
-                  disabled={index === 0}
-                  aria-label={`Sposta ${section.label} in alto`}
-                  className="px-1 text-xs leading-tight text-text-muted disabled:opacity-25"
-                >
-                  ▲
-                </button>
-                <button
-                  type="button"
-                  onClick={() => move(id, 1)}
-                  disabled={index === order.length - 1}
-                  aria-label={`Sposta ${section.label} in basso`}
-                  className="px-1 text-xs leading-tight text-text-muted disabled:opacity-25"
-                >
-                  ▼
-                </button>
+                  role="switch"
+                  onClick={() => toggle(id)}
+                  aria-checked={visible}
+                  // Spegnere è sempre possibile; accendere solo se c'è posto.
+                  disabled={!visible && full}
+                  aria-label={`${section.label} in Home`}
+                  className="switch"
+                />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm text-text">{section.label}</p>
-                <p className="truncate text-xs text-text-faint">{section.description}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => toggle(id)}
-                aria-pressed={visible}
-                // Spegnere è sempre possibile; accendere solo se c'è posto.
-                disabled={!visible && full}
-                aria-label={visible ? `Nascondi ${section.label}` : `Mostra ${section.label}`}
-                className="btn btn-secondary btn-sm shrink-0 disabled:opacity-30"
-              >
-                {visible ? "Mostra" : "Nascosta"}
-              </button>
             </li>
           );
         })}
@@ -266,7 +257,7 @@ function HomeLayoutSettings() {
       <button
         type="button"
         onClick={reset}
-        className="btn btn-secondary btn-sm mt-2 w-full"
+        className="btn btn-plain btn-sm mt-3 -ml-3"
       >
         Torna all'ordine predefinito
       </button>
@@ -281,10 +272,10 @@ function SourceTemplates() {
 
   return (
     <div>
-      <span className="mb-1.5 block text-xs font-medium text-text-faint">
+      <span className="mb-1 block text-base font-semibold text-text">
         Indirizzi delle tue sorgenti
       </span>
-      <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
+      <p className="mb-3 text-sm text-text-muted">
         Se i tuoi video stanno tutti sullo stesso server, scrivilo qui una volta sola: da quel
         momento ogni titolo della libreria ha il suo pulsante{" "}
         <strong className="font-medium text-text-muted">Guarda</strong>, senza incollare più niente.
@@ -317,7 +308,7 @@ function SourceTemplates() {
                 className="field w-full font-mono"
               />
               {preview && (
-                <p className="mt-1 break-all px-1 font-mono text-xs leading-relaxed text-text-faint">
+                <p className="mt-1.5 break-all px-1 font-mono text-xs leading-relaxed text-text-muted">
                   Per «Il Padrino» prova {preview}
                   {others > 0 && (
                     <span className="font-sans"> e altri {others} indirizzi, finché uno risponde</span>
@@ -339,16 +330,16 @@ function SourceTemplates() {
       </button>
 
       {showHelp && (
-        <dl className="mt-2 flex flex-col gap-1.5 rounded-sm bg-surface-2 p-3">
+        <dl className="mt-3 flex flex-col gap-2 rounded-md bg-surface-2 p-4">
           {TEMPLATE_FIELDS.map((f) => (
             <div key={f.token} className="flex flex-wrap items-baseline gap-x-2">
               <dt className="font-mono text-xs text-accent-text">{f.token}</dt>
-              <dd className="flex-1 text-xs text-text-faint">
+              <dd className="flex-1 text-sm text-text-muted">
                 {f.label} <span className="font-mono">({f.example})</span>
               </dd>
             </div>
           ))}
-          <p className="mt-1 text-xs leading-relaxed text-text-faint">
+          <p className="mt-1 text-sm text-text-muted">
             I segnaposto vengono riempiti con i dati del titolo, e il player chiede quell'indirizzo
             sul server che hai indicato.
           </p>
@@ -464,10 +455,10 @@ function PageReaderSetting() {
 
   return (
     <div>
-      <span className="mb-1.5 block text-xs font-medium text-text-faint">
+      <span className="mb-1 block text-base font-semibold text-text">
         Lettore di pagine
       </span>
-      <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
+      <p className="mb-3 text-sm text-text-muted">
         «Estrai il flusso» e la ricerca sui Siti devono leggere il sorgente di una pagina, e un
         browser può leggere solo i siti che glielo permettono con un header (
         <span className="font-mono">CORS</span>): i siti di streaming non lo mandano mai, e da lì non
@@ -488,7 +479,7 @@ function PageReaderSetting() {
         className="field w-full font-mono"
       />
       {pageReader.trim() && (
-        <p className="mt-1 break-all px-1 font-mono text-xs leading-relaxed text-text-faint">
+        <p className="mt-1.5 break-all px-1 font-mono text-xs leading-relaxed text-text-muted">
           {preview ? `Per una pagina chiederà ${preview}` : "Quell'indirizzo non è utilizzabile."}
         </p>
       )}
@@ -513,7 +504,7 @@ function PageReaderSetting() {
       </div>
 
       {showRecipe && (
-        <div className="mt-2 flex flex-col gap-2 rounded-sm bg-surface-2 p-3 text-xs leading-relaxed text-text-faint">
+        <div className="mt-2 flex flex-col gap-2 rounded-md bg-surface-2 p-4 text-sm text-text-muted">
           <p className="text-text-muted">
             Due cose da incollare, niente da scrivere. Un Cloudflare Worker: piano gratuito,
             nessuna carta, niente da tenere acceso.
@@ -524,7 +515,7 @@ function PageReaderSetting() {
             Create → Start with Hello World → Deploy. Poi «Edit code», cancella tutto e incolla
             questo:
           </p>
-          <pre className="max-h-52 overflow-auto rounded-sm border border-border bg-surface p-2 font-mono text-xs leading-relaxed text-text-muted">
+          <pre className="max-h-52 overflow-auto rounded-sm bg-surface p-3 font-mono text-xs leading-relaxed text-text-muted">
             {snippet}
           </pre>
           <button
@@ -562,7 +553,7 @@ function PageReaderSetting() {
             </p>
           )}
 
-          <p className="border-t border-border pt-1.5">
+          <p className="pt-3 shadow-[inset_0_1px_0_var(--separator)]">
             La riga sullo <span className="font-mono">User-Agent</span> è il punto in cui «fingersi
             un browser normale» funziona davvero: da una pagina web quell'header non si può
             toccare, da un Worker sì — ed è ciò che molti siti guardano per decidere cosa servire.
@@ -573,14 +564,14 @@ function PageReaderSetting() {
       )}
 
       {showHelp && (
-        <div className="mt-2 flex flex-col gap-1.5 rounded-sm bg-surface-2 p-3 text-xs leading-relaxed text-text-faint">
+        <div className="mt-2 flex flex-col gap-1.5 rounded-md bg-surface-2 p-4 text-sm text-text-muted">
           <p>
-            <span className="font-mono text-accent-text">{"{url}"}</span> è l'indirizzo da leggere,
+            <span className="font-mono text-text">{"{url}"}</span> è l'indirizzo da leggere,
             codificato: la forma giusta per chi lo mette in un parametro —{" "}
             <span className="font-mono">https://mio-lettore.dev/?u={"{url}"}</span>.
           </p>
           <p>
-            <span className="font-mono text-accent-text">{"{url-nudo}"}</span> è lo stesso indirizzo
+            <span className="font-mono text-text">{"{url-nudo}"}</span> è lo stesso indirizzo
             lasciato intero, per chi lo vuole come coda del percorso.
           </p>
           <p>
@@ -588,7 +579,7 @@ function PageReaderSetting() {
             <span className="font-mono">https://mio-lettore.casa/</span> — che è come funziona{" "}
             <span className="font-mono">cors-anywhere</span> e quasi tutto ciò che gli somiglia.
           </p>
-          <p className="border-t border-border pt-1.5 text-text-muted">
+          <p className="pt-3 text-text-muted shadow-[inset_0_1px_0_var(--separator)]">
             Da sapere prima di scriverlo: il lettore vede ogni indirizzo che gli passi. Uno tuo
             resta una cosa fra te e il tuo server; uno pubblico di terzi è una persona in mezzo che
             legge la tua navigazione. CineMate non ne propone nessuno apposta.
@@ -638,20 +629,21 @@ function SettingsRow({
   to?: string;
   onNavigate?: () => void;
 }) {
+  // Le icone in grigio: sono un indice, non sette inviti. L'accento resta
+  // per l'azione che conta nella schermata, quando c'è.
   const body = (
     <>
-      <span className="mt-0.5 shrink-0 text-accent-text">{icon}</span>
+      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-text-muted">{icon}</span>
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-medium text-text">{title}</span>
-        <span className="mt-0.5 block text-xs leading-snug text-text-faint">{subtitle}</span>
+        <span className="mt-0.5 block text-xs text-text-muted">{subtitle}</span>
       </span>
       <span aria-hidden="true" className="mt-0.5 shrink-0 text-text-faint">
-        ›
+        <ChevronRightIcon size={16} />
       </span>
     </>
   );
-  const className =
-    "flex w-full items-start gap-3 px-3.5 py-3 text-left transition-colors hover:bg-surface-hover";
+  const className = "list-row items-start hover:bg-surface-hover active:bg-surface-hover";
   return to ? (
     <Link to={to} onClick={onNavigate} className={className}>
       {body}
@@ -666,8 +658,10 @@ function SettingsRow({
 function SettingsGroup({ label, children }: { label: string; children: ReactNode }) {
   return (
     <section>
-      <h3 className="mb-1.5 px-1 text-xs font-semibold text-text-faint">{label}</h3>
-      <div className="divide-y divide-border overflow-hidden rounded-lg bg-surface-2">
+      <h3 className="mb-2 px-4 text-sm font-medium text-text-muted">{label}</h3>
+      {/* Sul foglio, che è già una superficie, il gruppo è un gradino sotto:
+          niente ombra, un tono in più. */}
+      <div className="list-group bg-surface-2 shadow-none" style={{ "--row-inset": "48px" } as React.CSSProperties}>
         {children}
       </div>
     </section>
@@ -693,8 +687,8 @@ function AboutPanel() {
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-lg bg-surface-2 p-4">
-        <h4 className="mb-2 text-sm font-semibold text-text">I tuoi dati</h4>
-        <p className="text-xs leading-relaxed text-text-faint">
+        <h4 className="mb-2 text-base font-semibold text-text">I tuoi dati</h4>
+        <p className="text-sm text-text-muted">
           Libreria, diario, voti, sorgenti e chiavi vivono solo in questo browser: non c'è nessun
           account e nessun server di CineMate a cui mandarli. Le uniche cose che escono dal
           dispositivo sono le richieste a TMDB e ad Anthropic, fatte con le chiavi che hai scritto
@@ -703,16 +697,16 @@ function AboutPanel() {
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-md border border-border">
+      <dl className="list-group bg-surface-2 shadow-none" style={{ "--row-inset": "16px" } as React.CSSProperties}>
         {rows.map((row) => (
-          <div key={row.label} className="border-b border-border px-3.5 py-3 last:border-b-0">
-            <span className="block text-xs font-medium text-text-faint">{row.label}</span>
-            <span className="mt-0.5 block text-sm text-text">{row.value}</span>
+          <div key={row.label} className="list-row flex-col items-start gap-0.5">
+            <dt className="text-xs text-text-muted">{row.label}</dt>
+            <dd className="text-sm text-text">{row.value}</dd>
           </div>
         ))}
-      </div>
+      </dl>
 
-      <p className="text-xs leading-relaxed text-text-faint">
+      <p className="text-xs text-text-muted">
         Questo prodotto usa l'API TMDB ma non è approvato né certificato da TMDB. CineMate non
         ospita né fornisce contenuti: riproduce le sorgenti che indichi tu.
       </p>
@@ -790,6 +784,16 @@ function SettingsForm() {
     pushToast("success", "Libreria esportata.");
   }
 
+  /*
+   * Le due conferme stanno nel foglio, non in una finestra del browser: il
+   * `window.confirm` di prima era un riquadro grigio di sistema, con «OK» al
+   * posto del verbo e il nome del sito in cima, nel mezzo di un'app che per il
+   * resto parla con la sua voce. Il file letto aspetta qui finché non si
+   * sceglie; la sostituzione è la stessa di prima, riga per riga.
+   */
+  const [pendingImport, setPendingImport] = useState<ReturnType<typeof parseBackup> | null>(null);
+  const [confirmingClear, setConfirmingClear] = useState(false);
+
   async function handleImportFile(file: File) {
     let backup;
     try {
@@ -798,11 +802,12 @@ function SettingsForm() {
       pushToast("error", e instanceof BackupParseError ? e.message : "Impossibile leggere il file.");
       return;
     }
-    const confirmed = window.confirm(
-      `Importare ${backup.items.length} titoli? La libreria attuale (${items.length} titoli) verrà sostituita` +
-        `${backup.player ? ", insieme alle sorgenti del player e agli host" : ""}.`,
-    );
-    if (!confirmed) return;
+    setConfirmingClear(false);
+    setPendingImport(backup);
+  }
+
+  function applyImport(backup: ReturnType<typeof parseBackup>) {
+    setPendingImport(null);
     importData(backup.items, backup.history);
     // Older files carry no saga section; leaving what is on the device alone is
     // safer than wiping orders the user may still want.
@@ -837,7 +842,7 @@ function SettingsForm() {
 
   return (
     <Sheet onClose={close} titleId={titleId} maxWidthClass="max-w-md">
-      <div className="flex flex-col gap-5 p-5 pt-8 sm:p-6">
+      <div className="flex flex-col gap-6 p-5 pt-8 sm:p-6">
         <div className="flex items-center gap-2.5">
           {panel && (
             <button
@@ -849,16 +854,16 @@ function SettingsForm() {
               <BackIcon size={16} />
             </button>
           )}
-          <h2 id={titleId} className="font-display text-xl font-semibold text-text">
+          <h2 id={titleId} className="t-title text-text">
             {panel ? PANEL_TITLES[panel] : "Impostazioni"}
           </h2>
         </div>
 
         {panel === null && (
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-6">
             <SettingsGroup label="Catalogo e intelligenza">
               <SettingsRow
-                icon={<SparkleIcon size={17} />}
+                icon={<SparkleIcon size={18} />}
                 title="Chiavi e modello"
                 subtitle="TMDB per copertine e cast, Anthropic per il critico. Restano su questo dispositivo."
                 onClick={() => setPanel("chiavi")}
@@ -867,13 +872,13 @@ function SettingsForm() {
 
             <SettingsGroup label="Riproduzione">
               <SettingsRow
-                icon={<PlayIcon size={17} />}
+                icon={<PlayIcon size={18} />}
                 title="Indirizzi delle tue sorgenti"
                 subtitle="Dove stanno i tuoi video: scrivilo una volta e ogni titolo ha il suo pulsante Guarda."
                 onClick={() => setPanel("sorgenti")}
               />
               <SettingsRow
-                icon={<CompassIcon size={17} />}
+                icon={<CompassIcon size={18} />}
                 title="Gestisci Link Host"
                 subtitle="I siti su cui cercare quando le tue sorgenti non hanno il titolo."
                 onClick={() => setPanel("linkhost")}
@@ -882,7 +887,7 @@ function SettingsForm() {
 
             <SettingsGroup label="App">
               <SettingsRow
-                icon={<SunIcon size={17} />}
+                icon={<SunIcon size={18} />}
                 title="Aspetto"
                 subtitle="Tema chiaro o scuro e colore d'accento."
                 onClick={() => setPanel("aspetto")}
@@ -891,7 +896,7 @@ function SettingsForm() {
                   si attraversa una volta sola, e l'unico modo di ritrovarlo
                   sarebbe cancellare la libreria. */}
               <SettingsRow
-                icon={<ReelMark size={17} />}
+                icon={<RefreshIcon size={18} />}
                 title="Rivedi il primo avvio"
                 subtitle="Le quattro schermate di benvenuto, compresa la chiave del catalogo."
                 onClick={() => {
@@ -900,19 +905,19 @@ function SettingsForm() {
                 }}
               />
               <SettingsRow
-                icon={<HomeIcon size={17} />}
+                icon={<HomeIcon size={18} />}
                 title="Home su misura"
                 subtitle="Quali righe vedere in Home, e in che ordine."
                 onClick={() => setPanel("home")}
               />
               <SettingsRow
-                icon={<StackIcon size={17} />}
+                icon={<StackIcon size={18} />}
                 title="Televisore"
                 subtitle="Comandi grandi e navigazione con le frecce del telecomando."
                 onClick={() => setPanel("tv")}
               />
               <SettingsRow
-                icon={<PersonIcon size={17} />}
+                icon={<PersonIcon size={18} />}
                 title="Controllo genitori"
                 subtitle="Nasconde i titoli sopra una certa età, protetto da un PIN."
                 onClick={() => setPanel("genitori")}
@@ -921,13 +926,13 @@ function SettingsForm() {
 
             <SettingsGroup label="Dati">
               <SettingsRow
-                icon={<BookIcon size={17} />}
+                icon={<BookIcon size={18} />}
                 title="Dati e backup"
                 subtitle="Esporta, importa, svuota. Tutto vive solo in questo browser."
                 onClick={() => setPanel("dati")}
               />
               <SettingsRow
-                icon={<PulseIcon size={17} />}
+                icon={<PulseIcon size={18} />}
                 title="Diagnostica"
                 subtitle="Test automatici, stato degli host e registro degli errori."
                 to="/diagnostica"
@@ -937,7 +942,7 @@ function SettingsForm() {
 
             <SettingsGroup label="Info">
               <SettingsRow
-                icon={<ReelMark size={17} />}
+                icon={<InfoIcon size={18} />}
                 title="Informazioni sull'app"
                 subtitle="Di cosa è fatta CineMate, con cosa parla e cosa promette sui tuoi dati."
                 onClick={() => setPanel("info")}
@@ -949,10 +954,10 @@ function SettingsForm() {
         {panel === "chiavi" && (
           <>
         <div>
-          <span className="mb-1.5 block text-xs font-medium text-text-faint">
+          <span className="mb-1 block text-base font-semibold text-text">
             Chiave API Anthropic
           </span>
-          <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
+          <p className="mb-3 text-sm text-text-muted">
             Usata solo dal tuo browser per parlare direttamente con l'API di Anthropic — non viene mai inviata altrove
             e resta salvata solo su questo dispositivo. Ricordati che è una chiave personale: non condividere questo
             dispositivo con dati sensibili collegati.
@@ -1003,8 +1008,8 @@ function SettingsForm() {
         </div>
 
         <div>
-          <span className="mb-1.5 block text-xs font-medium text-text-faint">Chiave API TMDB</span>
-          <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
+          <span className="mb-1 block text-base font-semibold text-text">Chiave API TMDB</span>
+          <p className="mb-3 text-sm text-text-muted">
             Per copertine reali, trama, cast, trailer e disponibilità streaming legale. Gratuita — la ottieni in
             pochi minuti creando un account su themoviedb.org (Impostazioni → API). Resta anch'essa solo su questo
             dispositivo.
@@ -1054,15 +1059,22 @@ function SettingsForm() {
               </button>
             )}
           </div>
-          <p className="mt-2.5 text-xs text-text-faint">
+          <p className="mt-3 text-xs text-text-muted">
             Questo prodotto usa l'API TMDB ma non è approvato né certificato da TMDB. Dati streaming forniti da
             JustWatch.
           </p>
         </div>
 
         <div>
-          <span className="mb-2 block text-xs font-medium text-text-faint">Modello</span>
-          <div className="flex flex-col gap-1.5" role="radiogroup" aria-label="Modello Claude">
+          <span className="mb-3 block text-base font-semibold text-text">Modello</span>
+          {/* Una scelta fra tre, come nelle impostazioni di sistema: la voce
+              scelta ha il segno di spunta, le altre niente. */}
+          <div
+            className="list-group bg-surface-2 shadow-none"
+            role="radiogroup"
+            aria-label="Modello Claude"
+            style={{ "--row-inset": "16px" } as React.CSSProperties}
+          >
             {MODELS.map((m) => (
               <button
                 key={m.id}
@@ -1070,15 +1082,15 @@ function SettingsForm() {
                 role="radio"
                 aria-checked={model === m.id}
                 onClick={() => setModel(m.id)}
-                className="flex items-center justify-between rounded-sm border px-3 py-2.5 text-left text-sm transition-colors"
-                style={
-                  model === m.id
-                    ? { borderColor: "color-mix(in srgb, var(--accent) 50%, transparent)", background: "color-mix(in srgb, var(--accent) 12%, transparent)" }
-                    : { borderColor: "var(--border-strong)" }
-                }
+                className="list-row min-h-12 justify-between py-2.5 hover:bg-surface-hover"
               >
-                <span className="font-medium text-text">{m.label}</span>
-                <span className="text-xs text-text-faint">{m.hint}</span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-text">{m.label}</span>
+                  <span className="block text-xs text-text-muted">{m.hint}</span>
+                </span>
+                <span aria-hidden="true" className="shrink-0 text-accent-text">
+                  {model === m.id && <CheckIcon size={18} />}
+                </span>
               </button>
             ))}
           </div>
@@ -1094,10 +1106,10 @@ function SettingsForm() {
         <PageReaderSetting />
 
         <div>
-          <span className="mb-1.5 block text-xs font-medium text-text-faint">
+          <span className="mb-1 block text-base font-semibold text-text">
             Quando un indirizzo non si risolve
           </span>
-          <p className="mb-2 text-xs leading-relaxed text-text-faint">
+          <p className="mb-3 text-sm text-text-muted">
             Un host che «non risponde» a volte non è spento: è il nome che non viene tradotto in un
             indirizzo. Il DNS è quel passaggio, viaggia in chiaro per impostazione predefinita, e il
             resolver dell'operatore è solo uno dei tanti possibili.
@@ -1116,59 +1128,102 @@ function SettingsForm() {
 
         {panel === "dati" && (
         <div>
-          <span className="mb-2 block text-xs font-medium text-text-faint">Dati locali</span>
-          <p className="mb-2.5 text-xs leading-relaxed text-text-faint">
+          <p className="mb-4 text-sm text-text-muted">
             Tutto vive solo in questo browser. Esporta ogni tanto un backup: è anche il modo per portare la libreria
             su un altro dispositivo.
           </p>
-          <div className="flex flex-col gap-2">
+          <div className="list-group bg-surface-2 shadow-none">
             <button
               type="button"
               onClick={exportData}
               disabled={items.length === 0}
-              className="w-full rounded-sm border border-border-strong px-3.5 py-2.5 text-left text-sm text-text disabled:opacity-40"
+              className="list-row hover:bg-surface-hover disabled:opacity-40"
             >
-              Esporta libreria (JSON)
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center text-text-muted"><DownloadIcon size={18} /></span>
+              <span className="flex-1 text-sm font-medium text-text">Esporta la libreria</span>
+              <span className="text-xs text-text-muted">JSON</span>
             </button>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="w-full rounded-sm border border-border-strong px-3.5 py-2.5 text-left text-sm text-text"
+              className="list-row hover:bg-surface-hover"
             >
-              Importa da backup…
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center text-text-muted"><UploadIcon size={18} /></span>
+              <span className="flex-1 text-sm font-medium text-text">Importa da un backup…</span>
             </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="application/json,.json"
-              className="sr-only"
-              aria-label="Scegli un file di backup JSON"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                e.target.value = "";
-                if (file) void handleImportFile(file);
-              }}
-            />
             <button
               type="button"
               disabled={items.length === 0}
               onClick={() => {
-                if (window.confirm(`Svuotare la libreria? ${items.length} titoli e tutto il diario verranno eliminati da questo dispositivo.`)) {
-                  clearAll();
-                  // Saghe, maratona e promemoria descrivono la stessa libreria:
-                  // lasciarli indietro significherebbe mostrare progressi di
-                  // titoli che non esistono più.
-                  useSagas.getState().clearAll();
-                  useMarathon.getState().stop();
-                  useReminders.getState().clearAll();
-                }
+                setPendingImport(null);
+                setConfirmingClear(true);
               }}
-              className="w-full rounded-sm border px-3.5 py-2.5 text-left text-sm disabled:opacity-40"
-              style={{ borderColor: "color-mix(in srgb, var(--danger) 40%, transparent)", color: "var(--danger)" }}
+              className="list-row hover:bg-surface-hover disabled:opacity-40"
+              style={{ color: "var(--danger)" }}
             >
-              Svuota la libreria
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center"><TrashIcon size={18} /></span>
+              <span className="flex-1 text-sm font-medium">Svuota la libreria</span>
             </button>
           </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            className="sr-only"
+            aria-label="Scegli un file di backup JSON"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (file) void handleImportFile(file);
+            }}
+          />
+
+          {pendingImport && (
+            <div role="alertdialog" aria-labelledby="import-confirm" className="mt-4 rounded-md bg-surface-2 p-4">
+              <p id="import-confirm" className="text-sm text-text">
+                Importare {pendingImport.items.length} titoli? La libreria attuale ({items.length} titoli) verrà
+                sostituita{pendingImport.player ? ", insieme alle sorgenti del player e agli host" : ""}.
+              </p>
+              <div className="mt-3 flex justify-end gap-2">
+                <button type="button" onClick={() => setPendingImport(null)} className="btn btn-secondary btn-sm">
+                  Annulla
+                </button>
+                <button type="button" onClick={() => applyImport(pendingImport)} className="btn btn-primary btn-sm">
+                  Importa
+                </button>
+              </div>
+            </div>
+          )}
+
+          {confirmingClear && (
+            <div role="alertdialog" aria-labelledby="clear-confirm" className="mt-4 rounded-md bg-surface-2 p-4">
+              <p id="clear-confirm" className="text-sm text-text">
+                Svuotare la libreria? {items.length} titoli e tutto il diario verranno eliminati da questo dispositivo.
+                Non si torna indietro.
+              </p>
+              <div className="mt-3 flex justify-end gap-2">
+                <button type="button" onClick={() => setConfirmingClear(false)} className="btn btn-secondary btn-sm">
+                  Annulla
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConfirmingClear(false);
+                    clearAll();
+                    // Saghe, maratona e promemoria descrivono la stessa libreria:
+                    // lasciarli indietro significherebbe mostrare progressi di
+                    // titoli che non esistono più.
+                    useSagas.getState().clearAll();
+                    useMarathon.getState().stop();
+                    useReminders.getState().clearAll();
+                  }}
+                  className="btn btn-danger-fill btn-sm"
+                >
+                  Svuota
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         )}
       </div>

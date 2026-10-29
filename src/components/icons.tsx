@@ -44,7 +44,9 @@ import {
   Star,
   Sun,
   TriangleAlert,
+  Trash2,
   Tv,
+  Upload,
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -196,6 +198,12 @@ export function MusicIcon({ size = 18 }: IconProps) {
 }
 export function DownloadIcon({ size = 16 }: IconProps) {
   return <Glyph icon={Download} size={size} />;
+}
+export function UploadIcon({ size = 16 }: IconProps) {
+  return <Glyph icon={Upload} size={size} />;
+}
+export function TrashIcon({ size = 16 }: IconProps) {
+  return <Glyph icon={Trash2} size={size} />;
 }
 export function GridIcon({ size = 16 }: IconProps) {
   return <Glyph icon={LayoutGrid} size={size} />;

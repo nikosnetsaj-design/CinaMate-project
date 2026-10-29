@@ -3,7 +3,7 @@ import { PosterArt } from "./PosterArt";
 import { getDetails, TmdbApiError, type TmdbDetails, type TmdbSearchResult } from "../lib/tmdb";
 import { formatRuntime } from "../lib/format";
 import { serviceLinkFor } from "../lib/deepLinks";
-import { BackIcon, ExternalIcon } from "./icons";
+import { BackIcon, CheckIcon, ExternalIcon } from "./icons";
 
 /**
  * The full card of a title you have not added — and may decide not to.
@@ -59,7 +59,7 @@ export function TitlePreview({
       <button
         type="button"
         onClick={onBack}
-        className="-ml-1 inline-flex w-fit items-center gap-1 rounded-sm px-1 py-0.5 text-sm text-text-muted hover:text-text"
+        className="btn btn-plain btn-sm -ml-3 w-fit text-text-muted"
       >
         <BackIcon size={16} />
         Torna ai risultati
@@ -73,14 +73,14 @@ export function TitlePreview({
           className="w-24 shrink-0 sm:w-28"
         />
         <div className="min-w-0 flex-1">
-          <h3 className="font-display text-lg font-semibold leading-tight text-text">{title}</h3>
-          <p className="mt-1 text-xs text-text-faint">
+          <h3 className="t-title text-text">{title}</h3>
+          <p className="mt-1 text-sm text-text-muted">
             {[year, details?.genre, details?.runtime ? formatRuntime(details.runtime) : null]
               .filter(Boolean)
               .join(" · ")}
           </p>
           {details && (
-            <p className="mt-1 text-xs text-text-faint">
+            <p className="mt-1 text-sm text-text-muted">
               {[
                 details.seasons ? `${details.seasons} stagion${details.seasons === 1 ? "e" : "i"}` : null,
                 details.episodes ? `${details.episodes} episodi` : null,
@@ -92,7 +92,8 @@ export function TitlePreview({
             </p>
           )}
           {alreadyInLibrary && (
-            <p className="mt-2 inline-block rounded-full px-2 py-0.5 text-xs font-medium" style={{ background: "color-mix(in srgb, var(--accent) 18%, transparent)", color: "var(--accent-text)" }}>
+            <p className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-text">
+              <CheckIcon size={16} />
               È già nella tua libreria
             </p>
           )}
@@ -103,29 +104,29 @@ export function TitlePreview({
 
       {!details && !error && (
         <div className="flex flex-col gap-2" aria-hidden="true">
-          <div className="skeleton h-3 w-full rounded-xs" />
-          <div className="skeleton h-3 w-11/12 rounded-xs" />
-          <div className="skeleton h-3 w-2/3 rounded-xs" />
+          <div className="skeleton h-4 w-full rounded-xs" />
+          <div className="skeleton h-4 w-11/12 rounded-xs" />
+          <div className="skeleton h-4 w-2/3 rounded-xs" />
         </div>
       )}
 
       {details?.overview && <p className="text-sm leading-relaxed text-text-muted">{details.overview}</p>}
 
       {details && (details.director || details.cast.length > 0) && (
-        <div className="flex flex-col gap-1.5 text-xs">
+        <div className="flex flex-col gap-1.5 text-sm">
           {details.director && (
-            <p className="text-text-faint">
-              <span className="text-text-muted">Regia</span> · {details.director}
+            <p className="text-text-muted">
+              <span className="text-text">Regia</span> · {details.director}
             </p>
           )}
           {details.cast.length > 0 && (
-            <p className="text-text-faint">
-              <span className="text-text-muted">Cast</span> · {details.cast.slice(0, 6).join(", ")}
+            <p className="text-text-muted">
+              <span className="text-text">Cast</span> · {details.cast.slice(0, 6).join(", ")}
             </p>
           )}
           {details.studio && (
-            <p className="text-text-faint">
-              <span className="text-text-muted">Studio</span> · {details.studio}
+            <p className="text-text-muted">
+              <span className="text-text">Studio</span> · {details.studio}
             </p>
           )}
         </div>
@@ -133,7 +134,7 @@ export function TitlePreview({
 
       {details && details.watchProviders.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs text-text-muted">Dove guardarlo:</span>
+          <span className="text-sm text-text-muted">Dove guardarlo:</span>
           {details.watchProviders.slice(0, 5).map((p) => {
             // Apribile anche da qui: capita di cercare un titolo per guardarlo
             // stasera, non per metterlo in libreria.
@@ -152,7 +153,7 @@ export function TitlePreview({
                 <ExternalIcon size={12} />
               </a>
             ) : (
-              <span key={p.name} className="rounded-full bg-surface-hover px-2.5 py-1 text-xs text-text">
+              <span key={p.name} className="flex h-8 items-center rounded-full bg-surface-2 px-3 text-sm text-text">
                 {p.name}
               </span>
             );

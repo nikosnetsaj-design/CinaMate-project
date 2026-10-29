@@ -4,6 +4,7 @@ import { Sheet } from "./Sheet";
 import { PosterArt } from "./PosterArt";
 import { CatalogBlock } from "./NeedsCatalog";
 import { TitlePreview } from "./TitlePreview";
+import { ChevronRightIcon } from "./icons";
 import { useAddSheet } from "../store/useAddSheet";
 import { useEditSheet } from "../store/useEditSheet";
 import { useLibrary } from "../store/useLibrary";
@@ -153,47 +154,40 @@ function AddItemForm() {
         ) : (
           <>
             <div>
-              <h2 id={titleId} className="font-display text-xl font-semibold text-text">
-                Cerca un titolo
+              <h2 id={titleId} className="t-title text-text">
+                Aggiungi un titolo
               </h2>
               <p className="mt-1 text-sm text-text-muted">
-                Scrivi il nome: i risultati arrivano mentre digiti, e tocca un titolo per vederne trama, cast e
-                durata prima di deciderlo. Se sbagli una lettera, cerco lo stesso qualcosa di simile.
+                I risultati arrivano mentre scrivi, anche con una lettera sbagliata. Tocca un titolo per
+                vederne trama e cast prima di aggiungerlo.
               </p>
             </div>
 
-            <div className="relative">
-              <input
-                autoFocus
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Es. Interstellar, The Bear, Naruto…"
-                aria-label="Cerca un titolo"
-                className="field w-full pr-10"
-              />
-              {busy && (
-                <span
-                  aria-hidden="true"
-                  className="spinner absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border-2"
-                  style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }}
-                />
-              )}
-            </div>
+            <input
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Es. Interstellar, The Bear, Naruto…"
+              aria-label="Cerca un titolo"
+              aria-busy={busy}
+              className="field w-full"
+            />
 
             {/* What you already own comes first: the fastest possible answer to
                 "do I have this?", and it needs neither key nor network. */}
             {owned.length > 0 && (
               <section className="flex flex-col gap-2">
-                <p className="text-xs font-medium text-text-faint">Già nella tua libreria</p>
+                <h3 className="px-4 text-sm font-medium text-text-muted">Già nella tua libreria</h3>
+                <ul className="list-group bg-surface-2 shadow-none" style={{ "--row-inset": "68px" } as React.CSSProperties}>
                 {owned.map((item) => (
+                  <li key={item.id}>
                   <button
-                    key={item.id}
                     type="button"
                     onClick={() => {
                       close();
                       openItem(item);
                     }}
-                    className="flex items-center gap-3 rounded-lg bg-surface-2 p-2.5 text-left transition-colors hover:bg-surface-hover"
+                    className="list-row hover:bg-surface-hover"
                   >
                     <PosterArt
                       item={item}
@@ -202,13 +196,16 @@ function AddItemForm() {
                       showTitle={false}
                     />
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-semibold text-text">{item.title}</div>
-                      <div className="truncate text-xs text-text-faint">
+                      <div className="truncate text-sm font-medium text-text">{item.title}</div>
+                      <div className="truncate text-xs text-text-muted">
                         {item.year} · {item.status}
                       </div>
                     </div>
+                    <span aria-hidden="true" className="shrink-0 text-text-faint"><ChevronRightIcon size={16} /></span>
                   </button>
+                  </li>
                 ))}
+                </ul>
               </section>
             )}
 
@@ -222,13 +219,30 @@ function AddItemForm() {
               </p>
             )}
 
-            {!missingKey &&
-              results.map((r) => (
+            {/* L'attesa ha la forma dei risultati: tre righe, non una rotella
+                dentro il campo. */}
+            {!missingKey && busy && results.length === 0 && (
+              <div aria-hidden="true" className="list-group bg-surface-2 shadow-none">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="list-row">
+                    <div className="skeleton aspect-2/3 w-12 shrink-0 rounded-xs" />
+                    <div className="flex flex-1 flex-col gap-2">
+                      <div className="skeleton h-4 w-2/3 rounded-xs" />
+                      <div className="skeleton h-3 w-1/4 rounded-xs" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!missingKey && results.length > 0 && (
+              <ul className="list-group bg-surface-2 shadow-none">
+              {results.map((r) => (
+                <li key={`${r.mediaType}-${r.tmdbId}`}>
                 <button
-                  key={`${r.mediaType}-${r.tmdbId}`}
                   type="button"
                   onClick={() => setPreview(r)}
-                  className="flex items-center gap-3.5 rounded-lg bg-surface-2 p-3 text-left transition-colors hover:bg-surface-hover"
+                  className="list-row items-start hover:bg-surface-hover"
                 >
                   <PosterArt
                     item={{ title: r.title, kind: r.kind, posterPath: r.posterPath }}
@@ -237,18 +251,19 @@ function AddItemForm() {
                     showTitle={false}
                   />
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-display text-sm font-semibold text-text">{r.title}</div>
-                    <div className="mt-0.5 flex items-center gap-1.5 text-xs text-text-faint">
-                      <span>{r.year ?? "—"}</span>
-                      {ownedTmdbIds.has(r.tmdbId) && (
-                        <span style={{ color: "var(--accent-text)" }}>· ce l'hai già</span>
-                      )}
+                    <div className="truncate text-sm font-medium text-text">{r.title}</div>
+                    <div className="mt-0.5 flex items-center gap-1.5 text-xs text-text-muted">
+                      <span className="tabular">{r.year ?? "—"}</span>
+                      {ownedTmdbIds.has(r.tmdbId) && <span className="text-text">· già in libreria</span>}
                     </div>
                     {r.overview && <div className="mt-1 line-clamp-2 text-xs text-text-muted">{r.overview}</div>}
                   </div>
-                  <span className="shrink-0 text-sm text-text-faint">›</span>
+                  <span aria-hidden="true" className="mt-0.5 shrink-0 text-text-faint"><ChevronRightIcon size={16} /></span>
                 </button>
+                </li>
               ))}
+              </ul>
+            )}
 
             {err && !busy && !missingKey && query.trim().length >= MIN_CHARS && (
               <p className="py-2 text-center text-sm text-text-muted">{err}</p>
@@ -257,7 +272,7 @@ function AddItemForm() {
             <button
               type="button"
               onClick={manual}
-              className="btn btn-secondary btn-lg mt-1"
+              className="btn btn-secondary mt-1"
             >
               Inserisci a mano
             </button>

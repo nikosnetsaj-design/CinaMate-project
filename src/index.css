@@ -525,14 +525,49 @@
   /* 30 px a vista, 44 al dito. */
   .segmented > button::after { content: ""; position: absolute; inset: -7px 0; }
   .segmented > button[aria-selected="true"],
-  .segmented > button[aria-pressed="true"] {
+  .segmented > button[aria-pressed="true"],
+  .segmented > button[aria-checked="true"] {
     background: var(--thumb);
     color: var(--text);
     box-shadow: var(--shadow-sm);
   }
   @media (hover: hover) {
-    .segmented > button:not([aria-selected="true"]):not([aria-pressed="true"]):hover { color: var(--text); }
+    .segmented > button:not([aria-selected="true"]):not([aria-pressed="true"]):not([aria-checked="true"]):hover { color: var(--text); }
   }
+  /* A tutta larghezza, quando le voci sono la scelta della schermata. */
+  .segmented-full { display: flex; width: 100%; }
+  .segmented-full > button { flex: 1 1 0; min-height: 36px; }
+
+  /* L'interruttore: acceso o spento, e si vede da dove sta il pomello prima
+     ancora che dal colore. La guida spenta ha il contrasto di un bordo forte
+     (3:1), quella accesa è l'accento. */
+  .switch {
+    position: relative;
+    flex: none;
+    width: 51px;
+    height: 31px;
+    border-radius: 999px;
+    background: var(--border-strong);
+    transition: background-color var(--dur-state) var(--ease-out);
+  }
+  .switch::before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 27px;
+    height: 27px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transition: transform var(--dur-move) var(--ease-out);
+  }
+  .switch::after { content: ""; position: absolute; inset: -7px -2px; }
+  .switch[aria-checked="true"],
+  .switch[data-on="true"] { background: var(--accent); }
+  .switch[aria-checked="true"]::before,
+  .switch[data-on="true"]::before { transform: translateX(20px); }
+  .switch:disabled { opacity: 0.4; cursor: not-allowed; }
 
   /* La riga che scorre di lato: arriva fino al bordo dello schermo — si vede
      che continua — ma la prima copertina resta allineata al testo, e lo
