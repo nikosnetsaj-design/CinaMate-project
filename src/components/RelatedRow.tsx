@@ -77,11 +77,7 @@ export function RelatedRow({ item }: { item: Item }) {
                 />
                 {owned ? (
                   <span
-                    className="absolute right-1 top-1 flex items-center justify-center rounded-full px-1.5 py-1 text-xs font-semibold"
-                    style={{
-                      background: owned.status === "Visto" ? "var(--status-done)" : "var(--accent)",
-                      color: "var(--accent-contrast)",
-                    }}
+                    className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/65 text-white backdrop-blur-sm"
                   >
                     {owned.status === "Visto" ? <CheckIcon size={11} /> : <ClockIcon size={11} />}
                   </span>

@@ -40,7 +40,7 @@ function QueryChips({ query }: { query: ParsedQuery }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {chips.map((chip) => (
-        <span key={chip} className="rounded-full border border-border-strong px-2.5 py-0.5 text-xs text-text-muted">
+        <span key={chip} className="rounded-full bg-surface px-2.5 py-1 text-xs text-text-muted">
           {chip}
         </span>
       ))}
@@ -210,8 +210,7 @@ export function NaturalSearch() {
                   />
                   {owned && (
                     <span
-                      className="absolute right-1 top-1 flex items-center justify-center rounded-full px-1.5 py-1 text-xs font-semibold"
-                      style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+                      className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/65 text-white backdrop-blur-sm"
                     >
                       <CheckIcon size={11} />
                     </span>

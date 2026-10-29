@@ -430,6 +430,17 @@
     box-shadow: inset 0 0 0 1px var(--danger), 0 0 0 3px color-mix(in srgb, var(--danger) 14%, transparent);
   }
 
+  /* La pillola della ricerca: un contenitore che si comporta da campo — filo
+     a 3:1, anello di 2 px quando il campo dentro ha il fuoco. */
+  .search-pill {
+    box-shadow: inset 0 0 0 1px var(--border-strong);
+    transition: box-shadow var(--dur-state) var(--ease-out), background-color var(--dur-state) var(--ease-out);
+  }
+  .search-pill:focus-within {
+    background: var(--surface);
+    box-shadow: inset 0 0 0 2px var(--accent), 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+
   /* Pastiglie di filtro: un riempimento, che si inverte quando è scelta. */
   .chip {
     position: relative;

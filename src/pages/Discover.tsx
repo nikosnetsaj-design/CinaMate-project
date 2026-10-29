@@ -8,6 +8,7 @@ import { getFeed, type DiscoverFeed, type TmdbSearchResult } from "../lib/tmdb";
 import { draftFromTmdb } from "../lib/addFromTmdb";
 import { PosterArt } from "../components/PosterArt";
 import { EmptyState } from "../components/EmptyState";
+import { RowHeader } from "../components/RowHeader";
 import { UpcomingBoard } from "../components/UpcomingBoard";
 import { NaturalSearch } from "../components/NaturalSearch";
 import { MoodPicker } from "../components/MoodPicker";
@@ -65,16 +66,13 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
   if (failed) return null;
 
   return (
-    <section className="flex flex-col gap-2.5">
-      <div>
-        <h2 className="section-mark font-display text-xl font-semibold text-text">{title}</h2>
-        {/* Every row says why it is here — a suggestion without a reason is an advert. */}
-        <p className="mt-0.5 text-xs text-text-faint">{why}</p>
-      </div>
-      <div className="no-scrollbar flex gap-3.5 overflow-x-auto pb-1">
+    <section className="flex flex-col gap-4">
+      {/* Every row says why it is here — a suggestion without a reason is an advert. */}
+      <RowHeader title={title} note={why} />
+      <div className="shelf">
         {rows === null
           ? Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="skeleton aspect-2/3 w-28 shrink-0 rounded-sm" aria-hidden="true" />
+              <div key={i} className="skeleton aspect-2/3 w-32 shrink-0 rounded-sm sm:w-36" aria-hidden="true" />
             ))
           : rows.map((r) => {
               const owned = items.some((i) => i.tmdbId === r.tmdbId);
@@ -85,21 +83,20 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
                   onClick={() => choose(r)}
                   disabled={picking !== null}
                   aria-label={owned ? `${r.title} — già in libreria, apri` : `Aggiungi ${r.title} alla libreria`}
-                  className="w-28 shrink-0 text-left disabled:opacity-60"
+                  className="group w-32 shrink-0 text-left disabled:opacity-60 sm:w-36"
                 >
                   <div className="relative">
-                    <PosterArt item={{ title: r.title, kind: r.kind, posterPath: r.posterPath }} size="sm" className="w-28" showTitle={!r.posterPath} />
+                    <PosterArt item={{ title: r.title, kind: r.kind, posterPath: r.posterPath }} size="sm" className="w-full transition-transform duration-200 group-active:scale-[0.98]" showTitle={!r.posterPath} />
                     {owned && (
                       <span
-                        className="absolute right-1 top-1 flex items-center justify-center rounded-full px-1.5 py-1 text-xs font-semibold"
-                        style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+                        className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/65 text-white backdrop-blur-sm"
                       >
                         <CheckIcon size={11} />
                       </span>
                     )}
                   </div>
-                  <p className="mt-1.5 line-clamp-2 text-xs font-medium text-text">{r.title}</p>
-                  <p className="font-mono tabular text-xs text-text-faint">
+                  <p className="mt-2 line-clamp-2 text-sm font-medium leading-snug text-text">{r.title}</p>
+                  <p className="tabular text-xs text-text-faint">
                     {picking === r.tmdbId ? "…" : (r.year ?? "")}
                   </p>
                 </button>
@@ -123,9 +120,9 @@ export function Discover() {
   const [tab, setTab] = useState<Tab>("sfoglia");
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
+    <div className="mx-auto flex max-w-6xl flex-col gap-8 px-[var(--gutter)] py-6 sm:py-10">
       <div>
-        <h1 className="font-display text-3xl font-semibold text-text">Scopri</h1>
+        <h1 className="t-display text-text">Scopri</h1>
         <p className="mt-1 text-sm text-text-muted">
           {tab === "sfoglia"
             ? "Tocca una copertina per aggiungerla alla tua libreria."
@@ -160,7 +157,8 @@ export function Discover() {
         />
       ) : (
         <>
-          <div className="flex gap-1 border-b border-border" role="tablist" aria-label="Sezioni di Scopri">
+          {/* Gli stessi segmenti di Cerca: un modo solo di dire «sei qui». */}
+          <div className="shelf gap-2" role="tablist" aria-label="Sezioni di Scopri">
             {TABS.map((t) => (
               <button
                 key={t.id}
@@ -168,10 +166,7 @@ export function Discover() {
                 role="tab"
                 aria-selected={tab === t.id}
                 onClick={() => setTab(t.id)}
-                className={`-mb-px rounded-t-sm border-b-2 px-3.5 py-2 text-sm font-medium transition-colors ${
-                  tab === t.id ? "text-text" : "border-transparent text-text-faint hover:text-text-muted"
-                }`}
-                style={tab === t.id ? { borderColor: "var(--accent)" } : undefined}
+                className="chip"
               >
                 {t.label}
               </button>
@@ -179,7 +174,7 @@ export function Discover() {
           </div>
 
           {tab === "sfoglia" && (
-            <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-10">
               {FEEDS.map((f) => (
                 <Row key={f.id} feed={f.id} title={f.title} why={f.why} />
               ))}

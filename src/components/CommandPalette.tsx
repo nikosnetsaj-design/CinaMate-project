@@ -85,7 +85,7 @@ function PaletteDialog() {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -8, scale: 0.98 }}
         transition={{ type: "spring", stiffness: 380, damping: 30 }}
-        className="relative z-10 w-full max-w-lg overflow-hidden rounded-md border border-border bg-surface shadow-[var(--shadow-lg)]"
+        className="relative z-10 w-full max-w-lg overflow-hidden rounded-lg bg-surface shadow-[var(--shadow-lg),0_0_0_1px_var(--separator)]"
         onKeyDown={(e) => {
           if (e.key === "ArrowDown") {
             e.preventDefault();
@@ -99,7 +99,9 @@ function PaletteDialog() {
           }
         }}
       >
-        <div className="flex items-center gap-2.5 border-b border-border px-4 py-3">
+        {/* Il fuoco si vede sul filo sotto il campo, non su un rettangolo
+            dentro il pannello: è l'unico campo, e il pannello è già lì per lui. */}
+        <div className="flex items-center gap-2.5 px-4 py-3 text-text-faint shadow-[inset_0_-1px_0_var(--separator)] transition-shadow focus-within:shadow-[inset_0_-2px_0_var(--accent)]">
           <SearchIcon />
           <input
             ref={inputRef}
@@ -110,9 +112,9 @@ function PaletteDialog() {
             }}
             placeholder="Titolo, saga, attore, regista, genere…"
             aria-label="Cerca nella libreria"
-            className="flex-1 bg-transparent text-sm text-text placeholder:text-text-faint focus:outline-none"
+            className="no-focus-ring flex-1 bg-transparent text-base text-text placeholder:text-text-faint outline-none"
           />
-          <kbd className="rounded-xs border border-border-strong px-1.5 py-0.5 text-xs text-text-faint">esc</kbd>
+          <kbd className="rounded-xs bg-surface-2 px-1.5 py-0.5 text-xs text-text-faint">esc</kbd>
         </div>
 
         <ul role="listbox" aria-label="Risultati" className="max-h-80 overflow-y-auto py-1.5">
