@@ -28,6 +28,11 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Prima di pubblicare, le stesse prove della pull request: un merge che
+      # le rompe non deve diventare il sito che tutti aprono.
+      - run: npm run lint
+      - run: npm test
+      - run: npm run contrast
       - run: npm run build
         env:
           GITHUB_PAGES: "true"
