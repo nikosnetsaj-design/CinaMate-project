@@ -1,5 +1,6 @@
 import type { HistoryEntry, Item } from "../types";
 import type { DailySeconds } from "../player/services/statsAndHistory";
+import { localDay } from "./day";
 
 /** One column of the activity chart. */
 export interface ActivityBucket {
@@ -22,11 +23,9 @@ const WEEKDAY = new Intl.DateTimeFormat("it-IT", { weekday: "short" });
 const MONTH_SHORT = new Intl.DateTimeFormat("it-IT", { month: "short" });
 const FULL_DAY = new Intl.DateTimeFormat("it-IT", { weekday: "long", day: "numeric", month: "long" });
 
+/** Lo stesso giorno locale del diario: vedi `lib/day`. */
 export function dayKey(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+  return localDay(date);
 }
 
 export function formatDay(key: string): string {

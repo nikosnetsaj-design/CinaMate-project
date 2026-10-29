@@ -27,6 +27,8 @@ import { getHosts, restoreHosts } from "../player/services/hostStore";
 import { getDailySeconds, restoreDailySeconds } from "../player/services/statsAndHistory";
 import { useWatchProgress } from "../store/useWatchProgress";
 import { buildBackup, parseBackup, BackupParseError } from "../lib/backup";
+import { localDay } from "../lib/day";
+import { downloadFile } from "../lib/download";
 import { resetAutoLinkAttempts } from "../lib/useAutoLinkTmdb";
 import { BackIcon, BookIcon, CheckIcon, ChevronDownIcon, ChevronRightIcon, ChevronUpIcon, CompassIcon, DownloadIcon, HomeIcon, InfoIcon, PersonIcon, PlayIcon, PulseIcon, RefreshIcon, SparkleIcon, StackIcon, SunIcon, TrashIcon, UploadIcon } from "./icons";
 
@@ -774,13 +776,7 @@ function SettingsForm() {
       },
       useGoals.getState().goals,
     );
-    const blob = new Blob([backup], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `cinemate-libreria-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadFile(`cinemate-libreria-${localDay()}.json`, backup, "application/json");
     pushToast("success", "Libreria esportata.");
   }
 

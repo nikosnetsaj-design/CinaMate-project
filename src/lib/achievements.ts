@@ -1,6 +1,7 @@
 import type { HistoryEntry, Item } from "../types";
 import { computeMinutes } from "./stats";
 import { buildEntries, sagaProgress } from "./sagas";
+import { localDaysAgo } from "./day";
 import type { TmdbSaga } from "./tmdb";
 
 export interface Achievement {
@@ -51,9 +52,7 @@ export function computeAchievements(
   }
   const maxEpisodesPerDay = episodesPerDay.size ? Math.max(...episodesPerDay.values()) : 0;
 
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - 30);
-  const cutoffStr = cutoff.toISOString().slice(0, 10);
+  const cutoffStr = localDaysAgo(30);
   const recentDays = new Set(
     history.filter((e) => e.date >= cutoffStr && liveItemIds.has(e.itemId)).map((e) => e.date),
   );

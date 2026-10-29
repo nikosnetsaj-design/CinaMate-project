@@ -23,7 +23,10 @@ import { ErrorIcon } from "./components/icons";
 import { useOnline } from "./lib/useOnline";
 import { useTheme } from "./store/useTheme";
 import { applyAccent } from "./lib/accents";
-import { useLibrary } from "./store/useLibrary";
+import { readOriginalLibrary, useLibrary } from "./store/useLibrary";
+import { useSettingsSheet } from "./store/useSettingsSheet";
+import { downloadFile } from "./lib/download";
+import { localDay } from "./lib/day";
 import { useAutoLinkTmdb } from "./lib/useAutoLinkTmdb";
 import { useAutoLinkSagas } from "./lib/useAutoLinkSagas";
 import { useReleaseAlerts } from "./lib/useReleaseAlerts";
@@ -88,18 +91,86 @@ function OfflineBanner() {
 }
 
 /**
- * I dati del dispositivo non si leggono.
+ * Quando i dati del dispositivo non sono come dovrebbero.
  *
- * Il bottone svuota libreria e diario, e lo faceva al primo tocco, senza dire
- * che cosa si sarebbe perso: un comando distruttivo travestito da «ripristina».
- * Adesso chiede una conferma che dice la conseguenza con parole sue, e solo al
- * secondo tocco fa quello che faceva prima.
+ * Erano due guasti con una frase sola: «non riesco a leggere i dati» compariva
+ * anche quando la memoria era *piena* — cioè quando la libreria si leggeva
+ * benissimo e solo l'ultima modifica non era stata salvata — e il rimedio
+ * offerto era svuotare tutto. Adesso sono tre casi, e ognuno ha il suo gesto:
+ *
+ * - **illeggibile**: la libreria intera non è un elenco. Si può scaricare
+ *   l'originale e poi ricominciare, con conferma;
+ * - **in parte**: qualche record storto, gli altri sono qui. Si dice quanti e
+ *   si offre la copia dei dati originali;
+ * - **memoria piena**: niente è rotto, ma le modifiche non restano. Il gesto
+ *   giusto è un backup, non una cancellazione.
  */
-function ErrorBanner() {
+function DataBanner() {
+  const loadIssue = useLibrary((s) => s.loadIssue);
   const storageError = useLibrary((s) => s.storageError);
   const resetCorruptedData = useLibrary((s) => s.resetCorruptedData);
+  const dismissLoadIssue = useLibrary((s) => s.dismissLoadIssue);
+  const openSettings = useSettingsSheet((s) => s.open);
   const [confirming, setConfirming] = useState(false);
-  if (!storageError) return null;
+
+  if (!loadIssue && !storageError) return null;
+
+  function downloadOriginal() {
+    const raw = readOriginalLibrary();
+    if (raw) downloadFile(`cinemate-dati-originali-${localDay()}.json`, raw, "application/json");
+  }
+
+  let text: string;
+  let actions: React.ReactNode;
+  if (loadIssue?.kind === "unreadable") {
+    text = confirming
+      ? "Libreria e diario di questo dispositivo verranno svuotati. Non si torna indietro."
+      : "Non riesco a leggere la libreria salvata su questo dispositivo. Scarica i dati originali prima di ricominciare: sono ancora qui.";
+    actions = confirming ? (
+      <>
+        <button type="button" onClick={() => setConfirming(false)} className="btn btn-secondary btn-sm">
+          Annulla
+        </button>
+        <button type="button" onClick={resetCorruptedData} className="btn btn-danger-fill btn-sm">
+          Svuota e ricomincia
+        </button>
+      </>
+    ) : (
+      <>
+        <button type="button" onClick={downloadOriginal} className="btn btn-secondary btn-sm">
+          Scarica i dati originali
+        </button>
+        <button type="button" onClick={() => setConfirming(true)} className="btn btn-secondary btn-sm">
+          Ricomincia da capo
+        </button>
+      </>
+    );
+  } else if (loadIssue?.kind === "partial") {
+    const n = loadIssue.skipped;
+    text = `${n === 1 ? "Un titolo salvato non si leggeva" : `${n} titoli salvati non si leggevano`}: ${
+      loadIssue.rescued ? "li ho messi da parte con una copia dei dati originali." : "li ho tolti."
+    } Il resto della libreria è qui.`;
+    actions = (
+      <>
+        {loadIssue.rescued && (
+          <button type="button" onClick={downloadOriginal} className="btn btn-secondary btn-sm">
+            Scarica la copia
+          </button>
+        )}
+        <button type="button" onClick={dismissLoadIssue} className="btn btn-secondary btn-sm">
+          {loadIssue.rescued ? "Elimina la copia" : "Ho capito"}
+        </button>
+      </>
+    );
+  } else {
+    text = "La memoria del browser è piena: le ultime modifiche non sono state salvate. Esporta un backup prima di continuare.";
+    actions = (
+      <button type="button" onClick={() => openSettings("dati")} className="btn btn-secondary btn-sm">
+        Esporta un backup
+      </button>
+    );
+  }
+
   return (
     <div
       role="alert"
@@ -110,24 +181,9 @@ function ErrorBanner() {
         <span className="mt-0.5 shrink-0" style={{ color: "var(--danger)" }}>
           <ErrorIcon />
         </span>
-        {confirming
-          ? "Libreria e diario di questo dispositivo verranno svuotati. Non si torna indietro."
-          : "Non riesco a leggere i dati salvati su questo dispositivo."}
+        {text}
       </span>
-      {confirming ? (
-        <span className="flex gap-2">
-          <button type="button" onClick={() => setConfirming(false)} className="btn btn-secondary btn-sm">
-            Annulla
-          </button>
-          <button type="button" onClick={resetCorruptedData} className="btn btn-danger-fill btn-sm">
-            Svuota e ricomincia
-          </button>
-        </span>
-      ) : (
-        <button type="button" onClick={() => setConfirming(true)} className="btn btn-secondary btn-sm">
-          Ricomincia da capo
-        </button>
-      )}
+      <span className="flex flex-wrap gap-2">{actions}</span>
     </div>
   );
 }
@@ -176,7 +232,7 @@ export default function App() {
       <Nav />
       <div className="min-h-screen pb-[calc(var(--tabbar-h)+env(safe-area-inset-bottom))] pt-14 lg:pb-0 lg:pl-60 lg:pt-0">
         <OfflineBanner />
-        <ErrorBanner />
+        <DataBanner />
         <main id="main-content">
           <Routes>
             <Route path="/" element={<Home />} />
