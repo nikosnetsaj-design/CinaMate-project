@@ -20,6 +20,8 @@ import { useOnboarding } from "../store/useOnboarding";
 import { ACCENTS } from "../lib/accents";
 import { ParentalSettings } from "./ParentalSettings";
 import { LinkHostSettings } from "./LinkHostSettings";
+import { SubscriptionsSettings } from "./SubscriptionsSettings";
+import { useSubscriptions } from "../store/useSubscriptions";
 import { DnsGuideButton } from "./DnsGuide";
 import { useLinkHosts } from "../store/useLinkHosts";
 import { TEMPLATE_FIELDS, previewTemplate, previewCount } from "../lib/sourceTemplate";
@@ -36,7 +38,7 @@ const ImportPanel = lazy(() => import("./ImportPanel").then((m) => ({ default: m
 import { localDay } from "../lib/day";
 import { downloadFile } from "../lib/download";
 import { resetAutoLinkAttempts } from "../lib/useAutoLinkTmdb";
-import { BackIcon, BookIcon, CheckIcon, ChevronDownIcon, ChevronRightIcon, ChevronUpIcon, CompassIcon, DownloadIcon, HomeIcon, InfoIcon, PersonIcon, PlayIcon, PulseIcon, RefreshIcon, SheetFileIcon, SparkleIcon, StackIcon, SunIcon, TrashIcon, UploadIcon } from "./icons";
+import { BackIcon, BookIcon, CheckIcon, ChevronDownIcon, ChevronRightIcon, ChevronUpIcon, CompassIcon, DownloadIcon, HomeIcon, InfoIcon, PersonIcon, PlayIcon, PulseIcon, RefreshIcon, SheetFileIcon, SparkleIcon, StackIcon, StarIcon, SunIcon, TrashIcon, UploadIcon } from "./icons";
 
 /**
  * Where your own sources live, written once instead of pasted per title.
@@ -608,10 +610,11 @@ function PageReaderSetting() {
  * che sono cose diverse, e fa entrare ognuna in una schermata che si legge
  * tutta senza scorrere.
  */
-type PanelId = "chiavi" | "sorgenti" | "linkhost" | "aspetto" | "home" | "tv" | "genitori" | "dati" | "importa" | "info";
+type PanelId = "chiavi" | "abbonamenti" | "sorgenti" | "linkhost" | "aspetto" | "home" | "tv" | "genitori" | "dati" | "importa" | "info";
 
 const PANEL_TITLES: Record<PanelId, string> = {
   chiavi: "Chiavi e modello",
+  abbonamenti: "I miei abbonamenti",
   sorgenti: "Indirizzi delle tue sorgenti",
   linkhost: "Gestisci Link Host",
   aspetto: "Aspetto",
@@ -786,6 +789,7 @@ function SettingsForm() {
       },
       useGoals.getState().goals,
       useLists.getState().lists,
+      useSubscriptions.getState().subs,
     );
     downloadFile(`cinemate-libreria-${localDay()}.json`, backup, "application/json");
     pushToast("success", "Libreria esportata.");
@@ -850,6 +854,7 @@ function SettingsForm() {
     }
     if (backup.goals !== undefined) useGoals.getState().restore(backup.goals);
     if (backup.lists !== undefined) useLists.getState().restore(backup.lists);
+    if (backup.subscriptions !== undefined) useSubscriptions.getState().restore(backup.subscriptions);
   }
 
   return (
@@ -879,6 +884,15 @@ function SettingsForm() {
                 title="Chiavi e modello"
                 subtitle="TMDB per copertine e cast, Anthropic per il critico. Restano su questo dispositivo."
                 onClick={() => setPanel("chiavi")}
+              />
+            </SettingsGroup>
+
+            <SettingsGroup label="Dove guardi">
+              <SettingsRow
+                icon={<StarIcon size={18} />}
+                title="I miei abbonamenti"
+                subtitle="Cosa è già incluso in quello che paghi, e quanto ti costa ogni ora guardata."
+                onClick={() => setPanel("abbonamenti")}
               />
             </SettingsGroup>
 
@@ -1131,6 +1145,7 @@ function SettingsForm() {
           </>
         )}
 
+        {panel === "abbonamenti" && <SubscriptionsSettings />}
         {panel === "linkhost" && <LinkHostSettings />}
         {panel === "info" && <AboutPanel />}
         {panel === "aspetto" && <AppearanceSettings />}

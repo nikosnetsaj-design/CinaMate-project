@@ -4,7 +4,8 @@ import { useSettings } from "../store/useSettings";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { useEditSheet } from "../store/useEditSheet";
 import { useSelectedItem } from "../store/useSelectedItem";
-import { getFeed, type DiscoverFeed, type TmdbSearchResult } from "../lib/tmdb";
+import { getFeed, getIncludedIn, type DiscoverFeed, type TmdbSearchResult } from "../lib/tmdb";
+import { useSubscriptions } from "../store/useSubscriptions";
 import { draftFromTmdb } from "../lib/addFromTmdb";
 import { PosterArt } from "../components/PosterArt";
 import { EmptyState } from "../components/EmptyState";
@@ -23,7 +24,21 @@ const FEEDS: { id: DiscoverFeed; title: string; why: string }[] = [
   { id: "upcoming", title: "In arrivo in sala", why: "Uscite italiane dei prossimi mesi" },
 ];
 
-function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: string }) {
+function Row({
+  feed,
+  load,
+  loadKey,
+  title,
+  why,
+}: {
+  feed?: DiscoverFeed;
+  /** Una riga che non è un catalogo fisso di TMDB: «incluso nei tuoi abbonamenti». */
+  load?: () => Promise<TmdbSearchResult[]>;
+  /** Cosa fa cambiare `load`: quando cambia, la riga si ricarica. */
+  loadKey?: string;
+  title: string;
+  why: string;
+}) {
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
   const items = useLibrary((s) => s.items);
   const openNew = useEditSheet((s) => s.openNew);
@@ -34,13 +49,17 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
 
   useEffect(() => {
     let cancelled = false;
-    getFeed(feed, tmdbApiKey)
+    setRows(null);
+    setFailed(false);
+    (load ? load() : feed ? getFeed(feed, tmdbApiKey) : Promise.resolve([]))
       .then((r) => !cancelled && setRows(r))
       .catch(() => !cancelled && setFailed(true));
     return () => {
       cancelled = true;
     };
-  }, [feed, tmdbApiKey]);
+    // `load` cambia identità a ogni render; quello che conta è `loadKey`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feed, tmdbApiKey, loadKey]);
 
   async function choose(r: TmdbSearchResult) {
     // Already in the library: open what you have rather than adding a twin.
@@ -64,7 +83,7 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
     setPicking(null);
   }
 
-  if (failed) return null;
+  if (failed || rows?.length === 0) return null;
 
   return (
     <section className="flex flex-col gap-4">
@@ -115,8 +134,13 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "prossimamente", label: "Prossimamente" },
 ];
 
+const andList = new Intl.ListFormat("it", { type: "conjunction" });
+
 export function Discover() {
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
+  const subs = useSubscriptions((s) => s.subs);
+  const mineIds = subs.map((s) => s.providerId);
+  const mineNames = andList.format(subs.map((s) => s.name));
   const openSettings = useSettingsSheet((s) => s.open);
   const [tab, setTab] = useState<Tab>("sfoglia");
 
@@ -180,6 +204,16 @@ export function Discover() {
           <div role="tabpanel" id="scopri-pannello" aria-labelledby={`scopri-tab-${tab}`}>
             {tab === "sfoglia" && (
               <div className="flex flex-col gap-10">
+                {/* Prima di tutto quello che paghi già: la scoperta più utile è
+                    quella che non costa niente in più. */}
+                {mineIds.length > 0 && (
+                  <Row
+                    load={() => getIncludedIn(mineIds, tmdbApiKey)}
+                    loadKey={mineIds.join("|")}
+                    title="Incluso nei tuoi abbonamenti"
+                    why={`Popolare adesso su ${mineNames}, senza pagare altro`}
+                  />
+                )}
                 {FEEDS.map((f) => (
                   <Row key={f.id} feed={f.id} title={f.title} why={f.why} />
                 ))}

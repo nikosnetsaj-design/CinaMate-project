@@ -71,9 +71,14 @@ export interface Backup {
    * con sé, quindi tornano al loro posto insieme alla libreria.
    */
   lists?: unknown;
+  /**
+   * I servizi a cui sei abbonato, coi prezzi che hai scritto. Stessa regola:
+   * li hai dichiarati tu, e niente li può ricostruire.
+   */
+  subscriptions?: unknown;
 }
 
-const CURRENT_VERSION = 6;
+const CURRENT_VERSION = 7;
 
 export function buildBackup(
   items: Item[],
@@ -82,6 +87,7 @@ export function buildBackup(
   player?: PlayerBackup,
   goals?: unknown,
   lists?: unknown,
+  subscriptions?: unknown,
 ): string {
   return JSON.stringify(
     {
@@ -94,6 +100,7 @@ export function buildBackup(
       player,
       goals,
       lists,
+      subscriptions,
     },
     null,
     2,
@@ -182,6 +189,7 @@ export function parseBackup(raw: string): Backup {
       player?: unknown;
       goals?: unknown;
       lists?: unknown;
+      subscriptions?: unknown;
     };
     const items = readItems(record.items);
     if (items.length === 0) throw new BackupParseError("Nessun titolo valido trovato nel file.");
@@ -196,6 +204,7 @@ export function parseBackup(raw: string): Backup {
       // Validated by the store that receives it, like the player sections.
       goals: record.goals,
       lists: record.lists,
+      subscriptions: record.subscriptions,
     };
   }
 

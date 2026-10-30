@@ -619,6 +619,94 @@ export async function getWatchProviders(tmdbId: number, mediaType: "movie" | "tv
   return info;
 }
 
+/* ------------------------------------------------------------------ */
+/* I servizi a cui sei abbonato                                         */
+/* ------------------------------------------------------------------ */
+
+export interface TmdbProviderOption {
+  id: number;
+  name: string;
+  logoPath: string | null;
+  /** L'ordine di JustWatch per l'Italia: prima quelli che hanno quasi tutti. */
+  priority: number;
+}
+
+interface RawProviderListEntry {
+  provider_id: number;
+  provider_name: string;
+  logo_path?: string | null;
+  display_priority?: number;
+  display_priorities?: Record<string, number>;
+}
+
+/** L'elenco dei servizi cambia di rado: una settimana su disco. */
+const providerCatalogCache = new TieredCache<TmdbProviderOption[]>("servizi", TTL.static);
+
+/**
+ * Tutti i servizi presenti in Italia, film e serie insieme, nell'ordine in cui
+ * JustWatch li mette per il paese. Serve all'elenco da cui scegli i tuoi
+ * abbonamenti: un elenco scritto a mano invecchierebbe al primo servizio nuovo.
+ */
+export async function getProviderCatalog(apiKey: string): Promise<TmdbProviderOption[]> {
+  const hit = await providerCatalogCache.get("IT");
+  if (hit) return hit;
+  const [movies, shows] = await Promise.all(
+    (["movie", "tv"] as const).map((type) =>
+      tmdbGet<{ results?: RawProviderListEntry[] }>(`/watch/providers/${type}`, apiKey, { watch_region: "IT" }),
+    ),
+  );
+  const byId = new Map<number, TmdbProviderOption>();
+  for (const p of [...(movies.results ?? []), ...(shows.results ?? [])]) {
+    if (byId.has(p.provider_id)) continue;
+    byId.set(p.provider_id, {
+      id: p.provider_id,
+      name: p.provider_name,
+      logoPath: p.logo_path ?? null,
+      priority: p.display_priorities?.IT ?? p.display_priority ?? 999,
+    });
+  }
+  const list = [...byId.values()].sort((a, b) => a.priority - b.priority || a.name.localeCompare(b.name));
+  providerCatalogCache.set("IT", list);
+  return list;
+}
+
+const includedCache = new TieredCache<TmdbSearchResult[]>("inclusi", TTL.feed);
+
+/**
+ * I titoli popolari adesso che sono *compresi* nei tuoi abbonamenti — non a
+ * noleggio, non in vendita: `with_watch_monetization_types=flatrate`. Film e
+ * serie in una riga sola, mescolati per popolarità, perché la domanda è «cosa
+ * c'è stasera in quello che pago», non «quali film».
+ */
+export async function getIncludedIn(providerIds: number[], apiKey: string): Promise<TmdbSearchResult[]> {
+  if (providerIds.length === 0) return [];
+  const key = providerIds.slice().sort((a, b) => a - b).join("|");
+  const hit = await includedCache.get(key);
+  if (hit) return hit;
+  const params: Record<string, string> = {
+    with_watch_providers: key,
+    watch_region: "IT",
+    with_watch_monetization_types: "flatrate",
+    sort_by: "popularity.desc",
+    "vote_count.gte": "100",
+    include_adult: "false",
+    page: "1",
+  };
+  const [movies, shows] = await Promise.all(
+    (["movie", "tv"] as const).map(async (type) => {
+      const data = await tmdbGet<{ results?: RawTypedResult[] }>(`/discover/${type}`, apiKey, params);
+      return (data.results ?? []).map((r) => toCandidate(r, type));
+    }),
+  );
+  const rows = [...movies, ...shows]
+    .filter((r) => r.title && r.posterPath)
+    .sort((a, b) => b.popularity - a.popularity)
+    .slice(0, 20)
+    .map(({ originalTitle: _drop, ...r }) => r);
+  includedCache.set(key, rows);
+  return rows;
+}
+
 /**
  * La scheda completa di un titolo, con TTL di 24 ore su disco.
  *
@@ -1754,6 +1842,7 @@ export function clearTmdbCaches(): void {
   keywordIdCache.clear();
   releaseDateCache.clear();
   stingerCache.clear();
+  includedCache.clear();
 }
 
 /* ------------------------------------------------------------------ */

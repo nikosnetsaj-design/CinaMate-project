@@ -5,10 +5,11 @@ import { useWatchSession } from "../store/useWatchSession";
 import { getWatchProviders, providerLogoUrl, type TmdbWatchInfo, type TmdbWatchProvider } from "../lib/tmdb";
 import { serviceLinkFor } from "../lib/deepLinks";
 import { useLinkHosts } from "../store/useLinkHosts";
+import { useSubscriptions } from "../store/useSubscriptions";
 import { useWebViewer } from "../store/useWebViewer";
 import { buildQuery, effectiveUrl, hostLabel, searchUrlsFor } from "../lib/linkHost";
 import type { Item } from "../types";
-import { ChevronRightIcon, ExternalIcon, LinkIcon, PlayIcon } from "./icons";
+import { CheckIcon, ChevronRightIcon, ExternalIcon, LinkIcon, PlayIcon } from "./icons";
 
 function linkLabel(url: string): string {
   try {
@@ -26,9 +27,20 @@ function linkLabel(url: string): string {
  * *vede*. Il nome resta nell'`alt` e nel `title`, quindi chi usa un lettore di
  * schermo sente lo stesso identico elenco di prima.
  */
-function ProviderTile({ provider, title, onOpen }: { provider: TmdbWatchProvider; title: string; onOpen: () => void }) {
+function ProviderTile({ provider, title, onOpen, mine = false }: { provider: TmdbWatchProvider; title: string; onOpen: () => void; mine?: boolean }) {
   const logo = providerLogoUrl(provider.logoPath, "w154");
   const link = serviceLinkFor(provider.name, title);
+  // Il segno sta fuori dalla tessera (che ritaglia il logo), in alto a destra:
+  // «questo lo paghi già» si vede prima di leggere il nome.
+  const badge = mine ? (
+    <span
+      aria-hidden="true"
+      className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.35)]"
+      style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+    >
+      <CheckIcon size={11} />
+    </span>
+  ) : null;
 
   const face = logo ? (
     <img src={logo} alt={provider.name} loading="lazy" decoding="async" className="h-full w-full object-cover" />
@@ -40,21 +52,28 @@ function ProviderTile({ provider, title, onOpen }: { provider: TmdbWatchProvider
 
   const shell =
     "block h-14 w-14 shrink-0 overflow-hidden rounded-[14px] border bg-surface-2 transition-transform";
+  const yours = mine ? " — incluso nel tuo abbonamento" : "";
 
-  return link ? (
-    <a
-      href={link.url}
-      onClick={onOpen}
-      target="_blank"
-      rel="noopener noreferrer"
-      title={`Apri ${title} su ${link.service}`}
-      className={`${shell} hover:scale-105`}
-    >
-      {face}
-    </a>
-  ) : (
-    <span className={shell} title={`${provider.name} — cercalo dal servizio`}>
-      {face}
+  return (
+    <span className="relative shrink-0">
+      {link ? (
+        <a
+          href={link.url}
+          onClick={onOpen}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={`Apri ${title} su ${link.service}${yours}`}
+          aria-label={`Apri ${title} su ${link.service}${yours}`}
+          className={`${shell} hover:scale-105`}
+        >
+          {face}
+        </a>
+      ) : (
+        <span className={shell} title={`${provider.name}${yours} — cercalo dal servizio`}>
+          {face}
+        </span>
+      )}
+      {badge}
     </span>
   );
 }
@@ -65,21 +84,25 @@ function ProviderGroup({
   providers,
   title,
   onOpen,
+  mine,
 }: {
   label: string;
   providers: TmdbWatchProvider[];
   title: string;
   onOpen: () => void;
+  mine: Set<number>;
 }) {
   if (providers.length === 0) return null;
+  // I tuoi per primi: sono quelli su cui si preme davvero.
+  const sorted = [...providers].sort((a, b) => Number(mine.has(b.id)) - Number(mine.has(a.id)));
   return (
     <div>
       <span className="mb-1.5 block text-xs font-medium text-text-muted">
         {label}
       </span>
-      <div className="flex flex-wrap gap-2">
-        {providers.map((p) => (
-          <ProviderTile key={`${label}-${p.id}`} provider={p} title={title} onOpen={onOpen} />
+      <div className="flex flex-wrap gap-2.5 pt-1">
+        {sorted.map((p) => (
+          <ProviderTile key={`${label}-${p.id}`} provider={p} title={title} onOpen={onOpen} mine={mine.has(p.id)} />
         ))}
       </div>
     </div>
@@ -133,8 +156,13 @@ function WatchProviders({ item }: { item: Item }) {
     };
   }, [item.tmdbId, item.tmdbMediaType, tmdbApiKey]);
 
+  const subs = useSubscriptions((s) => s.subs);
+  const mine = new Set(subs.map((s) => s.providerId));
   const linked = Boolean(item.tmdbId && item.tmdbMediaType);
   const providers = [...watch.streaming, ...watch.free, ...watch.rent, ...watch.buy];
+  // La domanda vera, quando sai a cosa sei abbonato: «ce l'ho già?».
+  const included = [...watch.streaming, ...watch.free].filter((p) => mine.has(p.id));
+  const includedNames = Array.from(new Set(included.map((p) => p.name)));
   const openable = providers.map((p) => ({ name: p.name, link: serviceLinkFor(p.name, item.title) }));
 
   /**
@@ -173,12 +201,23 @@ function WatchProviders({ item }: { item: Item }) {
       {linked && tmdbApiKey && state === "done" && providers.length === 0 && (
         <p className="text-xs text-text-faint">Non risulta disponibile in Italia al momento.</p>
       )}
+      {linked && tmdbApiKey && state === "done" && subs.length > 0 && providers.length > 0 && (
+        <p
+          className="mb-3 flex items-center gap-1.5 text-sm font-medium"
+          style={{ color: includedNames.length ? "var(--accent-text)" : "var(--text-muted)" }}
+        >
+          {includedNames.length > 0 && <CheckIcon size={15} />}
+          {includedNames.length > 0
+            ? `Incluso nel tuo abbonamento: ${includedNames.join(", ")}`
+            : "Non è incluso nei tuoi abbonamenti."}
+        </p>
+      )}
       {linked && tmdbApiKey && state === "done" && providers.length > 0 && (
         <div className="flex flex-col gap-3">
-          <ProviderGroup label="Streaming" providers={watch.streaming} title={item.title} onOpen={() => startWatching(item.id)} />
-          <ProviderGroup label="Gratis" providers={watch.free} title={item.title} onOpen={() => startWatching(item.id)} />
-          <ProviderGroup label="Noleggia" providers={watch.rent} title={item.title} onOpen={() => startWatching(item.id)} />
-          <ProviderGroup label="Acquista" providers={watch.buy} title={item.title} onOpen={() => startWatching(item.id)} />
+          <ProviderGroup label="Streaming" providers={watch.streaming} title={item.title} onOpen={() => startWatching(item.id)} mine={mine} />
+          <ProviderGroup label="Gratis" providers={watch.free} title={item.title} onOpen={() => startWatching(item.id)} mine={mine} />
+          <ProviderGroup label="Noleggia" providers={watch.rent} title={item.title} onOpen={() => startWatching(item.id)} mine={mine} />
+          <ProviderGroup label="Acquista" providers={watch.buy} title={item.title} onOpen={() => startWatching(item.id)} mine={mine} />
         </div>
       )}
 
