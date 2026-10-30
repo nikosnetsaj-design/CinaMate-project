@@ -53,7 +53,7 @@ npm install
 npm run dev      # ambiente di sviluppo
 npm run build    # build di produzione (tsc + vite build)
 npm run lint      # oxlint, e un avviso conta come errore
-npm test          # scripts/tests: migrazioni, episodi, backup, consigli, saghe, filtri…
+npm test          # scripts/tests: migrazioni, episodi, backup, consigli, saghe, filtri, importazione…
 npm run test:e2e  # Playwright: avvio, aggiunta, una puntata segnata, esportazione
 npm run contrast  # WCAG AA su ogni coppia testo/sfondo dei due temi
 ```
@@ -414,6 +414,17 @@ rete che non è la tua.
   con un nome (il segnalibro accanto ai filtri): si aggiornano da sole e
   scrivono sotto il nome cosa tengono. Tutte si condividono con link e QR, e
   stanno nel backup.
+- **Importa da un'altra app**: Impostazioni → Dati e backup → *Importa da
+  un'altra app*. Accetta l'esportazione di **Letterboxd** (lo ZIP o i suoi CSV:
+  visti, voti, diario, watchlist, like), **Trakt** (i JSON del backup),
+  **IMDb** (il CSV dei voti o della watchlist) e **TV Time** (i CSV degli
+  episodi visti). I file si leggono nel browser; ogni titolo si cerca su TMDB
+  — con l'id quando il file lo porta, altrimenti per titolo e anno — e quelli
+  incerti si scelgono in una schermata di revisione. Un titolo già in libreria
+  non entra due volte: riceve solo il voto, gli episodi e le visioni che gli
+  mancano. I voti diventano su 10 (le stelle di Letterboxd raddoppiano), il
+  diario prende le date vere delle visioni, e alla fine un resoconto dice cosa
+  è entrato, cosa è stato completato e cosa è rimasto fuori.
 - **Condivisione**: un link o un codice QR per aprire un titolo — o la lista
   che hai davanti, filtri compresi — su un altro dispositivo. Senza server: la
   lista viaggia dentro il link.

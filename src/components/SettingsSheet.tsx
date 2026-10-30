@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { lazy, Suspense, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -19,6 +19,10 @@ import { useHomeLayout, HOME_SECTIONS, MAX_ROWS } from "../store/useHomeLayout";
 import { useOnboarding } from "../store/useOnboarding";
 import { ACCENTS } from "../lib/accents";
 import { ParentalSettings } from "./ParentalSettings";
+
+// Il foglio dell'importazione porta con sé i lettori dei formati e lo ZIP:
+// si scarica solo quando lo si apre.
+const ImportSheet = lazy(() => import("./ImportSheet"));
 import { LinkHostSettings } from "./LinkHostSettings";
 import { DnsGuideButton } from "./DnsGuide";
 import { useLinkHosts } from "../store/useLinkHosts";
@@ -737,6 +741,7 @@ function SettingsForm() {
   const [draftTmdbKey, setDraftTmdbKey] = useState(tmdbApiKey);
   const [revealTmdb, setRevealTmdb] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importingOther, setImportingOther] = useState(false);
   const titleId = "settings-sheet-title";
   // Il foglio si monta solo da aperto, quindi il pannello richiesto da chi ha
   // aperto vale come valore iniziale e non serve tenerli sincronizzati dopo.
@@ -1154,6 +1159,13 @@ function SettingsForm() {
               <span className="flex h-5 w-5 shrink-0 items-center justify-center text-text-muted"><UploadIcon size={18} /></span>
               <span className="flex-1 text-sm font-medium text-text">Importa da un backup…</span>
             </button>
+            <button type="button" onClick={() => setImportingOther(true)} className="list-row hover:bg-surface-hover">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center text-text-muted"><UploadIcon size={18} /></span>
+              <span className="flex-1">
+                <span className="block text-sm font-medium text-text">Importa da un'altra app…</span>
+                <span className="block text-xs text-text-muted">Letterboxd, Trakt, IMDb, TV Time</span>
+              </span>
+            </button>
             <button
               type="button"
               disabled={items.length === 0}
@@ -1180,6 +1192,12 @@ function SettingsForm() {
               if (file) void handleImportFile(file);
             }}
           />
+
+          {importingOther && (
+            <Suspense fallback={null}>
+              <ImportSheet onClose={() => setImportingOther(false)} />
+            </Suspense>
+          )}
 
           {pendingImport && (
             <div role="alertdialog" aria-labelledby="import-confirm" className="mt-4 rounded-md bg-surface-2 p-4">

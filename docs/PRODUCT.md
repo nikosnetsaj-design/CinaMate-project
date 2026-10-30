@@ -59,6 +59,7 @@ resta tua e non ti vende niente.
 | **Collezioni** | Le saghe si perdono in ordine sparso | "Il Padrino 1‑2‑3" come un blocco | Utile ✅ |
 | **Più visti / Ultimi aggiunti** | "Dove sono finite le mie ore?" e "cos'è entrato ieri?" | Due domande diverse, due righe | Utile ✅ |
 | **Home su misura** | Sei righe fisse non sono le stesse per tutti | Riordini e spegni le righe in Impostazioni; il tetto di sei resta | Utile ✅ |
+| **Importa da un'altra app** | Anni di storia su Letterboxd, Trakt, IMDb o TV Time restavano là: ricominciare da zero è il motivo per cui non si cambia app | I file dell'esportazione — CSV, JSON o lo ZIP così com'è — letti nel browser. Abbinamento su TMDB: esatto con l'id (Trakt, IMDb, TheTVDB), per titolo originale o italiano + anno (± 1) altrimenti; i casi dubbi in una schermata di revisione con il più probabile già indicato. Nessun doppione: un titolo già in libreria riceve solo voto, episodi e visioni che gli mancano, e «In pausa» o «Abbandonato» non vengono scavalcati. Voti portati su 10, diario con le date vere (mai una data inventata), resoconto finale: aggiunti, completati, lasciati fuori | Utile ✅ |
 | **Liste personali** | Watchlist unica troppo grezza | "Da vedere col partner", "Horror di ottobre": liste a mano, rinominabili, riordinabili, con copertina a mosaico; e **liste intelligenti**, cioè una ricerca della Libreria salvata con un nome che si aggiorna da sola e dice a parole cosa tiene. Si condividono con il link e il QR di sempre, stanno nel backup | Utile ✅ |
 
 > **Regola anti‑Netflix:** massimo 6 righe in Home. Ogni riga deve dichiarare
@@ -568,7 +569,8 @@ registi, badge di saga e di genere, **player per le sorgenti proprie** (§3.6),
 degli errori di battitura**, **ricerca in linguaggio naturale**, **riassunto
 senza spoiler**, **traduzione della sinossi**, righe **Per te / Più visti /
 Ultimi aggiunti / Simili sul tuo scaffale**, **obiettivi personali**, **tinte
-d'accento e Home riordinabile**, **condivisione di liste e codice QR**,
+d'accento e Home riordinabile**, **condivisione di liste e codice QR**, **liste personali e intelligenti**,
+**importazione da Letterboxd, Trakt, IMDb e TV Time**,
 **controllo genitori**, **diagnostica con test e log errori**, **apri sul
 servizio**, **navigazione da telecomando** e **copertina larga nella scheda**, e
 nel player **gesture**, **buffer adattivo** e **host con test

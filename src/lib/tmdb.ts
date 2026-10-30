@@ -32,6 +32,11 @@ export interface TmdbSearchResult {
   kind: Kind;
   /** Quanto TMDB lo vede cercato in questo momento. Serve a ordinare, non a giudicare. */
   popularity: number;
+  /**
+   * Il titolo originale, dove la ricerca lo riporta: un'esportazione di
+   * Letterboxd scrive «The Godfather», TMDB in italiano risponde «Il padrino».
+   */
+  originalTitle?: string;
 }
 
 export interface TmdbWatchProvider {
@@ -293,6 +298,8 @@ interface RawMultiSearchResult {
   media_type: "movie" | "tv" | "person";
   title?: string;
   name?: string;
+  original_title?: string;
+  original_name?: string;
   release_date?: string;
   first_air_date?: string;
   overview?: string;
@@ -386,6 +393,66 @@ export async function searchTitles(
     .sort((a, b) => a.rank - b.rank || b.r.popularity - a.r.popularity)
     .slice(0, limit)
     .map((entry) => entry.r);
+}
+
+/*
+ * L'abbinamento dell'importazione: due domande più strette di `/search/multi`.
+ */
+
+function mapResult(r: RawMultiSearchResult, mediaType: "movie" | "tv"): TmdbSearchResult {
+  const genreNames = (r.genre_ids ?? []).map((id) => GENRE_NAMES[id]).filter((n): n is string => !!n);
+  const dateStr = r.release_date || r.first_air_date;
+  return {
+    tmdbId: r.id,
+    mediaType,
+    title: r.title || r.name || "",
+    year: dateStr ? Number(dateStr.slice(0, 4)) : null,
+    overview: r.overview || "",
+    posterPath: r.poster_path ?? null,
+    kind: guessKind(mediaType, genreNames, r.origin_country),
+    popularity: r.popularity ?? 0,
+    originalTitle: r.original_title || r.original_name || undefined,
+  };
+}
+
+/**
+ * Un titolo da un identificativo di un altro catalogo — IMDb (`tt0816692`) o
+ * TheTVDB — con `/find`. È la risposta esatta: un file di IMDb o di TV Time
+ * porta l'identificativo, e cercare per nome quando c'è l'id sarebbe
+ * scegliere di sbagliare.
+ */
+export async function findByExternalId(
+  id: string,
+  source: "imdb_id" | "tvdb_id",
+  apiKey: string,
+): Promise<TmdbSearchResult | null> {
+  const data = await tmdbGet<{ movie_results?: RawMultiSearchResult[]; tv_results?: RawMultiSearchResult[] }>(
+    `/find/${encodeURIComponent(id)}`,
+    apiKey,
+    { external_source: source },
+  );
+  const movie = data.movie_results?.[0];
+  if (movie) return mapResult(movie, "movie");
+  const tv = data.tv_results?.[0];
+  if (tv) return mapResult(tv, "tv");
+  return null;
+}
+
+/**
+ * La ricerca per titolo con il tipo e l'anno noti: `/search/movie?year=` o
+ * `/search/tv?first_air_date_year=`. Un «Dune» del 2021 non deve trovare il
+ * «Dune» del 1984 prima di sé.
+ */
+export async function searchByKind(
+  query: string,
+  mediaType: "movie" | "tv",
+  year: number | null,
+  apiKey: string,
+): Promise<TmdbSearchResult[]> {
+  const params: Record<string, string> = { query, include_adult: "false" };
+  if (year) params[mediaType === "movie" ? "year" : "first_air_date_year"] = String(year);
+  const data = await tmdbGet<{ results: RawMultiSearchResult[] }>(`/search/${mediaType}`, apiKey, params);
+  return data.results.map((r) => mapResult(r, mediaType)).filter((r) => r.title);
 }
 
 interface RawVideo {

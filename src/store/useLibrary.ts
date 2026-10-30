@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { HistoryEntry, Item, Status, ToastKind, ToastMessage, WatchedEpisode } from "../types";
 import { durable } from "../lib/durable";
+import { applyImport, type Accepted, type ImportOutcome } from "../lib/importApply";
 import {
   isEpisodic,
   isWatched,
@@ -161,6 +162,8 @@ interface LibraryState {
   clearJustCompleted: () => void;
 
   importData: (items: Item[], history: HistoryEntry[]) => void;
+  /** I titoli scelti dall'importazione da un'altra app: aggiunti o completati, mai doppi. */
+  importEntries: (accepted: Accepted[]) => Omit<ImportOutcome, "items" | "history">;
   clearAll: () => void;
   resetCorruptedData: () => void;
 }
@@ -307,6 +310,11 @@ export const useLibrary = create<LibraryState>((set, get) => ({
           merged.watched = remapProvisional(merged.watched, layout);
         }
         if (merged.watched) merged = { ...merged, seen: merged.watched.length };
+        // Il numero di puntate arriva dopo il registro — un titolo importato,
+        // o collegato più tardi — e le hai già segnate tutte: è finita.
+        if ("episodes" in patch && merged.status === "In visione" && merged.episodes && merged.seen >= merged.episodes) {
+          merged = { ...merged, status: "Visto" };
+        }
       }
       return merged;
     });
@@ -417,6 +425,15 @@ export const useLibrary = create<LibraryState>((set, get) => ({
     } else {
       get().pushToast("success", `Libreria importata: ${items.length} titoli.`);
     }
+  },
+
+  importEntries: (accepted) => {
+    const { items, history, ...counts } = applyImport(get().items, get().history, accepted, { today: today(), newId });
+    if (counts.added + counts.updated === 0) return counts;
+    persistOrToast(get, set, items);
+    saveHistory(history);
+    set({ history });
+    return counts;
   },
 
   clearAll: () => {
