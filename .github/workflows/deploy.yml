@@ -28,6 +28,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # I controlli vengono prima della build: se uno fallisce il job si ferma
+      # e la pubblicazione non parte. Il sito resta quello di prima invece di
+      # diventare una versione che i test sapevano già rotta.
+      - run: npm run lint
+      - run: npm test
+      - run: npm run contrast
       - run: npm run build
         env:
           GITHUB_PAGES: "true"
