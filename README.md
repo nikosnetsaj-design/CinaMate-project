@@ -22,11 +22,16 @@ tuo server, scritto una volta sola nelle Impostazioni.
 
 ## Stack
 
-- **Vite + React 18 + TypeScript**
+- **Vite + React 19 + TypeScript**
 - **Tailwind CSS v4** — design tokens "Sala buia" custom in `src/index.css`:
   nero neutro, grigi neutri, accento verde
 - **Zustand** per lo stato (libreria, tema, obiettivi, layout della Home,
-  controllo genitori, impostazioni, sheet), persistito su `localStorage`
+  controllo genitori, impostazioni, sheet). Libreria, diario e cronologia del
+  lettore stanno su **IndexedDB** (`src/lib/durable.ts`), il resto — pochi byte
+  di impostazioni — su `localStorage`. Al primo avvio dopo l'aggiornamento i
+  dati si spostano da soli, con una copia di sicurezza che resta finché la
+  migrazione non si conferma (cinque avvii e una settimana; stato e ripristino
+  in Diagnostica)
 - **React Router** per la navigazione
 - **Framer Motion** per le micro-interazioni
 - **hls.js** per il player (streaming adattivo), caricato solo quando apri la
@@ -47,7 +52,8 @@ API Anthropic (se la aggiungi nelle Impostazioni) resta anch'essa solo nel
 npm install
 npm run dev      # ambiente di sviluppo
 npm run build    # build di produzione (tsc + vite build)
-npm run lint      # oxlint
+npm run lint      # oxlint, e un avviso conta come errore
+npm test          # scripts/tests: migrazioni, cache, ritmo delle richieste…
 npm run contrast  # WCAG AA su ogni coppia testo/sfondo dei due temi
 ```
 

@@ -8,6 +8,7 @@ import { EmptyState } from "../components/EmptyState";
 import { clearErrorLog, getErrorLog, subscribeErrorLog, type LoggedError, type ErrorScope } from "../lib/errorLog";
 import { runSelfTests, type TestResult, type TestStatus } from "../lib/selfTest";
 import { getHosts, computeHostStats, getSwitchLog } from "../player/services/hostStore";
+import { CONFIRM_AFTER_DAYS, CONFIRM_AFTER_LAUNCHES, durable, type Backend, type StorageStatus } from "../lib/durable";
 
 const STATUS_COLOUR: Record<TestStatus, string> = {
   pass: "var(--success)",
@@ -101,6 +102,102 @@ function HostSummary() {
         </p>
       )}
     </div>
+  );
+}
+
+const BACKEND_LABEL: Record<Backend, string> = {
+  idb: "IndexedDB",
+  local: "localStorage",
+  unavailable: "Non raggiungibile",
+};
+
+const DAY_MS = 86_400_000;
+
+/**
+ * Dove stanno i dati, e la copia di sicurezza della migrazione.
+ *
+ * La copia di prima del passaggio a IndexedDB resta finché la migrazione non è
+ * confermata da sola (cinque avvii senza errori e una settimana). Qui si vede a
+ * che punto è, e si può tornare indietro — dicendo prima cosa si perde.
+ */
+function StorageSection() {
+  const [status, setStatus] = useState<StorageStatus>(() => durable.status());
+  const [confirming, setConfirming] = useState<"restore" | null>(null);
+  const [busy, setBusy] = useState(false);
+  const meta = status.meta;
+  const daysLeft = meta?.migratedAt
+    ? Math.max(0, Math.ceil(CONFIRM_AFTER_DAYS - (Date.now() - Date.parse(meta.migratedAt)) / DAY_MS))
+    : 0;
+  const launchesLeft = meta ? Math.max(0, CONFIRM_AFTER_LAUNCHES - meta.launches) : 0;
+
+  async function restore() {
+    setBusy(true);
+    const ok = await durable.restoreBackup();
+    setBusy(false);
+    setConfirming(null);
+    // Gli store hanno letto i dati all'avvio: ricaricare è il modo pulito di
+    // ripartire da quelli ripristinati.
+    if (ok) location.reload();
+  }
+
+  async function confirmNow() {
+    setBusy(true);
+    await durable.confirmNow();
+    setStatus(durable.status());
+    setBusy(false);
+  }
+
+  return (
+    <Section title="Archivio">
+      <ul className="list-group" style={{ "--row-inset": "16px" } as React.CSSProperties}>
+        <li className="list-row justify-between">
+          <span className="text-sm text-text">Dove stanno libreria e diario</span>
+          <span className="text-sm font-medium text-text">{BACKEND_LABEL[status.backend]}</span>
+        </li>
+        {meta?.migratedAt && (
+          <li className="list-row justify-between">
+            <span className="text-sm text-text">Spostati da localStorage</span>
+            <span className="tabular text-sm text-text-muted">{when(Date.parse(meta.migratedAt))}</span>
+          </li>
+        )}
+        {status.backups.length > 0 && (
+          <li className="list-row flex-col items-stretch gap-1">
+            <span className="text-sm text-text">Copia di prima della migrazione</span>
+            <span className="text-xs text-text-muted">
+              Si cancella da sola tra {launchesLeft} {launchesLeft === 1 ? "avvio" : "avvii"}
+              {daysLeft > 0 ? ` e almeno ${daysLeft} ${daysLeft === 1 ? "giorno" : "giorni"}` : ""}, se tutto va bene.
+            </span>
+          </li>
+        )}
+      </ul>
+      {status.reason && <p className="text-sm text-text-muted">{status.reason}</p>}
+
+      {status.backups.length > 0 &&
+        (confirming === "restore" ? (
+          <div role="alertdialog" aria-labelledby="restore-confirm" className="rounded-md bg-surface p-4 shadow-[var(--shadow-sm)]">
+            <p id="restore-confirm" className="text-sm text-text">
+              Torno ai dati com'erano il giorno della migrazione. Quello che hai aggiunto o segnato dopo si perde.
+            </p>
+            <div className="mt-3 flex justify-end gap-2">
+              <button type="button" onClick={() => setConfirming(null)} className="btn btn-secondary btn-sm">
+                Annulla
+              </button>
+              <button type="button" disabled={busy} onClick={() => void restore()} className="btn btn-danger-fill btn-sm">
+                Ripristina la copia
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => setConfirming("restore")} className="btn btn-secondary btn-sm">
+              Ripristina la copia
+            </button>
+            <button type="button" disabled={busy} onClick={() => void confirmNow()} className="btn btn-plain btn-sm">
+              Va tutto bene, eliminala ora
+            </button>
+          </div>
+        ))}
+    </Section>
   );
 }
 
@@ -227,6 +324,8 @@ export function Diagnostics() {
           </ul>
         )}
       </Section>
+
+      <StorageSection />
 
       <Section title="Backup">
         <p className="text-sm text-text-muted">

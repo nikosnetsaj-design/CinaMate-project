@@ -505,9 +505,20 @@ docs/             questa specifica
 
 **Scelte e motivo**
 
-- **Client‑only, dati in `localStorage`** — nessun server significa nessuna
+- **Client‑only, dati sul dispositivo** — nessun server significa nessuna
   raccolta dati, nessun costo, nessun account. Il prezzo è la sincronizzazione,
   risolta per ora con esporta/importa.
+- **Libreria, diario e cronologia del lettore su IndexedDB** (`lib/durable.ts`),
+  con una copia in memoria caricata prima che l'app parta: gli store leggono in
+  modo sincrono come quando stavano in `localStorage`, ma senza il suo tetto di
+  circa 5 MB e senza serializzare tutto a ogni scrittura. Il passaggio è
+  automatico al primo avvio e ripetibile: si copia, si rilegge, si confronta, e
+  solo allora l'originale diventa una copia di sicurezza (`cinemate:pre-idb:*`)
+  che si cancella da sola dopo cinque avvii senza errori e una settimana. Fino
+  ad allora la Diagnostica la mostra e la sa ripristinare. Senza IndexedDB si
+  resta su `localStorage`; se i dati erano su IndexedDB e un avvio non lo apre,
+  l'app non scrive niente invece di ripartire da una libreria vuota.
+  Impostazioni, chiavi e preferenze — pochi byte — restano in `localStorage`.
 - **Chiavi API personali dell'utente**, salvate solo sul dispositivo.
 - **TMDB** come unica fonte di catalogo (+ JustWatch per la disponibilità).
 - **Zustand** invece di Redux: lo stato è piccolo, la cerimonia non serve.

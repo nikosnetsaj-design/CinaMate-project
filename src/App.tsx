@@ -97,8 +97,31 @@ function OfflineBanner() {
  */
 function ErrorBanner() {
   const storageError = useLibrary((s) => s.storageError);
+  const storageUnavailable = useLibrary((s) => s.storageUnavailable);
   const resetCorruptedData = useLibrary((s) => s.resetCorruptedData);
   const [confirming, setConfirming] = useState(false);
+  // Il database c'è ma oggi non si apre: niente è rovinato, quindi nessun
+  // pulsante distruttivo. L'app non scrive niente finché non si riapre.
+  if (storageUnavailable) {
+    return (
+      <div
+        role="alert"
+        className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3 sm:px-6"
+        style={{ background: "color-mix(in srgb, var(--warning) 14%, var(--bg))" }}
+      >
+        <span className="flex min-w-0 flex-1 basis-64 items-start gap-2.5 text-sm text-text">
+          <span className="mt-0.5 shrink-0" style={{ color: "var(--warning)" }}>
+            <ErrorIcon />
+          </span>
+          I tuoi dati sono al sicuro, ma questo avvio non riesce ad aprirli. Finché non si riaprono non salvo
+          niente. Ricarica la pagina; se succede ancora, chiudi le altre schede di CineMate.
+        </span>
+        <button type="button" onClick={() => location.reload()} className="btn btn-secondary btn-sm">
+          Ricarica
+        </button>
+      </div>
+    );
+  }
   if (!storageError) return null;
   return (
     <div

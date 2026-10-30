@@ -1,8 +1,13 @@
 import { create } from "zustand";
 import type { HistoryEntry, Item, Status, ToastKind, ToastMessage } from "../types";
+import { durable } from "../lib/durable";
 
-const STORAGE_KEY = "cinemate:v2";
-const HISTORY_KEY = "cinemate:history:v1";
+/*
+ * La libreria e il diario stanno su IndexedDB (lib/durable), con una copia in
+ * memoria caricata prima che l'app parta: le letture qui sotto restano
+ * sincrone come quando stavano in localStorage, e da lì arrivano ancora se
+ * IndexedDB non c'è.
+ */
 
 function isItemArray(value: unknown): value is Item[] {
   return (
@@ -14,32 +19,20 @@ function isItemArray(value: unknown): value is Item[] {
   );
 }
 
-function loadItems(): { data: Item[]; corrupted: boolean } {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    // A new library starts genuinely empty — no demo titles to delete first.
-    if (raw === null) return { data: [], corrupted: false };
-    const parsed: unknown = JSON.parse(raw);
-    if (!isItemArray(parsed)) throw new Error("malformed cinemate library");
-    return { data: parsed, corrupted: false };
-  } catch {
-    return { data: [], corrupted: true };
-  }
+function loadItems(): { data: Item[]; corrupted: boolean; absent: boolean } {
+  const stored = durable.read("library");
+  // A new library starts genuinely empty — no demo titles to delete first.
+  if (stored === undefined) return { data: [], corrupted: false, absent: true };
+  if (stored.corrupt || !isItemArray(stored.value)) return { data: [], corrupted: true, absent: false };
+  return { data: stored.value, corrupted: false, absent: false };
 }
 
 function saveItems(items: Item[]): boolean {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    return true;
-  } catch {
-    return false;
-  }
+  return durable.write("library", items);
 }
 
 const initial = loadItems();
-if (localStorage.getItem(STORAGE_KEY) === null && !initial.corrupted) {
-  saveItems(initial.data);
-}
+if (initial.absent) saveItems(initial.data);
 
 function isHistoryArray(value: unknown): value is HistoryEntry[] {
   return (
@@ -48,29 +41,22 @@ function isHistoryArray(value: unknown): value is HistoryEntry[] {
   );
 }
 
-function loadHistory(): HistoryEntry[] {
-  try {
-    const raw = localStorage.getItem(HISTORY_KEY);
-    if (raw === null) return [];
-    const parsed: unknown = JSON.parse(raw);
-    if (!isHistoryArray(parsed)) throw new Error("malformed cinemate history");
-    return parsed;
-  } catch {
-    return [];
-  }
+function loadHistory(): { data: HistoryEntry[]; absent: boolean } {
+  const stored = durable.read("history");
+  if (stored === undefined) return { data: [], absent: true };
+  if (stored.corrupt || !isHistoryArray(stored.value)) return { data: [], absent: false };
+  return { data: stored.value, absent: false };
 }
 
 function saveHistory(history: HistoryEntry[]): void {
-  try {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-  } catch {
-    // Non-critical derived data — skip silently on quota errors rather than
-    // surfacing another toast on top of the main library's own storageError.
-  }
+  // Non-critical derived data — a failure is not surfaced on its own, on top of
+  // the main library's storageError.
+  durable.write("history", history);
 }
 
-const initialHistory = loadHistory();
-if (localStorage.getItem(HISTORY_KEY) === null) saveHistory(initialHistory);
+const loadedHistory = loadHistory();
+const initialHistory = loadedHistory.data;
+if (loadedHistory.absent) saveHistory(initialHistory);
 
 function makeHistoryEntry(
   item: Pick<Item, "id" | "title" | "kind">,
@@ -108,6 +94,12 @@ interface LibraryState {
   history: HistoryEntry[];
   toasts: ToastMessage[];
   storageError: boolean;
+  /**
+   * The data lives in a database that this launch could not open. Distinct
+   * from `storageError`: nothing is corrupt and nothing must be reset — the
+   * remedy is to reload, not to start over.
+   */
+  storageUnavailable: boolean;
   justCompleted: JustCompleted | null;
 
   addItem: (data: Omit<Item, "id" | "added">) => void;
@@ -163,6 +155,7 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   history: initialHistory,
   toasts: [],
   storageError: initial.corrupted,
+  storageUnavailable: durable.status().backend === "unavailable",
   justCompleted: null,
 
   addItem: (data) => {
@@ -323,3 +316,22 @@ export const useLibrary = create<LibraryState>((set, get) => ({
     get().pushToast("info", "Dati locali ripristinati.");
   },
 }));
+
+/*
+ * Una scrittura su disco che fallisce dopo — IndexedDB risponde in modo
+ * asincrono — arriva qui, con lo stesso avviso di una scrittura sincrona
+ * rifiutata. E una scrittura fatta in un'altra scheda aggiorna questa: prima,
+ * con due schede aperte, l'ultima a salvare cancellava le aggiunte dell'altra.
+ */
+durable.onError(() => {
+  useLibrary.setState({ storageError: true });
+  useLibrary.getState().pushToast("error", "Impossibile salvare: memoria del browser piena o non disponibile.");
+});
+durable.subscribe((key) => {
+  if (key === "library") {
+    const next = loadItems();
+    if (!next.corrupted) useLibrary.setState({ items: next.data });
+  } else if (key === "history") {
+    useLibrary.setState({ history: loadHistory().data });
+  }
+});
