@@ -1,5 +1,6 @@
 import type { HistoryEntry, Item } from "../types";
 import type { Goal } from "../store/useGoals";
+import { localDay } from "./day";
 
 export interface GoalProgress {
   goal: Goal;
@@ -52,10 +53,6 @@ function windowFor(period: Goal["period"], now: Date): { start: Date; end: Date 
   return { start, end };
 }
 
-function isoDate(date: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-}
 
 /**
  * Measured from the diary rather than from the library's current state, and
@@ -66,8 +63,8 @@ function isoDate(date: Date): string {
  */
 export function computeGoalProgress(goal: Goal, items: Item[], history: HistoryEntry[], now = new Date()): GoalProgress {
   const { start, end } = windowFor(goal.period, now);
-  const startIso = isoDate(start);
-  const endIso = isoDate(end);
+  const startIso = localDay(start);
+  const endIso = localDay(end);
   const itemById = new Map(items.map((i) => [i.id, i]));
 
   let current = 0;

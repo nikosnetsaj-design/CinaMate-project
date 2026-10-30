@@ -1,0 +1,41 @@
+name: Verifica
+
+# Le stesse prove che si lanciano a mano prima di un rilascio, su ogni pull
+# request e su ogni push: tipi, lint, prove, contrasto WCAG e build. Il deploy
+# su Pages fa le stesse cose prima di pubblicare (deploy.yml), quindi un ramo
+# principale rosso non arriva mai sul sito; questo file serve a saperlo prima,
+# sulla pull request, invece che dopo il merge.
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [Cinemate]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verifica-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verifica:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Prove
+        run: npm test
+      - name: Contrasto WCAG AA
+        run: npm run contrast
+      - name: Tipi e build
+        run: npm run build
+        env:
+          GITHUB_PAGES: "true"

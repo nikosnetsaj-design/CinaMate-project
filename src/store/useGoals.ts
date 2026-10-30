@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { isRecord, readJson, writeJson } from "../lib/localStore";
+import { localDay } from "../lib/day";
 
 const KEY = "cinemate:goals:v1";
 
@@ -71,7 +72,7 @@ export const useGoals = create<GoalsState>((set, get) => ({
         {
           ...goal,
           id: `goal-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
-          createdAt: new Date().toISOString().slice(0, 10),
+          createdAt: localDay(),
         },
       ]),
     }),

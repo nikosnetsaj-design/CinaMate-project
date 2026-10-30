@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { CreditsScenesNote } from "./CreditsScenesNote";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useFocusTrap } from "../lib/useFocusTrap";
@@ -21,6 +22,7 @@ import { ShareSheet } from "./ShareSheet";
 import { EpisodeList } from "./EpisodeList";
 import { DownloadButton } from "./DownloadButton";
 import { SpoilerFreeRecap, TranslateOverview } from "./AiItemExtras";
+import { ItemListsChips } from "./ListsUI";
 import { BackIcon, EyeIcon, HeartIcon, InfoIcon, MinusIcon, PlayIcon, PlusIcon, ShareIcon, SparkleIcon, StarIcon } from "./icons";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useLibrary } from "../store/useLibrary";
@@ -29,6 +31,7 @@ import { useAddSheet } from "../store/useAddSheet";
 import { useCriticDraft } from "../store/useCriticDraft";
 import { useTitleLogo } from "../lib/useTitleLogo";
 import type { Item, Status } from "../types";
+import { onTabListKeyDown } from "../lib/tabKeys";
 
 /**
  * Un'azione tonda della riga sotto ai pulsanti: icona grande, parola sotto.
@@ -201,6 +204,8 @@ function ItemDetail({ item }: { item: Item }) {
             ))}
         </p>
 
+        <CreditsScenesNote item={item} />
+
         {/* Alto di proposito: "guardalo adesso" è il motivo per cui la scheda si
             apre dopo una ricerca, e stava sotto le note. */}
         <WatchButton item={item} onNavigate={close} />
@@ -279,13 +284,17 @@ function ItemDetail({ item }: { item: Item }) {
           className="no-scrollbar mt-6 flex scroll-mt-4 gap-2 overflow-x-auto"
           role="tablist"
           aria-label="Sezioni del titolo"
+          onKeyDown={onTabListKeyDown}
         >
           {TABS.map((t) => (
             <button
               key={t.id}
               type="button"
               role="tab"
+              id={`scheda-tab-${t.id}`}
               aria-selected={tab === t.id}
+              aria-controls="scheda-pannello"
+              tabIndex={tab === t.id ? 0 : -1}
               onClick={() => setTab(t.id)}
               className="chip"
             >
@@ -294,7 +303,7 @@ function ItemDetail({ item }: { item: Item }) {
           ))}
         </div>
 
-        <div className="mt-5">
+        <div className="mt-5" role="tabpanel" id="scheda-pannello" aria-labelledby={`scheda-tab-${tab}`}>
           {tab === "episodi" && (
             <div className="flex flex-col gap-4">
               <EpisodeList item={item} onNavigate={close} />
@@ -363,6 +372,8 @@ function ItemDetail({ item }: { item: Item }) {
                   ))}
                 </div>
               </div>
+
+              <ItemListsChips item={item} />
 
               <div className="mt-4 flex gap-3">
                 <div className="flex flex-1 items-center justify-between gap-3 rounded-lg bg-surface-2 p-3 pl-4">

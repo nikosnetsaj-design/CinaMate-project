@@ -88,6 +88,13 @@ export type ContentRating = {
   descriptors: string[];
 };
 
+/**
+ * C'è qualcosa durante o dopo i titoli di coda. Lo sa il catalogo dell'app
+ * che ospita il player, non il player: arriva dentro il contenuto, e quando
+ * manca vuol dire «non si sa», non «non c'è».
+ */
+export type CreditsScene = { during: boolean; after: boolean };
+
 export type MediaContent = {
   id: string;
   type: 'movie' | 'episode';
@@ -107,6 +114,7 @@ export type MediaContent = {
   nextInSaga?: SagaEntry;
   seasonPlaylist?: EpisodeRef[];
   sagaPlaylist?: SagaEntry[];
+  creditsScene?: CreditsScene;
 };
 
 // ---------- Downloads ----------

@@ -44,13 +44,36 @@ export const useServiceWorker = create<ServiceWorkerState>((set) => ({
 }));
 
 /**
+ * L'elenco dei file di questa versione, scritto dal build (`vite.config.ts`).
+ * Manca in sviluppo e in una pubblicazione fatta a mano senza il plugin: in
+ * quel caso si torna al comportamento di prima, senza pulizia.
+ */
+async function readAssetList(): Promise<{ precache: string[]; all: string[] } | null> {
+  try {
+    const response = await fetch(`${import.meta.env.BASE_URL}offline-assets.json`, { cache: "no-store" });
+    if (!response.ok) return null;
+    const data = (await response.json()) as { precache?: unknown; all?: unknown };
+    const strings = (value: unknown) => (Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : null);
+    const precache = strings(data.precache);
+    const all = strings(data.all);
+    if (!precache || !all) return null;
+    const absolute = (name: string) => new URL(`${import.meta.env.BASE_URL}${name}`, window.location.origin).href;
+    return { precache: precache.map(absolute), all: all.map(absolute) };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Tells the worker which files this page is built from, so they are cached on
  * the *first* visit rather than the second — see the matching comment in sw.js.
  *
- * The list is taken from what the browser really loaded, not from a guess: the
- * resource timeline knows every script, stylesheet and font that was fetched,
- * hashed filenames included, which is precisely what a hand-written worker
- * cannot know on its own.
+ * Two sources, added together. The resource timeline knows every script,
+ * stylesheet and font the browser really fetched for this page, hashed names
+ * included. The build's own list (`offline-assets.json`) adds what this page
+ * has *not* loaded yet: since the pages arrive on demand, a Libreria never
+ * opened online would otherwise be missing offline. The same list lets the
+ * worker drop the files of versions that are gone.
  */
 async function primeAssetCache() {
   try {
@@ -63,14 +86,17 @@ async function primeAssetCache() {
     // "other", so the very chunk the app cannot boot without was the one being
     // left out — and the fonts with it. Every same-origin resource here is
     // build output, so origin is both simpler and correct.
-    const urls = performance
+    const loaded = performance
       .getEntriesByType("resource")
       .map((entry) => entry.name)
       .filter((name) => name.startsWith(`${window.location.origin}/`))
-      // The worker is served by the browser, never from its own cache.
-      .filter((name) => !name.endsWith("/sw.js"));
+      // The worker is served by the browser, never from its own cache, and
+      // the asset list is a question to ask fresh every time.
+      .filter((name) => !name.endsWith("/sw.js") && !name.includes("offline-assets.json"));
 
-    if (urls.length > 0) worker.postMessage({ type: "cache-assets", urls: Array.from(new Set(urls)) });
+    const list = await readAssetList();
+    const urls = Array.from(new Set([...loaded, ...(list?.precache ?? [])]));
+    if (urls.length > 0) worker.postMessage({ type: "cache-assets", urls, keep: list?.all });
   } catch {
     // No priming this time; the next visit's requests go through the worker
     // and populate the cache the ordinary way.
@@ -113,7 +139,11 @@ export function registerServiceWorker() {
         // so there is nothing worth interrupting anyone about.
       });
 
-    void primeAssetCache();
+    // A browser fermo: sono un centinaio di kB da scaricare, e nessuno di
+    // questi deve passare davanti alle copertine della prima schermata.
+    const idle = (fn: () => void) =>
+      typeof requestIdleCallback === "function" ? requestIdleCallback(fn, { timeout: 15_000 }) : setTimeout(fn, 4_000);
+    idle(() => void primeAssetCache());
 
     let reloading = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {

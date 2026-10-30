@@ -1,10 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
-import type { SkipMarker, MediaContent } from '../types';
+import type { CreditsScene, SkipMarker, MediaContent } from '../types';
 import { markWatched, setWatchStatus } from '../services/statsAndHistory';
 import { getPlaybackPrefs } from '../services/playbackPrefs';
 
 export const AUTOPLAY_COUNTDOWN_SEC = 8;
 const COMPLETED_THRESHOLD = 0.92; // 92% watched counts as completed
+/** Quanto resta a schermo l'avviso della scena dopo i titoli. */
+const CREDITS_NOTICE_MS = 10_000;
+
+/** Il titolo ha qualcosa nei titoli di coda, se il catalogo lo sa. */
+function stingerOf(content: MediaContent | null): CreditsScene | null {
+  const scene = content?.creditsScene;
+  return scene && (scene.during || scene.after) ? scene : null;
+}
 
 type Props = {
   content: MediaContent | null;
@@ -32,6 +40,8 @@ export function usePlaybackExtras({ content, currentTime, duration, isPlaying, o
   const [countdown, setCountdown] = useState<number | null>(null);
   const [nextCancelled, setNextCancelled] = useState(false);
   const [autoSkipped, setAutoSkipped] = useState<SkipMarker['type'] | null>(null);
+  const [creditsNotice, setCreditsNotice] = useState<CreditsScene | null>(null);
+  const noticeShownRef = useRef(false);
   const markedRef = useRef(false);
   const skippedRef = useRef<Set<string>>(new Set());
   const seekRef = useRef(seek);
@@ -41,10 +51,29 @@ export function usePlaybackExtras({ content, currentTime, duration, isPlaying, o
   useEffect(() => {
     markedRef.current = false;
     skippedRef.current = new Set();
+    noticeShownRef.current = false;
     setNextCancelled(false);
     setCountdown(null);
     setAutoSkipped(null);
+    setCreditsNotice(null);
   }, [content?.id]);
+
+  /**
+   * «Resta: c'è una scena dopo i titoli». Una volta per titolo, nel momento in
+   * cui partono i titoli di coda — il marker «crediti», se è segnato, o la
+   * soglia del «visto», che in un film di due ore cade proprio lì — cioè
+   * quando la mano va al pulsante per chiudere.
+   */
+  const showCreditsNotice = (scene: CreditsScene) => {
+    if (noticeShownRef.current) return;
+    noticeShownRef.current = true;
+    setCreditsNotice(scene);
+  };
+  useEffect(() => {
+    if (!creditsNotice) return;
+    const id = window.setTimeout(() => setCreditsNotice(null), CREDITS_NOTICE_MS);
+    return () => window.clearTimeout(id);
+  }, [creditsNotice]);
 
   // active Skip Intro / Skip Recap / Skip Credits marker
   useEffect(() => {
@@ -54,6 +83,15 @@ export function usePlaybackExtras({ content, currentTime, duration, isPlaying, o
     }
     const marker = content.skipMarkers.find(m => currentTime >= m.startSec && currentTime < m.endSec);
     setActiveMarker(marker ?? null);
+
+    // Con una scena nei titoli di coda il salto automatico dei crediti non
+    // scatta: chi l'ha acceso voleva saltare i nomi, non la scena. Al suo
+    // posto, l'avviso; il pulsante per saltare a mano resta.
+    const stinger = stingerOf(content);
+    if (marker?.type === 'credits' && stinger) {
+      showCreditsNotice(stinger);
+      return;
+    }
 
     // Automatic skipping, when asked for. Each marker is jumped at most once
     // per title: without that, seeking back into an intro you deliberately
@@ -90,6 +128,14 @@ export function usePlaybackExtras({ content, currentTime, duration, isPlaying, o
       onCompleted?.(content.id);
     }
 
+    // Senza un marker dei crediti, la soglia del «visto» è la migliore stima
+    // di quando cominciano: in un film di due ore cade nove minuti prima della
+    // fine. Un titolo *con* il marker aspetta il marker, che è esatto.
+    const stinger = stingerOf(content);
+    if (stinger && progress >= COMPLETED_THRESHOLD && !content.skipMarkers.some((m) => m.type === 'credits')) {
+      showCreditsNotice(stinger);
+    }
+
     const hasNext =
       !!(content.nextEpisode || content.nextInSaga) && getPlaybackPrefs().autoplayNext && !blockAutoplay;
     const timeRemaining = duration - currentTime;
@@ -111,5 +157,5 @@ export function usePlaybackExtras({ content, currentTime, duration, isPlaying, o
     setCountdown(null);
   };
 
-  return { activeMarker, countdown, cancelAutoplay, autoSkipped };
+  return { activeMarker, countdown, cancelAutoplay, autoSkipped, creditsNotice };
 }

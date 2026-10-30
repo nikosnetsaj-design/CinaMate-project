@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useLibrary } from "../store/useLibrary";
 import { voteColor } from "../lib/vote";
+import { localDaysAgo } from "../lib/day";
 import type { HistoryEntry, Item } from "../types";
 
 interface Stripe {
@@ -38,11 +39,6 @@ function buildStripes(history: HistoryEntry[], items: Item[], since: string | nu
     .filter((s): s is Stripe => s !== null);
 }
 
-function daysAgo(n: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - n);
-  return d.toISOString().slice(0, 10);
-}
 
 /**
  * "Il Nastro" — the signature. Every viewing session becomes one vertical
@@ -75,7 +71,7 @@ export function Nastro({
   const history = useLibrary((s) => s.history);
   const items = useLibrary((s) => s.items);
   const reduceMotion = useReducedMotion();
-  const since = useMemo(() => from ?? daysAgo(days), [from, days]);
+  const since = useMemo(() => from ?? localDaysAgo(days), [from, days]);
 
   // An empty band is a bad first impression when the only history is older
   // than the window, so fall back to the most recent sessions and say so

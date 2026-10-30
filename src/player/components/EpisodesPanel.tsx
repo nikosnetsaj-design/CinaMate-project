@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useFocusTrap } from '../../lib/useFocusTrap';
 import { CloseIcon, PlayIcon } from './Icons';
 import SeriesEpisodes, { type SeriesEpisodesProps } from './SeriesEpisodes';
+import { onTabListKeyDown } from '../../lib/tabKeys';
 
 /**
  * La lista di cosa altro c'è da riprodurre, senza uscire dal player.
@@ -60,11 +61,12 @@ export default function EpisodesPanel({ entries, currentId, onSelect, onClose, s
         </div>
 
         {series && entries.length > 1 && (
-          <div className="pv-side-tabs" role="tablist">
+          <div className="pv-side-tabs" role="tablist" aria-label="Cosa elencare" onKeyDown={onTabListKeyDown}>
             <button
               type="button"
               role="tab"
               aria-selected={tab === 'serie'}
+              tabIndex={tab === 'serie' ? 0 : -1}
               className={tab === 'serie' ? 'active' : ''}
               onClick={() => setTab('serie')}
             >
@@ -74,6 +76,7 @@ export default function EpisodesPanel({ entries, currentId, onSelect, onClose, s
               type="button"
               role="tab"
               aria-selected={tab === 'altro'}
+              tabIndex={tab === 'altro' ? 0 : -1}
               className={tab === 'altro' ? 'active' : ''}
               onClick={() => setTab('altro')}
             >

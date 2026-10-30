@@ -1,41 +1,91 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { MotionConfig } from "framer-motion";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Nav } from "./components/Nav";
 import { ToastStack } from "./components/ToastStack";
 import { PageSkeleton } from "./components/Skeletons";
 import { CommandPalette } from "./components/CommandPalette";
-import { CatalogSheetPortal } from "./components/CatalogSheet";
 import { ItemDetailSheetPortal } from "./components/ItemDetailSheet";
-import { AddItemSheetPortal } from "./components/AddItemSheet";
-import { EditItemSheetPortal } from "./components/EditItemSheet";
-import { SettingsSheetPortal } from "./components/SettingsSheet";
-import { SagaSheetPortal } from "./components/SagaSheet";
-import { PersonSheetPortal } from "./components/PersonSheet";
 import { NextChapterPrompt } from "./components/NextChapterPrompt";
 import { ResumePrompt } from "./components/ResumePrompt";
 import { IncomingShare } from "./components/IncomingShare";
 import { UpdatePrompt } from "./components/UpdatePrompt";
-import { WebViewer } from "./components/WebViewer";
-import { Onboarding } from "./components/Onboarding";
 import { MiniPlayerBar } from "./components/MiniPlayerBar";
+import { useAddSheet } from "./store/useAddSheet";
+import { useEditSheet } from "./store/useEditSheet";
+import { useSelectedPerson } from "./store/useSelectedPerson";
+import { useSelectedSaga } from "./store/useSelectedSaga";
+import { useCatalogPreview } from "./store/useCatalogPreview";
+import { useWebViewer } from "./store/useWebViewer";
+import { useOnboarding } from "./store/useOnboarding";
 import { ErrorIcon } from "./components/icons";
 import { useOnline } from "./lib/useOnline";
 import { useTheme } from "./store/useTheme";
 import { applyAccent } from "./lib/accents";
-import { useLibrary } from "./store/useLibrary";
+import { readOriginalLibrary, useLibrary } from "./store/useLibrary";
+import { useSettingsSheet } from "./store/useSettingsSheet";
+import { downloadFile } from "./lib/download";
+import { localDay } from "./lib/day";
 import { useAutoLinkTmdb } from "./lib/useAutoLinkTmdb";
 import { useAutoLinkSagas } from "./lib/useAutoLinkSagas";
 import { useReleaseAlerts } from "./lib/useReleaseAlerts";
 import { useSpatialNav } from "./lib/useSpatialNav";
 import { Home } from "./pages/Home";
-import { Library } from "./pages/Library";
-import { Sagas } from "./pages/Sagas";
-import { Discover } from "./pages/Discover";
-import { Search } from "./pages/Search";
-import { Tu } from "./pages/Tu";
-import { Critic } from "./pages/Critic";
 import { useWatchProgressSync } from "./store/useWatchProgress";
+
+/**
+ * Le pagine, tranne la Home, arrivano quando servono.
+ *
+ * Il pacchetto d'avvio era di 807 kB perché conteneva tutta l'app: le sei
+ * pagine, le Impostazioni con le loro nove schermate, il Web Viewer, il primo
+ * avvio, sette fogli. Per aprire «Stasera» ne serve una frazione. Ognuna di
+ * queste si scarica al primo uso — e di solito prima, quando il dito tocca la
+ * voce in barra (`lib/prefetch`) — e il service worker le mette tutte in cache
+ * alla prima visita, così l'app offline resta intera (`vite.config.ts`).
+ */
+const Library = lazy(() => import("./pages/Library").then((m) => ({ default: m.Library })));
+const Sagas = lazy(() => import("./pages/Sagas").then((m) => ({ default: m.Sagas })));
+const Discover = lazy(() => import("./pages/Discover").then((m) => ({ default: m.Discover })));
+const Search = lazy(() => import("./pages/Search").then((m) => ({ default: m.Search })));
+const Tu = lazy(() => import("./pages/Tu").then((m) => ({ default: m.Tu })));
+const Critic = lazy(() => import("./pages/Critic").then((m) => ({ default: m.Critic })));
+const Lists = lazy(() => import("./pages/Lists").then((m) => ({ default: m.Lists })));
+const ListDetail = lazy(() => import("./pages/Lists").then((m) => ({ default: m.ListDetail })));
+
+/*
+ * I fogli che si aprono di rado. La scheda del titolo resta nel pacchetto
+ * d'avvio: è il tocco più frequente dell'app, e deve aprirsi senza attese.
+ */
+const SettingsSheetPortal = lazy(() =>
+  import("./components/SettingsSheet").then((m) => ({ default: m.SettingsSheetPortal })),
+);
+const AddItemSheetPortal = lazy(() => import("./components/AddItemSheet").then((m) => ({ default: m.AddItemSheetPortal })));
+const EditItemSheetPortal = lazy(() =>
+  import("./components/EditItemSheet").then((m) => ({ default: m.EditItemSheetPortal })),
+);
+const PersonSheetPortal = lazy(() => import("./components/PersonSheet").then((m) => ({ default: m.PersonSheetPortal })));
+const SagaSheetPortal = lazy(() => import("./components/SagaSheet").then((m) => ({ default: m.SagaSheetPortal })));
+const CatalogSheetPortal = lazy(() => import("./components/CatalogSheet").then((m) => ({ default: m.CatalogSheetPortal })));
+const WebViewer = lazy(() => import("./components/WebViewer").then((m) => ({ default: m.WebViewer })));
+const Onboarding = lazy(() => import("./components/Onboarding").then((m) => ({ default: m.Onboarding })));
+
+/**
+ * Monta un foglio a caricamento differito la prima volta che serve, e poi lo
+ * lascia montato.
+ *
+ * «Poi lo lascia» è la parte che conta: ogni foglio gestisce da sé la propria
+ * animazione d'uscita con `AnimatePresence`, che ha bisogno di restare nel
+ * documento mentre il foglio scivola via. Smontarlo alla chiusura lo farebbe
+ * sparire di colpo.
+ */
+function Deferred({ when, children }: { when: boolean; children: ReactNode }) {
+  const [armed, setArmed] = useState(when);
+  useEffect(() => {
+    if (when) setArmed(true);
+  }, [when]);
+  if (!armed && !when) return null;
+  return <Suspense fallback={null}>{children}</Suspense>;
+}
 
 
 /**
@@ -88,18 +138,86 @@ function OfflineBanner() {
 }
 
 /**
- * I dati del dispositivo non si leggono.
+ * Quando i dati del dispositivo non sono come dovrebbero.
  *
- * Il bottone svuota libreria e diario, e lo faceva al primo tocco, senza dire
- * che cosa si sarebbe perso: un comando distruttivo travestito da «ripristina».
- * Adesso chiede una conferma che dice la conseguenza con parole sue, e solo al
- * secondo tocco fa quello che faceva prima.
+ * Erano due guasti con una frase sola: «non riesco a leggere i dati» compariva
+ * anche quando la memoria era *piena* — cioè quando la libreria si leggeva
+ * benissimo e solo l'ultima modifica non era stata salvata — e il rimedio
+ * offerto era svuotare tutto. Adesso sono tre casi, e ognuno ha il suo gesto:
+ *
+ * - **illeggibile**: la libreria intera non è un elenco. Si può scaricare
+ *   l'originale e poi ricominciare, con conferma;
+ * - **in parte**: qualche record storto, gli altri sono qui. Si dice quanti e
+ *   si offre la copia dei dati originali;
+ * - **memoria piena**: niente è rotto, ma le modifiche non restano. Il gesto
+ *   giusto è un backup, non una cancellazione.
  */
-function ErrorBanner() {
+function DataBanner() {
+  const loadIssue = useLibrary((s) => s.loadIssue);
   const storageError = useLibrary((s) => s.storageError);
   const resetCorruptedData = useLibrary((s) => s.resetCorruptedData);
+  const dismissLoadIssue = useLibrary((s) => s.dismissLoadIssue);
+  const openSettings = useSettingsSheet((s) => s.open);
   const [confirming, setConfirming] = useState(false);
-  if (!storageError) return null;
+
+  if (!loadIssue && !storageError) return null;
+
+  function downloadOriginal() {
+    const raw = readOriginalLibrary();
+    if (raw) downloadFile(`cinemate-dati-originali-${localDay()}.json`, raw, "application/json");
+  }
+
+  let text: string;
+  let actions: React.ReactNode;
+  if (loadIssue?.kind === "unreadable") {
+    text = confirming
+      ? "Libreria e diario di questo dispositivo verranno svuotati. Non si torna indietro."
+      : "Non riesco a leggere la libreria salvata su questo dispositivo. Scarica i dati originali prima di ricominciare: sono ancora qui.";
+    actions = confirming ? (
+      <>
+        <button type="button" onClick={() => setConfirming(false)} className="btn btn-secondary btn-sm">
+          Annulla
+        </button>
+        <button type="button" onClick={resetCorruptedData} className="btn btn-danger-fill btn-sm">
+          Svuota e ricomincia
+        </button>
+      </>
+    ) : (
+      <>
+        <button type="button" onClick={downloadOriginal} className="btn btn-secondary btn-sm">
+          Scarica i dati originali
+        </button>
+        <button type="button" onClick={() => setConfirming(true)} className="btn btn-secondary btn-sm">
+          Ricomincia da capo
+        </button>
+      </>
+    );
+  } else if (loadIssue?.kind === "partial") {
+    const n = loadIssue.skipped;
+    text = `${n === 1 ? "Un titolo salvato non si leggeva" : `${n} titoli salvati non si leggevano`}: ${
+      loadIssue.rescued ? "li ho messi da parte con una copia dei dati originali." : "li ho tolti."
+    } Il resto della libreria è qui.`;
+    actions = (
+      <>
+        {loadIssue.rescued && (
+          <button type="button" onClick={downloadOriginal} className="btn btn-secondary btn-sm">
+            Scarica la copia
+          </button>
+        )}
+        <button type="button" onClick={dismissLoadIssue} className="btn btn-secondary btn-sm">
+          {loadIssue.rescued ? "Elimina la copia" : "Ho capito"}
+        </button>
+      </>
+    );
+  } else {
+    text = "La memoria del browser è piena: le ultime modifiche non sono state salvate. Esporta un backup prima di continuare.";
+    actions = (
+      <button type="button" onClick={() => openSettings("dati")} className="btn btn-secondary btn-sm">
+        Esporta un backup
+      </button>
+    );
+  }
+
   return (
     <div
       role="alert"
@@ -110,29 +228,27 @@ function ErrorBanner() {
         <span className="mt-0.5 shrink-0" style={{ color: "var(--danger)" }}>
           <ErrorIcon />
         </span>
-        {confirming
-          ? "Libreria e diario di questo dispositivo verranno svuotati. Non si torna indietro."
-          : "Non riesco a leggere i dati salvati su questo dispositivo."}
+        {text}
       </span>
-      {confirming ? (
-        <span className="flex gap-2">
-          <button type="button" onClick={() => setConfirming(false)} className="btn btn-secondary btn-sm">
-            Annulla
-          </button>
-          <button type="button" onClick={resetCorruptedData} className="btn btn-danger-fill btn-sm">
-            Svuota e ricomincia
-          </button>
-        </span>
-      ) : (
-        <button type="button" onClick={() => setConfirming(true)} className="btn btn-secondary btn-sm">
-          Ricomincia da capo
-        </button>
-      )}
+      <span className="flex flex-wrap gap-2">{actions}</span>
     </div>
   );
 }
 
 export default function App() {
+  const settingsOpen = useSettingsSheet((s) => s.isOpen);
+  const addOpen = useAddSheet((s) => s.isOpen);
+  const editOpen = useEditSheet((s) => s.isOpen);
+  const personOpen = useSelectedPerson((s) => !!s.name);
+  const sagaOpen = useSelectedSaga((s) => !!s.key);
+  const catalogOpen = useCatalogPreview((s) => !!s.target);
+  const webViewerOpen = useWebViewer((s) => !!s.url);
+  // La stessa regola del primo avvio (vedi `Onboarding`): si mostra a chi
+  // apre con lo scaffale vuoto, o a chi l'ha chiesto. Ripetuta qui per non
+  // scaricarlo a chi non lo vedrà — chi viene da una versione di prima ha la
+  // libreria piena e nessuna riga «già fatto».
+  const [emptyAtStart] = useState(() => useLibrary.getState().items.length === 0);
+  const onboardingPending = useOnboarding((s) => s.replaying || (!s.done && emptyAtStart));
   const theme = useTheme((s) => s.theme);
   const accent = useTheme((s) => s.accent);
   useAutoLinkTmdb();
@@ -176,12 +292,19 @@ export default function App() {
       <Nav />
       <div className="min-h-screen pb-[calc(var(--tabbar-h)+env(safe-area-inset-bottom))] pt-14 lg:pb-0 lg:pl-60 lg:pt-0">
         <OfflineBanner />
-        <ErrorBanner />
+        <DataBanner />
         <main id="main-content">
+          {/* Un confine solo per tutte le pagine: la navigazione di React Router
+              passa da una transizione, quindi la pagina di prima resta a schermo
+              finché quella nuova non è arrivata, e lo scheletro si vede solo
+              quando l'attesa è davvero lunga. */}
+          <Suspense fallback={<PageSkeleton />}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/libreria" element={<Library />} />
             <Route path="/saghe" element={<Sagas />} />
+            <Route path="/liste" element={<Lists />} />
+            <Route path="/liste/:id" element={<ListDetail />} />
             <Route path="/scopri" element={<Discover />} />
             <Route path="/cerca" element={<Search />} />
             <Route path="/tu" element={<Tu />} />
@@ -218,6 +341,7 @@ export default function App() {
               }
             />
           </Routes>
+          </Suspense>
         </main>
       </div>
       <ToastStack />
@@ -229,12 +353,24 @@ export default function App() {
       <MiniPlayerBar />
       <CommandPalette />
       <ItemDetailSheetPortal />
-      <CatalogSheetPortal />
-      <SagaSheetPortal />
-      <PersonSheetPortal />
-      <AddItemSheetPortal />
-      <EditItemSheetPortal />
-      <SettingsSheetPortal />
+      <Deferred when={catalogOpen}>
+        <CatalogSheetPortal />
+      </Deferred>
+      <Deferred when={sagaOpen}>
+        <SagaSheetPortal />
+      </Deferred>
+      <Deferred when={personOpen}>
+        <PersonSheetPortal />
+      </Deferred>
+      <Deferred when={addOpen}>
+        <AddItemSheetPortal />
+      </Deferred>
+      <Deferred when={editOpen}>
+        <EditItemSheetPortal />
+      </Deferred>
+      <Deferred when={settingsOpen}>
+        <SettingsSheetPortal />
+      </Deferred>
       <ResumePrompt />
       <NextChapterPrompt />
       <IncomingShare />
@@ -242,12 +378,16 @@ export default function App() {
       {/* Il primo minuto. Sta in fondo perché copre tutto il resto, e si
           mostra da sé solo a libreria vuota: chi ha già uno scaffale ha
           superato questo passaggio molto tempo fa. */}
-      <Onboarding />
+      <Deferred when={onboardingPending}>
+        <Onboarding />
+      </Deferred>
       {/* In fondo a tutto e fuori da ogni rotta: il Web Viewer si apre dalle
           Impostazioni, dal player e dalla scheda di un titolo, e da qualunque
           punto parta deve coprire lo schermo intero senza portarsi via la
           pagina che c'era. */}
-      <WebViewer />
+      <Deferred when={webViewerOpen}>
+        <WebViewer />
+      </Deferred>
     </MotionConfig>
   );
 }

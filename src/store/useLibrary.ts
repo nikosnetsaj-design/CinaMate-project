@@ -1,33 +1,100 @@
 import { create } from "zustand";
 import type { HistoryEntry, Item, Status, ToastKind, ToastMessage } from "../types";
+import { localDay } from "../lib/day";
+import { normalizeHistoryEntry, normalizeItem, salvage } from "../lib/normalize";
 
 const STORAGE_KEY = "cinemate:v2";
 const HISTORY_KEY = "cinemate:history:v1";
+/**
+ * La copia del valore originale quando la lettura ha dovuto scartare qualcosa.
+ * Esportata perché il banner la offre da scaricare: i dati sono tuoi anche
+ * quando l'app non li sa leggere.
+ */
+export const RESCUE_KEY = "cinemate:v2:rescue";
 
-function isItemArray(value: unknown): value is Item[] {
-  return (
-    Array.isArray(value) &&
-    value.every(
-      (v) =>
-        v && typeof v === "object" && typeof (v as Item).id === "string" && typeof (v as Item).title === "string",
-    )
-  );
+/**
+ * Cosa è andato storto leggendo la libreria all'avvio, se qualcosa è andato
+ * storto. Prima c'era un solo stato, «non riesco a leggere», e un solo
+ * rimedio, svuotare: un titolo malformato su trecento costava gli altri
+ * duecentonovantanove, sovrascritti dalla prima modifica successiva.
+ */
+export interface LoadIssue {
+  /** `unreadable`: il valore intero non è un elenco. `partial`: alcuni record sì e altri no. */
+  kind: "unreadable" | "partial";
+  /** I record scartati, per `partial`. */
+  skipped: number;
+  /** Se una copia del valore originale è stata messa da parte sotto `RESCUE_KEY`. */
+  rescued: boolean;
 }
 
-function loadItems(): { data: Item[]; corrupted: boolean } {
+/**
+ * Mette da parte il valore originale, una volta sola: se una copia c'è già è
+ * quella più vecchia, cioè la più vicina ai dati buoni, e non va sostituita.
+ */
+function keepRescue(raw: string): boolean {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    // A new library starts genuinely empty — no demo titles to delete first.
-    if (raw === null) return { data: [], corrupted: false };
-    const parsed: unknown = JSON.parse(raw);
-    if (!isItemArray(parsed)) throw new Error("malformed cinemate library");
-    return { data: parsed, corrupted: false };
+    if (localStorage.getItem(RESCUE_KEY) !== null) return true;
+    localStorage.setItem(RESCUE_KEY, JSON.stringify({ savedAt: new Date().toISOString(), raw }));
+    return true;
   } catch {
-    return { data: [], corrupted: true };
+    return false;
   }
 }
 
+/**
+ * Il valore originale, così com'era prima che l'app lo scartasse: la copia di
+ * sicurezza se c'è, altrimenti la chiave stessa — che in quel caso nessuno ha
+ * sovrascritto (vedi `protectOriginal`).
+ */
+export function readOriginalLibrary(): string | null {
+  try {
+    const rescue = localStorage.getItem(RESCUE_KEY);
+    if (rescue !== null) {
+      const parsed = JSON.parse(rescue) as { raw?: unknown };
+      if (typeof parsed.raw === "string") return parsed.raw;
+    }
+    return localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Vero quando la libreria salvata non si legge *e* non c'è stato posto per
+ * una copia: allora la chiave originale è l'unico posto in cui quei dati
+ * esistono, e nessuna scrittura deve toccarla finché non lo decidi tu.
+ */
+let protectOriginal = false;
+
+function loadItems(): { data: Item[]; issue: LoadIssue | null } {
+  let raw: string | null;
+  try {
+    raw = localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return { data: [], issue: null };
+  }
+  // A new library starts genuinely empty — no demo titles to delete first.
+  if (raw === null) return { data: [], issue: null };
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    parsed = undefined;
+  }
+  if (!Array.isArray(parsed)) {
+    const rescued = keepRescue(raw);
+    protectOriginal = !rescued;
+    return { data: [], issue: { kind: "unreadable", skipped: 0, rescued } };
+  }
+
+  const { records, skipped } = salvage(parsed, normalizeItem);
+  if (skipped === 0) return { data: records, issue: null };
+  return { data: records, issue: { kind: "partial", skipped, rescued: keepRescue(raw) } };
+}
+
 function saveItems(items: Item[]): boolean {
+  if (protectOriginal) return false;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     return true;
@@ -37,24 +104,15 @@ function saveItems(items: Item[]): boolean {
 }
 
 const initial = loadItems();
-if (localStorage.getItem(STORAGE_KEY) === null && !initial.corrupted) {
-  saveItems(initial.data);
-}
-
-function isHistoryArray(value: unknown): value is HistoryEntry[] {
-  return (
-    Array.isArray(value) &&
-    value.every((v) => v && typeof v === "object" && typeof (v as HistoryEntry).id === "string")
-  );
-}
 
 function loadHistory(): HistoryEntry[] {
   try {
     const raw = localStorage.getItem(HISTORY_KEY);
     if (raw === null) return [];
     const parsed: unknown = JSON.parse(raw);
-    if (!isHistoryArray(parsed)) throw new Error("malformed cinemate history");
-    return parsed;
+    if (!Array.isArray(parsed)) return [];
+    // Voce per voce, come la libreria: una voce storta non porta via il diario.
+    return salvage(parsed, normalizeHistoryEntry).records;
   } catch {
     return [];
   }
@@ -70,16 +128,16 @@ function saveHistory(history: HistoryEntry[]): void {
 }
 
 const initialHistory = loadHistory();
-if (localStorage.getItem(HISTORY_KEY) === null) saveHistory(initialHistory);
 
 function makeHistoryEntry(
   item: Pick<Item, "id" | "title" | "kind">,
   date: string,
   action: HistoryEntry["action"],
   count = 1,
+  id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
 ): HistoryEntry {
   return {
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id,
     itemId: item.id,
     title: item.title,
     kind: item.kind,
@@ -89,8 +147,9 @@ function makeHistoryEntry(
   };
 }
 
+/** Il giorno di calendario locale: vedi `lib/day` per la storia di questa riga. */
 function today(): string {
-  return new Date().toISOString().slice(0, 10);
+  return localDay();
 }
 
 /**
@@ -107,7 +166,10 @@ interface LibraryState {
   items: Item[];
   history: HistoryEntry[];
   toasts: ToastMessage[];
+  /** L'ultima scrittura è stata rifiutata: memoria piena o non disponibile. */
   storageError: boolean;
+  /** Cosa la lettura all'avvio ha dovuto scartare. Vedi `LoadIssue`. */
+  loadIssue: LoadIssue | null;
   justCompleted: JustCompleted | null;
 
   addItem: (data: Omit<Item, "id" | "added">) => void;
@@ -127,8 +189,22 @@ interface LibraryState {
   clearJustCompleted: () => void;
 
   importData: (items: Item[], history: HistoryEntry[]) => void;
+  /**
+   * Titoli che arrivano da fuori — un export di Letterboxd o di IMDb — da
+   * *unire* alla libreria invece di sostituirla, con le loro voci di diario.
+   * Le voci del diario si riferiscono ai titoli per indice nell'elenco
+   * passato, perché gli id li assegna lo store.
+   */
+  mergeImported: (
+    incoming: Omit<Item, "id" | "added">[],
+    updates: { id: string; patch: Partial<Item> }[],
+    diary: { index?: number; itemId?: string; date: string; action: HistoryEntry["action"]; count?: number }[],
+    addedDates?: (string | undefined)[],
+  ) => { added: number; updated: number; logged: number; createdIds: string[]; saved: boolean };
   clearAll: () => void;
   resetCorruptedData: () => void;
+  /** Butta la copia di sicurezza dopo che l'hai vista (o scaricata). */
+  dismissLoadIssue: () => void;
 }
 
 /** L'identificativo di un record nuovo: il momento in cui è entrato, più caso. */
@@ -136,19 +212,40 @@ function newId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+/**
+ * L'identificativo di un record arrivato da un import.
+ *
+ * Diverso di proposito da `newId`: quello porta scritto l'istante in
+ * millisecondi, e `repairUtcDay` (vedi `lib/day`) lo usa per correggere le
+ * date scritte col giorno di Greenwich — cioè ogni data uguale al giorno UTC
+ * di quell'istante. Una data importata non è stata calcolata adesso, ma
+ * può coincidere col giorno UTC di adesso: importando a mezzanotte e mezza
+ * la visione di ieri, la correzione la sposterebbe a oggi. Senza le tredici
+ * cifre in testa la correzione non la tocca.
+ */
+function importId(): string {
+  return `imp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 function persistOrToast(
   get: () => LibraryState,
   set: (partial: Partial<LibraryState>) => void,
   next: Item[],
   successText?: string,
-) {
+): boolean {
   const ok = saveItems(next);
-  set({ items: next, storageError: !ok });
+  set({ items: next, storageError: !ok && !protectOriginal });
   if (!ok) {
-    get().pushToast("error", "Impossibile salvare: memoria del browser piena o non disponibile.");
+    get().pushToast(
+      "error",
+      protectOriginal
+        ? "Non salvo niente finché i dati che non riesco a leggere sono lì: scegli cosa farne nel riquadro in cima."
+        : "Impossibile salvare: memoria del browser piena o non disponibile.",
+    );
   } else if (successText) {
     get().pushToast("success", successText);
   }
+  return ok;
 }
 
 function logHistory(get: () => LibraryState, set: (partial: Partial<LibraryState>) => void, entries: HistoryEntry[]) {
@@ -162,7 +259,8 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   items: initial.data,
   history: initialHistory,
   toasts: [],
-  storageError: initial.corrupted,
+  storageError: false,
+  loadIssue: initial.issue,
   justCompleted: null,
 
   addItem: (data) => {
@@ -298,15 +396,53 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   },
   clearJustCompleted: () => set({ justCompleted: null }),
 
-  importData: (items, history) => {
+  importData: (rawItems, rawHistory) => {
+    // Ripassati anche qui: `parseBackup` li normalizza già, ma questo è il
+    // punto in cui entrano nello store, e chi lo chiama domani potrebbe non
+    // passare di là.
+    const items = salvage(rawItems, normalizeItem).records;
+    const history = salvage(rawHistory, normalizeHistoryEntry).records;
+    // Un import è una scelta esplicita di sostituire: vale anche come
+    // risposta ai dati illeggibili, che da qui in poi non vanno più protetti.
+    protectOriginal = false;
     const okItems = saveItems(items);
     saveHistory(history);
-    set({ items, history, storageError: !okItems });
+    set({ items, history, storageError: !okItems, loadIssue: null });
     if (!okItems) {
       get().pushToast("error", "Impossibile salvare: memoria del browser piena o non disponibile.");
     } else {
       get().pushToast("success", `Libreria importata: ${items.length} titoli.`);
     }
+  },
+
+  mergeImported: (incoming, updates, diary, addedDates = []) => {
+    const fallbackDay = today();
+    const created: Item[] = incoming.map((data, index) => {
+      const day = addedDates[index];
+      return { ...data, id: importId(), added: day && /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : fallbackDay };
+    });
+    const patches = new Map(updates.map((u) => [u.id, u.patch]));
+    const merged = [...created, ...get().items.map((i) => (patches.has(i.id) ? { ...i, ...patches.get(i.id) } : i))];
+    const saved = persistOrToast(get, set, merged);
+
+    const byIndex = (index: number | undefined) => (index === undefined ? undefined : created[index]);
+    const byId = new Map(merged.map((i) => [i.id, i]));
+    const entries: HistoryEntry[] = [];
+    for (const d of diary) {
+      const target = byIndex(d.index) ?? (d.itemId ? byId.get(d.itemId) : undefined);
+      if (!target) continue;
+      entries.push(makeHistoryEntry(target, d.date, d.action, d.count ?? 1, importId()));
+    }
+    // In ordine di data: il diario si legge così, e qualche vista (il Nastro)
+    // assume che le voci siano già in fila.
+    if (entries.length) {
+      const next = [...get().history, ...entries].sort((a, b) => a.date.localeCompare(b.date));
+      saveHistory(next);
+      set({ history: next });
+    }
+    // Gli id nuovi, nell'ordine dell'elenco ricevuto: servono a chi deve
+    // metterli in una lista subito dopo (le liste di Letterboxd).
+    return { added: created.length, updated: updates.length, logged: entries.length, createdIds: created.map((i) => i.id), saved };
   },
 
   clearAll: () => {
@@ -317,9 +453,19 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   },
 
   resetCorruptedData: () => {
+    protectOriginal = false;
     saveItems([]);
     saveHistory([]);
-    set({ items: [], history: [], storageError: false, justCompleted: null });
+    set({ items: [], history: [], storageError: false, loadIssue: null, justCompleted: null });
     get().pushToast("info", "Dati locali ripristinati.");
+  },
+
+  dismissLoadIssue: () => {
+    try {
+      localStorage.removeItem(RESCUE_KEY);
+    } catch {
+      /* la copia resta: occupa spazio, non fa danni */
+    }
+    set({ loadIssue: null });
   },
 }));

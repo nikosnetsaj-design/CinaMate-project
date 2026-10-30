@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useLibrary } from "../store/useLibrary";
 import { useSettings } from "../store/useSettings";
 import { useOnboarding } from "../store/useOnboarding";
+import { useSettingsSheet } from "../store/useSettingsSheet";
 import { useFocusTrap } from "../lib/useFocusTrap";
 import { TASTE_PICKS, seedDraft, type SeedPick } from "../lib/seedShelf";
 import { searchTitles } from "../lib/tmdb";
@@ -328,6 +329,17 @@ function Done({ added, onClose }: { added: number; onClose: () => void }) {
         </p>
       </div>
       <Primary onClick={onClose}>Entra</Primary>
+      {/* Chi arriva con anni di diario altrove non deve ricominciare da tre
+          locandine: l'import è il secondo modo di riempire lo scaffale, e
+          questo è il momento in cui ci si pensa. */}
+      <Quiet
+        onClick={() => {
+          onClose();
+          useSettingsSheet.getState().open("importa");
+        }}
+      >
+        Hai già tutto su Letterboxd, IMDb o Netflix? Importalo
+      </Quiet>
     </div>
   );
 }

@@ -31,7 +31,7 @@ import type { PlaylistEntry } from './EpisodesPanel';
 import type { SeriesEpisodesProps } from './SeriesEpisodes';
 import ClipSheet from './ClipSheet';
 import type { ClipResult } from './ClipSheet';
-import { SkipButton, PostPlayOverlay, ErrorOverlay, SubtitleOverlay, EndScreenRecommendations, GestureOverlay, AutoSkipNote } from './Overlays';
+import { SkipButton, PostPlayOverlay, ErrorOverlay, SubtitleOverlay, EndScreenRecommendations, GestureOverlay, AutoSkipNote, CreditsSceneNote } from './Overlays';
 import ResumeBar from './ResumeBar';
 import ShortcutsHelp from './ShortcutsHelp';
 import type { Recommendation } from '../services/recommendationService';
@@ -512,6 +512,7 @@ export default function VideoPlayer({
             <SkipButton marker={extras.activeMarker} onSkip={handleSkip} />
           )}
           {extras.autoSkipped && <AutoSkipNote type={extras.autoSkipped} />}
+          {extras.creditsNotice && <CreditsSceneNote scene={extras.creditsNotice} />}
           {notice && (
             <div className="pv-autoskip-note" role="status">
               {notice}

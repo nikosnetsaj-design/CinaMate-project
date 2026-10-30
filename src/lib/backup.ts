@@ -1,6 +1,7 @@
 import type { HistoryEntry, Item } from "../types";
 import type { SagaOrders, WatchOrder } from "./sagas";
 import { isRecord } from "./localStore";
+import { normalizeHistoryEntry, normalizeItem, salvage } from "./normalize";
 
 /**
  * Everything a saga knows that cannot be derived again from TMDB: the viewing
@@ -64,9 +65,20 @@ export interface Backup {
    * not here — it is recomputed from the diary, which the file already carries.
    */
   goals?: unknown;
+  /**
+   * Le liste personali. Stessa regola degli obiettivi: le hai fatte tu, e
+   * niente le può ricostruire. Tengono gli id dei titoli, che il file porta
+   * con sé, quindi tornano al loro posto insieme alla libreria.
+   */
+  lists?: unknown;
+  /**
+   * I servizi a cui sei abbonato, coi prezzi che hai scritto. Stessa regola:
+   * li hai dichiarati tu, e niente li può ricostruire.
+   */
+  subscriptions?: unknown;
 }
 
-const CURRENT_VERSION = 5;
+const CURRENT_VERSION = 7;
 
 export function buildBackup(
   items: Item[],
@@ -74,6 +86,8 @@ export function buildBackup(
   sagas?: SagaBackup,
   player?: PlayerBackup,
   goals?: unknown,
+  lists?: unknown,
+  subscriptions?: unknown,
 ): string {
   return JSON.stringify(
     {
@@ -85,28 +99,26 @@ export function buildBackup(
       sagas,
       player,
       goals,
+      lists,
+      subscriptions,
     },
     null,
     2,
   );
 }
 
-function looksLikeItem(value: unknown): value is Item {
-  return (
-    !!value &&
-    typeof value === "object" &&
-    typeof (value as Item).title === "string" &&
-    typeof (value as Item).id === "string"
-  );
+/**
+ * Un titolo del file entra se ha almeno un titolo leggibile, e ne esce
+ * completo: `normalizeItem` rimette al loro tipo i campi che l'interfaccia
+ * legge senza controllare. Prima bastavano `id` e `title`, e un backup scritto
+ * a mano senza `cast` apriva una scheda che si rompeva al primo render.
+ */
+function readItems(values: unknown[]): Item[] {
+  return salvage(values, normalizeItem).records;
 }
 
-function looksLikeHistoryEntry(value: unknown): value is HistoryEntry {
-  return (
-    !!value &&
-    typeof value === "object" &&
-    typeof (value as HistoryEntry).itemId === "string" &&
-    typeof (value as HistoryEntry).date === "string"
-  );
+function readHistory(values: unknown[]): HistoryEntry[] {
+  return salvage(values, normalizeHistoryEntry).records;
 }
 
 /**
@@ -164,7 +176,7 @@ export function parseBackup(raw: string): Backup {
   }
 
   if (Array.isArray(parsed)) {
-    const items = parsed.filter(looksLikeItem);
+    const items = readItems(parsed);
     if (items.length === 0) throw new BackupParseError("Nessun titolo valido trovato nel file.");
     return { items, history: [] };
   }
@@ -176,10 +188,12 @@ export function parseBackup(raw: string): Backup {
       sagas?: unknown;
       player?: unknown;
       goals?: unknown;
+      lists?: unknown;
+      subscriptions?: unknown;
     };
-    const items = record.items.filter(looksLikeItem);
+    const items = readItems(record.items);
     if (items.length === 0) throw new BackupParseError("Nessun titolo valido trovato nel file.");
-    const history = Array.isArray(record.history) ? record.history.filter(looksLikeHistoryEntry) : [];
+    const history = Array.isArray(record.history) ? readHistory(record.history) : [];
     // Drop history pointing at titles the backup doesn't contain.
     const ids = new Set(items.map((i) => i.id));
     return {
@@ -189,6 +203,8 @@ export function parseBackup(raw: string): Backup {
       player: parsePlayerBackup(record.player),
       // Validated by the store that receives it, like the player sections.
       goals: record.goals,
+      lists: record.lists,
+      subscriptions: record.subscriptions,
     };
   }
 

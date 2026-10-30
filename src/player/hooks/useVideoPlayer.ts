@@ -102,6 +102,35 @@ function nativeFullscreenAvailable(): boolean {
   return !!(doc.fullscreenEnabled || doc.webkitFullscreenEnabled);
 }
 
+/** `lock()` è nello standard ma non ancora nei tipi di TypeScript. */
+type LockableOrientation = ScreenOrientation & { lock?: (orientation: 'landscape') => Promise<void> };
+
+/**
+ * Lo schermo pieno di un film, in orizzontale.
+ *
+ * Con il telefono in verticale, lo schermo pieno di un 16:9 è una striscia
+ * alta un terzo dello schermo, e bisognava girarlo a mano — e a volte non si
+ * girava affatto, perché l'app installata dichiarava `portrait` nel manifest.
+ * Netflix e YouTube ruotano da soli: qui lo stesso, ma solo per un video più
+ * largo che alto (uno girato in verticale resta com'è) e solo dove il browser
+ * lo permette — Android sì, iPhone e i computer no, e lì `lock` rifiuta senza
+ * conseguenze.
+ */
+function lockLandscape(video: HTMLVideoElement | null) {
+  const orientation = (typeof screen !== 'undefined' ? screen.orientation : undefined) as LockableOrientation | undefined;
+  if (!orientation?.lock) return;
+  if (video && video.videoWidth && video.videoHeight && video.videoWidth < video.videoHeight) return;
+  orientation.lock('landscape').catch(() => {});
+}
+
+function unlockOrientation() {
+  try {
+    (typeof screen !== 'undefined' ? screen.orientation : undefined)?.unlock?.();
+  } catch {
+    /* niente da sbloccare */
+  }
+}
+
 // Swaps only the origin (protocol + host + port) of `originalUrl` for the
 // one in `newOrigin`, keeping path/query/hash untouched. Falls back to the
 // original URL if either string doesn't parse — malformed host config
@@ -335,8 +364,12 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
       setMuted(video.muted);
     };
     const onRateChange = () => setPlaybackRateState(video.playbackRate);
-    const onFsChange = () =>
-      setIsFullscreen(!!(document.fullscreenElement ?? (document as WebkitDocument).webkitFullscreenElement));
+    const onFsChange = () => {
+      const active = !!(document.fullscreenElement ?? (document as WebkitDocument).webkitFullscreenElement);
+      setIsFullscreen(active);
+      // Uscendo, il telefono torna libero di girare come vuole chi lo tiene.
+      if (!active) unlockOrientation();
+    };
     // iOS never sets document.fullscreenElement, so its own begin/end events
     // are the only way to know the OS player was dismissed.
     const onWebkitBegin = () => setIsFullscreen(true);
@@ -589,10 +622,12 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
       if (nativeFullscreenAvailable()) {
         if (el.requestFullscreen) {
           await el.requestFullscreen();
+          lockLandscape(videoRef.current);
           return;
         }
         if (el.webkitRequestFullscreen) {
           el.webkitRequestFullscreen();
+          lockLandscape(videoRef.current);
           return;
         }
       }

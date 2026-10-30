@@ -136,10 +136,11 @@ export function didYouMean(query: string, items: Item[]): string | null {
   return best?.title ?? null;
 }
 
-export type SearchGroup = "titolo" | "saga" | "persona";
+export type SearchGroup = "titolo" | "lista" | "saga" | "persona";
 
 export const GROUP_LABELS: Record<SearchGroup, string> = {
   titolo: "Titoli",
+  lista: "Le tue liste",
   saga: "Saghe e universi",
   persona: "Attori e registi",
 };
@@ -153,9 +154,10 @@ export interface SearchHit {
   item?: Item;
   sagaKey?: SagaKey;
   personName?: string;
+  listId?: string;
 }
 
-const MAX_PER_GROUP = { titolo: 6, saga: 4, persona: 4 } as const;
+const MAX_PER_GROUP = { titolo: 6, lista: 4, saga: 4, persona: 4 } as const;
 
 /** Names come from the library itself, so the list stays small and offline. */
 function peopleIndex(items: Item[]): Map<string, { name: string; asDirector: number; asActor: number }> {
@@ -190,7 +192,13 @@ function personSublabel(entry: { asDirector: number; asActor: number }): string 
  * for "nolan" should offer the man and the films as two separate decisions, not
  * as one ranked soup where the person is lost between two Interstellars.
  */
-export function smartSearch(query: string, items: Item[], sagas: Record<string, TmdbSaga>): SearchHit[] {
+export function smartSearch(
+  query: string,
+  items: Item[],
+  sagas: Record<string, TmdbSaga>,
+  /** Le liste personali, per nome: «horror» trova anche «Horror di ottobre». */
+  lists: { id: string; name: string; count: number }[] = [],
+): SearchHit[] {
   const q = fold(query.trim());
   if (!q) return [];
 
@@ -236,5 +244,16 @@ export function smartSearch(query: string, items: Item[], sagas: Record<string, 
       personName: entry.name,
     }));
 
-  return [...titles, ...sagaHits.concat(universeHits).slice(0, MAX_PER_GROUP.saga), ...people];
+  const listHits: SearchHit[] = lists
+    .filter((list) => fold(list.name).includes(q))
+    .slice(0, MAX_PER_GROUP.lista)
+    .map((list) => ({
+      group: "lista" as const,
+      id: `lista:${list.id}`,
+      label: list.name,
+      sublabel: `${list.count} ${list.count === 1 ? "titolo" : "titoli"}`,
+      listId: list.id,
+    }));
+
+  return [...titles, ...listHits, ...sagaHits.concat(universeHits).slice(0, MAX_PER_GROUP.saga), ...people];
 }

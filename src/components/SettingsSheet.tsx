@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { lazy, Suspense, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -12,6 +12,7 @@ import { useReminders } from "../store/useReminders";
 import { usePlayerSources } from "../store/usePlayerSources";
 import { usePlayerPrefs } from "../store/usePlayerPrefs";
 import { useGoals } from "../store/useGoals";
+import { useLists } from "../store/useLists";
 import { useTheme } from "../store/useTheme";
 import { useTvMode, type TvPreference } from "../store/useTvMode";
 import { useHomeLayout, HOME_SECTIONS, MAX_ROWS } from "../store/useHomeLayout";
@@ -19,6 +20,8 @@ import { useOnboarding } from "../store/useOnboarding";
 import { ACCENTS } from "../lib/accents";
 import { ParentalSettings } from "./ParentalSettings";
 import { LinkHostSettings } from "./LinkHostSettings";
+import { SubscriptionsSettings } from "./SubscriptionsSettings";
+import { useSubscriptions } from "../store/useSubscriptions";
 import { DnsGuideButton } from "./DnsGuide";
 import { useLinkHosts } from "../store/useLinkHosts";
 import { TEMPLATE_FIELDS, previewTemplate, previewCount } from "../lib/sourceTemplate";
@@ -27,8 +30,15 @@ import { getHosts, restoreHosts } from "../player/services/hostStore";
 import { getDailySeconds, restoreDailySeconds } from "../player/services/statsAndHistory";
 import { useWatchProgress } from "../store/useWatchProgress";
 import { buildBackup, parseBackup, BackupParseError } from "../lib/backup";
+import { libraryCsv, letterboxdExport, type LetterboxdExport } from "../lib/exportCsv";
+// A caricamento differito: i lettori di Letterboxd, IMDb e Netflix, lo ZIP e
+// l'abbinamento pesano quanto metà del foglio, e servono a chi importa — una
+// volta, forse due — non a chi apre le impostazioni per cambiare tema.
+const ImportPanel = lazy(() => import("./ImportPanel").then((m) => ({ default: m.ImportPanel })));
+import { localDay } from "../lib/day";
+import { downloadFile } from "../lib/download";
 import { resetAutoLinkAttempts } from "../lib/useAutoLinkTmdb";
-import { BackIcon, BookIcon, CheckIcon, ChevronDownIcon, ChevronRightIcon, ChevronUpIcon, CompassIcon, DownloadIcon, HomeIcon, InfoIcon, PersonIcon, PlayIcon, PulseIcon, RefreshIcon, SparkleIcon, StackIcon, SunIcon, TrashIcon, UploadIcon } from "./icons";
+import { BackIcon, BookIcon, CheckIcon, ChevronDownIcon, ChevronRightIcon, ChevronUpIcon, CompassIcon, DownloadIcon, HomeIcon, InfoIcon, PersonIcon, PlayIcon, PulseIcon, RefreshIcon, SheetFileIcon, SparkleIcon, StackIcon, StarIcon, SunIcon, TrashIcon, UploadIcon } from "./icons";
 
 /**
  * Where your own sources live, written once instead of pasted per title.
@@ -600,10 +610,11 @@ function PageReaderSetting() {
  * che sono cose diverse, e fa entrare ognuna in una schermata che si legge
  * tutta senza scorrere.
  */
-type PanelId = "chiavi" | "sorgenti" | "linkhost" | "aspetto" | "home" | "tv" | "genitori" | "dati" | "info";
+type PanelId = "chiavi" | "abbonamenti" | "sorgenti" | "linkhost" | "aspetto" | "home" | "tv" | "genitori" | "dati" | "importa" | "info";
 
 const PANEL_TITLES: Record<PanelId, string> = {
   chiavi: "Chiavi e modello",
+  abbonamenti: "I miei abbonamenti",
   sorgenti: "Indirizzi delle tue sorgenti",
   linkhost: "Gestisci Link Host",
   aspetto: "Aspetto",
@@ -611,8 +622,12 @@ const PANEL_TITLES: Record<PanelId, string> = {
   tv: "Televisore",
   genitori: "Controllo genitori",
   dati: "Dati e backup",
+  importa: "Importa da altri servizi",
   info: "Informazioni",
 };
+
+/** Le schermate che stanno dentro un'altra: «indietro» porta lì, non all'indice. */
+const PANEL_PARENT: Partial<Record<PanelId, PanelId>> = { importa: "dati" };
 
 function SettingsRow({
   icon,
@@ -773,14 +788,10 @@ function SettingsForm() {
         daily: getDailySeconds(),
       },
       useGoals.getState().goals,
+      useLists.getState().lists,
+      useSubscriptions.getState().subs,
     );
-    const blob = new Blob([backup], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `cinemate-libreria-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadFile(`cinemate-libreria-${localDay()}.json`, backup, "application/json");
     pushToast("success", "Libreria esportata.");
   }
 
@@ -793,6 +804,10 @@ function SettingsForm() {
    */
   const [pendingImport, setPendingImport] = useState<ReturnType<typeof parseBackup> | null>(null);
   const [confirmingClear, setConfirmingClear] = useState(false);
+  // I due file per Letterboxd, preparati quando apri la riga: i conteggi si
+  // leggono prima di scaricare, e ogni file si scarica col suo tocco — due
+  // download di fila dallo stesso clic Safari li blocca.
+  const [lbExport, setLbExport] = useState<LetterboxdExport | null>(null);
 
   async function handleImportFile(file: File) {
     let backup;
@@ -838,6 +853,8 @@ function SettingsForm() {
       }
     }
     if (backup.goals !== undefined) useGoals.getState().restore(backup.goals);
+    if (backup.lists !== undefined) useLists.getState().restore(backup.lists);
+    if (backup.subscriptions !== undefined) useSubscriptions.getState().restore(backup.subscriptions);
   }
 
   return (
@@ -847,8 +864,8 @@ function SettingsForm() {
           {panel && (
             <button
               type="button"
-              onClick={() => setPanel(null)}
-              aria-label="Torna alle impostazioni"
+              onClick={() => setPanel((p) => (p ? (PANEL_PARENT[p] ?? null) : null))}
+              aria-label={panel && PANEL_PARENT[panel] ? `Torna a ${PANEL_TITLES[PANEL_PARENT[panel]!]}` : "Torna alle impostazioni"}
               className="icon-btn icon-btn-filled icon-btn-sm shrink-0"
             >
               <BackIcon size={16} />
@@ -867,6 +884,15 @@ function SettingsForm() {
                 title="Chiavi e modello"
                 subtitle="TMDB per copertine e cast, Anthropic per il critico. Restano su questo dispositivo."
                 onClick={() => setPanel("chiavi")}
+              />
+            </SettingsGroup>
+
+            <SettingsGroup label="Dove guardi">
+              <SettingsRow
+                icon={<StarIcon size={18} />}
+                title="I miei abbonamenti"
+                subtitle="Cosa è già incluso in quello che paghi, e quanto ti costa ogni ora guardata."
+                onClick={() => setPanel("abbonamenti")}
               />
             </SettingsGroup>
 
@@ -1119,6 +1145,7 @@ function SettingsForm() {
           </>
         )}
 
+        {panel === "abbonamenti" && <SubscriptionsSettings />}
         {panel === "linkhost" && <LinkHostSettings />}
         {panel === "info" && <AboutPanel />}
         {panel === "aspetto" && <AppearanceSettings />}
@@ -1126,12 +1153,19 @@ function SettingsForm() {
         {panel === "home" && <HomeLayoutSettings />}
         {panel === "genitori" && <ParentalSettings />}
 
+        {panel === "importa" && (
+          <Suspense fallback={<p className="py-6 text-sm text-text-muted">Un attimo…</p>}>
+            <ImportPanel onFinished={() => setPanel("dati")} />
+          </Suspense>
+        )}
+
         {panel === "dati" && (
         <div>
           <p className="mb-4 text-sm text-text-muted">
             Tutto vive solo in questo browser. Esporta ogni tanto un backup: è anche il modo per portare la libreria
             su un altro dispositivo.
           </p>
+          <h3 className="mb-2 px-1 text-sm font-medium text-text-muted">Backup completo</h3>
           <div className="list-group bg-surface-2 shadow-none">
             <button
               type="button"
@@ -1151,6 +1185,68 @@ function SettingsForm() {
               <span className="flex h-5 w-5 shrink-0 items-center justify-center text-text-muted"><UploadIcon size={18} /></span>
               <span className="flex-1 text-sm font-medium text-text">Importa da un backup…</span>
             </button>
+          </div>
+
+          <h3 className="mb-2 mt-5 px-1 text-sm font-medium text-text-muted">Da e verso altri servizi</h3>
+          <div className="list-group bg-surface-2 shadow-none">
+            <button type="button" onClick={() => setPanel("importa")} className="list-row items-start hover:bg-surface-hover">
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-text-muted"><UploadIcon size={18} /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium text-text">Importa da Letterboxd, IMDb, Netflix…</span>
+                <span className="mt-0.5 block text-xs text-text-muted">Voti, diario con le date vere e liste, uniti a quello che hai.</span>
+              </span>
+              <span aria-hidden="true" className="mt-0.5 shrink-0 text-text-faint"><ChevronRightIcon size={16} /></span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setLbExport((v) => (v ? null : letterboxdExport(items, history, localDay())))}
+              disabled={items.length === 0}
+              aria-expanded={lbExport !== null}
+              className="list-row hover:bg-surface-hover disabled:opacity-40"
+            >
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center text-text-muted"><SheetFileIcon size={18} /></span>
+              <span className="flex-1 text-sm font-medium text-text">Esporta per Letterboxd</span>
+              <span className="text-xs text-text-muted">CSV</span>
+            </button>
+            {lbExport && (
+              <div className="list-row flex-col items-stretch gap-2.5 py-3">
+                <p className="text-xs text-text-muted">
+                  {lbExport.films === 0 && lbExport.wanted === 0
+                    ? "Nessun film da portare: Letterboxd tiene solo il cinema, e qui ci sono serie."
+                    : `${lbExport.films} film visti (${lbExport.entries} righe di diario) e ${lbExport.wanted} in watchlist. Si caricano su letterboxd.com/import: il diario come import normale, la watchlist con «Import to watchlist».${lbExport.skippedSeries ? ` ${lbExport.skippedSeries} serie restano fuori: Letterboxd non le tiene.` : ""}`}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {lbExport.diary.map((f) => (
+                    <button key={f.name} type="button" className="btn btn-secondary btn-sm" onClick={() => downloadFile(f.name, f.content, "text/csv")}>
+                      <DownloadIcon size={16} />
+                      {lbExport.diary.length > 1 ? f.name.replace(/^.*-(parte-\d+)\.csv$/, "Diario, $1") : "Diario e voti"}
+                    </button>
+                  ))}
+                  {lbExport.watchlist.map((f) => (
+                    <button key={f.name} type="button" className="btn btn-secondary btn-sm" onClick={() => downloadFile(f.name, f.content, "text/csv")}>
+                      <DownloadIcon size={16} />
+                      {lbExport.watchlist.length > 1 ? f.name.replace(/^.*-(parte-\d+)\.csv$/, "Watchlist, $1") : "Watchlist"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                downloadFile(`cinemate-libreria-${localDay()}.csv`, libraryCsv(items, history), "text/csv");
+                pushToast("success", "Libreria esportata in CSV.");
+              }}
+              disabled={items.length === 0}
+              className="list-row hover:bg-surface-hover disabled:opacity-40"
+            >
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center text-text-muted"><SheetFileIcon size={18} /></span>
+              <span className="flex-1 text-sm font-medium text-text">Esporta in un foglio di calcolo</span>
+              <span className="text-xs text-text-muted">CSV</span>
+            </button>
+          </div>
+
+          <div className="list-group mt-5 bg-surface-2 shadow-none">
             <button
               type="button"
               disabled={items.length === 0}
@@ -1182,7 +1278,15 @@ function SettingsForm() {
             <div role="alertdialog" aria-labelledby="import-confirm" className="mt-4 rounded-md bg-surface-2 p-4">
               <p id="import-confirm" className="text-sm text-text">
                 Importare {pendingImport.items.length} titoli? La libreria attuale ({items.length} titoli) verrà
-                sostituita{pendingImport.player ? ", insieme alle sorgenti del player e agli host" : ""}.
+                sostituita
+                {pendingImport.lists !== undefined && pendingImport.player
+                  ? ", insieme alle liste, alle sorgenti del player e agli host"
+                  : pendingImport.lists !== undefined
+                    ? ", insieme alle liste"
+                    : pendingImport.player
+                      ? ", insieme alle sorgenti del player e agli host"
+                      : ""}
+                .
               </p>
               <div className="mt-3 flex justify-end gap-2">
                 <button type="button" onClick={() => setPendingImport(null)} className="btn btn-secondary btn-sm">
@@ -1216,6 +1320,7 @@ function SettingsForm() {
                     useSagas.getState().clearAll();
                     useMarathon.getState().stop();
                     useReminders.getState().clearAll();
+                    useLists.getState().clearAll();
                   }}
                   className="btn btn-danger-fill btn-sm"
                 >

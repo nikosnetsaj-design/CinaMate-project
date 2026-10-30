@@ -42,6 +42,14 @@ export interface Item {
   added: string;
   tmdbId: number | null;
   tmdbMediaType: "movie" | "tv" | null;
+  /**
+   * L'identificativo IMDb (`tt0133093`), quando il titolo è arrivato da un
+   * export di IMDb. Facoltativo e raro: serve a collegarlo a TMDB senza
+   * cercare per nome — `/find` risponde con *quel* film, non con il più
+   * famoso fra quelli che si chiamano così — e a riportarlo in un export CSV,
+   * dove gli altri servizi lo usano per riconoscerlo.
+   */
+  imdbId?: string | null;
   posterPath: string | null;
   /**
    * L'immagine orizzontale, usata come intestazione della scheda. Opzionale

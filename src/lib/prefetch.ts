@@ -23,8 +23,40 @@ function once(key: string, load: () => Promise<unknown>) {
   void load().catch(() => started.delete(key));
 }
 
+/**
+ * Le pagine a caricamento differito, per il primo pezzo dell'indirizzo. Sono
+ * pezzi piccoli — decine di kB, non seicento — ma la stessa regola vale lo
+ * stesso: si scaricano quando c'è un'intenzione, non «per sicurezza».
+ */
+const ROUTES: Record<string, () => Promise<unknown>> = {
+  player: () => import("../pages/Player"),
+  libreria: () => import("../pages/Library"),
+  liste: () => import("../pages/Lists"),
+  saghe: () => import("../pages/Sagas"),
+  scopri: () => import("../pages/Discover"),
+  cerca: () => import("../pages/Search"),
+  tu: () => import("../pages/Tu"),
+  critico: () => import("../pages/Critic"),
+};
+
 export function prefetchRoute(path: string) {
-  if (path.startsWith("/player")) once("player", () => import("../pages/Player"));
+  const segment = path.replace(/^\//, "").split(/[/?#]/)[0];
+  const load = ROUTES[segment];
+  if (load) once(segment, load);
+}
+
+/** Il foglio delle Impostazioni, che si apre da un bottone e non da un indirizzo. */
+export function prefetchSettings() {
+  once("impostazioni", () => import("../components/SettingsSheet"));
+}
+
+/** Gli stessi tre segnali d'intenzione, per un bottone che apre le Impostazioni. */
+export function settingsPrefetchHandlers() {
+  return {
+    onMouseEnter: prefetchSettings,
+    onFocus: prefetchSettings,
+    onTouchStart: prefetchSettings,
+  };
 }
 
 /** Spread onto a link to make hovering, focusing or touching it preload. */

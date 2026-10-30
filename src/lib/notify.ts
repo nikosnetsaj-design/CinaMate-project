@@ -22,11 +22,29 @@ export async function requestNotificationPermission(): Promise<boolean> {
   }
 }
 
-/** Returns false when the notification could not be shown, so the caller can fall back. */
-export function showNotification(title: string, body: string, tag: string): boolean {
+/**
+ * Resolves to false when the notification could not be shown, so the caller
+ * can fall back.
+ *
+ * Two fixes live here. Chrome on Android refuses `new Notification()` outright
+ * ("Illegal constructor": only a service worker may show one there), and the
+ * `catch` turned that into a silent fallback — every reminder on the most
+ * common phone became a toast. The registration's `showNotification` works on
+ * Android and desktop alike, so it goes first. And the icon used an absolute
+ * `/icon-192.png`, which on GitHub Pages — served under the repository's path
+ * — is a 404: notifications arrived with the browser's generic icon.
+ */
+export async function showNotification(title: string, body: string, tag: string): Promise<boolean> {
   if (!notificationsAllowed()) return false;
+  const icon = `${import.meta.env.BASE_URL}icon-192.png`;
+  const options: NotificationOptions = { body, tag, icon };
   try {
-    new Notification(title, { body, tag, icon: "/icon-192.png" });
+    const registration = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistration() : undefined;
+    if (registration) {
+      await registration.showNotification(title, options);
+      return true;
+    }
+    new Notification(title, options);
     return true;
   } catch {
     return false;

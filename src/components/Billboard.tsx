@@ -12,6 +12,7 @@ import { paletteFor } from "../lib/palette";
 import { useTitleLogo } from "../lib/useTitleLogo";
 import { CheckIcon, InfoIcon, PlayIcon, PlusIcon } from "./icons";
 import type { Item } from "../types";
+import { onTabListKeyDown } from "../lib/tabKeys";
 
 /**
  * La vetrina: un titolo solo, grande, con la ragione per cui è lì e due modi
@@ -182,13 +183,14 @@ export function Billboard() {
             <div className="mt-2 flex items-center justify-center gap-3 sm:justify-start">
               {/* Il punto si vede da 8 px, si tocca da 24: il bersaglio è il
                   bottone, il punto è solo il suo disegno. */}
-              <div className="-mx-2 flex items-center" role="tablist" aria-label="Proposte in vetrina">
+              <div className="-mx-2 flex items-center" role="tablist" aria-label="Proposte in vetrina" onKeyDown={onTabListKeyDown}>
                 {featured.map((entry, i) => (
                   <button
                     key={entry.item.id}
                     type="button"
                     role="tab"
                     aria-selected={i === index}
+                    tabIndex={i === index ? 0 : -1}
                     aria-label={`Vetrina ${i + 1} di ${featured.length}: ${entry.item.title}`}
                     onClick={() => setIndex(i)}
                     className="flex h-6 min-w-6 items-center justify-center rounded-full px-1"

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useAddSheet } from "../store/useAddSheet";
 import { usePlayerSources } from "../store/usePlayerSources";
@@ -13,12 +13,16 @@ import { PosterGridSkeleton } from "../components/Skeletons";
 import { FilterSheet } from "../components/FilterSheet";
 import { ShareSheet } from "../components/ShareSheet";
 import { didYouMean, matchQuality } from "../lib/search";
-import { activeFilterCount, applyFilters, type Filters } from "../lib/filters";
+import { activeFilterCount, applyFilters, describeFilters, type Filters } from "../lib/filters";
 import { STATUSES } from "../lib/status";
 import { useAppReady } from "../lib/useAppReady";
 import { useVisibleItems } from "../lib/useVisibleItems";
 import type { Kind, Status } from "../types";
-import { GridIcon, ListIcon, ShareIcon } from "../components/icons";
+import { GridIcon, ListIcon, ListPlusIcon, ShareIcon } from "../components/icons";
+import { LibraryTabs } from "../components/LibraryTabs";
+import { useLists } from "../store/useLists";
+import { useSettingsSheet } from "../store/useSettingsSheet";
+import { useLibrary } from "../store/useLibrary";
 
 /** I tipi che un indirizzo può nominare: di ciò che arriva scritto lì non ci si fida. */
 const KIND_IDS: Kind[] = ["film", "serie", "anime", "doc"];
@@ -30,6 +34,9 @@ export function Library() {
   const items = useVisibleItems();
   const openItem = useSelectedItem((s) => s.open);
   const openAddSheet = useAddSheet((s) => s.open);
+  const createList = useLists((s) => s.create);
+  const pushToast = useLibrary((s) => s.pushToast);
+  const navigate = useNavigate();
 
   const [q, setQ] = useState("");
   const [filters, setFilters] = useState<Filters>({});
@@ -105,7 +112,7 @@ export function Library() {
   // when it is actually four horror films would be worse than useless to
   // whoever opens it.
   const listName =
-    q.trim() || (filterCount > 0 ? "Selezione dalla mia libreria" : "La mia libreria");
+    q.trim() || (filterCount > 0 ? describeFilters(filters) || "Selezione dalla mia libreria" : "La mia libreria");
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-5 px-[var(--gutter)] py-6 sm:py-10">
@@ -113,6 +120,8 @@ export function Library() {
         <h1 className="t-display text-text">Libreria</h1>
         <p className="mt-1 text-sm tabular text-text-muted">{items.length} titoli in totale</p>
       </div>
+
+      <LibraryTabs />
 
       <SearchBar value={q} onChange={setQ} placeholder="Cerca per titolo, regista, genere, attore…" />
 
@@ -166,6 +175,26 @@ export function Library() {
           >
             {grid ? <ListIcon size={20} /> : <GridIcon size={20} />}
           </button>
+          {/* Una ricerca o un filtro sono una lista che non ha ancora un nome:
+              «gli horror che ho visto» si salva così com'è, e da lì vive per
+              conto suo — un titolo nuovo non ci entra da solo, perché una lista
+              è una scelta e non una regola. */}
+          {(filterCount > 0 || q.trim()) && list.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                const id = createList(listName, list.map((i) => i.id));
+                if (id) {
+                  pushToast("success", `Salvata come lista: ${list.length} titoli.`);
+                  navigate(`/liste/${encodeURIComponent(id)}`, { viewTransition: true });
+                }
+              }}
+              aria-label="Salva questa selezione come lista"
+              className="icon-btn"
+            >
+              <ListPlusIcon size={20} />
+            </button>
+          )}
           {/* Shares exactly what is on screen, filters and search included —
               that is what makes it a *list* rather than an export: "gli horror
               che ho visto" is a query, and the query's result is the list. */}
@@ -195,20 +224,27 @@ export function Library() {
               : "Prova a toglierne uno, o a cercare con un'altra parola."
           }
           action={
-            <button
-              type="button"
-              onClick={() => {
-                if (items.length === 0) {
-                  openAddSheet();
-                  return;
-                }
-                setQ("");
-                setFilters({});
-              }}
-              className={items.length === 0 ? "btn btn-primary" : "btn btn-secondary"}
-            >
-              {items.length === 0 ? "Aggiungi il primo titolo" : "Togli filtri e ricerca"}
-            </button>
+            <div className="flex flex-col items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (items.length === 0) {
+                    openAddSheet();
+                    return;
+                  }
+                  setQ("");
+                  setFilters({});
+                }}
+                className={items.length === 0 ? "btn btn-primary" : "btn btn-secondary"}
+              >
+                {items.length === 0 ? "Aggiungi il primo titolo" : "Togli filtri e ricerca"}
+              </button>
+              {items.length === 0 && (
+                <button type="button" onClick={() => useSettingsSheet.getState().open("importa")} className="btn btn-plain text-text-muted hover:text-text">
+                  Importa da Letterboxd, IMDb o Netflix
+                </button>
+              )}
+            </div>
           }
         />
       ) : grid ? (

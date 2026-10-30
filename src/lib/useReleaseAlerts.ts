@@ -45,9 +45,9 @@ export function useReleaseAlerts() {
             : `Esce ${when}.`;
 
         reminders.markNotified(entry.item.id, entry.date);
-        if (!showNotification(entry.item.title, what, `cinemate-${entry.item.id}-${entry.date}`)) {
-          pushToast("info", `${entry.item.title} — ${what.toLowerCase()}`);
-        }
+        void showNotification(entry.item.title, what, `cinemate-${entry.item.id}-${entry.date}`).then((shown) => {
+          if (!shown) pushToast("info", `${entry.item.title} — ${what.toLowerCase()}`);
+        });
       }
     });
 

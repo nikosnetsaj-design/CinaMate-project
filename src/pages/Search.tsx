@@ -17,6 +17,7 @@ import { prefetchHandlers } from "../lib/prefetch";
 import { PosterArt } from "../components/PosterArt";
 import { CheckIcon, CloseIcon, PlayIcon, SearchIcon } from "../components/icons";
 import type { Item } from "../types";
+import { onTabListKeyDown } from "../lib/tabKeys";
 
 /**
  * Cerca: una casella, due schede, e — quando la casella è vuota — qualcosa da
@@ -389,7 +390,7 @@ export function Search() {
           )}
         </label>
 
-        <div className="mt-3 flex gap-2" role="tablist" aria-label="Cosa cercare">
+        <div className="mt-3 flex gap-2" role="tablist" aria-label="Cosa cercare" onKeyDown={onTabListKeyDown}>
           {([
             { id: "titoli", label: "Film & TV" },
             { id: "persone", label: "Persone" },
@@ -399,6 +400,7 @@ export function Search() {
               type="button"
               role="tab"
               aria-selected={tab === t.id}
+              tabIndex={tab === t.id ? 0 : -1}
               onClick={() => setTab(t.id)}
               className="chip"
             >

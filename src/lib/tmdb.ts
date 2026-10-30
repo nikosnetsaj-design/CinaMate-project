@@ -383,6 +383,88 @@ export async function searchTitles(
     .map((entry) => entry.r);
 }
 
+/* ------------------------------------------------------------------ */
+/* Riconoscere un titolo che arriva da fuori                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Un risultato con in più il titolo originale. Gli export stranieri scrivono i
+ * film col nome inglese o originale, e le risposte qui arrivano in italiano:
+ * «The Godfather» non somiglia a «Il padrino», ma all'originale sì.
+ */
+export interface TmdbCandidate extends TmdbSearchResult {
+  originalTitle: string;
+}
+
+interface RawTypedResult {
+  id: number;
+  title?: string;
+  name?: string;
+  original_title?: string;
+  original_name?: string;
+  release_date?: string;
+  first_air_date?: string;
+  overview?: string;
+  poster_path?: string | null;
+  genre_ids?: number[];
+  origin_country?: string[];
+  popularity?: number;
+}
+
+function toCandidate(r: RawTypedResult, mediaType: "movie" | "tv"): TmdbCandidate {
+  const genreNames = (r.genre_ids ?? []).map((id) => GENRE_NAMES[id]).filter((n): n is string => !!n);
+  const dateStr = r.release_date || r.first_air_date;
+  return {
+    tmdbId: r.id,
+    mediaType,
+    title: r.title || r.name || "",
+    originalTitle: r.original_title || r.original_name || "",
+    year: dateStr && dateStr.length >= 4 ? Number(dateStr.slice(0, 4)) : null,
+    overview: r.overview || "",
+    posterPath: r.poster_path ?? null,
+    kind: guessKind(mediaType, genreNames, r.origin_country),
+    popularity: r.popularity ?? 0,
+  };
+}
+
+/**
+ * Il titolo che ha quell'identificativo IMDb, se TMDB lo conosce.
+ *
+ * È una risposta esatta, non una ricerca: un export di IMDb porta `tt0133093`
+ * per ogni riga, e cercare «Matrix» per nome vorrebbe dire scegliere fra
+ * quattro film e una serie quello che quell'id dice già.
+ */
+export async function findByImdbId(imdbId: string, apiKey: string, signal?: AbortSignal): Promise<TmdbCandidate | null> {
+  const data = await tmdbGet<{ movie_results?: RawTypedResult[]; tv_results?: RawTypedResult[] }>(
+    `/find/${encodeURIComponent(imdbId)}`,
+    apiKey,
+    { external_source: "imdb_id" },
+    signal,
+  );
+  const movie = data.movie_results?.[0];
+  if (movie) return toCandidate(movie, "movie");
+  const tv = data.tv_results?.[0];
+  return tv ? toCandidate(tv, "tv") : null;
+}
+
+/**
+ * Cerca solo fra i film o solo fra le serie, e solo in un anno quando lo si
+ * sa. `/search/multi` mescola tutto e non accetta un anno: per chi ha già in
+ * mano «Dune, 1984» è la domanda sbagliata.
+ */
+export async function searchByType(
+  query: string,
+  mediaType: "movie" | "tv",
+  apiKey: string,
+  year?: number | null,
+  signal?: AbortSignal,
+): Promise<TmdbCandidate[]> {
+  const params: Record<string, string> = { query, include_adult: "false" };
+  if (year) params[mediaType === "movie" ? "primary_release_year" : "first_air_date_year"] = String(year);
+  const data = await tmdbGet<{ results?: RawTypedResult[] }>(`/search/${mediaType}`, apiKey, params, signal);
+  return (data.results ?? []).map((r) => toCandidate(r, mediaType)).filter((r) => r.title);
+}
+
 interface RawVideo {
   type: string;
   site: string;
@@ -535,6 +617,94 @@ export async function getWatchProviders(tmdbId: number, mediaType: "movie" | "tv
   };
   watchCache.set(key, info);
   return info;
+}
+
+/* ------------------------------------------------------------------ */
+/* I servizi a cui sei abbonato                                         */
+/* ------------------------------------------------------------------ */
+
+export interface TmdbProviderOption {
+  id: number;
+  name: string;
+  logoPath: string | null;
+  /** L'ordine di JustWatch per l'Italia: prima quelli che hanno quasi tutti. */
+  priority: number;
+}
+
+interface RawProviderListEntry {
+  provider_id: number;
+  provider_name: string;
+  logo_path?: string | null;
+  display_priority?: number;
+  display_priorities?: Record<string, number>;
+}
+
+/** L'elenco dei servizi cambia di rado: una settimana su disco. */
+const providerCatalogCache = new TieredCache<TmdbProviderOption[]>("servizi", TTL.static);
+
+/**
+ * Tutti i servizi presenti in Italia, film e serie insieme, nell'ordine in cui
+ * JustWatch li mette per il paese. Serve all'elenco da cui scegli i tuoi
+ * abbonamenti: un elenco scritto a mano invecchierebbe al primo servizio nuovo.
+ */
+export async function getProviderCatalog(apiKey: string): Promise<TmdbProviderOption[]> {
+  const hit = await providerCatalogCache.get("IT");
+  if (hit) return hit;
+  const [movies, shows] = await Promise.all(
+    (["movie", "tv"] as const).map((type) =>
+      tmdbGet<{ results?: RawProviderListEntry[] }>(`/watch/providers/${type}`, apiKey, { watch_region: "IT" }),
+    ),
+  );
+  const byId = new Map<number, TmdbProviderOption>();
+  for (const p of [...(movies.results ?? []), ...(shows.results ?? [])]) {
+    if (byId.has(p.provider_id)) continue;
+    byId.set(p.provider_id, {
+      id: p.provider_id,
+      name: p.provider_name,
+      logoPath: p.logo_path ?? null,
+      priority: p.display_priorities?.IT ?? p.display_priority ?? 999,
+    });
+  }
+  const list = [...byId.values()].sort((a, b) => a.priority - b.priority || a.name.localeCompare(b.name));
+  providerCatalogCache.set("IT", list);
+  return list;
+}
+
+const includedCache = new TieredCache<TmdbSearchResult[]>("inclusi", TTL.feed);
+
+/**
+ * I titoli popolari adesso che sono *compresi* nei tuoi abbonamenti — non a
+ * noleggio, non in vendita: `with_watch_monetization_types=flatrate`. Film e
+ * serie in una riga sola, mescolati per popolarità, perché la domanda è «cosa
+ * c'è stasera in quello che pago», non «quali film».
+ */
+export async function getIncludedIn(providerIds: number[], apiKey: string): Promise<TmdbSearchResult[]> {
+  if (providerIds.length === 0) return [];
+  const key = providerIds.slice().sort((a, b) => a - b).join("|");
+  const hit = await includedCache.get(key);
+  if (hit) return hit;
+  const params: Record<string, string> = {
+    with_watch_providers: key,
+    watch_region: "IT",
+    with_watch_monetization_types: "flatrate",
+    sort_by: "popularity.desc",
+    "vote_count.gte": "100",
+    include_adult: "false",
+    page: "1",
+  };
+  const [movies, shows] = await Promise.all(
+    (["movie", "tv"] as const).map(async (type) => {
+      const data = await tmdbGet<{ results?: RawTypedResult[] }>(`/discover/${type}`, apiKey, params);
+      return (data.results ?? []).map((r) => toCandidate(r, type));
+    }),
+  );
+  const rows = [...movies, ...shows]
+    .filter((r) => r.title && r.posterPath)
+    .sort((a, b) => b.popularity - a.popularity)
+    .slice(0, 20)
+    .map(({ originalTitle: _drop, ...r }) => r);
+  includedCache.set(key, rows);
+  return rows;
 }
 
 /**
@@ -1415,6 +1585,60 @@ export interface TmdbTitleExtras {
   posters: string[];
   backdrops: string[];
   related: TmdbSearchResult[];
+  /** Le scene durante e dopo i titoli di coda, quando TMDB le segna. */
+  creditsScenes: CreditsScenes;
+}
+
+/* ------------------------------------------------------------------ */
+/* Scene durante e dopo i titoli di coda                                */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Se c'è qualcosa da vedere mentre scorrono i titoli, o dopo.
+ *
+ * Nessun servizio lo dice, e da quindici anni di Marvel la domanda «c'è una
+ * scena dopo?» si fa in sala, a voce, ai vicini di poltrona. TMDB lo sa: due
+ * keyword della comunità, `duringcreditsstinger` e `aftercreditsstinger`,
+ * presenti su migliaia di film. Si riconoscono per id e per nome, così una
+ * delle due che cambiasse non spegnerebbe la funzione in silenzio.
+ *
+ * Il dato è comunitario: un film appena uscito può non averlo ancora, quindi
+ * la sua assenza non vuol dire «non c'è niente», e l'interfaccia non lo dice.
+ */
+export interface CreditsScenes {
+  during: boolean;
+  after: boolean;
+}
+
+const STINGER_DURING = { id: 179431, name: "duringcreditsstinger" };
+const STINGER_AFTER = { id: 179430, name: "aftercreditsstinger" };
+
+interface RawKeyword {
+  id: number;
+  name?: string;
+}
+
+export function readCreditsScenes(keywords: RawKeyword[] | undefined): CreditsScenes {
+  const list = keywords ?? [];
+  const has = (k: { id: number; name: string }) => list.some((x) => x.id === k.id || x.name === k.name);
+  return { during: has(STINGER_DURING), after: has(STINGER_AFTER) };
+}
+
+const stingerCache = new TieredCache<CreditsScenes>("scene-dopo-i-titoli", TTL.metadata);
+
+/**
+ * Solo le keyword, per il player: la scheda le ha già dentro `getTitleExtras`,
+ * ma il player non apre la scheda, e chiedere crediti, immagini e correlati
+ * per sapere due booleani sarebbe sproporzionato.
+ */
+export async function getCreditsScenes(tmdbId: number, mediaType: "movie" | "tv", apiKey: string): Promise<CreditsScenes> {
+  const key = `${mediaType}:${tmdbId}`;
+  const hit = await stingerCache.get(key);
+  if (hit) return hit;
+  const raw = await tmdbGet<{ keywords?: RawKeyword[]; results?: RawKeyword[] }>(`/${mediaType}/${tmdbId}/keywords`, apiKey);
+  const scenes = readCreditsScenes(raw.keywords ?? raw.results);
+  stingerCache.set(key, scenes);
+  return scenes;
 }
 
 interface RawImage {
@@ -1435,6 +1659,8 @@ interface RawExtras extends RawDetails {
   credits?: { cast?: RawCast[]; crew?: (RawCrew & { id: number; profile_path?: string | null; department?: string })[] };
   videos?: { results?: (RawVideo & { name?: string; iso_639_1?: string })[] };
   recommendations?: { results?: RawMultiSearchResult[] };
+  /** I film le tengono sotto `keywords`, le serie sotto `results`. */
+  keywords?: { keywords?: RawKeyword[]; results?: RawKeyword[] };
 }
 
 /**
@@ -1505,7 +1731,7 @@ export function getTitleExtras(tmdbId: number, mediaType: "movie" | "tv", apiKey
   // partirebbero quattro richieste identiche.
   const promise = (async (): Promise<TmdbTitleExtras> => {
     const raw = await tmdbGet<RawExtras>(`/${mediaType}/${tmdbId}`, apiKey, {
-      append_to_response: "credits,images,videos,recommendations",
+      append_to_response: "credits,images,videos,recommendations,keywords",
       // Senza questi due, `language=it-IT` restituisce solo il materiale
       // italiano — che per tre titoli su quattro vuol dire niente.
       include_image_language: "it,en,null",
@@ -1581,6 +1807,7 @@ export function getTitleExtras(tmdbId: number, mediaType: "movie" | "tv", apiKey
       posters: sortImages(raw.images?.posters, 16),
       backdrops: sortImages(raw.images?.backdrops, 16),
       related,
+      creditsScenes: readCreditsScenes(raw.keywords?.keywords ?? raw.keywords?.results),
     };
   })();
 
@@ -1614,6 +1841,8 @@ export function clearTmdbCaches(): void {
   personIdCache.clear();
   keywordIdCache.clear();
   releaseDateCache.clear();
+  stingerCache.clear();
+  includedCache.clear();
 }
 
 /* ------------------------------------------------------------------ */

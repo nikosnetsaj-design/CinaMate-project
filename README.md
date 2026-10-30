@@ -22,9 +22,9 @@ tuo server, scritto una volta sola nelle Impostazioni.
 
 ## Stack
 
-- **Vite + React 18 + TypeScript**
-- **Tailwind CSS v4** — design tokens "Sala buia" custom in `src/index.css`:
-  nero neutro, grigi neutri, accento verde
+- **Vite + React 19 + TypeScript**
+- **Tailwind CSS v4** — design tokens «Sala e carta» in `src/index.css`: di
+  sera un nero caldo, di giorno una carta calda, un solo accento color brace
 - **Zustand** per lo stato (libreria, tema, obiettivi, layout della Home,
   controllo genitori, impostazioni, sheet), persistito su `localStorage`
 - **React Router** per la navigazione
@@ -48,8 +48,13 @@ npm install
 npm run dev      # ambiente di sviluppo
 npm run build    # build di produzione (tsc + vite build)
 npm run lint      # oxlint
+npm test          # le prove: scripts/tests/*.test.ts, senza framework
 npm run contrast  # WCAG AA su ogni coppia testo/sfondo dei due temi
 ```
+
+Le stesse quattro cose — lint, prove, contrasto, tipi e build — girano su ogni
+pull request (`.github/workflows/verifica.yml`), e il deploy su Pages le
+ripete prima di pubblicare: un ramo rosso non arriva mai sul sito.
 
 `npm run contrast` legge i colori veri da `src/index.css`, compone le
 trasparenze sul fondo su cui finiscono e calcola il rapporto secondo WCAG 2.1.
@@ -105,6 +110,19 @@ src/
                   dnsGuide.ts       riferimento DoH/DoT e resolver pubblici
                   doh.ts            risoluzione via DoH dal browser, come
                                     diagnosi: è il nome o è il server?
+                  importers.ts      i formati di Letterboxd, IMDb, Netflix e dei
+                                    CSV qualunque, e il piano di unione: cosa
+                                    entra, cosa si aggiorna, cosa va nel diario
+                  importMatch.ts    da «The Godfather, 1972» alla scheda di TMDB
+                  titleMatch.ts     quando due titoli sono lo stesso titolo:
+                                    serve all'import e alla passata in sottofondo
+                  csv.ts · zip.ts   CSV nel dialetto degli export veri, e lo ZIP
+                                    di Letterboxd aperto senza librerie
+                  exportCsv.ts      la libreria per un foglio di calcolo e per
+                                    l'import di Letterboxd
+                  ics.ts            le uscite in arrivo come file di calendario
+                  subscriptions.ts  i tuoi abbonamenti e il loro conto
+                  tabKeys.ts        le frecce nelle file di schede
   player/       il player, autonomo dal resto dell'app:
                   hooks/      motore video (hls.js), gesture, sottotitoli,
                               maratona, download, watch party, cast,
@@ -134,9 +152,10 @@ src/
 Il player è un modulo a sé: usa i propri tipi (`src/player/types.ts`) e le
 proprie chiavi `localStorage` (prefisso `ppv:`) per cronologia e statistiche
 interne. I file dello strato di collegamento sono i soli che conoscono gli store
-di CineMate; `player/components/` e `player/hooks/` non ne sanno nulla — l'unica
-eccezione è `useFocusTrap`, che è un'utility generica per i modali usata da tutti
-i fogli dell'app e che riscrivere qui sarebbe peggio che condividere.
+di CineMate; `player/components/` e `player/hooks/` non ne sanno nulla — le uniche
+eccezioni sono due utilità generiche di accessibilità, `useFocusTrap` per i modali
+e `onTabListKeyDown` (`lib/tabKeys.ts`) per le file di schede, usate da tutti i
+fogli dell'app: riscriverle qui sarebbe peggio che condividerle.
 
 Il lettore di pagine sta invece in `useSettings`, accanto alle chiavi API: non è
 una sorgente ma un modo di leggere, e vale per tutta l'app — la ricerca
@@ -157,6 +176,21 @@ rete che non è la tua.
 - **Libreria unificata**: ogni titolo ha uno stato (In visione / Visto / Da
   vedere / Abbandonato / In pausa), un voto da 1 a 10, piattaforma, ed
   eventualmente episodi/stagioni per serie e anime.
+- **Arrivi con la tua storia**: Impostazioni → Dati e backup → «Importa da
+  Letterboxd, IMDb, Netflix…». Lo ZIP di Letterboxd così com'è (visti, voti,
+  diario con le rivisioni, recensioni, watchlist, «mi piace», liste), i voti e
+  la watchlist di IMDb, la cronologia di Netflix, o qualunque CSV con una
+  colonna Titolo. Prima di scrivere i titoli si riconoscono su TMDB — per id
+  IMDb, poi per nome *e anno*, così «Dune» del 1984 non diventa quello del
+  2021 e «The Godfather» non entra accanto a «Il padrino» — e un riepilogo
+  dice cosa succederà. Due regole: nel diario entrano solo visioni con una
+  data vera (il giorno in cui hai *registrato* cinquecento film non è il
+  giorno in cui li hai visti), e quello che hai scritto qui vince. Un secondo
+  import dello stesso file non aggiunge niente.
+- **Esci quando vuoi**: «Esporta per Letterboxd» scrive il loro formato
+  d'import (diario con le rivisioni, voti, watchlist a parte, spezzato sotto
+  il megabyte che accettano); «Esporta in un foglio di calcolo» apre in Excel
+  con un doppio clic (punto e virgola e BOM), e si rilegge qui.
 - **Saghe e collezioni**: i film si raggruppano da soli nella loro saga usando le
   collezioni TMDB. Ogni saga ha copertina, descrizione, elenco numerato dei
   capitoli, stato di visione per capitolo e percentuale di completamento.
@@ -174,6 +208,12 @@ rete che non è la tua.
   solo pulsante pieno — **Guarda** — e cinque azioni tonde: Trailer, Preferito,
   Voto, Guardato, Condividi. Sotto, quattro schede: **Episodi**, Dettagli, Saga,
   Simili.
+- **Scene durante e dopo i titoli di coda**: una pastiglia con la poltrona
+  nella scheda — «Scena dopo i titoli di coda» — e nel player, quando partono
+  i titoli, «Resta: c'è una scena dopo i titoli»; il salto automatico dei
+  crediti non scatta su quei film. Il dato sono due keyword della comunità di
+  TMDB, e la loro assenza non viene detta: un film appena uscito può non
+  averle ancora.
 - **Cast con le facce**: foto tonde, nome e personaggio, con «mostra tutti».
   Un attore si ricorda per la faccia e per il ruolo prima che per il nome; senza
   TMDB restano le pastiglie con i nomi, che la libreria ha comunque.
@@ -184,6 +224,13 @@ rete che non è la tua.
   qualcosa che va pagato a parte, e «Disney+» in mezzo ad altre cinque scritte
   si legge, mentre il quadratino col castello si *vede*. Il nome resta
   nell'`alt`, quindi con un lettore di schermo l'elenco è identico a prima.
+- **I miei abbonamenti**: dici a cosa sei abbonato (e, se vuoi, quanto paghi)
+  in Impostazioni, e «Dove guardarlo» risponde alla domanda vera — «Incluso
+  nel tuo abbonamento: Netflix» — con le tue icone per prime; in Scopri c'è
+  una riga «Incluso nei tuoi abbonamenti» con cosa è popolare lì senza pagare
+  altro; in Tu il conto, servizio per servizio: visioni e ore dell'ultimo mese
+  e quanto ti è costata ogni ora. Un servizio fermo dice da quando, senza
+  colori d'allarme.
 - **Regia e troupe**: le carte con la faccia di chi l'ha fatto — regia,
   sceneggiatura, musiche, fotografia, produzione — e per le serie chi l'ha
   ideata. Un tocco apre la scheda della persona con la sua filmografia. TMDB
@@ -198,12 +245,13 @@ rete che non è la tua.
 - **Studi di produzione**: i marchi, su fondo chiaro. Non è gusto: i loghi di
   TMDB sono inchiostro nero su trasparente, e messi sul fondo scuro
   sparirebbero.
-- **Grafica «Sala buia»**: fondo nero, grigi neutri e verde. Prima era velluto
-  melanzana con i grigi tinti di lillà: il testo secondario tirava al rosa e su
-  quel fondo non si staccava da niente. Adesso i titoli di sezione sono bianchi
-  e grandi, le etichette dei gruppi sono verdi, e i voti vanno dal blu al rosso
-  invece che dal ciano al magenta — nel Nastro un 6 e un 9 erano la stessa
-  striscia rosa. Gli altri cinque accenti restano in Impostazioni → Aspetto.
+- **Grafica «Sala e carta»**: di sera un nero caldo, di giorno una carta calda —
+  mai il nero pieno, che fa vibrare il testo bianco, e mai il grigio freddo, che
+  fa sembrare l'app un modulo. Le locandine portano il colore; l'interfaccia
+  intorno tace, con un solo accento color brace dove c'è un'azione. I voti
+  vanno da freddo a caldo nei toni della carta. Gli altri accenti restano in
+  Impostazioni → Aspetto, e l'icona dell'app è lo stesso marchio che si vede in
+  alto: la pizza della pellicola sulla tessera color brace.
 - **Maggiori informazioni**: il pulsante sotto il cast porta ai dati del film —
   regia, incassi, studi, media — senza risalire alla riga delle schede.
 - **Colonna sonora**: un tocco apre la ricerca di Spotify già scritta, col nome
@@ -335,7 +383,11 @@ rete che non è la tua.
 - **Pagine persone**: attori e registi cliccabili ovunque, con filmografia da
   TMDB e in evidenza ciò che hai già in libreria.
 - **Prossimamente**: calendario dei nuovi episodi delle serie che segui e delle
-  uscite dei film in watchlist, con promemoria e notifiche locali.
+  uscite dei film in watchlist, con promemoria e notifiche locali (su Android
+  passano dal service worker, l'unica strada che Chrome lì accetta). E
+  «Calendario» le mette tutte nel calendario del telefono con un file `.ics`:
+  ricorda lui, anche ad app chiusa, e spostare la data su TMDB sposta
+  l'evento invece di duplicarlo.
 - **Ricerca intelligente**: una sola barra che trova titoli, saghe, universi,
   attori e registi, con i risultati raggruppati per tipo — e che perdona gli
   errori di battitura, proponendo il titolo che intendevi.
@@ -377,6 +429,10 @@ rete che non è la tua.
   restano avanti, indietro e volume. Si accende da sola su una TV, un Fire TV o
   un Chromecast, e nelle impostazioni c'è l'interruttore a tre stati con scritto
   cosa ha riconosciuto.
+- **Da tastiera, le schede si percorrono con le frecce**: ← → passano alla
+  scheda accanto, Inizio e Fine ai bordi, e nel giro del tasto Tab ogni fila
+  di schede è una fermata sola — come chiede WAI-ARIA, e come si aspetta chi
+  usa un lettore di schermo che le annuncia.
 - **Copertina larga nella scheda**: l'immagine orizzontale del titolo dietro
   all'intestazione, sfumata verso il fondo. Quando manca — o mentre arriva —
   resta la sfumatura generata dal titolo, che è sempre stata l'intestazione
@@ -606,6 +662,10 @@ perché non scorra dietro al film. Non è un ripiego povero: le regole di scena
 bassa misurano il riquadro, quindi a schermo pieno il lettore si ridisegna da
 solo alla nuova altezza, e i comandi restano i nostri — episodi, sottotitoli,
 maratona — che nel lettore di sistema sparirebbero tutti.
+
+Su Android, lo schermo pieno di un video più largo che alto **gira da solo in
+orizzontale**, come in Netflix e YouTube, e all'uscita il telefono torna
+libero; l'app installata non è più bloccata in verticale dal manifest.
 
 Due conseguenze pratiche: il pulsante c'è **sempre** (prima si decideva
 guardando `videoRef.current`, che al primo render è ancora `null` — e un ref non
