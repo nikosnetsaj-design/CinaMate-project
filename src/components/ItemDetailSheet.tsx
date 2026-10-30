@@ -25,6 +25,8 @@ import { DownloadButton } from "./DownloadButton";
 import { SpoilerFreeRecap, TranslateOverview } from "./AiItemExtras";
 import { BackIcon, EyeIcon, HeartIcon, InfoIcon, ListIcon, MinusIcon, PlayIcon, PlusIcon, ShareIcon, SparkleIcon, StarIcon } from "./icons";
 import { ListPickerSheet } from "./ListPickerSheet";
+import { TrailerPlayer } from "./TrailerPlayer";
+import { youtubeKey } from "../lib/youtube";
 import { useLists } from "../store/useLists";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useLibrary } from "../store/useLibrary";
@@ -98,6 +100,8 @@ function ItemDetail({ item }: { item: Item }) {
   const shelfMates = useMemo(() => similarInLibrary(item, items), [item, items]);
   const [sharing, setSharing] = useState(false);
   const [pickingList, setPickingList] = useState(false);
+  const [trailerOpen, setTrailerOpen] = useState(false);
+  const trailerKey = youtubeKey(item.trailerUrl);
   const inLists = useLists((s) => s.lists.some((l) => l.kind === "manual" && l.itemIds.includes(item.id)));
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [a, b] = paletteFor(item.title);
@@ -145,6 +149,20 @@ function ItemDetail({ item }: { item: Item }) {
         >
           <PlayIcon size={28} />
         </button>
+
+        {/* Il trailer sta sull'immagine, dove lo cerca l'occhio, e si apre qui
+            dentro invece che su YouTube: uscire per novanta secondi voleva dire
+            perdere la scheda. Così la fila delle azioni resta di cinque. */}
+        {trailerKey && (
+          <button
+            type="button"
+            onClick={() => setTrailerOpen(true)}
+            className="btn btn-sm absolute bottom-4 right-4 bg-black/45 text-white backdrop-blur-md hover:bg-black/65 sm:right-6"
+          >
+            <PlayIcon size={14} />
+            Trailer
+          </button>
+        )}
 
         <div className="absolute bottom-3.5 left-4 flex items-end gap-3.5 sm:left-6">
           <PosterArt item={item} size="lg" showTitle={false} priority className="w-20 shrink-0 shadow-[var(--shadow-lg)] sm:w-24" />
@@ -217,11 +235,6 @@ function ItemDetail({ item }: { item: Item }) {
             la sua riga di pastiglie in Dettagli, e un interruttore a due valori
             avrebbe dovuto inventare uno stato "non in lista" che non esiste. */}
         <div className="mt-6 flex flex-wrap justify-around gap-2">
-          {item.trailerUrl && (
-            <RoundAction label="Trailer" onClick={() => window.open(item.trailerUrl!, "_blank", "noopener")}>
-              <PlayIcon size={17} />
-            </RoundAction>
-          )}
           <RoundAction label="Preferito" active={item.fav} onClick={() => toggleFav(item.id)}>
             <HeartIcon size={17} filled={item.fav} />
           </RoundAction>
@@ -558,6 +571,9 @@ function ItemDetail({ item }: { item: Item }) {
 
       {sharing && <ShareSheet target={{ kind: "item", item }} onClose={() => setSharing(false)} />}
       {pickingList && <ListPickerSheet item={item} onClose={() => setPickingList(false)} />}
+      {trailerOpen && trailerKey && (
+        <TrailerPlayer videoKey={trailerKey} title={`${item.title} — trailer`} onClose={() => setTrailerOpen(false)} />
+      )}
     </div>,
     document.body,
   );

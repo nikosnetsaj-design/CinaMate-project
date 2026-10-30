@@ -73,7 +73,8 @@ resta tua e non ti vende niente.
 | Funzione | Problema | Beneficio | Priorità |
 |---|---|---|---|
 | **Intestazione larga con Riproduci** | La scheda si apriva su una fascia di dati e il "guarda" stava sotto le note | Copertina orizzontale con il play al centro, riga dei fatti (anno · classificazione · stagioni · durata · qualità) e un solo pulsante pieno | Essenziale ✅ |
-| **Cinque azioni tonde** | Le stesse cose erano sparse fra pastiglie di stato e pulsanti in fondo | Trailer, Preferito, Voto, Guardato, Condividi: tutte reversibili e tutte con un effetto visibile | Utile ✅ |
+| **Cinque azioni tonde** | Le stesse cose erano sparse fra pastiglie di stato e pulsanti in fondo | Preferito, Voto, Guardato, Liste, Condividi: tutte reversibili e tutte con un effetto visibile | Utile ✅ |
+| **Trailer dentro l'app** | Il trailer apriva YouTube in un'altra scheda, e al ritorno la scheda del titolo non c'era più | Un pulsante «Trailer» sull'immagine larga apre il video qui dentro (`youtube-nocookie`); dove il browser ha la Document Picture-in-Picture API una finestrella resta sopra le altre e riparte dal secondo in cui eri. Dove l'API non c'è il pulsante non compare | Utile ✅ |
 | **Schede invece di una colonna** | La scheda era lunga quanto tre schermate | Episodi · Dettagli · Saga · Simili: si apre su ciò che serve, e per una serie è l'elenco delle puntate | Utile ✅ |
 | **Episodi per stagione** | La libreria sapeva *quanti* episodi avevi visto, non quali | Un registro per titolo — stagione, episodio, data — al posto del contatore (`seen` resta come valore derivato). La griglia delle stagioni funziona anche senza TMDB: tocco = visto, pressione lunga (o Maiuscolo + clic) = visto fino a lì. Con TMDB, titolo, durata, voto, trama e miniatura di ogni puntata. Il prossimo episodio, la ricerca sui siti, i modelli d'indirizzo e il lettore leggono stagione ed episodio veri | Utile ✅ |
 | **Episodi dentro il lettore** | Il pannello «Episodi» elencava gli altri titoli dello scaffale: la risposta giusta a una domanda che non si fa mentre si guarda una serie a metà stagione | Le puntate vere della stagione in onda — fotogramma, durata, trama, tendina delle stagioni, quella in corso evidenziata — e un tocco riparte da lì. Gli altri titoli restano, nella seconda scheda | Utile ✅ |
@@ -578,8 +579,7 @@ essenziale è chiusa: quello che resta qui sotto è utile, non necessario, e
 nessuna delle tre è un buco che si sente usando l'app.
 
 **Poi (Utile)**
-1. Trailer in‑app con PiP
-2. Universi costruiti a mano dall'utente, oltre a quelli da keyword
+1. Universi costruiti a mano dall'utente, oltre a quelli da keyword
 
 **Futuro**
 5. Sync cloud con account

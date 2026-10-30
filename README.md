@@ -220,8 +220,11 @@ rete che non è la tua.
   nessun catalogo che l'app possa leggere.
 - **Media**: tre schede — **Video**, **Poster**, **Sfondi**. I trailer si aprono
   dentro l'app, in un pannello sopra la scheda (`youtube-nocookie`, quindi
-  nessun cookie di profilazione finché non premi play); locandine e sfondi si
-  ingrandiscono a tutto schermo. Uscire dal sito per novanta secondi di trailer
+  nessun cookie di profilazione finché non premi play), e sul computer — dove
+  Chrome ed Edge hanno la Document Picture-in-Picture API — passano in una
+  finestrella che resta sopra le altre, dal secondo in cui eri. Il trailer
+  principale ha il suo pulsante sull'immagine larga della scheda; locandine e
+  sfondi si ingrandiscono a tutto schermo. Uscire dal sito per novanta secondi di trailer
   vuol dire perdere il posto in cui eri, e al ritorno l'app riparte da capo.
 - **Prequel & Sequel**: la saga come una linea da percorrere — le locandine in
   ordine, l'anno sulla copertina, il numero del capitolo grande dietro, e

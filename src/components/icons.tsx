@@ -36,6 +36,7 @@ import {
   Minus,
   Moon,
   Music,
+  PictureInPicture2,
   Play,
   Plus,
   RefreshCw,
@@ -199,6 +200,9 @@ export function MusicIcon({ size = 18 }: IconProps) {
 }
 export function DownloadIcon({ size = 16 }: IconProps) {
   return <Glyph icon={Download} size={size} />;
+}
+export function PictureInPictureIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={PictureInPicture2} size={size} />;
 }
 export function BookmarkIcon({ size = 18 }: IconProps) {
   return <Glyph icon={Bookmark} size={size} />;
