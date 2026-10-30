@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { CreditsScenesNote } from "./CreditsScenesNote";
 import { createPortal } from "react-dom";
 import { useFocusTrap } from "../lib/useFocusTrap";
 import { paletteFor } from "../lib/palette";
@@ -196,6 +197,8 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
               </span>
             ))}
         </p>
+
+        <CreditsScenesNote item={item} />
 
         {/* L'unica azione che questa scheda può offrire, e l'unica che serve:
             portarlo dentro. Il foglio si apre compilato — resta una decisione,

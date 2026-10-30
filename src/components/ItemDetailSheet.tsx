@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { CreditsScenesNote } from "./CreditsScenesNote";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useFocusTrap } from "../lib/useFocusTrap";
@@ -201,6 +202,8 @@ function ItemDetail({ item }: { item: Item }) {
               </span>
             ))}
         </p>
+
+        <CreditsScenesNote item={item} />
 
         {/* Alto di proposito: "guardalo adesso" è il motivo per cui la scheda si
             apre dopo una ricerca, e stava sotto le note. */}

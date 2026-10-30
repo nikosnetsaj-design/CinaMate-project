@@ -1497,6 +1497,60 @@ export interface TmdbTitleExtras {
   posters: string[];
   backdrops: string[];
   related: TmdbSearchResult[];
+  /** Le scene durante e dopo i titoli di coda, quando TMDB le segna. */
+  creditsScenes: CreditsScenes;
+}
+
+/* ------------------------------------------------------------------ */
+/* Scene durante e dopo i titoli di coda                                */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Se c'è qualcosa da vedere mentre scorrono i titoli, o dopo.
+ *
+ * Nessun servizio lo dice, e da quindici anni di Marvel la domanda «c'è una
+ * scena dopo?» si fa in sala, a voce, ai vicini di poltrona. TMDB lo sa: due
+ * keyword della comunità, `duringcreditsstinger` e `aftercreditsstinger`,
+ * presenti su migliaia di film. Si riconoscono per id e per nome, così una
+ * delle due che cambiasse non spegnerebbe la funzione in silenzio.
+ *
+ * Il dato è comunitario: un film appena uscito può non averlo ancora, quindi
+ * la sua assenza non vuol dire «non c'è niente», e l'interfaccia non lo dice.
+ */
+export interface CreditsScenes {
+  during: boolean;
+  after: boolean;
+}
+
+const STINGER_DURING = { id: 179431, name: "duringcreditsstinger" };
+const STINGER_AFTER = { id: 179430, name: "aftercreditsstinger" };
+
+interface RawKeyword {
+  id: number;
+  name?: string;
+}
+
+export function readCreditsScenes(keywords: RawKeyword[] | undefined): CreditsScenes {
+  const list = keywords ?? [];
+  const has = (k: { id: number; name: string }) => list.some((x) => x.id === k.id || x.name === k.name);
+  return { during: has(STINGER_DURING), after: has(STINGER_AFTER) };
+}
+
+const stingerCache = new TieredCache<CreditsScenes>("scene-dopo-i-titoli", TTL.metadata);
+
+/**
+ * Solo le keyword, per il player: la scheda le ha già dentro `getTitleExtras`,
+ * ma il player non apre la scheda, e chiedere crediti, immagini e correlati
+ * per sapere due booleani sarebbe sproporzionato.
+ */
+export async function getCreditsScenes(tmdbId: number, mediaType: "movie" | "tv", apiKey: string): Promise<CreditsScenes> {
+  const key = `${mediaType}:${tmdbId}`;
+  const hit = await stingerCache.get(key);
+  if (hit) return hit;
+  const raw = await tmdbGet<{ keywords?: RawKeyword[]; results?: RawKeyword[] }>(`/${mediaType}/${tmdbId}/keywords`, apiKey);
+  const scenes = readCreditsScenes(raw.keywords ?? raw.results);
+  stingerCache.set(key, scenes);
+  return scenes;
 }
 
 interface RawImage {
@@ -1517,6 +1571,8 @@ interface RawExtras extends RawDetails {
   credits?: { cast?: RawCast[]; crew?: (RawCrew & { id: number; profile_path?: string | null; department?: string })[] };
   videos?: { results?: (RawVideo & { name?: string; iso_639_1?: string })[] };
   recommendations?: { results?: RawMultiSearchResult[] };
+  /** I film le tengono sotto `keywords`, le serie sotto `results`. */
+  keywords?: { keywords?: RawKeyword[]; results?: RawKeyword[] };
 }
 
 /**
@@ -1587,7 +1643,7 @@ export function getTitleExtras(tmdbId: number, mediaType: "movie" | "tv", apiKey
   // partirebbero quattro richieste identiche.
   const promise = (async (): Promise<TmdbTitleExtras> => {
     const raw = await tmdbGet<RawExtras>(`/${mediaType}/${tmdbId}`, apiKey, {
-      append_to_response: "credits,images,videos,recommendations",
+      append_to_response: "credits,images,videos,recommendations,keywords",
       // Senza questi due, `language=it-IT` restituisce solo il materiale
       // italiano — che per tre titoli su quattro vuol dire niente.
       include_image_language: "it,en,null",
@@ -1663,6 +1719,7 @@ export function getTitleExtras(tmdbId: number, mediaType: "movie" | "tv", apiKey
       posters: sortImages(raw.images?.posters, 16),
       backdrops: sortImages(raw.images?.backdrops, 16),
       related,
+      creditsScenes: readCreditsScenes(raw.keywords?.keywords ?? raw.keywords?.results),
     };
   })();
 
@@ -1696,6 +1753,7 @@ export function clearTmdbCaches(): void {
   personIdCache.clear();
   keywordIdCache.clear();
   releaseDateCache.clear();
+  stingerCache.clear();
 }
 
 /* ------------------------------------------------------------------ */

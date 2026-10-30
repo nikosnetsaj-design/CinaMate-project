@@ -1,5 +1,6 @@
 import {
   Activity,
+  Armchair,
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
@@ -132,6 +133,10 @@ export function PencilIcon({ size = 18 }: IconProps) {
 }
 export function CalendarPlusIcon({ size = 18 }: IconProps) {
   return <Glyph icon={CalendarPlus} size={size} />;
+}
+/** La poltrona: «resta seduto», c'è una scena nei titoli di coda. */
+export function SeatIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Armchair} size={size} />;
 }
 /** Un foglio a righe: il CSV che si porta in un altro servizio. */
 export function SheetFileIcon({ size = 18 }: IconProps) {

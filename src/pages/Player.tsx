@@ -19,6 +19,7 @@ import { getLifetimeStats } from "../player/services/statsAndHistory";
 import { getOfflineSourceUrl } from "../player/services/downloadService";
 import { WebSocketTransport } from "../player/services/watchPartyTransport";
 import { buildPlayerCatalog, originOf, streamUrlOf } from "../player/fromLibrary";
+import { useCreditsScenes } from "../lib/useCreditsScenes";
 import { recommendFromLibrary } from "../player/recommendFromLibrary";
 import { resolvePlayable } from "../player/resolveSource";
 import type { SearchOutcome } from "../player/searchOnLinkHost";
@@ -197,10 +198,13 @@ export function Player() {
   }, [targetItem, lookup, addresses, linkHosts, resolved]);
 
   const resolvedUrl = targetItem ? resolved[targetItem.id] : undefined;
-  const networkContent = useMemo(
-    () => (resolvedUrl ? { ...baseContent, manifestUrl: resolvedUrl } : baseContent),
-    [baseContent, resolvedUrl],
-  );
+  // La scena nei titoli di coda la sa il catalogo, non il player: arriva qui e
+  // viaggia dentro il contenuto, come la classificazione per età.
+  const creditsScene = useCreditsScenes(targetItem);
+  const networkContent = useMemo(() => {
+    const withUrl = resolvedUrl ? { ...baseContent, manifestUrl: resolvedUrl } : baseContent;
+    return creditsScene ? { ...withUrl, creditsScene } : withUrl;
+  }, [baseContent, resolvedUrl, creditsScene]);
 
   // --- Offline playback -----------------------------------------------------
   // A completed download is played by handing hls.js a blob playlist built from

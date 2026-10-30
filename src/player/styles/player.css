@@ -733,6 +733,40 @@
   animation: pv-fade-in 0.25s ease;
 }
 
+/* La scena nei titoli di coda. Sta nell'angolo delle pastiglie — sotto la
+   barra del titolo, o in cima quando la barra si nasconde — e per il tempo in
+   cui parla le pastiglie si fanno da parte: una voce sola in quell'angolo, e
+   nessuna sovrapposizione col trasporto al centro, nemmeno sulla scena alta
+   180 pixel di un telefono. Resta visibile anche a comandi nascosti, che è
+   proprio la condizione in cui scorrono i titoli di coda. Il bordo d'accento
+   perché è l'unico avviso del player che chiede di *non* fare qualcosa. */
+.pv-stinger-note {
+  position: absolute;
+  left: 16px;
+  top: calc(var(--pv-topbar-h) + 4px);
+  transition: top 0.35s ease;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(440px, calc(100% - 32px));
+  padding: 8px 13px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--pv-text);
+  background: rgba(19, 17, 22, 0.9);
+  border: 1px solid var(--pv-accent);
+  border-radius: 6px;
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+  animation: pv-fade-in 0.25s ease;
+}
+.pv-stinger-note svg { flex: none; color: var(--pv-accent); }
+.pv-stinger-short { display: none; }
+.pv-controls-hidden .pv-stinger-note { top: 12px; }
+:has(> .pv-stinger-note) > .pv-notices { visibility: hidden; }
+
 .pv-shortcuts-panel { max-width: 460px; }
 .pv-shortcuts-title {
   font-family: var(--pv-font-body);
@@ -774,6 +808,11 @@
      explain; the picture is the only place with room left. */
   .pv-resume-bar { left: 12px; right: 12px; max-width: none; }
   .pv-autoskip-note { right: 12px; }
+  /* Una riga sola e la frase corta: due righe qui sarebbero un quarto del film. */
+  .pv-stinger-note { left: 12px; gap: 6px; padding: 5px 10px; font-size: 0.78rem; white-space: nowrap; }
+  .pv-stinger-note svg { width: 14px; height: 14px; }
+  .pv-stinger-long { display: none; }
+  .pv-stinger-short { display: inline; }
 }
 
 /* ===================== Progress bar + film-strip scrub preview (signature) ===================== */

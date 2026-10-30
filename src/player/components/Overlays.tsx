@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
-import type { SkipMarker, SubtitleStyle, MediaContent } from '../types';
+import type { CreditsScene, SkipMarker, SubtitleStyle, MediaContent } from '../types';
 import { getEndScreenRecommendations } from '../services/recommendationService';
 import type { Recommendation } from '../services/recommendationService';
 import type { GestureFeedback } from '../hooks/usePlayerGestures';
@@ -126,6 +126,34 @@ export function AutoSkipNote({ type }: { type: SkipMarker['type'] }) {
   return (
     <div className="pv-autoskip-note" role="status">
       {what}
+    </div>
+  );
+}
+
+/**
+ * L'avviso della scena nei titoli di coda. Due frasi, una lunga e una corta:
+ * il CSS sceglie in base all'altezza della scena (vedi player.css), perché su
+ * un telefono la frase intera andrebbe a capo sopra il film.
+ */
+export function CreditsSceneNote({ scene }: { scene: CreditsScene }) {
+  const [long, short] =
+    scene.during && scene.after
+      ? ['Resta fino in fondo: ci sono scene durante e dopo i titoli', 'Resta: scene durante e dopo i titoli']
+      : scene.after
+        ? ["Resta: c'è una scena dopo i titoli", 'Resta: scena dopo i titoli']
+        : ["Resta: c'è una scena durante i titoli", 'Resta: scena durante i titoli'];
+  return (
+    <div className="pv-stinger-note" role="status">
+      <svg viewBox="0 0 24 24" width={16} height={16} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3" />
+        <path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z" />
+        <path d="M5 18v2" />
+        <path d="M19 18v2" />
+      </svg>
+      <span className="pv-stinger-long">{long}</span>
+      {/* Solo una delle due è visibile, e solo quella arriva al lettore di
+          schermo: `display: none` la toglie anche dall'albero accessibile. */}
+      <span className="pv-stinger-short">{short}</span>
     </div>
   );
 }
