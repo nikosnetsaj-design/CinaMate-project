@@ -13,6 +13,7 @@ import { UpcomingBoard } from "../components/UpcomingBoard";
 import { NaturalSearch } from "../components/NaturalSearch";
 import { MoodPicker } from "../components/MoodPicker";
 import { CheckIcon } from "../components/icons";
+import { onTabListKeyDown } from "../lib/tabKeys";
 
 const FEEDS: { id: DiscoverFeed; title: string; why: string }[] = [
   { id: "trending", title: "Di cosa si parla", why: "I film più visti questa settimana nel mondo" },
@@ -158,13 +159,16 @@ export function Discover() {
       ) : (
         <>
           {/* Gli stessi segmenti di Cerca: un modo solo di dire «sei qui». */}
-          <div className="shelf gap-2" role="tablist" aria-label="Sezioni di Scopri">
+          <div className="shelf gap-2" role="tablist" aria-label="Sezioni di Scopri" onKeyDown={onTabListKeyDown}>
             {TABS.map((t) => (
               <button
                 key={t.id}
                 type="button"
                 role="tab"
+                id={`scopri-tab-${t.id}`}
                 aria-selected={tab === t.id}
+                aria-controls="scopri-pannello"
+                tabIndex={tab === t.id ? 0 : -1}
                 onClick={() => setTab(t.id)}
                 className="chip"
               >
@@ -173,15 +177,17 @@ export function Discover() {
             ))}
           </div>
 
-          {tab === "sfoglia" && (
-            <div className="flex flex-col gap-10">
-              {FEEDS.map((f) => (
-                <Row key={f.id} feed={f.id} title={f.title} why={f.why} />
-              ))}
-            </div>
-          )}
-          {tab === "chiedi" && <NaturalSearch />}
-          {tab === "prossimamente" && <UpcomingBoard />}
+          <div role="tabpanel" id="scopri-pannello" aria-labelledby={`scopri-tab-${tab}`}>
+            {tab === "sfoglia" && (
+              <div className="flex flex-col gap-10">
+                {FEEDS.map((f) => (
+                  <Row key={f.id} feed={f.id} title={f.title} why={f.why} />
+                ))}
+              </div>
+            )}
+            {tab === "chiedi" && <NaturalSearch />}
+            {tab === "prossimamente" && <UpcomingBoard />}
+          </div>
         </>
       )}
     </div>

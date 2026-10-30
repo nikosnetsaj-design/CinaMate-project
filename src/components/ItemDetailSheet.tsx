@@ -31,6 +31,7 @@ import { useAddSheet } from "../store/useAddSheet";
 import { useCriticDraft } from "../store/useCriticDraft";
 import { useTitleLogo } from "../lib/useTitleLogo";
 import type { Item, Status } from "../types";
+import { onTabListKeyDown } from "../lib/tabKeys";
 
 /**
  * Un'azione tonda della riga sotto ai pulsanti: icona grande, parola sotto.
@@ -283,13 +284,17 @@ function ItemDetail({ item }: { item: Item }) {
           className="no-scrollbar mt-6 flex scroll-mt-4 gap-2 overflow-x-auto"
           role="tablist"
           aria-label="Sezioni del titolo"
+          onKeyDown={onTabListKeyDown}
         >
           {TABS.map((t) => (
             <button
               key={t.id}
               type="button"
               role="tab"
+              id={`scheda-tab-${t.id}`}
               aria-selected={tab === t.id}
+              aria-controls="scheda-pannello"
+              tabIndex={tab === t.id ? 0 : -1}
               onClick={() => setTab(t.id)}
               className="chip"
             >
@@ -298,7 +303,7 @@ function ItemDetail({ item }: { item: Item }) {
           ))}
         </div>
 
-        <div className="mt-5">
+        <div className="mt-5" role="tabpanel" id="scheda-pannello" aria-labelledby={`scheda-tab-${tab}`}>
           {tab === "episodi" && (
             <div className="flex flex-col gap-4">
               <EpisodeList item={item} onNavigate={close} />

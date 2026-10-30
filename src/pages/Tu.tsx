@@ -7,6 +7,7 @@ import { EmptyState } from "../components/EmptyState";
 import { GoalsPanel } from "../components/GoalsPanel";
 import { ProfileHeader, ProfileSummary } from "./Profile";
 import { AchievementsTab, DiaryTab, TasteTab } from "./Stats";
+import { onTabListKeyDown } from "../lib/tabKeys";
 
 /**
  * Tu — una sola pagina per una sola domanda.
@@ -71,13 +72,16 @@ export function Tu() {
       ) : (
         <>
           {/* Gli stessi segmenti di Cerca e Scopri. */}
-          <div className="shelf gap-2" role="tablist" aria-label="Sezioni del profilo">
+          <div className="shelf gap-2" role="tablist" aria-label="Sezioni del profilo" onKeyDown={onTabListKeyDown}>
             {TABS.map((t) => (
               <button
                 key={t.id}
                 type="button"
                 role="tab"
+                id={`tu-tab-${t.id}`}
                 aria-selected={tab === t.id}
+                aria-controls="tu-pannello"
+                tabIndex={tab === t.id ? 0 : -1}
                 onClick={() => setTab(t.id)}
                 className="chip"
               >
@@ -86,15 +90,17 @@ export function Tu() {
             ))}
           </div>
 
-          {tab === "riepilogo" && <ProfileSummary />}
-          {tab === "diario" && <DiaryTab items={items} openItem={openItem} />}
-          {tab === "gusti" && <TasteTab items={items} openItem={openItem} />}
-          {tab === "traguardi" && (
-            <div className="flex flex-col gap-10">
-              <AchievementsTab items={items} />
-              <GoalsPanel items={items} />
-            </div>
-          )}
+          <div role="tabpanel" id="tu-pannello" aria-labelledby={`tu-tab-${tab}`}>
+            {tab === "riepilogo" && <ProfileSummary />}
+            {tab === "diario" && <DiaryTab items={items} openItem={openItem} />}
+            {tab === "gusti" && <TasteTab items={items} openItem={openItem} />}
+            {tab === "traguardi" && (
+              <div className="flex flex-col gap-10">
+                <AchievementsTab items={items} />
+                <GoalsPanel items={items} />
+              </div>
+            )}
+          </div>
         </>
       )}
     </div>

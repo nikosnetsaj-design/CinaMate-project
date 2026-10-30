@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { backdropUrl, posterUrl, youtubeThumb, youtubeWatchUrl, type TmdbVideo } from "../lib/tmdb";
 import { CloseIcon, ExternalIcon, PlayIcon } from "./icons";
+import { onTabListKeyDown } from "../lib/tabKeys";
 
 /**
  * Il materiale del titolo: video, locandine, sfondi.
@@ -136,7 +137,7 @@ export function MediaGallery({
     <section className="mt-5">
       <h3 className="font-display text-lg font-semibold text-text">Media</h3>
 
-      <div className="mt-2.5 flex gap-1.5" role="tablist" aria-label="Materiale del titolo">
+      <div className="mt-2.5 flex gap-1.5" role="tablist" aria-label="Materiale del titolo" onKeyDown={onTabListKeyDown}>
         {tabs.map((t) => {
           const on = t.id === active;
           return (
@@ -144,7 +145,10 @@ export function MediaGallery({
               key={t.id}
               type="button"
               role="tab"
+              id={`media-tab-${t.id}`}
               aria-selected={on}
+              aria-controls="media-pannello"
+              tabIndex={on ? 0 : -1}
               onClick={() => setTab(t.id)}
               className="rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
               style={
@@ -159,7 +163,7 @@ export function MediaGallery({
         })}
       </div>
 
-      <div className="mt-3">
+      <div className="mt-3" role="tabpanel" id="media-pannello" aria-labelledby={`media-tab-${active}`}>
         {active === "video" && (
           <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1">
             {videos.map((v) => (

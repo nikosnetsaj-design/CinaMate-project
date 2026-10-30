@@ -23,6 +23,7 @@ import { RowHeader } from "../components/RowHeader";
 import { FigureBand } from "../components/Figures";
 import { useAppReady } from "../lib/useAppReady";
 import { useVisibleItems } from "../lib/useVisibleItems";
+import { onTabListKeyDown } from "../lib/tabKeys";
 
 /**
  * L'attesa, disegnata come la pagina che sta arrivando.
@@ -189,13 +190,14 @@ export function ProfileSummary() {
             <RowHeader
               title="Attività"
               trailing={
-                <div className="segmented" role="tablist" aria-label="Periodo del grafico">
+                <div className="segmented" role="tablist" aria-label="Periodo del grafico" onKeyDown={onTabListKeyDown}>
                   {ACTIVITY_RANGES.map((r) => (
                     <button
                       key={r.id}
                       type="button"
                       role="tab"
                       aria-selected={range === r.id}
+                      tabIndex={range === r.id ? 0 : -1}
                       onClick={() => setRange(r.id)}
                     >
                       {r.label}

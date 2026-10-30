@@ -134,9 +134,10 @@ src/
 Il player è un modulo a sé: usa i propri tipi (`src/player/types.ts`) e le
 proprie chiavi `localStorage` (prefisso `ppv:`) per cronologia e statistiche
 interne. I file dello strato di collegamento sono i soli che conoscono gli store
-di CineMate; `player/components/` e `player/hooks/` non ne sanno nulla — l'unica
-eccezione è `useFocusTrap`, che è un'utility generica per i modali usata da tutti
-i fogli dell'app e che riscrivere qui sarebbe peggio che condividere.
+di CineMate; `player/components/` e `player/hooks/` non ne sanno nulla — le uniche
+eccezioni sono due utilità generiche di accessibilità, `useFocusTrap` per i modali
+e `onTabListKeyDown` (`lib/tabKeys.ts`) per le file di schede, usate da tutti i
+fogli dell'app: riscriverle qui sarebbe peggio che condividerle.
 
 Il lettore di pagine sta invece in `useSettings`, accanto alle chiavi API: non è
 una sorgente ma un modo di leggere, e vale per tutta l'app — la ricerca
