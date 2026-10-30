@@ -407,6 +407,11 @@ rete che non è la tua.
 - **Ricerca a parole**: scrivi «film di fantascienza anni '90» e Claude la
   traduce in filtri per TMDB, che risponde. Il modello sceglie i filtri, non i
   titoli: così la lista è vera per costruzione.
+- **Il tuo palato**: in *Tu → Gusti*, cosa premi e cosa punisci — generi,
+  decennio, registi, durata, paesi — e quanto voti rispetto al pubblico di
+  TMDB, calcolato qui dai tuoi voti (servono almeno cinque). Ogni riga dice la
+  media e su quanti titoli. È lo stesso profilo che ordina *Per te*, e ogni
+  consiglio cita la riga da cui viene.
 - **Consigli con il perché**: le righe *Per te*, *Più visti*, *Ultimi aggiunti*
   e *Simili sul tuo scaffale*, ognuna con la ragione scritta sotto al titolo.
 - **Obiettivi personali**: due film a settimana, cinquanta all'anno, dieci

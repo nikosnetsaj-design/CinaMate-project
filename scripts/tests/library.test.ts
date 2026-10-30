@@ -135,5 +135,34 @@ function make(over: Record<string, unknown> = {}): any {
   check("liste: un backup non valido non sostituisce niente", useLists.getState().lists.length === 2);
 }
 
+// --- Palato ---------------------------------------------------------------
+{
+  const { buildPalate, loved, disliked, decadeLabel, runtimeBucket } = await import("../../src/lib/palate.ts");
+  const lib = [
+    make({ genre: "Fantascienza", year: 1995, vote: 9, runtime: 160, countries: ["JP"], tmdbRating: 7.5 }),
+    make({ genre: "Fantascienza", year: 1998, vote: 10, runtime: 170, countries: ["JP"], tmdbRating: 8 }),
+    make({ genre: "Horror", year: 2015, vote: 3, runtime: 95, countries: ["US"], tmdbRating: 6 }),
+    make({ genre: "Horror", year: 2018, vote: 4, runtime: 100, countries: ["US"], tmdbRating: 6.5 }),
+    make({ genre: "Commedia", year: 2016, vote: 6, runtime: 100, countries: ["US", "GB"] }),
+    make({ genre: "Horror", status: "Da vedere", vote: null }),
+  ];
+  const palate = buildPalate(lib);
+  check("palato: conta solo i titoli votati", palate.rated === 5);
+  check("palato: premi il genere sopra la tua media", loved(palate.facets.genre)[0]?.key === "Fantascienza");
+  check("palato: punisci quello sotto", disliked(palate.facets.genre)[0]?.key === "Horror");
+  check("palato: il decennio in parole", loved(palate.facets.decade, 1)[0]?.label === "anni '90", decadeLabel("2010"));
+  check("palato: la durata solo per i film", runtimeBucket({ kind: "serie", runtime: 50 } as any) === null && runtimeBucket({ kind: "film", runtime: 160 } as any) === "fiume");
+  check("palato: il paese per nome", loved(palate.facets.country, 1)[0]?.label === "Giappone", loved(palate.facets.country, 1)[0]?.label);
+  check("palato: una coproduzione non conta doppio", Math.abs((palate.weights.country.get("GB") ?? 0) * 2 - (6 - palate.average)) < 1e-9);
+  check("palato: il confronto con TMDB", palate.vsCrowd !== null && palate.vsCrowd.count === 4);
+
+  // La Home cita il motivo dal palato.
+  const shelf = [...lib, make({ title: "Akira", genre: "Animazione", year: 1993, countries: ["JP"], runtime: 124, status: "Da vedere" })];
+  const picks = forYou(shelf);
+  const akira = picks.find((p: any) => p.item.title === "Akira");
+  check("consigli: il palato porta un titolo senza genere in comune", !!akira, picks.map((p: any) => p.item.title).join());
+  check("consigli: e lo dice", !!akira && /anni '90|Giappone/.test(akira.reason), akira?.reason);
+}
+
 console.log(failures === 0 ? "\nTutti i controlli passati." : `\n${failures} controlli falliti.`);
 process.exit(failures === 0 ? 0 : 1);

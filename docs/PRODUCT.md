@@ -54,6 +54,7 @@ resta tua e non ti vende niente.
 | **Continua la saga** | Ti fermi al capitolo tre e non riparti | Il prossimo capitolo, già scelto | Essenziale ✅ |
 | **Maratona in corso** | Una saga guardata in tre settimane sembra tre cose | Una sola corsa, con il segnalibro | Utile ✅ |
 | **Per te** | I consigli generici non ti somigliano | Suggerimenti dal *tuo* storico, con motivazione | Utile ✅ |
+| **Il tuo palato** | «Cosa mi piace?» non aveva una risposta scritta, e i consigli guardavano solo genere, regia e cast | Calcolato in locale dai voti (`lib/palate.ts`), ogni voto pesato per quanto si scosta dalla *tua* media: generi che premi e che punisci, decennio, registi, durata dei film, paesi, e il confronto con il voto di TMDB. Scheda in cima a Tu → Gusti, con media e numero di titoli per riga; sotto i 5 voti dice quanti ne mancano. Le stesse cifre muovono *Per te*, che cita la riga da cui viene il consiglio («Perché gli anni '90 sono il tuo decennio») | Utile ✅ |
 | **Tendenze / Più votati / Nuove uscite** | Scoperta oltre la propria bolla | Cataloghi TMDB curati | Utile ✅ |
 | **In uscita al cinema** | Scopri i film quando sono già usciti | Anticipo sulle uscite | Utile ✅ |
 | **Collezioni** | Le saghe si perdono in ordine sparso | "Il Padrino 1‑2‑3" come un blocco | Utile ✅ |

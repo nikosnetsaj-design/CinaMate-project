@@ -1,5 +1,6 @@
 import type { Item } from "../types";
 import { computeMinutes } from "./stats";
+import { buildPalate, names, palateKeys, palateReason, type Dimension } from "./palate";
 
 /**
  * Every row on the Home page that is not a plain list obeys product rule 2:
@@ -14,88 +15,38 @@ export interface Suggestion {
 
 const WATCHED = new Set(["Visto", "In visione"]);
 
-function names(value: string): string[] {
-  return value
-    .split(",")
-    .map((n) => n.trim())
-    .filter(Boolean);
-}
-
-/**
- * A taste profile built only from titles you actually rated, weighted by how
- * far the vote sits from your own average rather than from an absolute middle.
- * Someone who rates generously and never goes below 7 would otherwise look
- * like they loved everything equally, and a profile that likes everything
- * recommends nothing.
- */
-interface Taste {
-  genres: Map<string, number>;
-  directors: Map<string, number>;
-  actors: Map<string, number>;
-  studios: Map<string, number>;
-  average: number;
-}
-
-function buildTaste(items: Item[]): Taste {
-  const rated = items.filter((i) => i.vote != null);
-  const average = rated.length ? rated.reduce((sum, i) => sum + (i.vote ?? 0), 0) / rated.length : 6;
-
-  const taste: Taste = {
-    genres: new Map(),
-    directors: new Map(),
-    actors: new Map(),
-    studios: new Map(),
-    average,
-  };
-
-  const bump = (map: Map<string, number>, key: string, weight: number) => {
-    if (!key) return;
-    map.set(key, (map.get(key) ?? 0) + weight);
-  };
-
-  for (const item of rated) {
-    // Positive above your average, negative below: a genre you keep rating 4
-    // should push its titles *down*, which a count-only profile can't express.
-    const weight = (item.vote ?? 0) - average;
-    if (weight === 0) continue;
-    bump(taste.genres, item.genre, weight);
-    bump(taste.studios, item.studio ?? "", weight * 0.5);
-    for (const name of names(item.director)) bump(taste.directors, name, weight);
-    // Cast is divided so a five-name list doesn't outweigh the one director.
-    for (const name of item.cast) bump(taste.actors, name, weight / item.cast.length);
-  }
-
-  return taste;
-}
-
 /**
  * Suggestions from what you already own but haven't watched. Deliberately not
  * from the whole catalogue: this row answers "what do I watch tonight from the
  * shelf", and a row that recommends things you don't have is a shop.
  */
 export function forYou(items: Item[], limit = 6): Suggestion[] {
-  const taste = buildTaste(items);
+  const { weights } = buildPalate(items);
   const candidates = items.filter((i) => i.status === "Da vedere" || i.status === "In pausa");
+
+  // Quanto conta ogni dimensione del palato. Regia e cast restano i segnali
+  // più forti; decennio, durata e paese spostano poco, e diventano il motivo
+  // solo quando non c'è niente di più preciso da dire.
+  const SCALE: Record<Dimension, number> = { genre: 1, director: 1.5, decade: 0.6, runtime: 0.5, country: 0.6 };
 
   const scored = candidates.map((item) => {
     // Each contribution is kept with its own label so the strongest one can
     // become the reason — the reason is the ranking, not a caption on it.
     const parts: { score: number; reason: string }[] = [];
 
-    const genre = taste.genres.get(item.genre) ?? 0;
-    if (genre > 0) parts.push({ score: genre, reason: `Perché voti alto i ${item.genre.toLowerCase()}` });
-
-    for (const name of names(item.director)) {
-      const score = taste.directors.get(name) ?? 0;
-      if (score > 0) parts.push({ score: score * 1.5, reason: `Perché ti è piaciuto il cinema di ${name}` });
+    for (const dimension of Object.keys(SCALE) as Dimension[]) {
+      for (const key of palateKeys(item, dimension)) {
+        const score = weights[dimension].get(key) ?? 0;
+        if (score > 0) parts.push({ score: score * SCALE[dimension], reason: palateReason(dimension, key) });
+      }
     }
 
     for (const name of item.cast) {
-      const score = taste.actors.get(name) ?? 0;
+      const score = weights.actor.get(name) ?? 0;
       if (score > 0) parts.push({ score: score * 1.2, reason: `Con ${name}, che guardi spesso` });
     }
 
-    const studio = item.studio ? taste.studios.get(item.studio) ?? 0 : 0;
+    const studio = item.studio ? weights.studio.get(item.studio) ?? 0 : 0;
     if (studio > 0) parts.push({ score: studio, reason: `Perché segui i film ${item.studio}` });
 
     // A saga you have already started outranks everything: the answer to "what

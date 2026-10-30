@@ -15,6 +15,7 @@ import { AchievementIcon } from "../components/AchievementIcon";
 import { RowHeader } from "../components/RowHeader";
 import { FigureBand } from "../components/Figures";
 import { StatusMark } from "../components/StatusChip";
+import { PalateCard } from "../components/PalateCard";
 import { CheckIcon } from "../components/icons";
 
 const KIND_LABELS: Record<string, string> = { film: "Film", serie: "Serie TV", anime: "Anime", doc: "Documentario" };
@@ -95,6 +96,10 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
 
   return (
     <div className="flex flex-col gap-10">
+      {/* Prima il palato: è la risposta alla domanda della scheda, «cosa ti
+          piace». I numeri sotto dicono quanto, questo dice cosa. */}
+      <PalateCard items={items} />
+
       <Section title="Il nastro">
         <Panel>
           {/* La finestra è l'anno scelto qui sotto, non "gli ultimi 365 giorni":
