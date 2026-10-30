@@ -1,4 +1,5 @@
 import type { Item } from "../types";
+import { nextEpisode } from "./episodes";
 
 /**
  * Addresses for your own sources, written once in Settings instead of pasted
@@ -61,12 +62,13 @@ export interface EpisodePick {
 // ricava in modo onesto. È un valore dichiarato, non indovinato — ed è
 // esattamente il motivo per cui l'elenco degli episodi, che la stagione la sa,
 // può ora passarla di qui.
-const DEFAULT_SEASON = "1";
-
-function nextEpisodeOf(item: Item): string {
-  // The episode you would watch next, which is the one after those already
-  // seen — the same number the library shows as progress.
-  return String((item.seen || 0) + 1);
+// Dal registro degli episodi in poi la stagione si sa: è quella del prossimo
+// episodio da guardare (lib/episodes). Senza registro resta la 1.
+function nextEpisodeOf(item: Item): { season: string; episode: string } {
+  const next = nextEpisode(item);
+  return next
+    ? { season: String(next.season), episode: String(next.episode) }
+    : { season: "1", episode: String((item.seen || 0) + 1) };
 }
 
 function pad(value: string): string {
@@ -74,8 +76,9 @@ function pad(value: string): string {
 }
 
 export function fillTemplate(template: string, item: Item, pick: EpisodePick = {}): string {
-  const episode = pick.episode != null ? String(pick.episode) : nextEpisodeOf(item);
-  const SEASON = pick.season != null ? String(pick.season) : DEFAULT_SEASON;
+  const guess = nextEpisodeOf(item);
+  const episode = pick.episode != null ? String(pick.episode) : guess.episode;
+  const SEASON = pick.season != null ? String(pick.season) : guess.season;
   return template
     .replace(/\{titolo\}/gi, encodeURIComponent(item.title))
     .replace(/\{slug\}/gi, slugify(item.title))

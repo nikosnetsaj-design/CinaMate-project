@@ -238,17 +238,21 @@ rete che non è la tua.
 - **Scarica dalla scheda**: i download non vivono più solo dentro il player.
   L'indirizzo viene risolto *prima* di partire, perché un download che comincia
   da un indirizzo indovinato fallisce a metà senza dire perché.
-- **Episodi per stagione**: per una serie collegata a TMDB l'elenco delle
-  puntate con miniatura, durata, voto e trama, con la tendina delle stagioni
-  (sette stagioni in fila orizzontale costringono a scorrere per arrivare
-  all'ultima, che è quella che si cerca). Il segno di spunta segna «visto
-  fino a qui» — traducendo la puntata nel totale che la libreria tiene — e il
-  play su una riga apre *quella* puntata: stagione ed episodio finiscono nelle
-  sorgenti del titolo, quindi l'indirizzo costruito diventa `…/s02e07.m3u8`
-  invece del solito `S01E{visti+1}`. Il play sta in fondo alla riga, sempre
-  visibile: prima compariva passando il puntatore sulla miniatura, un gesto che
-  su un telefono — dove questa lista si usa — non esiste. Le puntate già viste
-  restano riconoscibili senza leggerle: miniatura spenta e segno verde sopra.
+- **Episodi per stagione**: la libreria non conta più gli episodi con un
+  numero solo, ne tiene il registro — stagione, episodio e data di ognuno.
+  Nella scheda c'è la griglia delle stagioni: un quadrato per puntata, un tocco
+  la segna o la toglie, tenendo premuto (o con Maiuscolo + clic) si segnano
+  anche tutte quelle prima. Il prossimo episodio ha l'anello d'accento. Funziona
+  anche senza TMDB: senza la divisione in stagioni le puntate stanno in fila
+  nella stagione 1, e si spostano da sole al loro posto quando la divisione
+  arriva. Per una serie collegata a TMDB c'è anche l'elenco delle puntate con
+  miniatura, durata, voto e trama, e il play su una riga apre *quella* puntata:
+  stagione ed episodio finiscono nelle sorgenti del titolo, quindi l'indirizzo
+  costruito diventa `…/s02e07.m3u8`. Il lettore, a fine puntata, segna quella
+  puntata — prima segnava «Visto» l'intera serie. Le librerie di prima vengono
+  convertite al primo avvio: le date arrivano dal diario, e gli episodi che il
+  diario non conosce prendono la data in cui la serie è entrata in libreria,
+  segnati come stimati.
 - **Il logo del titolo**: in vetrina e in cima alla scheda, quando TMDB ha il
   lettering disegnato della serie o del film. È metà dell'effetto — «Cent'anni
   di solitudine» nel suo lettering *è* la locandina, lo stesso nome nel font
@@ -740,12 +744,11 @@ hanno:
    *promettono* una playlist (`/getlink?id=…&sig=…`) vengono letti per
    confermarli dal MIME type o dalla riga `#EXTM3U`.
 
-**Quale episodio.** La libreria conta gli episodi visti come un totale unico,
-non per stagione: da «visti: 27» non si ricava se sia S02E03 o S03E01, e
-indovinare è il tipo di errore che ti fa partire l'episodio sbagliato. Quindi il
-valore predefinito è l'unico onesto — stagione 1, episodio `visti + 1` — e il
-pannello **Siti** del player ha due caselle per correggerlo. Sono anche ciò che
-rende raggiungibili i percorsi annidati per stagione.
+**Quale episodio.** La libreria tiene un registro degli episodi — stagione,
+episodio e data di ognuno — quindi la domanda parte dal prossimo episodio vero,
+S02E03 e non «il ventottesimo». Il pannello **Siti** del player ha comunque due
+caselle per scegliere a mano un'altra puntata, e sono ciò che rende
+raggiungibili i percorsi annidati per stagione.
 
 **Più siti insieme.** Con più Link Host la ricerca parte su tutti in parallelo,
 non uno dopo l'altro: in fila, tre siti lenti sono tre timeout sommati. E fra

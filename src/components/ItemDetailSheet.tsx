@@ -19,6 +19,8 @@ import { TitleFacts } from "./TitleFacts";
 import { RelatedRow } from "./RelatedRow";
 import { ShareSheet } from "./ShareSheet";
 import { EpisodeList } from "./EpisodeList";
+import { EpisodeGrid } from "./EpisodeGrid";
+import { episodeLabel, nextEpisode } from "../lib/episodes";
 import { DownloadButton } from "./DownloadButton";
 import { SpoilerFreeRecap, TranslateOverview } from "./AiItemExtras";
 import { BackIcon, EyeIcon, HeartIcon, InfoIcon, MinusIcon, PlayIcon, PlusIcon, ShareIcon, SparkleIcon, StarIcon } from "./icons";
@@ -80,7 +82,6 @@ function ItemDetail({ item }: { item: Item }) {
   const toggleFav = useLibrary((s) => s.toggleFav);
   const incrementEpisode = useLibrary((s) => s.incrementEpisode);
   const decrementEpisode = useLibrary((s) => s.decrementEpisode);
-  const setEpisodesSeen = useLibrary((s) => s.setEpisodesSeen);
   const setRewatch = useLibrary((s) => s.setRewatch);
   const removeItem = useLibrary((s) => s.removeItem);
   const openEdit = useEditSheet((s) => s.openEdit);
@@ -98,6 +99,7 @@ function ItemDetail({ item }: { item: Item }) {
   const [a, b] = paletteFor(item.title);
   const isSeries = item.kind !== "film" && item.kind !== "doc";
   const [tab, setTab] = useState<Tab>(isSeries ? "episodi" : "dettagli");
+  const nextUp = nextEpisode(item);
   const pct = isSeries && item.episodes ? Math.round(((item.seen || 0) / item.episodes) * 100) : null;
   const watchedMinutes = item.kind === "film" ? (item.status === "Visto" ? item.runtime : 0) : (item.seen || 0) * item.runtime;
 
@@ -308,35 +310,33 @@ function ItemDetail({ item }: { item: Item }) {
                   <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-hover">
                     <div className="h-full rounded-full transition-[width] duration-300" style={{ width: `${pct}%`, background: "var(--accent)" }} />
                   </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={item.episodes}
-                    value={item.seen || 0}
-                    onChange={(e) => setEpisodesSeen(item.id, Number(e.target.value))}
-                    aria-label="Episodi visti"
-                    className="mt-3 w-full"
-                  />
-                  <div className="mt-1.5 flex justify-between text-xs tabular text-text-faint">
+                  <div className="mt-1.5 flex justify-between text-xs tabular text-text-muted">
                     <span>
                       {item.seen || 0} di {item.episodes} episodi
                     </span>
                     <span>{formatRuntime(watchedMinutes)} guardate</span>
                   </div>
-                  <div className="mt-3 flex gap-2">
+                  <div className="mt-4">
+                    <EpisodeGrid item={item} />
+                  </div>
+                  <div className="mt-4 flex gap-2">
                     <button
                       type="button"
                       onClick={() => decrementEpisode(item.id)}
-                      className="btn btn-secondary btn-sm flex-1"
+                      disabled={(item.seen || 0) === 0}
+                      aria-label="Togli l'ultimo episodio segnato"
+                      className="btn btn-secondary btn-sm flex-1 disabled:opacity-40"
                     >
-                      − 1 ep
+                      <MinusIcon size={16} />
+                      Togli
                     </button>
                     <button
                       type="button"
                       onClick={() => incrementEpisode(item.id)}
-                      className="btn btn-primary btn-sm flex-[2]"
+                      disabled={!nextUp}
+                      className="btn btn-primary btn-sm flex-[2] disabled:opacity-40"
                     >
-                      Segna episodio visto
+                      {nextUp ? `Segna ${episodeLabel(nextUp)}` : "Tutto visto"}
                     </button>
                   </div>
                 </div>

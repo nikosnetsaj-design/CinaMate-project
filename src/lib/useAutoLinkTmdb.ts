@@ -48,6 +48,9 @@ function fillGaps(item: Item, d: Awaited<ReturnType<typeof getDetails>>, mediaTy
     similar: item.similar.length ? item.similar : d.similar,
     episodes: item.episodes ?? d.episodes,
     seasons: item.seasons ?? d.seasons,
+    // La divisione in stagioni non la scrive nessuno a mano: si prende sempre
+    // da TMDB, ed è ciò che manda al loro posto gli episodi provvisori.
+    seasonEpisodes: d.seasonEpisodes ?? item.seasonEpisodes,
     // Always taken from TMDB: the saga is not something the user curates, and
     // `null` here is the real answer "standalone", not a gap.
     collectionId: d.collectionId,
@@ -80,7 +83,13 @@ function fillGaps(item: Item, d: Awaited<ReturnType<typeof getDetails>>, mediaTy
  * meant for an independent film with no company credited.
  */
 function needsSync(item: Item): boolean {
-  return !item.tmdbId || item.audioLangs === undefined;
+  return (
+    !item.tmdbId ||
+    item.audioLangs === undefined ||
+    // Una serie collegata prima del registro degli episodi: le manca la
+    // divisione in stagioni, che è ciò che dà un posto ai suoi episodi.
+    (item.tmdbMediaType === "tv" && item.seasonEpisodes === undefined)
+  );
 }
 
 /**

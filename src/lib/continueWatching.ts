@@ -1,4 +1,5 @@
 import type { Item } from "../types";
+import { lastWatched, nextEpisode } from "./episodes";
 import type { PlaybackHistoryEntry } from "../player/services/statsAndHistory";
 
 /**
@@ -34,22 +35,16 @@ const DAY = 86_400_000;
 const STALE_AFTER = 180 * DAY;
 
 /**
- * Which season and episode a series is sitting on.
- *
- * Derived by spreading the episode count evenly over the seasons, because that
- * is genuinely all CineMate knows: the library stores totals, not a per-season
- * breakdown. It is right for the great majority of shows and honestly wrong for
- * the ones with a six-episode final season — which is why nothing else in the
- * app is computed from it, and why the label is never used to decide anything,
- * only to be read.
+ * Which season and episode a series is sitting on: the next one in the
+ * episode registry (lib/episodes). It used to be guessed by spreading the
+ * total evenly over the seasons, which was wrong for every show with a short
+ * final season; the registry knows the real split.
  */
 export function episodePosition(item: Item): { season: number; episode: number } | null {
-  if (!item.episodes || !SERIES_KINDS.has(item.kind)) return null;
-  const next = Math.min(item.episodes, (item.seen || 0) + 1);
-  const seasons = Math.max(1, item.seasons || 1);
-  const perSeason = Math.max(1, Math.ceil(item.episodes / seasons));
-  const season = Math.min(seasons, Math.ceil(next / perSeason));
-  return { season, episode: next - (season - 1) * perSeason };
+  if (!SERIES_KINDS.has(item.kind)) return null;
+  // Il registro degli episodi sa qual è il prossimo, stagione compresa. Una
+  // serie finita mostra l'ultimo episodio, non uno che non esiste.
+  return nextEpisode(item) ?? lastWatched(item);
 }
 
 export function resumeLabel(item: Item): string {

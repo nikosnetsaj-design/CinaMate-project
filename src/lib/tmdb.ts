@@ -49,6 +49,11 @@ export interface TmdbDetails {
   runtime: number;
   episodes: number | null;
   seasons: number | null;
+  /**
+   * Quante puntate ha ogni stagione, dalla 1 (le speciali escluse). `null` per
+   * i film. È ciò che dice al registro degli episodi dove finisce una stagione.
+   */
+  seasonEpisodes: number[] | null;
   overview: string;
   director: string;
   cast: string[];
@@ -430,6 +435,7 @@ interface RawDetails {
   episode_run_time?: number[];
   number_of_episodes?: number;
   number_of_seasons?: number;
+  seasons?: { season_number: number; episode_count?: number }[];
   origin_country?: string[];
   created_by?: { id?: number; name: string; profile_path?: string | null }[];
   credits?: { cast?: RawCast[]; crew?: RawCrew[] };
@@ -545,7 +551,10 @@ export async function getWatchProviders(tmdbId: number, mediaType: "movie" | "tv
  * alcuna cache: riaprire la stessa scheda due volte la riscaricava due volte,
  * e la passata di collegamento automatico la rifaceva da capo a ogni avvio.
  */
-const detailsCache = new TieredCache<TmdbDetails>("dettagli", TTL.metadata);
+// «v2»: dal registro degli episodi in poi la scheda porta anche la divisione
+// in stagioni. Le voci salvate prima non ce l'hanno, e senza cambiare nome
+// resterebbero buone per un giorno intero dicendo «non si sa».
+const detailsCache = new TieredCache<TmdbDetails>("dettagli-v2", TTL.metadata);
 
 export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiKey: string): Promise<TmdbDetails> {
   const cacheKey = `${mediaType}:${tmdbId}`;
@@ -579,6 +588,13 @@ export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiK
     runtime: mediaType === "movie" ? details.runtime ?? 0 : details.episode_run_time?.[0] ?? 0,
     episodes: mediaType === "tv" ? details.number_of_episodes ?? null : null,
     seasons: mediaType === "tv" ? details.number_of_seasons ?? null : null,
+    seasonEpisodes:
+      mediaType === "tv" && details.seasons
+        ? details.seasons
+            .filter((s) => s.season_number >= 1)
+            .sort((a, b) => a.season_number - b.season_number)
+            .map((s) => Math.max(0, s.episode_count ?? 0))
+        : null,
     overview: details.overview || "",
     director,
     cast: (details.credits?.cast ?? []).slice(0, 5).map((c) => c.name),
