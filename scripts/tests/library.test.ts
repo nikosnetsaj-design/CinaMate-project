@@ -98,5 +98,42 @@ function make(over: Record<string, unknown> = {}): any {
   check("filtri: opzioni dallo scaffale, le più frequenti prima", genres[0].value === "Dramma" && genres[0].count === 2);
 }
 
+// --- Liste ----------------------------------------------------------------
+{
+  const { useLists, freeName } = await import("../../src/store/useLists.ts");
+  const { useLibrary } = await import("../../src/store/useLibrary.ts");
+  const { listItems } = await import("../../src/lib/useListItems.ts");
+  const { describeQuery } = await import("../../src/lib/listing.ts");
+
+  const shelf = [
+    make({ id: "x1", title: "Uno", genre: "Horror", year: 2001 }),
+    make({ id: "x2", title: "Due", genre: "Horror", year: 2010, runtime: 95 }),
+    make({ id: "x3", title: "Tre", genre: "Commedia", year: 2020 }),
+  ];
+  useLibrary.setState({ items: shelf });
+  const L = useLists.getState();
+  const manual = L.createManual("Da vedere", ["x1"]);
+  useLists.getState().toggleItem(manual, "x3");
+  useLists.getState().toggleItem(manual, "x2");
+  useLists.getState().moveItem(manual, "x2", -1);
+  const m = useLists.getState().lists.find((l: any) => l.id === manual)!;
+  check("liste: titoli nell'ordine scelto", listItems(m, shelf).map((i: any) => i.id).join() === "x1,x2,x3", (m as any).itemIds.join());
+  useLists.getState().toggleItem(manual, "x1");
+  check("liste: lo stesso gesto toglie", !(useLists.getState().lists.find((l: any) => l.id === manual) as any).itemIds.includes("x1"));
+  check("liste: nomi senza doppioni", freeName(useLists.getState().lists, "da vedere") === "da vedere 2");
+
+  const smart = useLists.getState().createSmart("Horror corti", { filters: { genre: "Horror", runtimeMax: 100 }, sort: "anno" });
+  const sl = useLists.getState().lists.find((l: any) => l.id === smart)!;
+  check("liste intelligenti: la ricerca salvata risponde", listItems(sl, shelf).map((i: any) => i.id).join() === "x2");
+  check("liste intelligenti: dette a parole", describeQuery((sl as any).query).join(" · ") === "Horror · sotto 100 min");
+
+  // Un titolo che esce dalla libreria esce anche dalle liste.
+  useLibrary.setState({ items: shelf.filter((i: any) => i.id !== "x2") });
+  check("liste: un titolo rimosso esce dalla lista", !(useLists.getState().lists.find((l: any) => l.id === manual) as any).itemIds.includes("x2"));
+
+  useLists.getState().restore([{ id: "rotta", kind: "manual", name: 3 }]);
+  check("liste: un backup non valido non sostituisce niente", useLists.getState().lists.length === 2);
+}
+
 console.log(failures === 0 ? "\nTutti i controlli passati." : `\n${failures} controlli falliti.`);
 process.exit(failures === 0 ? 0 : 1);

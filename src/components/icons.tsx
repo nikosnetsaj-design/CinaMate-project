@@ -4,6 +4,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   Bell,
+  Bookmark,
   ChartNoAxesColumn,
   Check,
   ChevronDown,
@@ -198,6 +199,9 @@ export function MusicIcon({ size = 18 }: IconProps) {
 }
 export function DownloadIcon({ size = 16 }: IconProps) {
   return <Glyph icon={Download} size={size} />;
+}
+export function BookmarkIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Bookmark} size={size} />;
 }
 export function UploadIcon({ size = 16 }: IconProps) {
   return <Glyph icon={Upload} size={size} />;

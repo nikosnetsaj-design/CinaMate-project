@@ -5,7 +5,7 @@ import { useAddSheet } from "../store/useAddSheet";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { prefetchHandlers } from "../lib/prefetch";
 import { AlertsBell, QuickMenu } from "./TopBar";
-import { CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, MoonIcon, PersonIcon, PlusIcon, ReelMark, SearchIcon, SparkleIcon, StackIcon, SunIcon } from "./icons";
+import { CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, ListIcon, MoonIcon, PersonIcon, PlusIcon, ReelMark, SearchIcon, SparkleIcon, StackIcon, SunIcon } from "./icons";
 
 /**
  * Quattro destinazioni, le stesse sul telefono e sul desktop.
@@ -51,6 +51,7 @@ const NAV_ITEMS = [
  */
 const SECONDARY = [
   { to: "/saghe", label: "Saghe", icon: StackIcon },
+  { to: "/liste", label: "Liste", icon: ListIcon },
   { to: "/scopri", label: "Scopri", icon: CompassIcon },
   { to: "/critico", label: "Critico", icon: SparkleIcon },
 ] as const;

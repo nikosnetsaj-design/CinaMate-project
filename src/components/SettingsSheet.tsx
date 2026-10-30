@@ -12,6 +12,7 @@ import { useReminders } from "../store/useReminders";
 import { usePlayerSources } from "../store/usePlayerSources";
 import { usePlayerPrefs } from "../store/usePlayerPrefs";
 import { useGoals } from "../store/useGoals";
+import { useLists } from "../store/useLists";
 import { useTheme } from "../store/useTheme";
 import { useTvMode, type TvPreference } from "../store/useTvMode";
 import { useHomeLayout, HOME_SECTIONS, MAX_ROWS } from "../store/useHomeLayout";
@@ -773,6 +774,7 @@ function SettingsForm() {
         daily: getDailySeconds(),
       },
       useGoals.getState().goals,
+      useLists.getState().lists,
     );
     const blob = new Blob([backup], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -838,6 +840,7 @@ function SettingsForm() {
       }
     }
     if (backup.goals !== undefined) useGoals.getState().restore(backup.goals);
+    if (backup.lists !== undefined) useLists.getState().restore(backup.lists);
   }
 
   return (

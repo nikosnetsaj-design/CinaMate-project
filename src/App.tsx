@@ -54,6 +54,9 @@ const Player = lazy(() => import("./pages/Player").then((m) => ({ default: m.Pla
  * the library.
  */
 const Diagnostics = lazy(() => import("./pages/Diagnostics").then((m) => ({ default: m.Diagnostics })));
+// Le liste arrivano con la loro pagina: chi non ne ha non le scarica.
+const Lists = lazy(() => import("./pages/Lists").then((m) => ({ default: m.Lists })));
+const ListDetail = lazy(() => import("./pages/Lists").then((m) => ({ default: m.ListDetail })));
 
 /**
  * La tavola della proposta di design: fuori dalla navigazione e in un pezzo a
@@ -205,6 +208,22 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/libreria" element={<Library />} />
             <Route path="/saghe" element={<Sagas />} />
+            <Route
+              path="/liste"
+              element={
+                <Suspense fallback={<PageSkeleton />}>
+                  <Lists />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/liste/:id"
+              element={
+                <Suspense fallback={<PageSkeleton />}>
+                  <ListDetail />
+                </Suspense>
+              }
+            />
             <Route path="/scopri" element={<Discover />} />
             <Route path="/cerca" element={<Search />} />
             <Route path="/tu" element={<Tu />} />

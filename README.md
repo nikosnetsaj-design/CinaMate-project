@@ -403,6 +403,14 @@ rete che non è la tua.
   e *Simili sul tuo scaffale*, ognuna con la ragione scritta sotto al titolo.
 - **Obiettivi personali**: due film a settimana, cinquanta all'anno, dieci
   horror a ottobre. Si misurano sul diario, non sullo scaffale.
+- **Liste personali**: «Da vedere col partner», «Horror di ottobre». Una lista
+  si crea dalla pagina **Liste** o dalla scheda di un titolo (azione **Liste**,
+  un interruttore per lista), si rinomina toccandone il nome, si riordina — le
+  liste fra loro e i titoli dentro — e ha per copertina le prime quattro
+  locandine. Le **liste intelligenti** sono una ricerca della Libreria salvata
+  con un nome (il segnalibro accanto ai filtri): si aggiornano da sole e
+  scrivono sotto il nome cosa tengono. Tutte si condividono con link e QR, e
+  stanno nel backup.
 - **Condivisione**: un link o un codice QR per aprire un titolo — o la lista
   che hai davanti, filtri compresi — su un altro dispositivo. Senza server: la
   lista viaggia dentro il link.

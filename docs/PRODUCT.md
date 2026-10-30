@@ -59,7 +59,7 @@ resta tua e non ti vende niente.
 | **Collezioni** | Le saghe si perdono in ordine sparso | "Il Padrino 1‑2‑3" come un blocco | Utile ✅ |
 | **Più visti / Ultimi aggiunti** | "Dove sono finite le mie ore?" e "cos'è entrato ieri?" | Due domande diverse, due righe | Utile ✅ |
 | **Home su misura** | Sei righe fisse non sono le stesse per tutti | Riordini e spegni le righe in Impostazioni; il tetto di sei resta | Utile ✅ |
-| **Liste personali** | Watchlist unica troppo grezza | "Da vedere col partner", "Horror di ottobre" | Utile |
+| **Liste personali** | Watchlist unica troppo grezza | "Da vedere col partner", "Horror di ottobre": liste a mano, rinominabili, riordinabili, con copertina a mosaico; e **liste intelligenti**, cioè una ricerca della Libreria salvata con un nome che si aggiorna da sola e dice a parole cosa tiene. Si condividono con il link e il QR di sempre, stanno nel backup | Utile ✅ |
 
 > **Regola anti‑Netflix:** massimo 6 righe in Home. Ogni riga deve dichiarare
 > *perché* è lì ("Perché hai messo 9 a Dark"). Niente caroselli senza motivo.
@@ -578,10 +578,8 @@ essenziale è chiusa: quello che resta qui sotto è utile, non necessario, e
 nessuna delle tre è un buco che si sente usando l'app.
 
 **Poi (Utile)**
-1. Liste personali salvate ("Da vedere col partner", "Horror di ottobre") —
-   oggi una lista si condivide ma non si conserva
-2. Trailer in‑app con PiP
-3. Universi costruiti a mano dall'utente, oltre a quelli da keyword
+1. Trailer in‑app con PiP
+2. Universi costruiti a mano dall'utente, oltre a quelli da keyword
 
 **Futuro**
 5. Sync cloud con account

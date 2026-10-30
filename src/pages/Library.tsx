@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useLists } from "../store/useLists";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useAddSheet } from "../store/useAddSheet";
 import { usePlayerSources } from "../store/usePlayerSources";
@@ -12,18 +13,18 @@ import { EmptyState } from "../components/EmptyState";
 import { PosterGridSkeleton } from "../components/Skeletons";
 import { FilterSheet } from "../components/FilterSheet";
 import { ShareSheet } from "../components/ShareSheet";
-import { didYouMean, matchQuality } from "../lib/search";
-import { activeFilterCount, applyFilters, type Filters } from "../lib/filters";
+import { didYouMean } from "../lib/search";
+import { activeFilterCount, type Filters } from "../lib/filters";
+import { describeQuery, runQuery, SORTS, type Sort } from "../lib/listing";
 import { STATUSES } from "../lib/status";
 import { useAppReady } from "../lib/useAppReady";
 import { useVisibleItems } from "../lib/useVisibleItems";
 import type { Kind, Status } from "../types";
-import { GridIcon, ListIcon, ShareIcon } from "../components/icons";
+import { BookmarkIcon, GridIcon, ListIcon, ShareIcon } from "../components/icons";
 
 /** I tipi che un indirizzo può nominare: di ciò che arriva scritto lì non ci si fida. */
 const KIND_IDS: Kind[] = ["film", "serie", "anime", "doc"];
 
-type Sort = "recenti" | "voto" | "titolo" | "anno";
 
 export function Library() {
   const ready = useAppReady();
@@ -57,6 +58,8 @@ export function Library() {
     setParams({}, { replace: true });
   }, [genreParam, kindParam, statusParam, setParams]);
   const [sharing, setSharing] = useState(false);
+  const createSmart = useLists((s) => s.createSmart);
+  const navigate = useNavigate();
   const [sort, setSort] = useState<Sort>("recenti");
   const [grid, setGrid] = useState(true);
 
@@ -65,31 +68,12 @@ export function Library() {
   const sources = usePlayerSources((s) => s.sources);
   const lookupSource = useMemo(() => (id: string) => sources[id], [sources]);
 
-  const { list, onlyFuzzy } = useMemo(() => {
-    const scored = applyFilters(items, filters, lookupSource)
-      .map((item) => ({ item, quality: matchQuality(item, q) }))
-      .filter((entry) => entry.quality !== "none");
-
-    // Exact matches always outrank near-misses, whatever the sort — a typo
-    // correction that buried the title you actually typed under three
-    // approximations of it would be worse than no correction at all.
-    const byRank = (a: (typeof scored)[number], b: (typeof scored)[number]) =>
-      (a.quality === "exact" ? 0 : 1) - (b.quality === "exact" ? 0 : 1);
-
-    const sorted = scored.sort((a, b) => {
-      const rank = byRank(a, b);
-      if (rank !== 0) return rank;
-      if (sort === "voto") return (b.item.vote ?? 0) - (a.item.vote ?? 0);
-      if (sort === "titolo") return a.item.title.localeCompare(b.item.title);
-      if (sort === "anno") return b.item.year - a.item.year;
-      return b.item.added.localeCompare(a.item.added);
-    });
-
-    return {
-      list: sorted.map((entry) => entry.item),
-      onlyFuzzy: sorted.length > 0 && sorted.every((entry) => entry.quality === "fuzzy"),
-    };
-  }, [items, filters, lookupSource, q, sort]);
+  // Exact matches always outrank near-misses, whatever the sort — see
+  // lib/listing, which the smart lists share.
+  const { list, onlyFuzzy } = useMemo(
+    () => runQuery(items, { filters, q, sort }, lookupSource),
+    [items, filters, lookupSource, q, sort],
+  );
 
   // Only offered when nothing matched exactly: over exact hits it would be
   // noise, and the suggestion is deliberately a title that really exists on
@@ -105,13 +89,26 @@ export function Library() {
   // when it is actually four horror films would be worse than useless to
   // whoever opens it.
   const listName =
-    q.trim() || (filterCount > 0 ? "Selezione dalla mia libreria" : "La mia libreria");
+    q.trim() || (filterCount > 0 ? describeQuery({ filters, sort }).join(" · ") || "Selezione dalla mia libreria" : "La mia libreria");
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-5 px-[var(--gutter)] py-6 sm:py-10">
-      <div>
-        <h1 className="t-display text-text">Libreria</h1>
-        <p className="mt-1 text-sm tabular text-text-muted">{items.length} titoli in totale</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="t-display text-text">Libreria</h1>
+          <p className="mt-1 text-sm tabular text-text-muted">{items.length} titoli in totale</p>
+        </div>
+        {/* Due altri modi di guardare lo stesso scaffale. Sul telefono la barra
+            laterale non c'è, e senza questi due collegamenti saghe e liste
+            sarebbero raggiungibili solo dal menu. */}
+        <nav aria-label="Altri modi di guardare la libreria" className="flex gap-2">
+          <Link to="/saghe" viewTransition className="chip">
+            Saghe
+          </Link>
+          <Link to="/liste" viewTransition className="chip">
+            Liste
+          </Link>
+        </nav>
       </div>
 
       <SearchBar value={q} onChange={setQ} placeholder="Cerca per titolo, regista, genere, attore…" />
@@ -153,10 +150,11 @@ export function Library() {
             aria-label="Ordina per"
             className="field field-sm w-auto"
           >
-            <option value="recenti">Recenti</option>
-            <option value="voto">Voto</option>
-            <option value="titolo">A–Z</option>
-            <option value="anno">Anno</option>
+            {SORTS.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.label}
+              </option>
+            ))}
           </select>
           <button
             type="button"
@@ -166,6 +164,22 @@ export function Library() {
           >
             {grid ? <ListIcon size={20} /> : <GridIcon size={20} />}
           </button>
+          {/* Una ricerca che vale la pena ritrovare diventa una lista che si
+              aggiorna da sola. Compare solo quando c'è una ricerca da salvare. */}
+          {(filterCount > 0 || q.trim()) && (
+            <button
+              type="button"
+              onClick={() => {
+                const id = createSmart(listName, { filters, q: q.trim() || undefined, sort });
+                navigate(`/liste/${id}`, { viewTransition: true });
+              }}
+              aria-label="Salva questa ricerca come lista intelligente"
+              title="Salva come lista intelligente"
+              className="icon-btn"
+            >
+              <BookmarkIcon size={20} />
+            </button>
+          )}
           {/* Shares exactly what is on screen, filters and search included —
               that is what makes it a *list* rather than an export: "gli horror
               che ho visto" is a query, and the query's result is the list. */}

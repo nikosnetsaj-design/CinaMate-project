@@ -23,7 +23,9 @@ import { EpisodeGrid } from "./EpisodeGrid";
 import { episodeLabel, nextEpisode } from "../lib/episodes";
 import { DownloadButton } from "./DownloadButton";
 import { SpoilerFreeRecap, TranslateOverview } from "./AiItemExtras";
-import { BackIcon, EyeIcon, HeartIcon, InfoIcon, MinusIcon, PlayIcon, PlusIcon, ShareIcon, SparkleIcon, StarIcon } from "./icons";
+import { BackIcon, EyeIcon, HeartIcon, InfoIcon, ListIcon, MinusIcon, PlayIcon, PlusIcon, ShareIcon, SparkleIcon, StarIcon } from "./icons";
+import { ListPickerSheet } from "./ListPickerSheet";
+import { useLists } from "../store/useLists";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useLibrary } from "../store/useLibrary";
 import { useEditSheet } from "../store/useEditSheet";
@@ -95,6 +97,8 @@ function ItemDetail({ item }: { item: Item }) {
   const logo = useTitleLogo(item);
   const shelfMates = useMemo(() => similarInLibrary(item, items), [item, items]);
   const [sharing, setSharing] = useState(false);
+  const [pickingList, setPickingList] = useState(false);
+  const inLists = useLists((s) => s.lists.some((l) => l.kind === "manual" && l.itemIds.includes(item.id)));
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [a, b] = paletteFor(item.title);
   const isSeries = item.kind !== "film" && item.kind !== "doc";
@@ -232,6 +236,9 @@ function ItemDetail({ item }: { item: Item }) {
             onClick={() => setStatus(item.id, item.status === "Visto" ? "Da vedere" : "Visto")}
           >
             <EyeIcon size={17} />
+          </RoundAction>
+          <RoundAction label="Liste" active={inLists} onClick={() => setPickingList(true)}>
+            <ListIcon size={17} />
           </RoundAction>
           <RoundAction label="Condividi" onClick={() => setSharing(true)}>
             <ShareIcon size={17} />
@@ -550,6 +557,7 @@ function ItemDetail({ item }: { item: Item }) {
       </div>
 
       {sharing && <ShareSheet target={{ kind: "item", item }} onClose={() => setSharing(false)} />}
+      {pickingList && <ListPickerSheet item={item} onClose={() => setPickingList(false)} />}
     </div>,
     document.body,
   );
