@@ -59,7 +59,7 @@ resta tua e non ti vende niente.
 | **Collezioni** | Le saghe si perdono in ordine sparso | "Il Padrino 1‑2‑3" come un blocco | Utile ✅ |
 | **Più visti / Ultimi aggiunti** | "Dove sono finite le mie ore?" e "cos'è entrato ieri?" | Due domande diverse, due righe | Utile ✅ |
 | **Home su misura** | Sei righe fisse non sono le stesse per tutti | Riordini e spegni le righe in Impostazioni; il tetto di sei resta | Utile ✅ |
-| **Liste personali** | Watchlist unica troppo grezza | "Da vedere col partner", "Horror di ottobre" | Utile |
+| **Liste personali** | Watchlist unica troppo grezza | "Da vedere col partner", "Horror di ottobre": salvate, riordinabili, condivisibili, con «Scegli tu» | Utile ✅ |
 
 > **Regola anti‑Netflix:** massimo 6 righe in Home. Ogni riga deve dichiarare
 > *perché* è lì ("Perché hai messo 9 a Dark"). Niente caroselli senza motivo.
@@ -80,6 +80,7 @@ resta tua e non ti vende niente.
 | **Riproduci quella puntata** | La stagione era fissa a 1 e l'episodio era «visti + 1» | Il play su una riga scrive stagione ed episodio nelle sorgenti del titolo: gli indirizzi costruiti diventano `…/s02e07.m3u8` e la ricerca sui siti chiede quella puntata | Utile ✅ |
 | **Cast con foto e personaggio** | Un attore si riconosce in faccia, non dal nome anagrafico | Cerchi con foto, nome e ruolo, «mostra tutti»; senza TMDB restano le pastiglie con i nomi | Utile ✅ |
 | **Voto TMDB** | Il voto del pubblico non si vedeva da nessuna parte | Sotto la trama, lontano dal tuo voto: sono due giudizi diversi e affiancarli suggerirebbe un confronto che non interessa | Utile ✅ |
+| **Scene durante e dopo i titoli** | «C'è una scena dopo?» si chiede ai vicini di poltrona | Una pastiglia con la poltrona, dalle keyword `duringcreditsstinger` / `aftercreditsstinger` di TMDB; l'assenza non viene affermata | Utile ✅ |
 | **Scarica dalla scheda** | I download vivevano solo dentro il player, cioè dove arrivi quando hai già deciso di guardare *adesso* | Scelta della qualità e download avviato dalla scheda, con l'indirizzo risolto prima di partire | Utile ✅ |
 | **Logo del titolo** | Il nome nel font dell'app è una didascalia, non una locandina | Il lettering disegnato da TMDB in vetrina e in cima alla scheda, con il titolo scritto come ripiego | Utile ✅ |
 | **Play sempre visibile sulla puntata** | Il play compariva passando il puntatore sulla miniatura: su un telefono, dove la lista si usa, era invisibile | Pulsante in fondo alla riga, grande da premere col dito; le puntate viste hanno la miniatura spenta e il segno verde | Utile ✅ |
@@ -124,8 +125,8 @@ resta tua e non ti vende niente.
 | Provider legali per l'Italia | "Ce l'ho su Netflix o devo noleggiarlo?" | Risposta immediata, dati JustWatch | Essenziale ✅ |
 | **Abbonamento, gratis, noleggio, acquisto** | Un elenco unico faceva sembrare compreso ciò che va pagato a parte | Quattro file separate con le icone dei servizi: si vede in un colpo d'occhio se ce l'hai già o se costa | Essenziale ✅ |
 | **Apri sul servizio** | Cercare di nuovo dentro l'app del servizio | L'icona del provider è un collegamento: apre il servizio con la ricerca già scritta, e su telefono apre l'app | Essenziale ✅ |
-| **I miei abbonamenti** | Ti propongono cose che non puoi vedere | Filtro "solo ciò che ho già" | Utile |
-| Avviso "in scadenza" | I titoli lasciano i cataloghi in silenzio | "Esce da Netflix il 30" | Utile |
+| **I miei abbonamenti** | Ti propongono cose che non puoi vedere | «Incluso nel tuo abbonamento: Netflix» nella scheda, le tue icone per prime, e in Scopri la riga «Incluso nei tuoi abbonamenti» (`with_watch_monetization_types=flatrate`) | Utile ✅ |
+| Avviso "in scadenza" | I titoli lasciano i cataloghi in silenzio | "Esce da Netflix il 30" | Utile — il dato non è in TMDB: JustWatch lo tiene per sé |
 | Link personali (2 per titolo) | Vuoi salvare un tuo riferimento | Segnalibri liberi | Essenziale ✅ |
 | **Link Host** | Un sito che conosci tu, e ogni volta la stessa ricerca da riscrivere a mano | I metadati del titolo diventano la ricerca del sito, la pagina che risponde viene letta e l'`.m3u8` finisce nel lettore. §3.3.1 | Essenziale ✅ |
 
@@ -262,6 +263,8 @@ il resto al servizio che ha la licenza.
 | **Host** | Aggiungere un host non serviva a niente per guardare | Un host è un indirizzo dove cercare i titoli, come le caselle in Impostazioni; e resta il cambio host senza interrompere la riproduzione quando un mirror cade | Utile ✅ |
 | **Host: velocità, priorità automatica, bilanciamento** | Con più mirror, "quale uso?" non ha una risposta a mano | Test di banda vero, punteggio 0–100, e tre modi di scegliere: ordine tuo, punteggio, o carico distribuito | Utile ✅ |
 | **Maratona della saga** | — | La stessa maratona del §3.4, non una seconda coda che vuol dire un'altra cosa: copre la saga di ciò che stai guardando e sparisce per un titolo standalone | Utile ✅ |
+| **Scena dopo i titoli: resta** | Il film finisce, si chiude, e la scena dopo i titoli non la vede nessuno | All'inizio dei titoli (marker «crediti», o la soglia del visto) un avviso per dieci secondi; il salto automatico dei crediti non scatta su quei film | Utile ✅ |
+| **Schermo pieno in orizzontale** | Lo schermo pieno di un 16:9 su un telefono in verticale è una striscia | Su Android gira da solo, e all'uscita il telefono torna libero; il manifest non blocca più l'app in verticale | Utile ✅ |
 | **Il diario si aggiorna da sé** | Guardi qui e la libreria non se ne accorge | Finito un titolo diventa "Visto", con voce nel diario e traguardi | Essenziale ✅ |
 
 **Come arriva una sorgente.** L'indirizzo del tuo server, scritto una volta sola
@@ -305,8 +308,12 @@ sezione: hanno il loro, con la licenza, e meglio. Questo player non è per loro 
 | Attori e registi più visti | "Chi guardo davvero?" | Classifica dal tuo storico, ogni nome apre la sua pagina | Utile ✅ |
 | Traguardi | Nessun ritorno emotivo | Riconoscimento delle abitudini, saghe e generi inclusi | Utile ✅ |
 | **Obiettivi personali** | I traguardi li decide l'app | Quelli che scegli tu, misurati sul diario e non sullo scaffale | Utile ✅ |
-| **Promemoria uscite** | Un episodio esce e non lo sai | Notifica locale il giorno stesso | Utile ✅ |
+| **Promemoria uscite** | Un episodio esce e non lo sai | Notifica locale il giorno stesso — su Android dal service worker, l'unica strada che Chrome lì accetta | Utile ✅ |
+| **Uscite nel calendario** | Le notifiche di una pagina web arrivano solo ad app aperta (e su iPhone solo installata) | Un file `.ics` con tutte le date: il calendario del telefono ricorda da sé, e l'`UID` stabile sposta l'evento se la data cambia | Utile ✅ |
+| **Il conto degli abbonamenti** | «Quanto mi costa davvero Netflix?» non te lo chiede nessun servizio | Per servizio, visioni e ore dell'ultimo mese ed euro per ora guardata; un servizio fermo dice da quando, senza allarmi | Utile ✅ |
 | Esporta / importa | I dati locali si perdono | Backup e cambio dispositivo, comprese le sorgenti del player e gli host | Essenziale ✅ |
+| **Importa da Letterboxd, IMDb, Netflix, CSV** | Una libreria nuova parte vuota anche per chi ha anni di diario altrove | Riconoscimento su TMDB per id IMDb o per nome e anno, riepilogo prima di scrivere, solo visioni con una data vera, «quello che hai scritto vince», secondo import idempotente | Essenziale ✅ |
+| **Esporta per Letterboxd e in CSV** | I dati sono tuoi solo se escono in un formato che altri leggono | Il formato d'import di Letterboxd (con tmdbID e rivisioni) e un foglio che l'Excel italiano apre con un doppio clic | Utile ✅ |
 | **Riassunto senza spoiler** | Riprendi una serie dopo 8 mesi | "Dove eravamo" senza rovinare nulla | Utile ✅ |
 | Assistente / critico | Consigli generici | Conosce i tuoi voti | Essenziale ✅ |
 | Sync cloud multi‑dispositivo | Telefono e PC separati | Una libreria sola | **Futura** — richiede backend e account |
@@ -412,24 +419,28 @@ sapere cosa crede di essere.
 
 ## 4. Design system
 
-Identità **"Sala buia"** (già in produzione).
+Identità **«Sala e carta»** (in produzione dalla riprogettazione, PR #31).
 
-Sostituisce *Velluto e Technicolor*, che era bello come tessuto e faticoso come
-interfaccia: il fondo melanzana `#1B1221` e i grigi lillà facevano tirare al
-rosa ogni testo secondario, e su quel fondo non si staccavano da niente — il
-testo «grigio» non si distingueva né dallo sfondo né dall'accento. Il nero fa
-due cose che il velluto non faceva: alza il contrasto di tutto ciò che gli sta
-sopra, e lascia che l'unico colore acceso dello schermo sia quello che si vuole
-guardare, cioè le locandine.
+Di sera un nero caldo, di giorno una carta calda: mai il nero pieno, che fa
+vibrare il testo bianco e rende le locandine adesivi su un vuoto, e mai il
+grigio freddo, che fa sembrare l'app un modulo. Le locandine portano il colore;
+l'interfaccia intorno tace. Ha sostituito *Sala buia* (nero neutro e verde), che
+a sua volta aveva sostituito *Velluto e Technicolor* (melanzana e lillà).
 
-- **Base**: nero neutro `#0A0A0B`, superfici `#141416` / `#1A1A1D`
-- **Testo**: bianco, e due grigi *neutri* — `#B6B6BD` e `#8B8B93`
-- **Accento**: verde `#22C55E` (`#4ADE80` come testo), il predefinito; gli altri
-  cinque restano scegliibili in Impostazioni → Aspetto
-- **Voti**: freddo → caldo, blu → verde → giallo → rosso. Prima la scala andava
-  dal ciano al magenta: due colori soli e sei rosa in mezzo, e nel Nastro — dove
-  le sessioni stanno una accanto all'altra — un 6 e un 9 erano la stessa striscia
-- **Tipografia**: Bricolage Grotesque (display) · Instrument Sans (testo) · IBM Plex Mono (**ogni cifra**)
+- **Base, di sera**: `#131211`, superfici `#1C1B19` / `#262422`; **di giorno**:
+  carta `#F6F3EE`, superfici `#FDFCFA` / `#EEEAE3`
+- **Testo**: `#F3EFE7`, e due toni caldi — `#B9B2A6` e `#A19A8F` (di giorno
+  `#1C1A17`, `#57524A`, `#645E54`)
+- **Accento**: uno solo, color brace — `#DC7A54` (`#EC9670` come testo) di
+  sera, `#B0502C` di giorno — dove c'è un'azione o uno stato attivo; gli altri
+  restano scegliibili in Impostazioni → Aspetto. I colori di esito dicono un
+  esito e basta
+- **Voti**: da freddo a caldo — un 4 è «mi ha lasciato freddo», non «pericolo» —
+  nei toni della carta invece che dell'arcobaleno
+- **Tipografia**: Newsreader (display) · Instrument Sans (testo) · IBM Plex Mono (**ogni cifra**)
+- **Marchio**: la pizza della pellicola sulla tessera color brace — in alto
+  nell'app e, uguale, nell'icona installata (con la versione «maskable» a fondo
+  pieno per Android e una a 32 unità per la scheda del browser)
 - **Firma**: Il Nastro — una sessione, un filo; tinta dal voto, larghezza dai minuti
 
 **Comportamento nativo:** viewport `viewport-fit=cover` e altezze in `dvh`;
@@ -462,7 +473,7 @@ prima; quello che cambia è che per cambiare accento non si passa più davanti a
 due chiavi API e al controllo genitori.
 
 **Accessibilità:** ogni coppia testo/sfondo ≥ WCAG AA, verificata da script —
-oggi **136 coppie, zero fallimenti**, con `npm run contrast`. Lo script legge i
+oggi **246 coppie (123 per tema), zero fallimenti**, con `npm run contrast`. Lo script legge i
 valori veri da `src/index.css`, compone le trasparenze sul fondo giusto e
 fallisce con codice 1 se qualcosa scende sotto soglia: prima la riga qui sopra
 era una promessa sulla parola, ed è il tipo di promessa che si rompe per prima
@@ -560,21 +571,31 @@ d'accento e Home riordinabile**, **condivisione di liste e codice QR**,
 **controllo genitori**, **diagnostica con test e log errori**, **apri sul
 servizio**, **navigazione da telecomando** e **copertina larga nella scheda**, e
 nel player **gesture**, **buffer adattivo** e **host con test
-velocità, priorità automatica e bilanciamento**.
+velocità, priorità automatica e bilanciamento**. Poi: **liste personali**,
+**import da Letterboxd, IMDb, Netflix e CSV** con l'**export per Letterboxd e
+in CSV**, il **collegamento a TMDB per anno e id IMDb**, le **scene durante e
+dopo i titoli**, le **uscite nel calendario** (.ics), **i miei abbonamenti** col
+loro conto, le **schede percorribili con le frecce**, le **icone del marchio
+attuale**, i **promemoria su Android** e lo **schermo pieno in orizzontale**.
 
-**Prossimo (Essenziale)** — niente. Con "apri sul servizio" l'ultima voce
-essenziale è chiusa: quello che resta qui sotto è utile, non necessario, e
-nessuna delle tre è un buco che si sente usando l'app.
+**Prossimo (Essenziale)** — niente: quello che resta qui sotto è utile, non
+necessario.
 
 **Poi (Utile)**
-1. Liste personali salvate ("Da vedere col partner", "Horror di ottobre") —
-   oggi una lista si condivide ma non si conserva
-2. Trailer in‑app con PiP
-3. Universi costruiti a mano dall'utente, oltre a quelli da keyword
+1. Trailer in‑app con PiP
+2. Universi costruiti a mano dall'utente, oltre a quelli da keyword
+3. Ricerca vocale (Web Speech API; va detto che la dettatura del browser passa
+   dai server di Google o di Apple)
+4. **La libreria su IndexedDB.** Oggi vive in `localStorage`, che ha un tetto
+   di pochi megabyte per sito: con l'import, una libreria di tremila titoli e
+   le loro trame ci arriva vicino. L'import lo dice prima di unire; la
+   soluzione vera è spostare libreria e diario dove sta già la cache di TMDB
+5. Avviso «in scadenza» — solo se un catalogo aperto comincerà a esporre il
+   dato: TMDB non ce l'ha, JustWatch lo tiene per sé
 
 **Futuro**
-5. Sync cloud con account
-6. Ricerca per immagine
+6. Sync cloud con account
+7. Ricerca per immagine
 
 ---
 
