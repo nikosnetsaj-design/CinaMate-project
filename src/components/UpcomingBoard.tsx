@@ -3,12 +3,15 @@ import { useLibrary } from "../store/useLibrary";
 import { useSettings } from "../store/useSettings";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useReminders } from "../store/useReminders";
-import { groupByMonth, loadUpcoming, trackedKey, type UpcomingEntry } from "../lib/upcoming";
+import { groupByMonth, loadUpcoming, trackedKey, upcomingEvents, type UpcomingEntry } from "../lib/upcoming";
+import { buildCalendar } from "../lib/ics";
+import { downloadFile } from "../lib/download";
+import { localDay } from "../lib/day";
 import { countdown, dayLabel, daysBetweenToday } from "../lib/format";
 import { requestNotificationPermission } from "../lib/notify";
 import { PosterArt } from "./PosterArt";
 import { EmptyState } from "./EmptyState";
-import { BellIcon } from "./icons";
+import { BellIcon, CalendarPlusIcon } from "./icons";
 
 function ReminderToggle({ itemId, title }: { itemId: string; title: string }) {
   const enabled = useReminders((s) => s.enabled.includes(itemId));
@@ -119,8 +122,26 @@ export function UpcomingBoard() {
 
   const months = groupByMonth(entries);
 
+  function addToCalendar() {
+    const ics = buildCalendar(upcomingEvents(entries!), { name: "CineMate · uscite in arrivo" });
+    downloadFile(`cinemate-uscite-${localDay()}.ics`, ics, "text/calendar");
+    useLibrary.getState().pushToast("success", "Apri il file per aggiungere le date al calendario.");
+  }
+
   return (
     <div className="flex flex-col gap-6">
+      {/* Il calendario del telefono ricorda anche ad app chiusa, e mette
+          l'episodio accanto agli impegni della sera: è lì che si decide. */}
+      <div className="flex items-center gap-3 rounded-lg bg-surface p-3">
+        <p className="min-w-0 flex-1 text-xs text-text-muted">
+          {entries.length === 1 ? "La data" : `Le ${entries.length} date`} nel calendario del telefono: ti avvisa lui, anche
+          ad app chiusa.
+        </p>
+        <button type="button" onClick={addToCalendar} className="btn btn-secondary btn-sm shrink-0">
+          <CalendarPlusIcon size={16} />
+          Calendario
+        </button>
+      </div>
       {months.map(({ month, entries: monthEntries }) => (
         <section key={month} className="flex flex-col gap-2.5">
           <h2 className="font-display text-lg font-semibold capitalize text-text">

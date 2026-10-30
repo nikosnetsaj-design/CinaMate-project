@@ -1,5 +1,6 @@
 import { getNextEpisode, getReleaseDate } from "./tmdb";
 import { daysBetweenToday } from "./format";
+import type { CalendarEvent } from "./ics";
 import type { Item } from "../types";
 
 export interface UpcomingEntry {
@@ -114,4 +115,35 @@ export function groupByMonth(entries: UpcomingEntry[]): { month: string; entries
   return Array.from(groups.entries())
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([month, list]) => ({ month, entries: list }));
+}
+
+/**
+ * Le uscite come eventi di calendario.
+ *
+ * L'identificativo non contiene la data: se TMDB sposta un episodio di una
+ * settimana, importare di nuovo il file sposta l'evento invece di lasciarne
+ * due — uno dei quali sbagliato — nei calendari che rispettano l'`UID`.
+ */
+export function upcomingEvents(entries: UpcomingEntry[]): CalendarEvent[] {
+  return entries.map(({ item, date, type, season, episode }) => {
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const code = season != null && episode != null ? `S${pad(season)}E${pad(episode)}` : null;
+    const ref = `${item.tmdbMediaType ?? "titolo"}-${item.tmdbId ?? item.id}`;
+    if (type === "episodio") {
+      return {
+        uid: `${ref}-${code ? code.toLowerCase() : date}@cinemate`,
+        date,
+        summary: `${item.title} · ${code ?? "nuovo episodio"}`,
+        description: `Nuovo episodio di «${item.title}»${
+          season != null && episode != null ? ` (stagione ${season}, episodio ${episode})` : ""
+        }. Dalla tua libreria su CineMate.`,
+      };
+    }
+    return {
+      uid: `${ref}@cinemate`,
+      date,
+      summary: `${item.title} · esce oggi`,
+      description: `«${item.title}»${item.year ? ` (${item.year})` : ""} esce oggi. Dalla tua watchlist su CineMate.`,
+    };
+  });
 }
