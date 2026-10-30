@@ -6,6 +6,10 @@ on:
     # so listing a feature branch here would let a work-in-progress push quietly
     # replace the live site; use workflow_dispatch to publish a branch on purpose.
     branches: [Cinemate]
+  # Le PR verso Cinemate fanno gli stessi controlli e la stessa build, ma non
+  # pubblicano: gli ultimi due passi sono saltati (vedi gli `if` più sotto).
+  pull_request:
+    branches: [Cinemate]
   workflow_dispatch:
 
 permissions:
@@ -13,10 +17,11 @@ permissions:
   pages: write
   id-token: write
 
-# Let a running deploy finish rather than cancelling it mid-publish.
+# Let a running deploy finish rather than cancelling it mid-publish. A PR's
+# checks are only checks: a newer push to the same PR replaces them.
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.ref) || 'pages' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -34,17 +39,25 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run contrast
+      # Il giro completo in un Chromium vero: avvio, aggiunta, una puntata
+      # segnata, esportazione. Costruisce l'app per conto suo, alla radice.
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+        env:
+          CI: "true"
       - run: npm run build
         env:
           GITHUB_PAGES: "true"
       # Pages has no server-side routing, so every unknown path must fall back
       # to the app shell or a refresh on /libreria would 404.
       - run: cp dist/index.html dist/404.html
-      - uses: actions/upload-pages-artifact@v3
+      - if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:

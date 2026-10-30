@@ -53,7 +53,8 @@ npm install
 npm run dev      # ambiente di sviluppo
 npm run build    # build di produzione (tsc + vite build)
 npm run lint      # oxlint, e un avviso conta come errore
-npm test          # scripts/tests: migrazioni, cache, ritmo delle richieste…
+npm test          # scripts/tests: migrazioni, episodi, backup, consigli, saghe, filtri…
+npm run test:e2e  # Playwright: avvio, aggiunta, una puntata segnata, esportazione
 npm run contrast  # WCAG AA su ogni coppia testo/sfondo dei due temi
 ```
 

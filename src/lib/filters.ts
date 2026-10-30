@@ -64,8 +64,9 @@ export function applyFilters(items: Item[], filters: Filters, lookupSource?: Sou
     if (filters.yearFrom !== undefined && item.year < filters.yearFrom) return false;
     if (filters.yearTo !== undefined && item.year > filters.yearTo) return false;
 
-    // A runtime of 0 means "unknown", not "instant": a length filter must not
-    // silently delete every title TMDB never gave a duration for.
+    // A runtime of 0 means "unknown", not "instant". It cannot satisfy a
+    // length filter in either direction, so the title is left out instead of
+    // passing every "under 90 minutes" as a zero-minute film.
     if (filters.runtimeMin !== undefined && (!item.runtime || item.runtime < filters.runtimeMin)) return false;
     if (filters.runtimeMax !== undefined && (!item.runtime || item.runtime > filters.runtimeMax)) return false;
 
