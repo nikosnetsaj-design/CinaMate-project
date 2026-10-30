@@ -134,6 +134,21 @@ self.addEventListener('message', (event) => {
   }
 });
 
+// Un tocco sul promemoria di un'uscita riporta all'app: alla scheda già
+// aperta se c'è, altrimenti a una nuova. Senza questo, su Android — dove le
+// notifiche passano dal service worker — il tocco non faceva niente.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const open = windows.find((client) => client.url.startsWith(SCOPE.href));
+      if (open) return open.focus();
+      return self.clients.openWindow(SCOPE.href);
+    })(),
+  );
+});
+
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET') return;

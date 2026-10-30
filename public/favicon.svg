@@ -1,11 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="7" fill="#0C0B0A"/>
-  <circle cx="16" cy="16" r="10.5" fill="none" stroke="#E4B363" stroke-width="2"/>
-  <circle cx="16" cy="7" r="1.6" fill="#E4B363"/>
-  <circle cx="23.8" cy="11.5" r="1.6" fill="#E4B363"/>
-  <circle cx="23.8" cy="20.5" r="1.6" fill="#E4B363"/>
-  <circle cx="16" cy="25" r="1.6" fill="#E4B363"/>
-  <circle cx="8.2" cy="20.5" r="1.6" fill="#E4B363"/>
-  <circle cx="8.2" cy="11.5" r="1.6" fill="#E4B363"/>
-  <circle cx="16" cy="16" r="3.2" fill="#E4B363"/>
+  <!-- Il marchio a 16 e 32 pixel: stesse proporzioni dell'icona, tratti più
+       pesanti, perché a quella misura un anello sottile sparisce. -->
+  <rect width="32" height="32" rx="7.5" fill="#dc7a54"/>
+  <circle cx="16" cy="16" r="9.10" fill="none" stroke="#1a0b05" stroke-width="2.30"/>
+  <circle cx="16.00" cy="10.25" r="1.55" fill="#1a0b05"/>
+  <circle cx="20.98" cy="13.12" r="1.55" fill="#1a0b05"/>
+  <circle cx="20.98" cy="18.88" r="1.55" fill="#1a0b05"/>
+  <circle cx="16.00" cy="21.75" r="1.55" fill="#1a0b05"/>
+  <circle cx="11.02" cy="18.88" r="1.55" fill="#1a0b05"/>
+  <circle cx="11.02" cy="13.12" r="1.55" fill="#1a0b05"/>
+  <circle cx="16" cy="16" r="2.30" fill="#1a0b05"/>
 </svg>
