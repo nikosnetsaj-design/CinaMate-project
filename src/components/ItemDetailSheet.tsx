@@ -319,6 +319,8 @@ function ItemDetail({ item }: { item: Item }) {
         <div className="mt-5">
           {tab === "episodi" && (
             <div className="flex flex-col gap-4">
+              {/* Prima delle puntate: è la domanda di chi sta per riprendere. */}
+              <SpoilerFreeRecap item={item} />
               <EpisodeList item={item} onNavigate={close} />
 
               {item.episodes ? (
@@ -424,7 +426,6 @@ function ItemDetail({ item }: { item: Item }) {
                 )}
               </div>
 
-              <SpoilerFreeRecap item={item} />
               <TranslateOverview item={item} />
 
               {item.notes && (

@@ -309,7 +309,7 @@ sezione: hanno il loro, con la licenza, e meglio. Questo player non è per loro 
 | **Obiettivi personali** | I traguardi li decide l'app | Quelli che scegli tu, misurati sul diario e non sullo scaffale | Utile ✅ |
 | **Promemoria uscite** | Un episodio esce e non lo sai | Notifica locale il giorno stesso | Utile ✅ |
 | Esporta / importa | I dati locali si perdono | Backup e cambio dispositivo, comprese le sorgenti del player e gli host | Essenziale ✅ |
-| **Riassunto senza spoiler** | Riprendi una serie dopo 8 mesi | "Dove eravamo" senza rovinare nulla | Utile ✅ |
+| **Nelle puntate precedenti** | Riprendi una serie dopo 8 mesi | Il riassunto si ferma alla fine dell'ultimo episodio del registro, detto per stagione, numero e titolo — non «ha visto 14 episodi», che lascerebbe al modello il conto. Le sinossi TMDB della stagione arrivano al modello solo fino a quel confine. Tre livelli (breve, normale, dettagliato); una volta pagato resta in memoria per quel confine e quel livello. In cima alla scheda Episodi, cioè dove si è prima di riprendere | Utile ✅ |
 | Assistente / critico | Consigli generici | Conosce i tuoi voti | Essenziale ✅ |
 | Sync cloud multi‑dispositivo | Telefono e PC separati | Una libreria sola | **Futura** — richiede backend e account |
 

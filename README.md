@@ -399,6 +399,11 @@ rete che non è la tua.
   qualità della tua copia, durata, anno, il tuo voto e quello di TMDB, e
   "solo con sottotitoli". Le opzioni sono prese dal tuo scaffale, quindi ogni
   voce del menu corrisponde a qualcosa che hai davvero.
+- **Nelle puntate precedenti**: in cima alla scheda *Episodi* di una serie
+  lasciata a metà, un riassunto (con la tua chiave Anthropic) che si ferma alla
+  fine dell'ultimo episodio segnato — breve, normale o dettagliato. Il prompt
+  nomina stagione ed episodio, e le sinossi di TMDB che lo ancorano ai fatti
+  arrivano solo fino a lì. Resta in memoria: riaprire la scheda non lo ripaga.
 - **Ricerca a parole**: scrivi «film di fantascienza anni '90» e Claude la
   traduce in filtri per TMDB, che risponde. Il modello sceglie i filtri, non i
   titoli: così la lista è vera per costruzione.
