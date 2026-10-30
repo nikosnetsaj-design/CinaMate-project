@@ -383,6 +383,88 @@ export async function searchTitles(
     .map((entry) => entry.r);
 }
 
+/* ------------------------------------------------------------------ */
+/* Riconoscere un titolo che arriva da fuori                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Un risultato con in più il titolo originale. Gli export stranieri scrivono i
+ * film col nome inglese o originale, e le risposte qui arrivano in italiano:
+ * «The Godfather» non somiglia a «Il padrino», ma all'originale sì.
+ */
+export interface TmdbCandidate extends TmdbSearchResult {
+  originalTitle: string;
+}
+
+interface RawTypedResult {
+  id: number;
+  title?: string;
+  name?: string;
+  original_title?: string;
+  original_name?: string;
+  release_date?: string;
+  first_air_date?: string;
+  overview?: string;
+  poster_path?: string | null;
+  genre_ids?: number[];
+  origin_country?: string[];
+  popularity?: number;
+}
+
+function toCandidate(r: RawTypedResult, mediaType: "movie" | "tv"): TmdbCandidate {
+  const genreNames = (r.genre_ids ?? []).map((id) => GENRE_NAMES[id]).filter((n): n is string => !!n);
+  const dateStr = r.release_date || r.first_air_date;
+  return {
+    tmdbId: r.id,
+    mediaType,
+    title: r.title || r.name || "",
+    originalTitle: r.original_title || r.original_name || "",
+    year: dateStr && dateStr.length >= 4 ? Number(dateStr.slice(0, 4)) : null,
+    overview: r.overview || "",
+    posterPath: r.poster_path ?? null,
+    kind: guessKind(mediaType, genreNames, r.origin_country),
+    popularity: r.popularity ?? 0,
+  };
+}
+
+/**
+ * Il titolo che ha quell'identificativo IMDb, se TMDB lo conosce.
+ *
+ * È una risposta esatta, non una ricerca: un export di IMDb porta `tt0133093`
+ * per ogni riga, e cercare «Matrix» per nome vorrebbe dire scegliere fra
+ * quattro film e una serie quello che quell'id dice già.
+ */
+export async function findByImdbId(imdbId: string, apiKey: string, signal?: AbortSignal): Promise<TmdbCandidate | null> {
+  const data = await tmdbGet<{ movie_results?: RawTypedResult[]; tv_results?: RawTypedResult[] }>(
+    `/find/${encodeURIComponent(imdbId)}`,
+    apiKey,
+    { external_source: "imdb_id" },
+    signal,
+  );
+  const movie = data.movie_results?.[0];
+  if (movie) return toCandidate(movie, "movie");
+  const tv = data.tv_results?.[0];
+  return tv ? toCandidate(tv, "tv") : null;
+}
+
+/**
+ * Cerca solo fra i film o solo fra le serie, e solo in un anno quando lo si
+ * sa. `/search/multi` mescola tutto e non accetta un anno: per chi ha già in
+ * mano «Dune, 1984» è la domanda sbagliata.
+ */
+export async function searchByType(
+  query: string,
+  mediaType: "movie" | "tv",
+  apiKey: string,
+  year?: number | null,
+  signal?: AbortSignal,
+): Promise<TmdbCandidate[]> {
+  const params: Record<string, string> = { query, include_adult: "false" };
+  if (year) params[mediaType === "movie" ? "primary_release_year" : "first_air_date_year"] = String(year);
+  const data = await tmdbGet<{ results?: RawTypedResult[] }>(`/search/${mediaType}`, apiKey, params, signal);
+  return (data.results ?? []).map((r) => toCandidate(r, mediaType)).filter((r) => r.title);
+}
+
 interface RawVideo {
   type: string;
   site: string;

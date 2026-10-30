@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLibrary } from "../store/useLibrary";
 import { useSettings } from "../store/useSettings";
-import { getDetails, searchTitles, TmdbApiError } from "./tmdb";
+import { findByImdbId, getDetails, searchByType, searchTitles, TmdbApiError } from "./tmdb";
+import { pickCandidate } from "./titleMatch";
 import type { Item } from "../types";
 
 const DELAY_MS = 300;
@@ -32,7 +33,7 @@ function isTemporary(e: unknown): boolean {
 let running = false;
 const attempted = new Set<string>();
 
-function fillGaps(item: Item, d: Awaited<ReturnType<typeof getDetails>>, mediaType: "movie" | "tv"): Partial<Item> {
+export function fillGaps(item: Item, d: Awaited<ReturnType<typeof getDetails>>, mediaType: "movie" | "tv"): Partial<Item> {
   return {
     tmdbId: d.tmdbId,
     tmdbMediaType: mediaType,
@@ -47,6 +48,12 @@ function fillGaps(item: Item, d: Awaited<ReturnType<typeof getDetails>>, mediaTy
     cast: item.cast.length ? item.cast : d.cast,
     similar: item.similar.length ? item.similar : d.similar,
     episodes: item.episodes ?? d.episodes,
+    // Una serie segnata «Vista» quando il totale degli episodi non si sapeva
+    // ancora — arrivata da un voto di IMDb, o scritta a mano senza catalogo —
+    // diventa vista tutta nel momento in cui il totale arriva. Prima restava
+    // «Vista» con zero episodi su sessanta: due affermazioni contrarie nella
+    // stessa scheda, e zero minuti nelle statistiche.
+    seen: item.status === "Visto" && item.episodes == null && d.episodes ? Math.max(item.seen || 0, d.episodes) : item.seen,
     seasons: item.seasons ?? d.seasons,
     // Always taken from TMDB: the saga is not something the user curates, and
     // `null` here is the real answer "standalone", not a gap.
@@ -65,6 +72,49 @@ function fillGaps(item: Item, d: Awaited<ReturnType<typeof getDetails>>, mediaTy
     // exists to keep things away from a child is worse than none.
     certification: d.certification,
   };
+}
+
+/**
+ * Quale scheda di TMDB è questo titolo.
+ *
+ * Prima era «il primo risultato della ricerca per nome», che è la risposta
+ * giusta finché i film con quel nome sono uno solo. «Dune» del 1984 scritto a
+ * mano diventava il Dune del 2021, con la sua copertina e il suo regista;
+ * peggio, un titolo arrivato da un import col suo anno esatto poteva
+ * collegarsi al remake. Adesso, nell'ordine:
+ *
+ * - un titolo già collegato non cerca niente: sa chi è, e ricercarlo per nome
+ *   potrebbe riscrivere un collegamento che avevi confermato tu;
+ * - un id IMDb (dagli export di IMDb) è una risposta esatta, via `/find`;
+ * - altrimenti la ricerca, e fra i risultati quello del tipo giusto (film o
+ *   serie) e dell'anno giusto, entro uno.
+ *
+ * L'anno vale come vincolo solo quando è un anno passato. L'anno corrente è il
+ * valore predefinito del foglio di aggiunta, quindi su un titolo scritto a mano
+ * non dice niente: lì, se nessun risultato ha quell'anno, resta il primo, come
+ * prima. Un anno passato invece è stato scelto o importato, e un titolo senza
+ * copertina — che il pulsante nella scheda può sempre collegare a mano — è
+ * meglio della copertina di un altro film.
+ */
+export async function resolveTarget(item: Item, apiKey: string): Promise<{ tmdbId: number; mediaType: "movie" | "tv" } | null> {
+  if (item.tmdbId && item.tmdbMediaType) return { tmdbId: item.tmdbId, mediaType: item.tmdbMediaType };
+  if (item.imdbId) {
+    const hit = await findByImdbId(item.imdbId, apiKey);
+    if (hit) return hit;
+  }
+  const year = item.year > 1800 ? item.year : null;
+  const strict = year !== null && year < new Date().getFullYear();
+  const type: "movie" | "tv" | null =
+    item.kind === "serie" || item.kind === "anime" ? "tv" : item.kind === "film" ? "movie" : null;
+  const results = await searchTitles(item.title, apiKey);
+  const sameType = type ? results.filter((r) => r.mediaType === type) : results;
+  const picked = pickCandidate(sameType.length ? sameType : results, { title: item.title, year }, { strictYear: strict });
+  if (picked || !year) return picked;
+  // La ricerca generale dà otto risultati, ordinati per popolarità: un film
+  // del 1960 con il nome di un successo di oggi può non esserci. Una seconda
+  // domanda, solo in quell'anno, lo trova.
+  const inYear = await searchByType(item.title, type ?? "movie", apiKey, year);
+  return pickCandidate(inYear, { title: item.title, year }, { strictYear: true });
 }
 
 /**
@@ -112,13 +162,7 @@ export function useAutoLinkTmdb() {
           if (!next) break;
           attempted.add(next.id);
           try {
-            // An already-linked title skips the search entirely: it knows which
-            // TMDB record it is, and re-searching by title could match a
-            // different one and quietly rewrite a link the user had confirmed.
-            const target =
-              next.tmdbId && next.tmdbMediaType
-                ? { tmdbId: next.tmdbId, mediaType: next.tmdbMediaType }
-                : (await searchTitles(next.title, tmdbApiKey))[0];
+            const target = await resolveTarget(next, tmdbApiKey);
             if (target) {
               const details = await getDetails(target.tmdbId, target.mediaType, tmdbApiKey);
               useLibrary.getState().updateItem(next.id, fillGaps(next, details, target.mediaType));
