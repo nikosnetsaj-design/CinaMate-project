@@ -21,6 +21,7 @@ import type { Kind, Status } from "../types";
 import { GridIcon, ListIcon, ListPlusIcon, ShareIcon } from "../components/icons";
 import { LibraryTabs } from "../components/LibraryTabs";
 import { useLists } from "../store/useLists";
+import { useSettingsSheet } from "../store/useSettingsSheet";
 import { useLibrary } from "../store/useLibrary";
 
 /** I tipi che un indirizzo può nominare: di ciò che arriva scritto lì non ci si fida. */
@@ -223,20 +224,27 @@ export function Library() {
               : "Prova a toglierne uno, o a cercare con un'altra parola."
           }
           action={
-            <button
-              type="button"
-              onClick={() => {
-                if (items.length === 0) {
-                  openAddSheet();
-                  return;
-                }
-                setQ("");
-                setFilters({});
-              }}
-              className={items.length === 0 ? "btn btn-primary" : "btn btn-secondary"}
-            >
-              {items.length === 0 ? "Aggiungi il primo titolo" : "Togli filtri e ricerca"}
-            </button>
+            <div className="flex flex-col items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (items.length === 0) {
+                    openAddSheet();
+                    return;
+                  }
+                  setQ("");
+                  setFilters({});
+                }}
+                className={items.length === 0 ? "btn btn-primary" : "btn btn-secondary"}
+              >
+                {items.length === 0 ? "Aggiungi il primo titolo" : "Togli filtri e ricerca"}
+              </button>
+              {items.length === 0 && (
+                <button type="button" onClick={() => useSettingsSheet.getState().open("importa")} className="btn btn-plain text-text-muted hover:text-text">
+                  Importa da Letterboxd, IMDb o Netflix
+                </button>
+              )}
+            </div>
           }
         />
       ) : grid ? (

@@ -134,9 +134,10 @@ function makeHistoryEntry(
   date: string,
   action: HistoryEntry["action"],
   count = 1,
+  id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
 ): HistoryEntry {
   return {
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id,
     itemId: item.id,
     title: item.title,
     kind: item.kind,
@@ -199,7 +200,7 @@ interface LibraryState {
     updates: { id: string; patch: Partial<Item> }[],
     diary: { index?: number; itemId?: string; date: string; action: HistoryEntry["action"]; count?: number }[],
     addedDates?: (string | undefined)[],
-  ) => { added: number; updated: number; logged: number };
+  ) => { added: number; updated: number; logged: number; createdIds: string[]; saved: boolean };
   clearAll: () => void;
   resetCorruptedData: () => void;
   /** Butta la copia di sicurezza dopo che l'hai vista (o scaricata). */
@@ -211,12 +212,27 @@ function newId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+/**
+ * L'identificativo di un record arrivato da un import.
+ *
+ * Diverso di proposito da `newId`: quello porta scritto l'istante in
+ * millisecondi, e `repairUtcDay` (vedi `lib/day`) lo usa per correggere le
+ * date scritte col giorno di Greenwich — cioè ogni data uguale al giorno UTC
+ * di quell'istante. Una data importata non è stata calcolata adesso, ma
+ * può coincidere col giorno UTC di adesso: importando a mezzanotte e mezza
+ * la visione di ieri, la correzione la sposterebbe a oggi. Senza le tredici
+ * cifre in testa la correzione non la tocca.
+ */
+function importId(): string {
+  return `imp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 function persistOrToast(
   get: () => LibraryState,
   set: (partial: Partial<LibraryState>) => void,
   next: Item[],
   successText?: string,
-) {
+): boolean {
   const ok = saveItems(next);
   set({ items: next, storageError: !ok && !protectOriginal });
   if (!ok) {
@@ -229,6 +245,7 @@ function persistOrToast(
   } else if (successText) {
     get().pushToast("success", successText);
   }
+  return ok;
 }
 
 function logHistory(get: () => LibraryState, set: (partial: Partial<LibraryState>) => void, entries: HistoryEntry[]) {
@@ -402,11 +419,11 @@ export const useLibrary = create<LibraryState>((set, get) => ({
     const fallbackDay = today();
     const created: Item[] = incoming.map((data, index) => {
       const day = addedDates[index];
-      return { ...data, id: newId(), added: day && /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : fallbackDay };
+      return { ...data, id: importId(), added: day && /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : fallbackDay };
     });
     const patches = new Map(updates.map((u) => [u.id, u.patch]));
     const merged = [...created, ...get().items.map((i) => (patches.has(i.id) ? { ...i, ...patches.get(i.id) } : i))];
-    persistOrToast(get, set, merged);
+    const saved = persistOrToast(get, set, merged);
 
     const byIndex = (index: number | undefined) => (index === undefined ? undefined : created[index]);
     const byId = new Map(merged.map((i) => [i.id, i]));
@@ -414,7 +431,7 @@ export const useLibrary = create<LibraryState>((set, get) => ({
     for (const d of diary) {
       const target = byIndex(d.index) ?? (d.itemId ? byId.get(d.itemId) : undefined);
       if (!target) continue;
-      entries.push(makeHistoryEntry(target, d.date, d.action, d.count ?? 1));
+      entries.push(makeHistoryEntry(target, d.date, d.action, d.count ?? 1, importId()));
     }
     // In ordine di data: il diario si legge così, e qualche vista (il Nastro)
     // assume che le voci siano già in fila.
@@ -423,7 +440,9 @@ export const useLibrary = create<LibraryState>((set, get) => ({
       saveHistory(next);
       set({ history: next });
     }
-    return { added: created.length, updated: updates.length, logged: entries.length };
+    // Gli id nuovi, nell'ordine dell'elenco ricevuto: servono a chi deve
+    // metterli in una lista subito dopo (le liste di Letterboxd).
+    return { added: created.length, updated: updates.length, logged: entries.length, createdIds: created.map((i) => i.id), saved };
   },
 
   clearAll: () => {
