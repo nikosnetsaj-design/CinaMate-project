@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useLibrary } from "../store/useLibrary";
 import { useSagas } from "../store/useSagas";
 import { useSelectedPerson } from "../store/useSelectedPerson";
 import { computeStats, computeYearInReview, yearsWithActivity } from "../lib/stats";
 import { computeAchievements } from "../lib/achievements";
-import { groupDiary } from "../lib/diary";
+import { groupDiary, yearAgo, type DiaryEntry } from "../lib/diary";
 import { voteColor } from "../lib/vote";
 import { PosterArt } from "../components/PosterArt";
 import { VoteBadge } from "../components/VoteBadge";
@@ -16,7 +16,8 @@ import { RowHeader } from "../components/RowHeader";
 import { FigureBand } from "../components/Figures";
 import { StatusMark } from "../components/StatusChip";
 import { PalateCard } from "../components/PalateCard";
-import { CheckIcon } from "../components/icons";
+import { CheckIcon, PeopleIcon, PlusIcon } from "../components/icons";
+import { DiaryHeatmap, DiaryNoteSheet, YearAgoCard } from "../components/DiaryExtras";
 
 const KIND_LABELS: Record<string, string> = { film: "Film", serie: "Serie TV", anime: "Anime", doc: "Documentario" };
 /*
@@ -284,7 +285,9 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
 
 export function DiaryTab({ items, openItem }: { items: Item[]; openItem: (item: Item) => void }) {
   const history = useLibrary((s) => s.history);
-  const days = groupDiary(history, items);
+  const days = useMemo(() => groupDiary(history, items), [history, items]);
+  const memory = useMemo(() => yearAgo(days, new Date().toISOString().slice(0, 10)), [days]);
+  const [noting, setNoting] = useState<{ entry: DiaryEntry; date: string } | null>(null);
 
   if (days.length === 0) {
     return (
@@ -295,53 +298,76 @@ export function DiaryTab({ items, openItem }: { items: Item[]; openItem: (item: 
     );
   }
 
+  // Dal quadretto al giorno: il diario è lungo, e la mappa serve a saltarci dentro.
+  function goToDay(date: string) {
+    document.getElementById(`diario-${date}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   let lastMonth = "";
   return (
-    <div className="flex flex-col">
-      {days.map(({ date, entries }, index) => {
-        const d = new Date(`${date}T00:00:00`);
-        const monthLabel = new Intl.DateTimeFormat("it-IT", { month: "long", year: "numeric" }).format(d);
-        const showMonth = monthLabel !== lastMonth;
-        lastMonth = monthLabel;
-        const weekday = new Intl.DateTimeFormat("it-IT", { weekday: "short" }).format(d);
-        return (
-          <div key={date}>
-            {showMonth && (
-              <h2 className={`t-title mb-2 text-text first-letter:uppercase ${index === 0 ? "" : "mt-8"}`}>{monthLabel}</h2>
-            )}
-            {/* Il giorno come su un calendario: la cifra grande, il nome
-                piccolo sopra. Un filo fra i giorni dello stesso mese. */}
-            <div className={`flex gap-4 py-3 ${showMonth ? "" : "shadow-[inset_0_1px_0_var(--separator)]"}`}>
-              <div className="w-10 shrink-0 pt-0.5 text-center">
-                <p className="text-xs text-text-faint">{weekday}</p>
-                <p className="t-figure text-text">{d.getDate()}</p>
+    <div className="flex flex-col gap-10">
+      {memory && <YearAgoCard memory={memory} openItem={openItem} />}
+      <DiaryHeatmap onPickDay={goToDay} />
+      <div className="flex flex-col">
+        {days.map(({ date, entries }, index) => {
+          const d = new Date(`${date}T00:00:00`);
+          const monthLabel = new Intl.DateTimeFormat("it-IT", { month: "long", year: "numeric" }).format(d);
+          const showMonth = monthLabel !== lastMonth;
+          lastMonth = monthLabel;
+          const weekday = new Intl.DateTimeFormat("it-IT", { weekday: "short" }).format(d);
+          return (
+            <div key={date} id={`diario-${date}`} className="scroll-mt-20">
+              {showMonth && (
+                <h2 className={`t-title mb-2 text-text first-letter:uppercase ${index === 0 ? "" : "mt-8"}`}>{monthLabel}</h2>
+              )}
+              {/* Il giorno come su un calendario: la cifra grande, il nome
+                  piccolo sopra. Un filo fra i giorni dello stesso mese. */}
+              <div className={`flex gap-4 py-3 ${showMonth ? "" : "shadow-[inset_0_1px_0_var(--separator)]"}`}>
+                <div className="w-10 shrink-0 pt-0.5 text-center">
+                  <p className="text-xs text-text-faint">{weekday}</p>
+                  <p className="t-figure text-text">{d.getDate()}</p>
+                </div>
+                <ul className="flex min-w-0 flex-1 flex-col gap-2">
+                  {entries.map((entry) => {
+                    const { item, action, count } = entry;
+                    const note = [entry.with && `con ${entry.with}`, entry.where].filter(Boolean).join(" · ");
+                    return (
+                      <li key={`${item.id}-${action}`} className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => openItem(item)}
+                          aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
+                          className="flex min-w-0 flex-1 items-center gap-3 rounded-sm text-left transition-transform duration-200 active:scale-[0.99]"
+                        >
+                          <PosterArt item={item} size="sm" showTitle={false} className="w-10 shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-text">{item.title}</p>
+                            <p className="truncate text-xs text-text-muted">
+                              {action === "watched" && "Completato"}
+                              {action === "episode" && `${count} episod${count === 1 ? "io" : "i"}`}
+                              {action === "rewatch" && "Rivisto"}
+                              {note && ` · ${note}`}
+                            </p>
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setNoting({ entry, date })}
+                          aria-label={note ? `Modifica con chi e dove per ${item.title}` : `Aggiungi con chi e dove per ${item.title}`}
+                          className="icon-btn icon-btn-sm shrink-0 text-text-faint hover:text-text"
+                        >
+                          {note ? <PeopleIcon size={15} /> : <PlusIcon size={15} />}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
-              <ul className="flex min-w-0 flex-1 flex-col gap-2">
-                {entries.map(({ item, action, count }) => (
-                  <li key={`${item.id}-${action}`}>
-                    <button
-                      type="button"
-                      onClick={() => openItem(item)}
-                      aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
-                      className="flex w-full items-center gap-3 rounded-sm text-left transition-transform duration-200 active:scale-[0.99]"
-                    >
-                      <PosterArt item={item} size="sm" showTitle={false} className="w-10 shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-text">{item.title}</p>
-                        <p className="text-xs text-text-muted">
-                          {action === "watched" && "Completato"}
-                          {action === "episode" && `${count} episod${count === 1 ? "io" : "i"}`}
-                          {action === "rewatch" && "Rivisto"}
-                        </p>
-                      </div>
-                    </button>
-                  </li>
-                ))}
-              </ul>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
+      {noting && <DiaryNoteSheet entry={noting.entry} date={noting.date} onClose={() => setNoting(null)} />}
     </div>
   );
 }

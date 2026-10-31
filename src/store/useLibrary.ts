@@ -164,6 +164,8 @@ interface LibraryState {
   importData: (items: Item[], history: HistoryEntry[]) => void;
   /** I titoli scelti dall'importazione da un'altra app: aggiunti o completati, mai doppi. */
   importEntries: (accepted: Accepted[]) => Omit<ImportOutcome, "items" | "history">;
+  /** Con chi e dove, sulle voci del diario indicate. Un campo vuoto si toglie. */
+  annotateHistory: (ids: string[], note: { with: string; where: string }) => void;
   clearAll: () => void;
   resetCorruptedData: () => void;
 }
@@ -434,6 +436,18 @@ export const useLibrary = create<LibraryState>((set, get) => ({
     saveHistory(history);
     set({ history });
     return counts;
+  },
+
+  annotateHistory: (ids, note) => {
+    const targets = new Set(ids);
+    const clean = { with: note.with.trim().slice(0, 80), where: note.where.trim().slice(0, 80) };
+    const next = get().history.map((h) => {
+      if (!targets.has(h.id)) return h;
+      const { with: _w, where: _p, ...rest } = h;
+      return { ...rest, ...(clean.with ? { with: clean.with } : {}), ...(clean.where ? { where: clean.where } : {}) };
+    });
+    saveHistory(next);
+    set({ history: next });
   },
 
   clearAll: () => {

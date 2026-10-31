@@ -305,6 +305,7 @@ sezione: hanno il loro, con la licenza, e meglio. Questo player non è per loro 
 | Funzione | Problema | Beneficio | Priorità |
 |---|---|---|---|
 | Diario cronologico | "Quando l'ho visto?" | Storia consultabile | Essenziale ✅ |
+| **Diario: l'anno a quadretti, un anno fa, con chi e dove** | Il diario era un elenco: si leggeva, non si guardava, e non ricordava niente da solo | Mappa annuale stile GitHub (settimane da lunedì, cinque gradini di visioni, riassunta in una frase per chi non vede i quadretti; un tocco porta a quel giorno); «Un anno fa, oggi, guardavi…» — lo stesso giorno o il più vicino entro tre; e per ogni visione, facoltativi, *con chi* e *dove*, scritti da te con i valori già usati come suggerimenti. Le note stanno nel diario, quindi nel backup | Utile ✅ |
 | **Profilo** | Le statistiche stanno in una pagina di analisi, non dove sei tu | Ore totali, livello, record e classifica serie in un posto solo | Essenziale ✅ |
 | **Grafico attività** | "Guardo davvero tutte le sere?" | Minuti per giorno, con vista settimana / mese / anno | Essenziale ✅ |
 | **Livello e record personale** | Contare le ore non è un traguardo | Un livello che cresce con le ore e il giorno record, con la striscia di giorni di fila | Utile ✅ |
@@ -577,7 +578,7 @@ Ultimi aggiunti / Simili sul tuo scaffale**, **obiettivi personali**, **tinte
 d'accento e Home riordinabile**, **condivisione di liste e codice QR**, **liste personali e intelligenti**,
 **importazione da Letterboxd, Trakt, IMDb e TV Time**, **riassunto «Nelle
 puntate precedenti»**, **il tuo palato**, **stasera in due**, **questo o quello**, **quale abbonamento
-conviene**,
+conviene**, **diario a quadretti con «un anno fa» e con chi/dove**,
 **controllo genitori**, **diagnostica con test e log errori**, **apri sul
 servizio**, **navigazione da telecomando** e **copertina larga nella scheda**, e
 nel player **gesture**, **buffer adattivo** e **host con test

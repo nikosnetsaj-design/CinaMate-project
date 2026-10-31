@@ -254,5 +254,44 @@ function make(over: Record<string, unknown> = {}): any {
   check("abbonamenti: con i miei, più i gratis", onMine(list as any, new Set(["disney plus"])).map((i: any) => i.id).join() === "e,h");
 }
 
+// --- Diario ----------------------------------------------------------------
+{
+  const { groupDiary, dayCounts, yearWeeks, heatLevel, yearAgo, noteSuggestions } = await import("../../src/lib/diary.ts");
+  const film = make({ id: "f", title: "Film" });
+  const serie = make({ id: "s", title: "Serie", kind: "serie" });
+  const h = (id: string, itemId: string, date: string, action: string, count = 1, extra: any = {}) => ({ id, itemId, title: "", kind: "film", date, action, count, ...extra });
+  const history = [
+    h("1", "s", "2025-10-30", "episode", 2, { with: "Marta" }),
+    h("2", "s", "2025-10-30", "episode", 1, { where: "a casa" }),
+    h("3", "f", "2025-11-02", "watched", 1, { with: "Marta", where: "al cinema" }),
+    h("4", "f", "2026-10-31", "rewatch"),
+  ];
+  const days = groupDiary(history as any, [film, serie]);
+  const row = days.find((d: any) => d.date === "2025-10-30")!.entries[0];
+  check("diario: le voci dello stesso giorno in una riga, con tutti gli id", row.count === 3 && row.ids.join() === "1,2");
+  check("diario: con chi e dove raccolti dalla riga", row.with === "Marta" && row.where === "a casa");
+
+  const counts = dayCounts(history as any, 2025);
+  check("mappa: visioni per giorno, solo nell'anno", counts.get("2025-10-30") === 3 && !counts.has("2026-10-31"));
+  const weeks = yearWeeks(2026);
+  check("mappa: settimane da lunedì, il primo gennaio 2026 è un giovedì", weeks[0][3] === "2026-01-01" && weeks[0][2] === null);
+  check("mappa: tutti i giorni dell'anno, una volta", weeks.flat().filter(Boolean).length === 365 && weeks.flat().at(-1) !== undefined);
+  check("mappa: cinque gradini", [0, 1, 3, 5, 9].map(heatLevel).join() === "0,1,2,3,4");
+
+  const exact = yearAgo(days, "2026-10-30");
+  check("un anno fa: lo stesso giorno", exact?.exact === true && exact.date === "2025-10-30");
+  const near = yearAgo(days, "2026-11-04");
+  check("un anno fa: il giorno più vicino entro tre", near?.exact === false && near.date === "2025-11-02");
+  check("un anno fa: oltre tre giorni, niente", yearAgo(days, "2026-12-01") === null);
+  check("note: suggerimenti dai più usati", noteSuggestions(history as any, "with").join() === "Marta");
+
+  const { useLibrary } = await import("../../src/store/useLibrary.ts");
+  useLibrary.setState({ history: history as any });
+  useLibrary.getState().annotateHistory(["1", "2"], { with: "  Luca ", where: "" });
+  const after = useLibrary.getState().history;
+  check("note: scritte su tutte le voci della riga, ripulite", after[0].with === "Luca" && after[1].with === "Luca");
+  check("note: un campo vuoto si toglie", after[1].where === undefined && !("where" in after[1]));
+}
+
 console.log(failures === 0 ? "\nTutti i controlli passati." : `\n${failures} controlli falliti.`);
 process.exit(failures === 0 ? 0 : 1);

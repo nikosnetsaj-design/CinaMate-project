@@ -161,4 +161,8 @@ export interface HistoryEntry {
   /** Per una voce di un episodio solo: quale. */
   season?: number;
   episode?: number;
+  /** Con chi, se vuoi ricordarlo: «Marta», «in famiglia». Scritto da te. */
+  with?: string;
+  /** Dove: «al cinema», «a casa di Luca». Scritto da te. */
+  where?: string;
 }

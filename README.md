@@ -411,6 +411,10 @@ rete che non è la tua.
 - **Ricerca a parole**: scrivi «film di fantascienza anni '90» e Claude la
   traduce in filtri per TMDB, che risponde. Il modello sceglie i filtri, non i
   titoli: così la lista è vera per costruzione.
+- **Diario**: in *Tu → Diario* l'anno a quadretti (un quadretto per giorno,
+  più scuro quante più visioni; un tocco porta a quel giorno), «un anno fa
+  guardavi…» quando il diario ha qualcosa da ricordare, e per ogni visione,
+  se vuoi, con chi e dove — il «+» accanto alla voce.
 - **Il tuo palato**: in *Tu → Gusti*, cosa premi e cosa punisci — generi,
   decennio, registi, durata, paesi — e quanto voti rispetto al pubblico di
   TMDB, calcolato qui dai tuoi voti (servono almeno cinque). Ogni riga dice la
