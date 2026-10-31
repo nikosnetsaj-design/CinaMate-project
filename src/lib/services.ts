@@ -19,6 +19,8 @@ export interface Availability {
   item: Item;
   streaming: TmdbWatchProvider[];
   free: TmdbWatchProvider[];
+  /** TMDB non ha risposto per questo titolo: non contarlo come «da nessuna parte». */
+  unavailable?: boolean;
 }
 
 export interface Service {

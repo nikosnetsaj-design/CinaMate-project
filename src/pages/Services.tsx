@@ -10,6 +10,7 @@ import { useUpcoming } from "../lib/useUpcoming";
 import { dayLabel, plural } from "../lib/format";
 import { CatalogBlock } from "../components/NeedsCatalog";
 import { EmptyState } from "../components/EmptyState";
+import { ErrorState } from "../components/ErrorState";
 import { PosterArt } from "../components/PosterArt";
 import { RowHeader } from "../components/RowHeader";
 import { CheckIcon } from "../components/icons";
@@ -56,6 +57,7 @@ export function Services() {
   );
   const trackedKey = tracked.map((i) => i.id).join(",");
   const [state, setState] = useState<{ region: string; key: string; list: Availability[]; done: number } | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!tmdbApiKey) return;
@@ -70,9 +72,9 @@ export function Services() {
         const item = queue[next++];
         try {
           const info = await getWatchProviders(item.tmdbId as number, item.tmdbMediaType as "movie" | "tv", tmdbApiKey, region);
-          out.push({ item, streaming: info.streaming, free: info.free });
+          out.push({ item, streaming: info.streaming, free: info.free, unavailable: info.unavailable });
         } catch {
-          out.push({ item, streaming: [], free: [] });
+          out.push({ item, streaming: [], free: [], unavailable: true });
         }
         done++;
         if (!cancelled && (done % 4 === 0 || done === queue.length)) setState({ region, key: trackedKey, list: [...out], done });
@@ -84,7 +86,7 @@ export function Services() {
     return () => {
       cancelled = true;
     };
-  }, [tmdbApiKey, region, trackedKey]);
+  }, [tmdbApiKey, region, trackedKey, attempt]);
 
   const ready = state !== null && state.region === region && state.key === trackedKey && state.done === tracked.length;
   const all = useMemo(() => state?.list ?? [], [state]);
@@ -94,7 +96,10 @@ export function Services() {
   const combo = useMemo(() => bestCombo(list), [list]);
   const mineSet = useMemo(() => new Set(mine), [mine]);
   const watchable = useMemo(() => onMine(list, mineSet), [list, mineSet]);
-  const nowhere = list.filter((av) => servicesOf(av).length === 0 && av.free.length === 0).length;
+  const nowhere = list.filter((av) => !av.unavailable && servicesOf(av).length === 0 && av.free.length === 0).length;
+  // Le risposte che non sono arrivate: «non lo so», da non contare come «da
+  // nessuna parte».
+  const missing = list.filter((av) => av.unavailable).length;
 
   // Cosa arriva, servizio per servizio: le uscite dei titoli che segui (da
   // vedere o in corso), sul servizio dove quei titoli stanno.
@@ -154,8 +159,22 @@ export function Services() {
             <div key={i} className="skeleton h-[72px] rounded-md" aria-hidden="true" />
           ))}
         </div>
+      ) : missing === list.length ? (
+        <ErrorState
+          title="TMDB non ha risposto"
+          description="Senza le risposte del catalogo non so su quale servizio stanno i tuoi titoli. La libreria funziona lo stesso."
+          onRetry={() => setAttempt((n) => n + 1)}
+        />
       ) : (
         <>
+          {missing > 0 && (
+            <ErrorState
+              compact
+              title={`${plural(missing, "titolo è rimasto", "titoli sono rimasti")} senza risposta`}
+              description="Il conto qui sotto è fatto sugli altri."
+              onRetry={() => setAttempt((n) => n + 1)}
+            />
+          )}
           {/* --- Il consiglio ------------------------------------------ */}
           {combo.steps.length > 0 ? (
             <section className="flex flex-col gap-3 rounded-lg bg-surface p-5 shadow-[var(--shadow-sm)]">

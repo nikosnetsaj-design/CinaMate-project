@@ -3,6 +3,9 @@ import { useSettings } from "../store/useSettings";
 import { CatalogNote } from "./NeedsCatalog";
 import { useWatchSession } from "../store/useWatchSession";
 import { getWatchProviders, providerLogoUrl, type TmdbWatchInfo, type TmdbWatchProvider } from "../lib/tmdb";
+import { useServices } from "../store/useServices";
+import { countryLabel } from "../lib/palate";
+import { ErrorState } from "./ErrorState";
 import { serviceLinkFor } from "../lib/deepLinks";
 import { useLinkHosts } from "../store/useLinkHosts";
 import { useWebViewer } from "../store/useWebViewer";
@@ -113,6 +116,8 @@ function WatchProviders({ item }: { item: Item }) {
   };
   const [state, setState] = useState<"idle" | "busy" | "error" | "done">("idle");
   const [watch, setWatch] = useState<TmdbWatchInfo>(EMPTY_WATCH);
+  const [attempt, setAttempt] = useState(0);
+  const region = useServices((s) => s.region);
   const link = watch.link;
 
   useEffect(() => {
@@ -123,7 +128,8 @@ function WatchProviders({ item }: { item: Item }) {
       .then((res) => {
         if (cancelled) return;
         setWatch(res);
-        setState("done");
+        // Liste vuote perché TMDB non ha risposto non vogliono dire «da nessuna parte».
+        setState(res.unavailable ? "error" : "done");
       })
       .catch(() => {
         if (!cancelled) setState("error");
@@ -131,7 +137,7 @@ function WatchProviders({ item }: { item: Item }) {
     return () => {
       cancelled = true;
     };
-  }, [item.tmdbId, item.tmdbMediaType, tmdbApiKey]);
+  }, [item.tmdbId, item.tmdbMediaType, tmdbApiKey, region, attempt]);
 
   const linked = Boolean(item.tmdbId && item.tmdbMediaType);
   const providers = [...watch.streaming, ...watch.free, ...watch.rent, ...watch.buy];
@@ -168,10 +174,10 @@ function WatchProviders({ item }: { item: Item }) {
       {/* «Non disponibile» sembrava dire che il film non c'è. La cosa che
           manca è la nostra informazione, non il titolo. */}
       {linked && tmdbApiKey && state === "error" && (
-        <p className="text-xs text-text-faint">Non so dove danno questo titolo.</p>
+        <ErrorState compact title="Non so dove danno questo titolo" description="TMDB non ha risposto." onRetry={() => setAttempt((n) => n + 1)} />
       )}
       {linked && tmdbApiKey && state === "done" && providers.length === 0 && (
-        <p className="text-xs text-text-faint">Non risulta disponibile in Italia al momento.</p>
+        <p className="text-xs text-text-faint">Non risulta disponibile in {countryLabel(region)} al momento.</p>
       )}
       {linked && tmdbApiKey && state === "done" && providers.length > 0 && (
         <div className="flex flex-col gap-3">

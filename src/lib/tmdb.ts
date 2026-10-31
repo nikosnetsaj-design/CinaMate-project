@@ -563,6 +563,11 @@ export interface TmdbWatchInfo {
   buy: TmdbWatchProvider[];
   /** La pagina JustWatch del titolo, quando c'è. */
   link: string | null;
+  /**
+   * La risposta non è arrivata (rete, limite di TMDB): le liste vuote qui
+   * sopra vogliono dire «non lo so», non «da nessuna parte».
+   */
+  unavailable?: boolean;
 }
 
 /** L'icona quadrata del servizio, quella che si riconosce senza leggere. */
@@ -614,9 +619,14 @@ export async function getWatchProviders(
   const hit = await watchCache.get(key);
   if (hit) return hit;
 
-  const providers = await tmdbGet<RawProvidersResponse>(`/${mediaType}/${tmdbId}/watch/providers`, apiKey).catch(
-    () => ({ results: {} }) as RawProvidersResponse,
-  );
+  let providers: RawProvidersResponse;
+  try {
+    providers = await tmdbGet<RawProvidersResponse>(`/${mediaType}/${tmdbId}/watch/providers`, apiKey);
+  } catch {
+    // Un errore non si mette in cache: prima un attimo senza rete diventava
+    // «non si guarda da nessuna parte» per ventiquattro ore.
+    return { streaming: [], free: [], rent: [], buy: [], link: null, unavailable: true };
+  }
   const it = providers.results?.[region];
   const info: TmdbWatchInfo = {
     streaming: toProviders(it?.flatrate),

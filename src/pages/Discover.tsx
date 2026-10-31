@@ -9,6 +9,7 @@ import { draftFromTmdb } from "../lib/addFromTmdb";
 import { PosterArt } from "../components/PosterArt";
 import { EmptyState } from "../components/EmptyState";
 import { RowHeader } from "../components/RowHeader";
+import { ErrorState } from "../components/ErrorState";
 import { UpcomingBoard } from "../components/UpcomingBoard";
 import { NaturalSearch } from "../components/NaturalSearch";
 import { MoodPicker } from "../components/MoodPicker";
@@ -29,17 +30,20 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
   const openItem = useSelectedItem((s) => s.open);
   const [rows, setRows] = useState<TmdbSearchResult[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [picking, setPicking] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    setFailed(false);
+    setRows(null);
     getFeed(feed, tmdbApiKey)
       .then((r) => !cancelled && setRows(r))
       .catch(() => !cancelled && setFailed(true));
     return () => {
       cancelled = true;
     };
-  }, [feed, tmdbApiKey]);
+  }, [feed, tmdbApiKey, attempt]);
 
   async function choose(r: TmdbSearchResult) {
     // Already in the library: open what you have rather than adding a twin.
@@ -58,17 +62,18 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
         }),
       );
     } catch {
-      setFailed(true);
+      useLibrary.getState().pushToast("error", `Non sono riuscito a leggere «${r.title}» dal catalogo. Riprova.`);
     }
     setPicking(null);
   }
-
-  if (failed) return null;
 
   return (
     <section className="flex flex-col gap-4">
       {/* Every row says why it is here — a suggestion without a reason is an advert. */}
       <RowHeader title={title} note={why} />
+      {failed ? (
+        <ErrorState compact title="Questa riga non è arrivata" description="TMDB non ha risposto." onRetry={() => setAttempt((n) => n + 1)} />
+      ) : (
       <div className="shelf">
         {rows === null
           ? Array.from({ length: 6 }).map((_, i) => (
@@ -103,6 +108,7 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
               );
             })}
       </div>
+      )}
     </section>
   );
 }

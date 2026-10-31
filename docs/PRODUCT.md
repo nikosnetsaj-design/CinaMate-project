@@ -394,6 +394,15 @@ vale la pena tenere.
   scritti in JavaScript.
 - Le conferme in linea («Svuotare la libreria?») si annunciano da sole.
 
+**Stati coerenti.** Tre componenti per tre situazioni, in tutte le pagine:
+`EmptyState` (non c'è ancora niente: cosa fare), gli scheletri nella forma di
+ciò che arriva (caricamento), `ErrorState` (non è arrivato: cosa resta in
+piedi, e «Riprova»; in versione compatta per una sola riga). Una risposta che
+non arriva non viene più spacciata per una risposta vuota: una ricerca fallita
+non dice «nessun risultato», una riga di Scopri non sparisce, «Dove guardarlo»
+non dice «non disponibile» quando è TMDB a non aver risposto — e un errore di
+rete non resta più in cache per ventiquattro ore come «da nessuna parte».
+
 ### 3.10 Prestazioni e batteria — Utile ✅
 
 - **Immagini alla misura giusta.** TMDB ricodifica ogni larghezza a parte, quindi

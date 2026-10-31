@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { ErrorState } from "./ErrorState";
 import { useNavigate } from "react-router-dom";
 import { useSettings } from "../store/useSettings";
 import { useSettingsSheet } from "../store/useSettingsSheet";
@@ -159,6 +160,7 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
   const [seasonMenu, setSeasonMenu] = useState(false);
   const [episodes, setEpisodes] = useState<TmdbEpisode[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!tmdbApiKey || item.tmdbId == null) return;
@@ -181,7 +183,7 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
     return () => {
       cancelled = true;
     };
-  }, [item.tmdbId, tmdbApiKey, season]);
+  }, [item.tmdbId, tmdbApiKey, season, attempt]);
 
   if (item.kind === "film" || item.kind === "doc") return null;
 
@@ -273,9 +275,12 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
       )}
 
       {failed ? (
-        <p className="text-xs text-text-faint">
-          Non sono riuscito a leggere questa stagione da TMDB. Riprova più tardi.
-        </p>
+        <ErrorState
+          compact
+          title="Questa stagione non è arrivata"
+          description="TMDB non ha risposto. La griglia qui sopra funziona lo stesso."
+          onRetry={() => setAttempt((n) => n + 1)}
+        />
       ) : episodes === null ? (
         <div className="flex flex-col gap-2">
           {Array.from({ length: 4 }).map((_, i) => (
