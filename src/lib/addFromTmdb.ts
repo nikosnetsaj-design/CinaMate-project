@@ -26,6 +26,7 @@ export async function draftFromTmdb(
     runtime: d.runtime,
     episodes: d.episodes,
     seasons: d.seasons,
+    seasonEpisodes: d.seasonEpisodes ?? undefined,
     overview: d.overview,
     director: d.director,
     cast: d.cast,

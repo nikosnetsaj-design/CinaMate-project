@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useFocusTrap } from "../lib/useFocusTrap";
 import { similarInLibrary } from "../lib/recommend";
 import { paletteFor } from "../lib/palette";
-import { formatRuntime } from "../lib/format";
+import { formatRuntime, scrollBehavior } from "../lib/format";
 import { STATUSES } from "../lib/status";
 import { backdropSrcSet, backdropUrl } from "../lib/tmdb";
 import { PosterArt } from "./PosterArt";
@@ -19,9 +19,15 @@ import { TitleFacts } from "./TitleFacts";
 import { RelatedRow } from "./RelatedRow";
 import { ShareSheet } from "./ShareSheet";
 import { EpisodeList } from "./EpisodeList";
+import { EpisodeGrid } from "./EpisodeGrid";
+import { episodeLabel, nextEpisode } from "../lib/episodes";
 import { DownloadButton } from "./DownloadButton";
 import { SpoilerFreeRecap, TranslateOverview } from "./AiItemExtras";
-import { BackIcon, EyeIcon, HeartIcon, InfoIcon, MinusIcon, PlayIcon, PlusIcon, ShareIcon, SparkleIcon, StarIcon } from "./icons";
+import { BackIcon, EyeIcon, HeartIcon, InfoIcon, ListIcon, MinusIcon, PlayIcon, PlusIcon, ShareIcon, SparkleIcon, StarIcon } from "./icons";
+import { ListPickerSheet } from "./ListPickerSheet";
+import { TrailerPlayer } from "./TrailerPlayer";
+import { youtubeKey } from "../lib/youtube";
+import { useLists } from "../store/useLists";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useLibrary } from "../store/useLibrary";
 import { useEditSheet } from "../store/useEditSheet";
@@ -80,7 +86,6 @@ function ItemDetail({ item }: { item: Item }) {
   const toggleFav = useLibrary((s) => s.toggleFav);
   const incrementEpisode = useLibrary((s) => s.incrementEpisode);
   const decrementEpisode = useLibrary((s) => s.decrementEpisode);
-  const setEpisodesSeen = useLibrary((s) => s.setEpisodesSeen);
   const setRewatch = useLibrary((s) => s.setRewatch);
   const removeItem = useLibrary((s) => s.removeItem);
   const openEdit = useEditSheet((s) => s.openEdit);
@@ -94,10 +99,15 @@ function ItemDetail({ item }: { item: Item }) {
   const logo = useTitleLogo(item);
   const shelfMates = useMemo(() => similarInLibrary(item, items), [item, items]);
   const [sharing, setSharing] = useState(false);
+  const [pickingList, setPickingList] = useState(false);
+  const [trailerOpen, setTrailerOpen] = useState(false);
+  const trailerKey = youtubeKey(item.trailerUrl);
+  const inLists = useLists((s) => s.lists.some((l) => l.kind === "manual" && l.itemIds.includes(item.id)));
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [a, b] = paletteFor(item.title);
   const isSeries = item.kind !== "film" && item.kind !== "doc";
   const [tab, setTab] = useState<Tab>(isSeries ? "episodi" : "dettagli");
+  const nextUp = nextEpisode(item);
   const pct = isSeries && item.episodes ? Math.round(((item.seen || 0) / item.episodes) * 100) : null;
   const watchedMinutes = item.kind === "film" ? (item.status === "Visto" ? item.runtime : 0) : (item.seen || 0) * item.runtime;
 
@@ -140,14 +150,34 @@ function ItemDetail({ item }: { item: Item }) {
           <PlayIcon size={28} />
         </button>
 
-        <div className="absolute bottom-3.5 left-4 flex items-end gap-3.5 sm:left-6">
-          <PosterArt item={item} size="lg" showTitle={false} priority className="w-20 shrink-0 shadow-[var(--shadow-lg)] sm:w-24" />
-          {item.vote != null && (
-            <div className="pb-1">
-              <span className="tabular text-4xl font-semibold leading-none text-white">{item.vote}</span>
-              <span className="text-sm text-white/70">/10</span>
-            </div>
-          )}
+        {/* Locandina, voto e trailer allineati alla colonna del testo, non ai
+            bordi dello schermo: su un tablet in orizzontale o sul computer la
+            locandina stava appoggiata al margine sinistro e il titolo a
+            centinaia di pixel di distanza. */}
+        <div className="absolute inset-x-0 bottom-3.5">
+          <div className="mx-auto flex max-w-3xl items-end gap-3.5 px-4 sm:px-6">
+            <PosterArt item={item} size="lg" showTitle={false} priority className="w-20 shrink-0 shadow-[var(--shadow-lg)] sm:w-24" />
+            {item.vote != null && (
+              <div className="pb-1">
+                <span className="tabular text-4xl font-semibold leading-none text-white">{item.vote}</span>
+                <span className="text-sm text-white/70">/10</span>
+              </div>
+            )}
+            {/* Il trailer sta sull'immagine, dove lo cerca l'occhio, e si apre
+                qui dentro invece che su YouTube: uscire per novanta secondi
+                voleva dire perdere la scheda. Così la fila delle azioni resta
+                di cinque. */}
+            {trailerKey && (
+              <button
+                type="button"
+                onClick={() => setTrailerOpen(true)}
+                className="btn btn-sm mb-0.5 ml-auto bg-black/45 text-white backdrop-blur-md hover:bg-black/65"
+              >
+                <PlayIcon size={14} />
+                Trailer
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -211,11 +241,6 @@ function ItemDetail({ item }: { item: Item }) {
             la sua riga di pastiglie in Dettagli, e un interruttore a due valori
             avrebbe dovuto inventare uno stato "non in lista" che non esiste. */}
         <div className="mt-6 flex flex-wrap justify-around gap-2">
-          {item.trailerUrl && (
-            <RoundAction label="Trailer" onClick={() => window.open(item.trailerUrl!, "_blank", "noopener")}>
-              <PlayIcon size={17} />
-            </RoundAction>
-          )}
           <RoundAction label="Preferito" active={item.fav} onClick={() => toggleFav(item.id)}>
             <HeartIcon size={17} filled={item.fav} />
           </RoundAction>
@@ -230,6 +255,9 @@ function ItemDetail({ item }: { item: Item }) {
             onClick={() => setStatus(item.id, item.status === "Visto" ? "Da vedere" : "Visto")}
           >
             <EyeIcon size={17} />
+          </RoundAction>
+          <RoundAction label="Liste" active={inLists} onClick={() => setPickingList(true)}>
+            <ListIcon size={17} />
           </RoundAction>
           <RoundAction label="Condividi" onClick={() => setSharing(true)}>
             <ShareIcon size={17} />
@@ -264,7 +292,7 @@ function ItemDetail({ item }: { item: Item }) {
             setTab("dettagli");
             // Sul frame successivo: se la scheda cambia, il blocco dei dati
             // non è ancora nel documento e lo scorrimento non troverebbe nulla.
-            requestAnimationFrame(() => tabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+            requestAnimationFrame(() => tabsRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: "start" }));
           }}
           className="chip mt-4 w-full"
         >
@@ -297,6 +325,8 @@ function ItemDetail({ item }: { item: Item }) {
         <div className="mt-5">
           {tab === "episodi" && (
             <div className="flex flex-col gap-4">
+              {/* Prima delle puntate: è la domanda di chi sta per riprendere. */}
+              <SpoilerFreeRecap item={item} />
               <EpisodeList item={item} onNavigate={close} />
 
               {item.episodes ? (
@@ -308,35 +338,33 @@ function ItemDetail({ item }: { item: Item }) {
                   <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-hover">
                     <div className="h-full rounded-full transition-[width] duration-300" style={{ width: `${pct}%`, background: "var(--accent)" }} />
                   </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={item.episodes}
-                    value={item.seen || 0}
-                    onChange={(e) => setEpisodesSeen(item.id, Number(e.target.value))}
-                    aria-label="Episodi visti"
-                    className="mt-3 w-full"
-                  />
-                  <div className="mt-1.5 flex justify-between text-xs tabular text-text-faint">
+                  <div className="mt-1.5 flex justify-between text-xs tabular text-text-muted">
                     <span>
                       {item.seen || 0} di {item.episodes} episodi
                     </span>
                     <span>{formatRuntime(watchedMinutes)} guardate</span>
                   </div>
-                  <div className="mt-3 flex gap-2">
+                  <div className="mt-4">
+                    <EpisodeGrid item={item} />
+                  </div>
+                  <div className="mt-4 flex gap-2">
                     <button
                       type="button"
                       onClick={() => decrementEpisode(item.id)}
-                      className="btn btn-secondary btn-sm flex-1"
+                      disabled={(item.seen || 0) === 0}
+                      aria-label="Togli l'ultimo episodio segnato"
+                      className="btn btn-secondary btn-sm flex-1 disabled:opacity-40"
                     >
-                      − 1 ep
+                      <MinusIcon size={16} />
+                      Togli
                     </button>
                     <button
                       type="button"
                       onClick={() => incrementEpisode(item.id)}
-                      className="btn btn-primary btn-sm flex-[2]"
+                      disabled={!nextUp}
+                      className="btn btn-primary btn-sm flex-[2] disabled:opacity-40"
                     >
-                      Segna episodio visto
+                      {nextUp ? `Segna ${episodeLabel(nextUp)}` : "Tutto visto"}
                     </button>
                   </div>
                 </div>
@@ -404,7 +432,6 @@ function ItemDetail({ item }: { item: Item }) {
                 )}
               </div>
 
-              <SpoilerFreeRecap item={item} />
               <TranslateOverview item={item} />
 
               {item.notes && (
@@ -428,7 +455,7 @@ function ItemDetail({ item }: { item: Item }) {
                   dell'app che sembrasse una pagina web. */}
               {confirmingDelete ? (
                 <div
-                  role="alertdialog"
+                  role="alert"
                   aria-labelledby={`${titleId}-delete`}
                   className="mt-6 rounded-lg p-4"
                   style={{ background: "color-mix(in srgb, var(--danger) 10%, var(--surface))" }}
@@ -550,6 +577,10 @@ function ItemDetail({ item }: { item: Item }) {
       </div>
 
       {sharing && <ShareSheet target={{ kind: "item", item }} onClose={() => setSharing(false)} />}
+      {pickingList && <ListPickerSheet item={item} onClose={() => setPickingList(false)} />}
+      {trailerOpen && trailerKey && (
+        <TrailerPlayer videoKey={trailerKey} title={`${item.title} — trailer`} onClose={() => setTrailerOpen(false)} />
+      )}
     </div>,
     document.body,
   );

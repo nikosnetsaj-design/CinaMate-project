@@ -229,7 +229,7 @@ export default function VideoPlayer({
     next: nextContentId ? goToNext : null,
   });
 
-  const subtitles = useSubtitles(content.subtitleTracks, player.currentTime);
+  const subtitles = useSubtitles(content.subtitleTracks, player.currentTime, content.id);
   const cast = useCast(player.videoRef, content.manifestUrl, content.title);
   usePlayerStats(player.isPlaying);
 

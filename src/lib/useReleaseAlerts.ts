@@ -15,12 +15,41 @@ const ALERT_WINDOW_DAYS = 1;
  * otherwise, so the reminder is never silently swallowed. The `notified` map in
  * the store is what keeps one release from being announced twice.
  */
+/**
+ * Il numero sull'icona (Badging API): quante uscite dei titoli che segui
+ * cadono oggi. Si spegne quando non ce ne sono, e dove il sistema non ha il
+ * numero sull'icona non succede niente.
+ */
+function setBadge(count: number) {
+  const nav = navigator as Navigator & { setAppBadge?: (n?: number) => Promise<void>; clearAppBadge?: () => Promise<void> };
+  try {
+    if (count > 0) void nav.setAppBadge?.(count)?.catch(() => undefined);
+    else void nav.clearAppBadge?.()?.catch(() => undefined);
+  } catch {
+    // niente numero sull'icona: nessun danno
+  }
+}
+
 export function useReleaseAlerts() {
   const items = useLibrary((s) => s.items);
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
   const enabled = useReminders((s) => s.enabled);
   const key = trackedKey(items);
   const enabledKey = enabled.join(",");
+
+  useEffect(() => {
+    if (!tmdbApiKey) {
+      setBadge(0);
+      return;
+    }
+    let cancelled = false;
+    void loadUpcoming(useLibrary.getState().items, tmdbApiKey).then((entries) => {
+      if (!cancelled) setBadge(entries.filter((e) => daysBetweenToday(e.date) === 0).length);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [tmdbApiKey, key]);
 
   useEffect(() => {
     if (!tmdbApiKey || enabled.length === 0) return;

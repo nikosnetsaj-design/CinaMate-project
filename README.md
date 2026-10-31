@@ -22,11 +22,16 @@ tuo server, scritto una volta sola nelle Impostazioni.
 
 ## Stack
 
-- **Vite + React 18 + TypeScript**
+- **Vite + React 19 + TypeScript**
 - **Tailwind CSS v4** — design tokens "Sala buia" custom in `src/index.css`:
   nero neutro, grigi neutri, accento verde
 - **Zustand** per lo stato (libreria, tema, obiettivi, layout della Home,
-  controllo genitori, impostazioni, sheet), persistito su `localStorage`
+  controllo genitori, impostazioni, sheet). Libreria, diario e cronologia del
+  lettore stanno su **IndexedDB** (`src/lib/durable.ts`), il resto — pochi byte
+  di impostazioni — su `localStorage`. Al primo avvio dopo l'aggiornamento i
+  dati si spostano da soli, con una copia di sicurezza che resta finché la
+  migrazione non si conferma (cinque avvii e una settimana; stato e ripristino
+  in Diagnostica)
 - **React Router** per la navigazione
 - **Framer Motion** per le micro-interazioni
 - **hls.js** per il player (streaming adattivo), caricato solo quando apri la
@@ -47,9 +52,16 @@ API Anthropic (se la aggiungi nelle Impostazioni) resta anch'essa solo nel
 npm install
 npm run dev      # ambiente di sviluppo
 npm run build    # build di produzione (tsc + vite build)
-npm run lint      # oxlint
+npm run lint      # oxlint, e un avviso conta come errore
+npm test          # scripts/tests: migrazioni, episodi, backup, consigli, saghe, filtri, importazione…
+npm run test:e2e  # Playwright: avvio, aggiunta, una puntata segnata, esportazione
 npm run contrast  # WCAG AA su ogni coppia testo/sfondo dei due temi
+npm run budget    # dopo la build: primo caricamento sotto i 200 KB gzip
 ```
+
+Il prodotto è descritto in `docs/PRODUCT.md` (funzioni, roadmap, regole,
+fuori perimetro); le proposte ancora da decidere, con costo e rischio, in
+`docs/IDEE.md`.
 
 `npm run contrast` legge i colori veri da `src/index.css`, compone le
 trasparenze sul fondo su cui finiscono e calcola il rapporto secondo WCAG 2.1.
@@ -213,8 +225,11 @@ rete che non è la tua.
   nessun catalogo che l'app possa leggere.
 - **Media**: tre schede — **Video**, **Poster**, **Sfondi**. I trailer si aprono
   dentro l'app, in un pannello sopra la scheda (`youtube-nocookie`, quindi
-  nessun cookie di profilazione finché non premi play); locandine e sfondi si
-  ingrandiscono a tutto schermo. Uscire dal sito per novanta secondi di trailer
+  nessun cookie di profilazione finché non premi play), e sul computer — dove
+  Chrome ed Edge hanno la Document Picture-in-Picture API — passano in una
+  finestrella che resta sopra le altre, dal secondo in cui eri. Il trailer
+  principale ha il suo pulsante sull'immagine larga della scheda; locandine e
+  sfondi si ingrandiscono a tutto schermo. Uscire dal sito per novanta secondi di trailer
   vuol dire perdere il posto in cui eri, e al ritorno l'app riparte da capo.
 - **Prequel & Sequel**: la saga come una linea da percorrere — le locandine in
   ordine, l'anno sulla copertina, il numero del capitolo grande dietro, e
@@ -232,17 +247,21 @@ rete che non è la tua.
 - **Scarica dalla scheda**: i download non vivono più solo dentro il player.
   L'indirizzo viene risolto *prima* di partire, perché un download che comincia
   da un indirizzo indovinato fallisce a metà senza dire perché.
-- **Episodi per stagione**: per una serie collegata a TMDB l'elenco delle
-  puntate con miniatura, durata, voto e trama, con la tendina delle stagioni
-  (sette stagioni in fila orizzontale costringono a scorrere per arrivare
-  all'ultima, che è quella che si cerca). Il segno di spunta segna «visto
-  fino a qui» — traducendo la puntata nel totale che la libreria tiene — e il
-  play su una riga apre *quella* puntata: stagione ed episodio finiscono nelle
-  sorgenti del titolo, quindi l'indirizzo costruito diventa `…/s02e07.m3u8`
-  invece del solito `S01E{visti+1}`. Il play sta in fondo alla riga, sempre
-  visibile: prima compariva passando il puntatore sulla miniatura, un gesto che
-  su un telefono — dove questa lista si usa — non esiste. Le puntate già viste
-  restano riconoscibili senza leggerle: miniatura spenta e segno verde sopra.
+- **Episodi per stagione**: la libreria non conta più gli episodi con un
+  numero solo, ne tiene il registro — stagione, episodio e data di ognuno.
+  Nella scheda c'è la griglia delle stagioni: un quadrato per puntata, un tocco
+  la segna o la toglie, tenendo premuto (o con Maiuscolo + clic) si segnano
+  anche tutte quelle prima. Il prossimo episodio ha l'anello d'accento. Funziona
+  anche senza TMDB: senza la divisione in stagioni le puntate stanno in fila
+  nella stagione 1, e si spostano da sole al loro posto quando la divisione
+  arriva. Per una serie collegata a TMDB c'è anche l'elenco delle puntate con
+  miniatura, durata, voto e trama, e il play su una riga apre *quella* puntata:
+  stagione ed episodio finiscono nelle sorgenti del titolo, quindi l'indirizzo
+  costruito diventa `…/s02e07.m3u8`. Il lettore, a fine puntata, segna quella
+  puntata — prima segnava «Visto» l'intera serie. Le librerie di prima vengono
+  convertite al primo avvio: le date arrivano dal diario, e gli episodi che il
+  diario non conosce prendono la data in cui la serie è entrata in libreria,
+  segnati come stimati.
 - **Il logo del titolo**: in vetrina e in cima alla scheda, quando TMDB ha il
   lettering disegnato della serie o del film. È metà dell'effetto — «Cent'anni
   di solitudine» nel suo lettering *è* la locandina, lo stesso nome nel font
@@ -300,9 +319,10 @@ rete che non è la tua.
   serviva una chiave *fallendo*. Ora c'è una striscia chiudibile in cima alla
   Home, una riga sotto ciò che senza catalogo è solo più povero, e un blocco al
   posto di ciò che senza catalogo non esiste — stesso testo, tre pesi.
-- **Doppio tocco su una locandina: preferito.** Il cuore c'era già, ma per
-  arrivarci servivano tre tocchi e un viaggio nella scheda. Non aggiunge un
-  pixel all'interfaccia, ed è il gesto che tutti hanno già imparato altrove.
+- **Pressione lunga su una locandina: preferito** (o Maiuscolo + clic, o
+  Maiuscolo + Invio). Il tocco apre la scheda subito: prima il preferito stava
+  sul doppio tocco, e ogni apertura aspettava 300 ms per vedere se ne arrivava
+  un secondo.
 - **Aggiorna contenuti**: butta via quello che TMDB ha lasciato in cache — fino a
   sei ore per una stagione, tutta la sessione per una locandina — ed è la
   risposta a «è uscito ieri e qui non lo vedo». La libreria non la tocca.
@@ -336,6 +356,10 @@ rete che non è la tua.
   TMDB e in evidenza ciò che hai già in libreria.
 - **Prossimamente**: calendario dei nuovi episodi delle serie che segui e delle
   uscite dei film in watchlist, con promemoria e notifiche locali.
+  Il pulsante **Aggiungi al calendario** esporta tutte le uscite in un file
+  `.ics` (eventi di un giorno intero, sul telefono passa dal foglio di
+  condivisione): le uscite con la campanella portano un avviso alle 9, e
+  reimportare il file aggiorna gli eventi invece di doppiarli.
 - **Ricerca intelligente**: una sola barra che trova titoli, saghe, universi,
   attori e registi, con i risultati raggruppati per tipo — e che perdona gli
   errori di battitura, proponendo il titolo che intendevi.
@@ -385,13 +409,72 @@ rete che non è la tua.
   qualità della tua copia, durata, anno, il tuo voto e quello di TMDB, e
   "solo con sottotitoli". Le opzioni sono prese dal tuo scaffale, quindi ogni
   voce del menu corrisponde a qualcosa che hai davvero.
+- **Nelle puntate precedenti**: in cima alla scheda *Episodi* di una serie
+  lasciata a metà, un riassunto (con la tua chiave Anthropic) che si ferma alla
+  fine dell'ultimo episodio segnato — breve, normale o dettagliato. Il prompt
+  nomina stagione ed episodio, e le sinossi di TMDB che lo ancorano ai fatti
+  arrivano solo fino a lì. Resta in memoria: riaprire la scheda non lo ripaga.
 - **Ricerca a parole**: scrivi «film di fantascienza anni '90» e Claude la
   traduce in filtri per TMDB, che risponde. Il modello sceglie i filtri, non i
   titoli: così la lista è vera per costruzione.
+- **Italiano o inglese**: in *Impostazioni → Aspetto → Lingua*. Tradotta la
+  cornice dell'app (navigazione, menu, titoli delle pagine, impostazioni,
+  stati); alcuni testi lunghi dentro i fogli restano in italiano.
+- **Da app installata**: tenendo premuta l'icona ci sono *Continua a
+  guardare*, *Aggiungi titolo* e *Cerca*; CineMate compare nel foglio
+  *Condividi* del telefono (un link di TMDB o IMDb apre la scheda del titolo,
+  Letterboxd e JustWatch diventano una ricerca); l'icona mostra quante uscite
+  dei titoli che segui cadono oggi.
+- **L'anno come immagine**: in *Tu → Gusti*, sotto «Il tuo anno», una storia
+  9:16 o un post 1:1 da condividere (foglio di sistema) o scaricare in PNG.
+  Disegnata nel browser.
+- **Diario**: in *Tu → Diario* l'anno a quadretti (un quadretto per giorno,
+  più scuro quante più visioni; un tocco porta a quel giorno), «un anno fa
+  guardavi…» quando il diario ha qualcosa da ricordare, e per ogni visione,
+  se vuoi, con chi e dove — il «+» accanto alla voce.
+- **Il tuo palato**: in *Tu → Gusti*, cosa premi e cosa punisci — generi,
+  decennio, registi, durata, paesi — e quanto voti rispetto al pubblico di
+  TMDB, calcolato qui dai tuoi voti (servono almeno cinque). Ogni riga dice la
+  media e su quanti titoli. È lo stesso profilo che ordina *Per te*, e ogni
+  consiglio cita la riga da cui viene.
 - **Consigli con il perché**: le righe *Per te*, *Più visti*, *Ultimi aggiunti*
   e *Simili sul tuo scaffale*, ognuna con la ragione scritta sotto al titolo.
 - **Obiettivi personali**: due film a settimana, cinquanta all'anno, dieci
   horror a ottobre. Si misurano sul diario, non sullo scaffale.
+- **Liste personali**: «Da vedere col partner», «Horror di ottobre». Una lista
+  si crea dalla pagina **Liste** o dalla scheda di un titolo (azione **Liste**,
+  un interruttore per lista), si rinomina toccandone il nome, si riordina — le
+  liste fra loro e i titoli dentro — e ha per copertina le prime quattro
+  locandine. Le **liste intelligenti** sono una ricerca della Libreria salvata
+  con un nome (il segnalibro accanto ai filtri): si aggiornano da sole e
+  scrivono sotto il nome cosa tengono. Tutte si condividono con link e QR, e
+  stanno nel backup.
+- **Importa da un'altra app**: Impostazioni → Dati e backup → *Importa da
+  un'altra app*. Accetta l'esportazione di **Letterboxd** (lo ZIP o i suoi CSV:
+  visti, voti, diario, watchlist, like), **Trakt** (i JSON del backup),
+  **IMDb** (il CSV dei voti o della watchlist) e **TV Time** (i CSV degli
+  episodi visti). I file si leggono nel browser; ogni titolo si cerca su TMDB
+  — con l'id quando il file lo porta, altrimenti per titolo e anno — e quelli
+  incerti si scelgono in una schermata di revisione. Un titolo già in libreria
+  non entra due volte: riceve solo il voto, gli episodi e le visioni che gli
+  mancano. I voti diventano su 10 (le stelle di Letterboxd raddoppiano), il
+  diario prende le date vere delle visioni, e alla fine un resoconto dice cosa
+  è entrato, cosa è stato completato e cosa è rimasto fuori.
+- **Abbonamenti**: quale servizio conviene per la tua lista «Da vedere», nel
+  tuo paese (si sceglie in cima alla pagina e vale per tutta l'app): quanti
+  titoli su ciascuno e quanti solo lì, la combinazione che ne copre di più
+  scritta con il conto, cosa sta per arrivare e dove, e — segnati i servizi
+  che paghi già — il filtro *Solo sui miei abbonamenti*.
+- **Questo o quello**: da *Tu → Gusti*, due titoli visti alla volta — scegli
+  quello che preferisci (o ← e → sulla tastiera). Con il punteggio Elo ne esce
+  una classifica tua; i voti che non le somigliano compaiono come proposta,
+  nella tua scala, e si cambiano solo con un tocco. I confronti stanno nel
+  backup.
+- **Stasera in due**: dal menu (o dalla barra laterale) la pagina mostra la
+  tua lista «Da vedere» come QR e link. Chi la apre — inquadrando il codice o
+  incollando il link — vede i titoli che avete in comune, dal più compatibile,
+  e può girare la ruota. Nel codice ci sono solo gli id TMDB nell'ordine dei
+  tuoi gusti: niente nomi, voti o diario.
 - **Condivisione**: un link o un codice QR per aprire un titolo — o la lista
   che hai davanti, filtri compresi — su un altro dispositivo. Senza server: la
   lista viaggia dentro il link.
@@ -734,12 +817,11 @@ hanno:
    *promettono* una playlist (`/getlink?id=…&sig=…`) vengono letti per
    confermarli dal MIME type o dalla riga `#EXTM3U`.
 
-**Quale episodio.** La libreria conta gli episodi visti come un totale unico,
-non per stagione: da «visti: 27» non si ricava se sia S02E03 o S03E01, e
-indovinare è il tipo di errore che ti fa partire l'episodio sbagliato. Quindi il
-valore predefinito è l'unico onesto — stagione 1, episodio `visti + 1` — e il
-pannello **Siti** del player ha due caselle per correggerlo. Sono anche ciò che
-rende raggiungibili i percorsi annidati per stagione.
+**Quale episodio.** La libreria tiene un registro degli episodi — stagione,
+episodio e data di ognuno — quindi la domanda parte dal prossimo episodio vero,
+S02E03 e non «il ventottesimo». Il pannello **Siti** del player ha comunque due
+caselle per scegliere a mano un'altra puntata, e sono ciò che rende
+raggiungibili i percorsi annidati per stagione.
 
 **Più siti insieme.** Con più Link Host la ricerca parte su tutti in parallelo,
 non uno dopo l'altro: in fila, tre siti lenti sono tre timeout sommati. E fra

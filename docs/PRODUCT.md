@@ -54,12 +54,18 @@ resta tua e non ti vende niente.
 | **Continua la saga** | Ti fermi al capitolo tre e non riparti | Il prossimo capitolo, già scelto | Essenziale ✅ |
 | **Maratona in corso** | Una saga guardata in tre settimane sembra tre cose | Una sola corsa, con il segnalibro | Utile ✅ |
 | **Per te** | I consigli generici non ti somigliano | Suggerimenti dal *tuo* storico, con motivazione | Utile ✅ |
+| **Stasera in due** | Scegliere in due vuol dire leggersi a voce le watchlist | Pagina `/stasera-in-due`: la tua lista «Da vedere» diventa un QR e un link che portano solo gli id TMDB, nell'ordine del tuo palato — niente nomi, voti o diario. Chi lo apre vede i titoli in comune ordinati per compatibilità (quanto stanno in alto in tutte e due le liste), ognuno con il suo perché, e una ruota pesata sulla compatibilità. La lista ricevuta vive solo nella sessione e il codice si toglie subito dalla barra degli indirizzi | Utile ✅ |
+| **Quale abbonamento conviene** | «Mi conviene Netflix o MUBI?» si decideva a memoria | Pagina Abbonamenti: per ogni titolo «Da vedere» TMDB dice dove sta in abbonamento nel *tuo paese* (scelto lì, l'Italia finché non lo cambi; vale per tutta l'app). Servizi ordinati per titoli e per «solo qui», varianti con pubblicità e canali Amazon/Apple contati come un servizio; il consiglio scritto con il conto («con Netflix vedi 3 dei tuoi 5; aggiungendo MUBI arrivi a 5»); le uscite in arrivo sul servizio dove stanno; i tuoi abbonamenti segnati e il filtro «solo sui miei abbonamenti» (più i gratuiti) | Utile ✅ |
+| **Calendario .ics** | Le uscite vivevano solo dentro l'app, che non manda notifiche se non la apri | «Aggiungi al calendario» in Prossimamente: un file .ics con eventi di un giorno intero (TMDB dà il giorno, non l'ora), UID stabili così reimportarlo aggiorna invece di doppiare, e l'avviso alle 9 solo sulle uscite con la campanella. Sul telefono passa dal foglio di condivisione | Utile ✅ |
+| **Questo o quello** | Il voto da 1 a 10 si dà un titolo alla volta, a mesi di distanza, e scivola | Due titoli visti alla volta (frecce ← → sulla tastiera, ↓ per «non saprei»): punteggio Elo con coppie scelte fra i meno confrontati e i più vicini, film con film e serie con serie. Ne esce una classifica personale, e i voti che non le somigliano vengono proposti nella tua scala — «gli hai dato 6, nei confronti sta fra i tuoi 9» — con «Metti 9» e «Lascia 6». Mai una modifica automatica. Tu → Gusti, nel backup | Utile ✅ |
+| **Il tuo palato** | «Cosa mi piace?» non aveva una risposta scritta, e i consigli guardavano solo genere, regia e cast | Calcolato in locale dai voti (`lib/palate.ts`), ogni voto pesato per quanto si scosta dalla *tua* media: generi che premi e che punisci, decennio, registi, durata dei film, paesi, e il confronto con il voto di TMDB. Scheda in cima a Tu → Gusti, con media e numero di titoli per riga; sotto i 5 voti dice quanti ne mancano. Le stesse cifre muovono *Per te*, che cita la riga da cui viene il consiglio («Perché gli anni '90 sono il tuo decennio») | Utile ✅ |
 | **Tendenze / Più votati / Nuove uscite** | Scoperta oltre la propria bolla | Cataloghi TMDB curati | Utile ✅ |
 | **In uscita al cinema** | Scopri i film quando sono già usciti | Anticipo sulle uscite | Utile ✅ |
 | **Collezioni** | Le saghe si perdono in ordine sparso | "Il Padrino 1‑2‑3" come un blocco | Utile ✅ |
 | **Più visti / Ultimi aggiunti** | "Dove sono finite le mie ore?" e "cos'è entrato ieri?" | Due domande diverse, due righe | Utile ✅ |
 | **Home su misura** | Sei righe fisse non sono le stesse per tutti | Riordini e spegni le righe in Impostazioni; il tetto di sei resta | Utile ✅ |
-| **Liste personali** | Watchlist unica troppo grezza | "Da vedere col partner", "Horror di ottobre" | Utile |
+| **Importa da un'altra app** | Anni di storia su Letterboxd, Trakt, IMDb o TV Time restavano là: ricominciare da zero è il motivo per cui non si cambia app | I file dell'esportazione — CSV, JSON o lo ZIP così com'è — letti nel browser. Abbinamento su TMDB: esatto con l'id (Trakt, IMDb, TheTVDB), per titolo originale o italiano + anno (± 1) altrimenti; i casi dubbi in una schermata di revisione con il più probabile già indicato. Nessun doppione: un titolo già in libreria riceve solo voto, episodi e visioni che gli mancano, e «In pausa» o «Abbandonato» non vengono scavalcati. Voti portati su 10, diario con le date vere (mai una data inventata), resoconto finale: aggiunti, completati, lasciati fuori | Utile ✅ |
+| **Liste personali** | Watchlist unica troppo grezza | "Da vedere col partner", "Horror di ottobre": liste a mano, rinominabili, riordinabili, con copertina a mosaico; e **liste intelligenti**, cioè una ricerca della Libreria salvata con un nome che si aggiorna da sola e dice a parole cosa tiene. Si condividono con il link e il QR di sempre, stanno nel backup | Utile ✅ |
 
 > **Regola anti‑Netflix:** massimo 6 righe in Home. Ogni riga deve dichiarare
 > *perché* è lì ("Perché hai messo 9 a Dark"). Niente caroselli senza motivo.
@@ -73,9 +79,10 @@ resta tua e non ti vende niente.
 | Funzione | Problema | Beneficio | Priorità |
 |---|---|---|---|
 | **Intestazione larga con Riproduci** | La scheda si apriva su una fascia di dati e il "guarda" stava sotto le note | Copertina orizzontale con il play al centro, riga dei fatti (anno · classificazione · stagioni · durata · qualità) e un solo pulsante pieno | Essenziale ✅ |
-| **Cinque azioni tonde** | Le stesse cose erano sparse fra pastiglie di stato e pulsanti in fondo | Trailer, Preferito, Voto, Guardato, Condividi: tutte reversibili e tutte con un effetto visibile | Utile ✅ |
+| **Cinque azioni tonde** | Le stesse cose erano sparse fra pastiglie di stato e pulsanti in fondo | Preferito, Voto, Guardato, Liste, Condividi: tutte reversibili e tutte con un effetto visibile | Utile ✅ |
+| **Trailer dentro l'app** | Il trailer apriva YouTube in un'altra scheda, e al ritorno la scheda del titolo non c'era più | Un pulsante «Trailer» sull'immagine larga apre il video qui dentro (`youtube-nocookie`); dove il browser ha la Document Picture-in-Picture API una finestrella resta sopra le altre e riparte dal secondo in cui eri. Dove l'API non c'è il pulsante non compare | Utile ✅ |
 | **Schede invece di una colonna** | La scheda era lunga quanto tre schermate | Episodi · Dettagli · Saga · Simili: si apre su ciò che serve, e per una serie è l'elenco delle puntate | Utile ✅ |
-| **Episodi per stagione** | La libreria sapeva *quanti* episodi avevi visto, non quali | Titolo, durata, voto, trama e miniatura di ogni puntata (TMDB, in cache sei ore); il segno di spunta segna "visto fino a qui" | Utile ✅ |
+| **Episodi per stagione** | La libreria sapeva *quanti* episodi avevi visto, non quali | Un registro per titolo — stagione, episodio, data — al posto del contatore (`seen` resta come valore derivato). La griglia delle stagioni funziona anche senza TMDB: tocco = visto, pressione lunga (o Maiuscolo + clic) = visto fino a lì. Con TMDB, titolo, durata, voto, trama e miniatura di ogni puntata. Il prossimo episodio, la ricerca sui siti, i modelli d'indirizzo e il lettore leggono stagione ed episodio veri | Utile ✅ |
 | **Episodi dentro il lettore** | Il pannello «Episodi» elencava gli altri titoli dello scaffale: la risposta giusta a una domanda che non si fa mentre si guarda una serie a metà stagione | Le puntate vere della stagione in onda — fotogramma, durata, trama, tendina delle stagioni, quella in corso evidenziata — e un tocco riparte da lì. Gli altri titoli restano, nella seconda scheda | Utile ✅ |
 | **Riproduci quella puntata** | La stagione era fissa a 1 e l'episodio era «visti + 1» | Il play su una riga scrive stagione ed episodio nelle sorgenti del titolo: gli indirizzi costruiti diventano `…/s02e07.m3u8` e la ricerca sui siti chiede quella puntata | Utile ✅ |
 | **Cast con foto e personaggio** | Un attore si riconosce in faccia, non dal nome anagrafico | Cerchi con foto, nome e ruolo, «mostra tutti»; senza TMDB restano le pastiglie con i nomi | Utile ✅ |
@@ -233,6 +240,7 @@ il resto al servizio che ha la licenza.
 |---|---|---|---|
 | **Player HLS** | Hai una sorgente tua (un NAS, un tuo CDN) e ti serve un lettore | Qualità adattiva, selezione manuale, ripresa al secondo, velocità, PiP, mini player, schermo intero | Utile ✅ |
 | **Sottotitoli** | I sottotitoli nativi non si possono davvero impostare | Renderer proprio: dimensione, colore, sfondo, posizione, sincronizzazione | Utile ✅ |
+| **Tracce e ritardo per serie** | Con una preferenza sola, l'anime in giapponese e la serie doppiata si rubavano la lingua a ogni cambio | Lingua dell'audio, sottotitoli (anche «spenti») e ritardo dei sottotitoli ricordati per titolo — per una serie, per tutta la serie — e preferiti alla scelta generale, che resta il punto di partenza per i titoli mai toccati. Ritardo regolabile a decimi di secondo con −/+ e detto a parole («anticipati di 0,3 s»). I marcatori di sigla, riepilogo e titoli di coda, scritti a mano nel pannello Sorgente, valgono già per tutta la serie | Utile ✅ |
 | **Salto intro/recap/crediti** | Riavvolgere a mano ogni episodio | Marker segnati dal punto in cui sei, con un tocco — o saltati da soli, se lo chiedi | Utile ✅ |
 | **Preferenze che restano** | Rimettere lingua, volume e velocità a ogni episodio | Volume, muto, velocità, lingua di audio e sottotitoli, stile dei sottotitoli e tetto di qualità valgono per ogni titolo che apri | Essenziale ✅ |
 | **Controlli di sistema** | Il telefono in tasca non si mette in pausa | Titolo, copertina e comandi sulla schermata di blocco, nelle notifiche e sui tasti multimediali (Media Session) | Essenziale ✅ |
@@ -298,16 +306,19 @@ sezione: hanno il loro, con la licenza, e meglio. Questo player non è per loro 
 | Funzione | Problema | Beneficio | Priorità |
 |---|---|---|---|
 | Diario cronologico | "Quando l'ho visto?" | Storia consultabile | Essenziale ✅ |
+| **Diario: l'anno a quadretti, un anno fa, con chi e dove** | Il diario era un elenco: si leggeva, non si guardava, e non ricordava niente da solo | Mappa annuale stile GitHub (settimane da lunedì, cinque gradini di visioni, riassunta in una frase per chi non vede i quadretti; un tocco porta a quel giorno); «Un anno fa, oggi, guardavi…» — lo stesso giorno o il più vicino entro tre; e per ogni visione, facoltativi, *con chi* e *dove*, scritti da te con i valori già usati come suggerimenti. Le note stanno nel diario, quindi nel backup | Utile ✅ |
 | **Profilo** | Le statistiche stanno in una pagina di analisi, non dove sei tu | Ore totali, livello, record e classifica serie in un posto solo | Essenziale ✅ |
 | **Grafico attività** | "Guardo davvero tutte le sere?" | Minuti per giorno, con vista settimana / mese / anno | Essenziale ✅ |
 | **Livello e record personale** | Contare le ore non è un traguardo | Un livello che cresce con le ore e il giorno record, con la striscia di giorni di fila | Utile ✅ |
 | Statistiche + anno in rassegna | I numeri non raccontano | Il tuo anno come storia, anno per anno | Essenziale ✅ |
+| **App installata: scorciatoie, condivisione, numero sull'icona** | Installata, CineMate si apriva sempre dalla Home e non compariva fra le app a cui mandare un link | Pressione lunga sull'icona: «Continua a guardare» (la scheda del titolo a metà), «Aggiungi titolo», «Cerca». Nel foglio «Condividi» di Android: un link di TMDB apre la scheda esatta, IMDb passa dall'id, Letterboxd e JustWatch diventano una ricerca, un link di CineMate si apre com'è, il testo si cerca per aggiungerlo. Il numero sull'icona (Badging API) conta le uscite di oggi dei titoli che segui. Il manifest non blocca più l'orientamento, così tablet e televisori ruotano | Utile ✅ |
+| **L'anno come immagine** | L'anno in rassegna restava dentro l'app | In Tu → Gusti, «Condividi come immagine»: una storia 9:16 o un post 1:1 disegnati su canvas nel browser (titoli completati, ore, episodi, mese più pieno, genere dell'anno e, nella storia, i tuoi tre titoli con le locandine), condivisi con il foglio di sistema (Web Share API) o scaricati in PNG. Niente server che la generi | Utile ✅ |
 | Attori e registi più visti | "Chi guardo davvero?" | Classifica dal tuo storico, ogni nome apre la sua pagina | Utile ✅ |
 | Traguardi | Nessun ritorno emotivo | Riconoscimento delle abitudini, saghe e generi inclusi | Utile ✅ |
 | **Obiettivi personali** | I traguardi li decide l'app | Quelli che scegli tu, misurati sul diario e non sullo scaffale | Utile ✅ |
 | **Promemoria uscite** | Un episodio esce e non lo sai | Notifica locale il giorno stesso | Utile ✅ |
 | Esporta / importa | I dati locali si perdono | Backup e cambio dispositivo, comprese le sorgenti del player e gli host | Essenziale ✅ |
-| **Riassunto senza spoiler** | Riprendi una serie dopo 8 mesi | "Dove eravamo" senza rovinare nulla | Utile ✅ |
+| **Nelle puntate precedenti** | Riprendi una serie dopo 8 mesi | Il riassunto si ferma alla fine dell'ultimo episodio del registro, detto per stagione, numero e titolo — non «ha visto 14 episodi», che lascerebbe al modello il conto. Le sinossi TMDB della stagione arrivano al modello solo fino a quel confine. Tre livelli (breve, normale, dettagliato); una volta pagato resta in memoria per quel confine e quel livello. In cima alla scheda Episodi, cioè dove si è prima di riprendere | Utile ✅ |
 | Assistente / critico | Consigli generici | Conosce i tuoi voti | Essenziale ✅ |
 | Sync cloud multi‑dispositivo | Telefono e PC separati | Una libreria sola | **Futura** — richiede backend e account |
 
@@ -365,6 +376,49 @@ messaggio che l'ha annunciato. Il log è un anello di dimensione fissa: illimita
 finirebbe per mangiarsi la stessa quota dove vive la libreria, che è la cosa che
 vale la pena tenere.
 
+### 3.9-bis Accessibilità — Essenziale ✅
+
+- **Verificata con axe-core** (WCAG 2.1 A/AA e buone pratiche) su dodici pagine,
+  la scheda di un titolo, il menu e le impostazioni, nei due temi: nessuna
+  violazione. Ogni pagina ha il suo `h1` (la Home lo ha per i lettori di
+  schermo), i titoli scendono di un livello alla volta anche dentro i fogli.
+- **Contrasto WCAG AA** su 246 coppie testo/sfondo, controllato in CI
+  (`npm run contrast`).
+- **Fogli e pannelli modali**: tutti trattengono il fuoco e si chiudono con Esc,
+  e quando uno sta sopra un altro (il trailer sopra la scheda, l'importazione
+  sopra le impostazioni) Esc e Tab arrivano solo a quello in cima. Il Web
+  Viewer, il trailer e l'ingrandimento delle immagini ora sono dialoghi veri.
+- **Menu della barra** con le voci annunciate come tali, frecce, Inizio/Fine,
+  Esc che riporta al pulsante.
+- **Meno movimento**: rispettato da CSS, framer-motion e dagli scorrimenti
+  scritti in JavaScript.
+- Le conferme in linea («Svuotare la libreria?») si annunciano da sole.
+
+**Stati coerenti.** Tre componenti per tre situazioni, in tutte le pagine:
+`EmptyState` (non c'è ancora niente: cosa fare), gli scheletri nella forma di
+ciò che arriva (caricamento), `ErrorState` (non è arrivato: cosa resta in
+piedi, e «Riprova»; in versione compatta per una sola riga). Una risposta che
+non arriva non viene più spacciata per una risposta vuota: una ricerca fallita
+non dice «nessun risultato», una riga di Scopri non sparisce, «Dove guardarlo»
+non dice «non disponibile» quando è TMDB a non aver risposto — e un errore di
+rete non resta più in cache per ventiquattro ore come «da nessuna parte».
+
+### 3.9-ter Lingue — Utile ✅ (in parte)
+
+Italiano predefinito, inglese a scelta in **Impostazioni → Aspetto → Lingua**.
+I testi stanno in `src/locales/it.ts` e `en.ts`; l'inglese è tipizzato sulle
+chiavi dell'italiano, quindi una frase dimenticata non compila (e un test
+controlla anche che i segnaposto coincidano). Cambiare lingua ricarica l'app e
+svuota la cache di TMDB, che da lì risponde in inglese (`en-US`); date, mesi e
+migliaia seguono la stessa scelta, e `<html lang>` è giusto dal primo pixel.
+
+**Tradotto:** la cornice — navigazione, menu, campanella, titoli e schede
+delle pagine, controlli della Libreria, Impostazioni (gruppi, voci, pannelli,
+aspetto), stati dei titoli, stati d'errore. **Ancora in italiano:** i testi
+lunghi dentro i singoli fogli e pagine (spiegazioni, stati vuoti specifici,
+moduli), i resoconti dell'importazione e le risposte del critico IA. Il
+lavoro che resta è meccanico: spostare le frasi nei due file.
+
 ### 3.10 Prestazioni e batteria — Utile ✅
 
 - **Immagini alla misura giusta.** TMDB ricodifica ogni larghezza a parte, quindi
@@ -373,6 +427,19 @@ vale la pena tenere.
 - **Precaricamento all'intenzione.** Il chunk del player parte quando il
   puntatore arriva sul link, non quando l'app è ferma: scaricare 600 KB "per
   ogni evenienza" è precisamente ciò che svuota la batteria in mobilità.
+- **Primo caricamento sotto i 200 KB gzip** (era 285, oggi 183), controllato in
+  CI da `npm run budget`: si scaricano all'avvio solo la Home e l'ossatura. Le
+  altre pagine arrivano quando le apri; i fogli — scheda del titolo,
+  impostazioni, aggiunta, Web Viewer, tavolozza — la prima volta che si aprono
+  (`DeferredPortals`); il motore delle animazioni dopo l'avvio (`LazyMotion`
+  con i componenti `m.*`).
+- **Il primo pixel subito.** `index.html` imposta il tema prima che arrivi il
+  CSS (niente più lampo scuro per chi usa il chiaro) e disegna un'ossatura
+  statica nei colori dell'app mentre il codice si scarica; React la toglie al
+  primo render. Al primo avvio il pezzo del benvenuto parte insieme all'app.
+  Lighthouse sulla build di produzione: desktop 97 · 100 · 100 (Performance,
+  Accessibilità, Best Practices); telefono simulato (4G lento, CPU ×4) 80–86 ·
+  100 · 100.
 - **Sonno in secondo piano.** I controlli periodici si fermano a pagina nascosta
   e ripartono al ritorno. Su un telefono l'app è quasi sempre nascosta e quasi
   mai chiusa, quindi "nessuno sta guardando" è lo stato normale.
@@ -505,9 +572,20 @@ docs/             questa specifica
 
 **Scelte e motivo**
 
-- **Client‑only, dati in `localStorage`** — nessun server significa nessuna
+- **Client‑only, dati sul dispositivo** — nessun server significa nessuna
   raccolta dati, nessun costo, nessun account. Il prezzo è la sincronizzazione,
   risolta per ora con esporta/importa.
+- **Libreria, diario e cronologia del lettore su IndexedDB** (`lib/durable.ts`),
+  con una copia in memoria caricata prima che l'app parta: gli store leggono in
+  modo sincrono come quando stavano in `localStorage`, ma senza il suo tetto di
+  circa 5 MB e senza serializzare tutto a ogni scrittura. Il passaggio è
+  automatico al primo avvio e ripetibile: si copia, si rilegge, si confronta, e
+  solo allora l'originale diventa una copia di sicurezza (`cinemate:pre-idb:*`)
+  che si cancella da sola dopo cinque avvii senza errori e una settimana. Fino
+  ad allora la Diagnostica la mostra e la sa ripristinare. Senza IndexedDB si
+  resta su `localStorage`; se i dati erano su IndexedDB e un avvio non lo apre,
+  l'app non scrive niente invece di ripartire da una libreria vuota.
+  Impostazioni, chiavi e preferenze — pochi byte — restano in `localStorage`.
 - **Chiavi API personali dell'utente**, salvate solo sul dispositivo.
 - **TMDB** come unica fonte di catalogo (+ JustWatch per la disponibilità).
 - **Zustand** invece di Redux: lo stato è piccolo, la cerimonia non serve.
@@ -550,13 +628,16 @@ in arrivo, copertine e dati TMDB automatici, provider legali, esporta/importa,
 identità visiva, pubblicazione web installabile, pagina **Scopri**, **saghe e
 collezioni** con i tre ordini di visione, **maratona**, **continua la storia**,
 **universi e timeline**, **pagine di attori e registi**, **calendario
-Prossimamente** con promemoria, **ricerca raggruppata**, statistiche su attori e
+Prossimamente** con promemoria ed **esportazione .ics**, **ricerca raggruppata**, statistiche su attori e
 registi, badge di saga e di genere, **player per le sorgenti proprie** (§3.6),
 **filtri avanzati** (studio, paese, audio, qualità, durata, voti), **correzione
 degli errori di battitura**, **ricerca in linguaggio naturale**, **riassunto
 senza spoiler**, **traduzione della sinossi**, righe **Per te / Più visti /
 Ultimi aggiunti / Simili sul tuo scaffale**, **obiettivi personali**, **tinte
-d'accento e Home riordinabile**, **condivisione di liste e codice QR**,
+d'accento e Home riordinabile**, **condivisione di liste e codice QR**, **liste personali e intelligenti**,
+**importazione da Letterboxd, Trakt, IMDb e TV Time**, **riassunto «Nelle
+puntate precedenti»**, **il tuo palato**, **stasera in due**, **questo o quello**, **quale abbonamento
+conviene**, **diario a quadretti con «un anno fa» e con chi/dove**, **l'anno come immagine 9:16 e 1:1**, **scorciatoie, condivisione verso l'app e numero sull'icona**, **tracce e ritardo dei sottotitoli per serie**,
 **controllo genitori**, **diagnostica con test e log errori**, **apri sul
 servizio**, **navigazione da telecomando** e **copertina larga nella scheda**, e
 nel player **gesture**, **buffer adattivo** e **host con test
@@ -567,10 +648,8 @@ essenziale è chiusa: quello che resta qui sotto è utile, non necessario, e
 nessuna delle tre è un buco che si sente usando l'app.
 
 **Poi (Utile)**
-1. Liste personali salvate ("Da vedere col partner", "Horror di ottobre") —
-   oggi una lista si condivide ma non si conserva
-2. Trailer in‑app con PiP
-3. Universi costruiti a mano dall'utente, oltre a quelli da keyword
+1. Universi costruiti a mano dall'utente, oltre a quelli da keyword
+2. Dieci proposte da scegliere, con costo, rischio e regole: [`docs/IDEE.md`](IDEE.md)
 
 **Futuro**
 5. Sync cloud con account

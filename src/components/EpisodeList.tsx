@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { ErrorState } from "./ErrorState";
 import { useNavigate } from "react-router-dom";
 import { useSettings } from "../store/useSettings";
 import { useSettingsSheet } from "../store/useSettingsSheet";
@@ -8,6 +9,8 @@ import { getSeason, stillUrl, type TmdbEpisode } from "../lib/tmdb";
 import { countdown, daysBetweenToday } from "../lib/format";
 import { prefetchHandlers } from "../lib/prefetch";
 import { CheckIcon, PlayIcon, StarIcon } from "./icons";
+import { isWatched, nextEpisode } from "../lib/episodes";
+import { useLongPress } from "../lib/useLongPress";
 import type { Item } from "../types";
 
 /**
@@ -30,14 +33,22 @@ function EpisodeRow({
   episode,
   watched,
   onPlay,
+  onToggle,
   onMarkUpTo,
 }: {
   episode: TmdbEpisode;
   watched: boolean;
   onPlay: (episode: TmdbEpisode) => void;
+  onToggle: (episode: TmdbEpisode) => void;
   onMarkUpTo: (episode: TmdbEpisode) => void;
 }) {
   const still = stillUrl(episode.stillPath);
+  // Tocco: questa puntata. Pressione lunga (o Maiuscolo + clic): anche tutte
+  // quelle prima — la stessa grammatica della griglia delle stagioni.
+  const press = useLongPress(
+    () => onToggle(episode),
+    () => onMarkUpTo(episode),
+  );
   // Una puntata non ancora andata in onda non si riproduce: il pulsante
   // manderebbe il player a cercare un file che non esiste da nessuna parte.
   const unreleased = episode.airDate != null && daysBetweenToday(episode.airDate) > 0;
@@ -65,7 +76,7 @@ function EpisodeRow({
         {watched && (
           <span
             className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded-full"
-            style={{ background: "var(--status-done)", color: "var(--accent-contrast)" }}
+            style={{ background: "var(--text)", color: "var(--bg)" }}
           >
             <CheckIcon size={12} />
           </span>
@@ -114,19 +125,15 @@ function EpisodeRow({
         )}
         <button
           type="button"
-          onClick={() => onMarkUpTo(episode)}
+          {...press}
           aria-pressed={watched}
-          aria-label={
-            watched
-              ? `Segna la serie come vista fino all'episodio ${episode.episodeNumber - 1}`
-              : `Segna la serie come vista fino all'episodio ${episode.episodeNumber}`
-          }
-          title="Segna visto fino a qui"
+          aria-label={`Episodio ${episode.episodeNumber}${watched ? ", visto" : ""}. Tieni premuto per segnare anche i precedenti`}
+          title="Tocca per segnarlo, tieni premuto per segnare anche i precedenti"
           className="icon-btn icon-btn-sm"
           style={
             watched
-              ? { background: "var(--accent)", color: "var(--accent-contrast)" }
-              : { background: "var(--surface-2)", color: "var(--text-muted)" }
+              ? { background: "var(--text)", color: "var(--bg)" }
+              : { background: "var(--surface)", color: "var(--text-muted)" }
           }
         >
           <CheckIcon size={15} />
@@ -139,20 +146,21 @@ function EpisodeRow({
 export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () => void }) {
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
   const openSettings = useSettingsSheet((s) => s.open);
-  const setEpisodesSeen = useLibrary((s) => s.setEpisodesSeen);
+  const toggleEpisode = useLibrary((s) => s.toggleEpisode);
+  const markEpisodesUpTo = useLibrary((s) => s.markEpisodesUpTo);
   const patchSource = usePlayerSources((s) => s.patch);
   const navigate = useNavigate();
 
   const seasons = useMemo(
-    () => Array.from({ length: Math.max(1, item.seasons || 1) }, (_, i) => i + 1),
-    [item.seasons],
+    () => Array.from({ length: Math.max(1, item.seasonEpisodes?.length || item.seasons || 1) }, (_, i) => i + 1),
+    [item.seasons, item.seasonEpisodes],
   );
-  const [season, setSeason] = useState(seasons[0]);
+  // Si apre sulla stagione del prossimo episodio: è quella che si cerca.
+  const [season, setSeason] = useState(() => nextEpisode(item)?.season ?? seasons[0]);
   const [seasonMenu, setSeasonMenu] = useState(false);
   const [episodes, setEpisodes] = useState<TmdbEpisode[] | null>(null);
   const [failed, setFailed] = useState(false);
-  /** Quanti episodi stanno prima di questa stagione, per il contatore della libreria. */
-  const [offset, setOffset] = useState(0);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!tmdbApiKey || item.tmdbId == null) return;
@@ -160,17 +168,13 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
     setEpisodes(null);
     setFailed(false);
 
-    // Le stagioni precedenti servono solo per una cosa: tradurre "visto fino a
-    // S3E4" nel totale unico che la libreria tiene. Sono richieste in cache e
-    // poche, ma vale la pena dirlo — non stiamo scaricando l'intera serie.
+    // Una stagione sola: il registro degli episodi sa già stagione per
+    // stagione cosa hai visto, quindi le precedenti non servono più a
+    // tradurre «fino a S3E4» in un totale.
     const load = async () => {
       const current = await getSeason(item.tmdbId!, season, tmdbApiKey);
-      const previous = await Promise.all(
-        seasons.filter((s) => s < season).map((s) => getSeason(item.tmdbId!, s, tmdbApiKey)),
-      );
       if (cancelled) return;
       setEpisodes(current);
-      setOffset(previous.reduce((sum, list) => sum + list.length, 0));
     };
 
     void load().catch(() => {
@@ -179,19 +183,19 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
     return () => {
       cancelled = true;
     };
-  }, [item.tmdbId, tmdbApiKey, season, seasons]);
+  }, [item.tmdbId, tmdbApiKey, season, attempt]);
 
   if (item.kind === "film" || item.kind === "doc") return null;
 
   if (!tmdbApiKey || item.tmdbId == null) {
     return (
-      <div className="rounded-md p-4 text-xs leading-relaxed text-text-faint bg-surface-2">
+      <div className="flex flex-col items-start gap-2 rounded-md bg-surface-2 p-4 text-sm text-text-muted">
         {tmdbApiKey
-          ? "Questo titolo non è collegato a TMDB, quindi non so quali episodi abbia. Collegalo dalla scheda e l'elenco compare da solo."
-          : "Gli episodi arrivano da TMDB: serve la tua chiave."}
+          ? "Questo titolo non è collegato a TMDB, quindi titoli e trame delle puntate non ci sono. La griglia qui sotto funziona lo stesso."
+          : "Titoli, trame e miniature delle puntate arrivano da TMDB. La griglia qui sotto funziona anche senza."}
         {!tmdbApiKey && (
-          <button type="button" onClick={() => openSettings()} className="ml-1.5 underline underline-offset-2">
-            Aggiungila in Impostazioni
+          <button type="button" onClick={() => openSettings("chiavi")} className="btn btn-plain btn-sm -ml-3">
+            Aggiungi la chiave
           </button>
         )}
       </div>
@@ -207,12 +211,10 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
     navigate(`/player?titolo=${encodeURIComponent(item.id)}`);
   };
 
-  const markUpTo = (episode: TmdbEpisode) => {
-    const upTo = offset + episode.episodeNumber;
-    // Ripremere sull'ultimo episodio segnato lo *toglie*: senza, l'unico modo
-    // per correggere un tocco sbagliato sarebbe la slitta del contatore.
-    setEpisodesSeen(item.id, (item.seen || 0) === upTo ? upTo - 1 : upTo);
-  };
+  const toggle = (episode: TmdbEpisode) =>
+    toggleEpisode(item.id, { season: episode.seasonNumber, episode: episode.episodeNumber });
+  const markUpTo = (episode: TmdbEpisode) =>
+    markEpisodesUpTo(item.id, { season: episode.seasonNumber, episode: episode.episodeNumber });
 
   return (
     <div className="flex flex-col gap-3">
@@ -273,9 +275,12 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
       )}
 
       {failed ? (
-        <p className="text-xs text-text-faint">
-          Non sono riuscito a leggere questa stagione da TMDB. Riprova più tardi.
-        </p>
+        <ErrorState
+          compact
+          title="Questa stagione non è arrivata"
+          description="TMDB non ha risposto. La griglia qui sopra funziona lo stesso."
+          onRetry={() => setAttempt((n) => n + 1)}
+        />
       ) : episodes === null ? (
         <div className="flex flex-col gap-2">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -290,8 +295,9 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
             <EpisodeRow
               key={`${episode.seasonNumber}-${episode.episodeNumber}`}
               episode={episode}
-              watched={(item.seen || 0) >= offset + episode.episodeNumber}
+              watched={isWatched(item, { season: episode.seasonNumber, episode: episode.episodeNumber })}
               onPlay={playEpisode}
+              onToggle={toggle}
               onMarkUpTo={markUpTo}
             />
           ))}

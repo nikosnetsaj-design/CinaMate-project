@@ -17,6 +17,8 @@ import { prefetchHandlers } from "../lib/prefetch";
 import { PosterArt } from "../components/PosterArt";
 import { CheckIcon, CloseIcon, PlayIcon, SearchIcon } from "../components/icons";
 import type { Item } from "../types";
+import { ErrorState } from "../components/ErrorState";
+import { t } from "../lib/i18n";
 
 /**
  * Cerca: una casella, due schede, e — quando la casella è vuota — qualcosa da
@@ -140,6 +142,8 @@ function TitleResults({ query }: { query: string }) {
   const openItem = useSelectedItem((s) => s.open);
   const openPreview = useCatalogPreview((s) => s.open);
   const [remote, setRemote] = useState<TmdbSearchResult[] | null>(null);
+  const [remoteFailed, setRemoteFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [corrected, setCorrected] = useState<string | null>(null);
 
   const mine = useMemo(() => (query ? items.filter((i) => matchesQuery(i, query)) : []), [items, query]);
@@ -152,6 +156,7 @@ function TitleResults({ query }: { query: string }) {
     }
     const controller = new AbortController();
     setRemote(null);
+    setRemoteFailed(false);
     setCorrected(null);
     // Mezzo secondo di attesa: la ricerca parte mentre scrivi, e senza questa
     // pausa ogni lettera sarebbe una richiesta buttata via dalla successiva.
@@ -161,13 +166,18 @@ function TitleResults({ query }: { query: string }) {
           setRemote(r.results);
           setCorrected(r.corrected ? r.usedTerm : null);
         })
-        .catch(() => setRemote([]));
+        .catch(() => {
+          // Una ricerca che non è arrivata non è una ricerca senza risultati.
+          if (controller.signal.aborted) return;
+          setRemote([]);
+          setRemoteFailed(true);
+        });
     }, 450);
     return () => {
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [query, tmdbApiKey]);
+  }, [query, tmdbApiKey, attempt]);
 
   /**
    * Un tocco apre la scheda, non il modulo di aggiunta.
@@ -258,6 +268,8 @@ function TitleResults({ query }: { query: string }) {
                 <div key={i} className="skeleton aspect-2/3 rounded-sm" aria-hidden="true" />
               ))}
             </div>
+          ) : remoteFailed ? (
+            <ErrorState compact title="La ricerca su TMDB non è arrivata" description="I titoli della tua libreria qui sopra ci sono lo stesso." onRetry={() => setAttempt((n) => n + 1)} />
           ) : remote.length === 0 ? (
             <p className="text-sm text-text-faint">Nessun risultato.</p>
           ) : (
@@ -329,7 +341,7 @@ export function Search() {
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-5 px-[var(--gutter)] py-6 sm:py-10">
-      <h1 className="t-display text-text">Cerca</h1>
+      <h1 className="t-display text-text">{t("page.search")}</h1>
 
       {/* La casella resta appesa in alto mentre la griglia scorre: su un
           telefono, correggere una parola non deve costare una risalita. */}
@@ -391,8 +403,8 @@ export function Search() {
 
         <div className="mt-3 flex gap-2" role="tablist" aria-label="Cosa cercare">
           {([
-            { id: "titoli", label: "Film & TV" },
-            { id: "persone", label: "Persone" },
+            { id: "titoli", label: t("tabs.search.titles") },
+            { id: "persone", label: t("tabs.search.people") },
           ] as const).map((t) => (
             <button
               key={t.id}
@@ -419,13 +431,16 @@ export function Search() {
             </ul>
           </section>
         ) : (
-          <p className="text-sm text-text-faint">
-            Scrivi un titolo. {!tmdbApiKey && (
-              <button type="button" onClick={() => openSettings()} className="underline underline-offset-2">
-                Con la chiave TMDB cerchi anche fuori dalla tua libreria.
+          <div className="flex flex-col items-start gap-1">
+            <p className="text-sm text-text-faint">Scrivi un titolo.</p>
+            {/* Un pulsante vero, alto 44 px, e non un collegamento nel testo:
+                sul telefono si tocca col pollice. */}
+            {!tmdbApiKey && (
+              <button type="button" onClick={() => openSettings("chiavi")} className="btn btn-plain btn-sm -ml-3 min-h-11 text-left">
+                Con la chiave TMDB cerchi anche fuori dalla tua libreria
               </button>
             )}
-          </p>
+          </div>
         )
       ) : tab === "titoli" ? (
         <TitleResults query={query.trim()} />

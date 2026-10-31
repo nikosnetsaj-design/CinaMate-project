@@ -3,6 +3,7 @@ import Hls from 'hls.js';
 import type { QualityLevel, AudioTrack, MediaContent, NetworkQuality } from '../types';
 import { getPlaybackPrefs, normaliseLang, setPlaybackPrefs } from '../services/playbackPrefs';
 import { describeFailure, type PlayerFailure } from '../services/playerErrors';
+import { getTitleTracks, rememberTitleTracks } from '../services/titleTracks';
 
 export type VideoPlayerOptions = {
   dataSaverMode?: boolean;
@@ -138,6 +139,9 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
   // `onEnded` navigate to *that* title's next episode. Reading through a ref
   // that is refreshed on every render keeps them current.
   const optionsRef = useRef(options);
+  // Per ricordare la traccia audio sul titolo giusto quando la scegli.
+  const contentIdRef = useRef(content?.id);
+  contentIdRef.current = content?.id;
   optionsRef.current = options;
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -225,7 +229,8 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
             // The dub you always pick, picked for you. Without this, a series
             // whose tracks happen to start on the original language makes you
             // reopen the menu at the top of every single episode.
-            const wanted = normaliseLang(getPlaybackPrefs().audioLang);
+            // Prima la scelta fatta su questo titolo, poi quella generale.
+            const wanted = normaliseLang(getTitleTracks(c.id).audioLang ?? getPlaybackPrefs().audioLang);
             if (wanted) {
               const match = hls.audioTracks.findIndex((t) => normaliseLang(t.lang) === wanted);
               if (match >= 0 && match !== hls.audioTrack) hls.audioTrack = match;
@@ -506,7 +511,10 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
     // Remembered by language rather than by index: track 2 is a different dub
     // on every title, but "italiano" is the same answer everywhere.
     const lang = hls.audioTracks?.[id]?.lang;
-    if (lang) setPlaybackPrefs({ audioLang: normaliseLang(lang) });
+    if (lang) {
+      setPlaybackPrefs({ audioLang: normaliseLang(lang) });
+      rememberTitleTracks(contentIdRef.current, { audioLang: normaliseLang(lang) });
+    }
   }, []);
   const setDataSaver = useCallback((enabled: boolean) => {
     if (hlsRef.current) applyLevelCap(hlsRef.current, getPlaybackPrefs().maxHeight, enabled);

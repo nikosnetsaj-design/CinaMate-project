@@ -1,5 +1,6 @@
 import type { HistoryEntry, Item } from "../types";
 import type { DailySeconds } from "../player/services/statsAndHistory";
+import { intlLocale } from "./i18n";
 
 /** One column of the activity chart. */
 export interface ActivityBucket {
@@ -18,9 +19,9 @@ export const ACTIVITY_RANGES: { id: ActivityRange; label: string }[] = [
   { id: "anno", label: "Anno" },
 ];
 
-const WEEKDAY = new Intl.DateTimeFormat("it-IT", { weekday: "short" });
-const MONTH_SHORT = new Intl.DateTimeFormat("it-IT", { month: "short" });
-const FULL_DAY = new Intl.DateTimeFormat("it-IT", { weekday: "long", day: "numeric", month: "long" });
+const WEEKDAY = new Intl.DateTimeFormat(intlLocale(), { weekday: "short" });
+const MONTH_SHORT = new Intl.DateTimeFormat(intlLocale(), { month: "short" });
+const FULL_DAY = new Intl.DateTimeFormat(intlLocale(), { weekday: "long", day: "numeric", month: "long" });
 
 export function dayKey(date: Date): string {
   const y = date.getFullYear();

@@ -109,6 +109,13 @@ export interface YearInReview {
   hours: number;
   topGenre: string | null;
   busiestMonth: string | null;
+  /** Episodi segnati nell'anno. */
+  episodes: number;
+  /**
+   * I tre titoli dell'anno: quelli che hai votato di più fra quelli con una
+   * visione nell'anno, a parità quelli su cui hai passato più episodi.
+   */
+  top: Item[];
 }
 
 const MONTH_NAMES = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"];
@@ -119,6 +126,8 @@ export function computeYearInReview(items: Item[], history: HistoryEntry[], year
   let minutes = 0;
   const monthCounts = new Map<number, number>();
   const watchedItemIds = new Set<string>();
+  const touched = new Map<string, number>();
+  let episodes = 0;
 
   for (const h of yearHistory) {
     const item = itemById.get(h.itemId);
@@ -128,11 +137,13 @@ export function computeYearInReview(items: Item[], history: HistoryEntry[], year
       if (item.kind === "film" || item.kind === "doc") minutes += item.runtime;
     } else if (h.action === "episode") {
       minutes += item.runtime * (h.count ?? 1);
+      episodes += h.count ?? 1;
     } else if (h.action === "rewatch" && (item.kind === "film" || item.kind === "doc")) {
       minutes += item.runtime;
     }
     const month = Number(h.date.slice(5, 7)) - 1;
     monthCounts.set(month, (monthCounts.get(month) ?? 0) + 1);
+    touched.set(h.itemId, (touched.get(h.itemId) ?? 0) + (h.count ?? 1));
   }
 
   const genreCounts = new Map<string, number>();
@@ -150,6 +161,12 @@ export function computeYearInReview(items: Item[], history: HistoryEntry[], year
     hours: Math.round(minutes / 60),
     topGenre,
     busiestMonth: busiestMonthIdx != null ? MONTH_NAMES[busiestMonthIdx] : null,
+    episodes,
+    top: [...touched.keys()]
+      .map((id) => itemById.get(id))
+      .filter((i): i is Item => !!i)
+      .sort((a, b) => (b.vote ?? 0) - (a.vote ?? 0) || (touched.get(b.id) ?? 0) - (touched.get(a.id) ?? 0))
+      .slice(0, 3),
   };
 }
 

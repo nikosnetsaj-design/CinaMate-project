@@ -1,4 +1,5 @@
 import type { Item } from "../types";
+import { nextEpisode } from '../lib/episodes';
 import { hasPlaceholder, looksLikeFile, normalizeBase, slugify } from "../lib/sourceTemplate";
 
 /**
@@ -72,9 +73,11 @@ function scoreOf(url: string, item: Item): number {
   let score = 10 + words.length;
   if (item.year && name.includes(String(item.year))) score += 4;
   if (item.kind !== "film") {
-    const episode = String((item.seen || 0) + 1).padStart(2, "0");
-    // s01e04, 1x04, or the bare number with a separator around it.
-    if (new RegExp(`(s01e${episode}|1x${episode}|-e?${episode}(-|$))`).test(name)) score += 6;
+    const next = nextEpisode(item) ?? { season: 1, episode: (item.seen || 0) + 1 };
+    const episode = String(next.episode).padStart(2, "0");
+    const season = String(next.season).padStart(2, "0");
+    // s02e04, 2x04, or the bare number with a separator around it.
+    if (new RegExp(`(s${season}e${episode}|${next.season}x${episode}|-e?${episode}(-|$))`).test(name)) score += 6;
     else score -= 2;
   }
   if (/\.m3u8?$/i.test(url)) score += 2;

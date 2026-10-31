@@ -2,7 +2,18 @@ import { useState } from "react";
 import { useSettings } from "../store/useSettings";
 import { useLibrary } from "../store/useLibrary";
 import { spoilerFreeRecap, translateOverview, ClaudeApiError } from "../lib/anthropic";
-import { getOverviewInEnglish } from "../lib/tmdb";
+import { getOverviewInEnglish, getSeason } from "../lib/tmdb";
+import { episodeLabel, isEpisodic, lastWatched } from "../lib/episodes";
+import {
+  cachedRecap,
+  RECAP_DETAILS,
+  recapKey,
+  savedDetail,
+  saveDetail,
+  storeRecap,
+  type EpisodeSynopsis,
+  type RecapDetail,
+} from "../lib/recap";
 import type { Item } from "../types";
 
 function Panel({ children }: { children: React.ReactNode }) {
@@ -16,32 +27,56 @@ function Label({ children }: { children: string }) {
 }
 
 /**
- * "Dove eravamo" for a series you left part-way through.
+ * «Nelle puntate precedenti», per una serie lasciata a metà.
  *
- * Only offered where it answers a real question: a series, started, not
- * finished. On a film it would be a plot summary of something you already
- * watched, and on episode zero it would be an advert.
+ * Solo dove risponde a una domanda vera: una serie iniziata e non finita. Su
+ * un film sarebbe la trama di qualcosa che hai già visto, e a zero episodi
+ * sarebbe una pubblicità.
  *
- * Never fetched automatically. This costs the user's own API credit, and a
- * recap that appears unasked on every detail sheet spends it on the many
- * occasions nobody wanted one.
+ * Il confine è l'ultimo episodio del registro, detto per nome — stagione,
+ * numero, titolo — e le sinossi di TMDB arrivano al modello solo fino a lì.
+ * Mai chiesto da solo: costa credito dell'utente. Una volta chiesto resta in
+ * memoria per quel confine e quel livello, e riaprire la scheda non lo ripaga.
  */
 export function SpoilerFreeRecap({ item }: { item: Item }) {
   const apiKey = useSettings((s) => s.apiKey);
   const model = useSettings((s) => s.model);
-  const [recap, setRecap] = useState<string | null>(null);
+  const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
+  const [detail, setDetail] = useState<RecapDetail>(savedDetail);
+  const [fresh, setFresh] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const relevant =
-    item.kind !== "film" && (item.seen || 0) > 0 && (!item.episodes || (item.seen || 0) < item.episodes);
+  const last = lastWatched(item);
+  const relevant = isEpisodic(item) && last && (!item.episodes || item.seen < item.episodes);
   if (!relevant || !apiKey) return null;
+
+  const key = recapKey(item.id, last, detail);
+  const recap = fresh[key] ?? cachedRecap(key);
 
   const load = async () => {
     setBusy(true);
     setError(null);
     try {
-      setRecap(await spoilerFreeRecap(item.title, item.seen || 0, item.episodes, apiKey, model));
+      // Le sinossi della stagione del confine, fino al confine: aiutano, ma
+      // se TMDB non risponde il riassunto si fa lo stesso.
+      let synopses: EpisodeSynopsis[] = [];
+      if (tmdbApiKey && item.tmdbId && item.tmdbMediaType === "tv") {
+        try {
+          const season = await getSeason(item.tmdbId, last.season, tmdbApiKey);
+          synopses = season.map((e) => ({ season: e.seasonNumber, episode: e.episodeNumber, title: e.title, overview: e.overview }));
+        } catch {
+          synopses = [];
+        }
+      }
+      const lastTitle = synopses.find((s) => s.season === last.season && s.episode === last.episode)?.title ?? null;
+      const text = await spoilerFreeRecap(
+        { title: item.title, year: item.year || null, last, lastTitle, watchedCount: item.seen, synopses, detail },
+        apiKey,
+        model,
+      );
+      storeRecap(key, text);
+      setFresh((f) => ({ ...f, [key]: text }));
     } catch (e) {
       setError(e instanceof ClaudeApiError ? e.message : "Riassunto non riuscito.");
     } finally {
@@ -50,32 +85,40 @@ export function SpoilerFreeRecap({ item }: { item: Item }) {
   };
 
   return (
-    <Panel>
-      <Label>Dove eravamo</Label>
-      {recap ? (
-        <p className="whitespace-pre-wrap text-sm leading-relaxed text-text">{recap}</p>
-      ) : (
-        <>
-          <p className="text-xs leading-relaxed text-text-faint">
-            Un riassunto fino all'episodio {item.seen}, senza anticipare niente di quello che viene
-            dopo.
-          </p>
+    <section className="rounded-lg bg-surface p-4 shadow-[var(--shadow-sm)]" aria-label="Nelle puntate precedenti">
+      <Label>Nelle puntate precedenti</Label>
+      <p className="text-xs leading-relaxed text-text-muted">
+        Fino alla fine di {episodeLabel(last)}, l'ultimo che hai segnato. Niente di quello che viene dopo.
+      </p>
+      <div className="segmented segmented-full mt-3" role="radiogroup" aria-label="Quanto dettaglio">
+        {RECAP_DETAILS.map((d) => (
           <button
+            key={d.id}
             type="button"
-            onClick={load}
-            disabled={busy}
-            className="btn btn-secondary mt-2.5 w-full"
+            role="radio"
+            aria-checked={detail === d.id}
+            onClick={() => {
+              setDetail(d.id);
+              saveDetail(d.id);
+            }}
           >
-            {busy ? "Sto ricostruendo…" : "Ricordami dove eravamo"}
+            {d.label}
           </button>
-        </>
+        ))}
+      </div>
+      {recap ? (
+        <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-text">{recap}</p>
+      ) : (
+        <button type="button" onClick={load} disabled={busy} className="btn btn-secondary mt-3 w-full">
+          {busy ? "Sto ricostruendo…" : "Ricordami dove eravamo"}
+        </button>
       )}
       {error && (
         <p role="alert" className="mt-2 text-xs" style={{ color: "var(--danger)" }}>
           {error}
         </p>
       )}
-    </Panel>
+    </section>
   );
 }
 

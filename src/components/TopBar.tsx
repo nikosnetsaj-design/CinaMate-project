@@ -13,7 +13,8 @@ import { useUpcoming } from "../lib/useUpcoming";
 import { effectiveUrl, hostLabel, withProtocol } from "../lib/linkHost";
 import { clearTmdbCaches } from "../lib/tmdb";
 import { countdown, dayLabel } from "../lib/format";
-import { BellIcon, ChevronRightIcon, DotsIcon, GearIcon, GlobeIcon, LinkIcon, MoonIcon, PersonIcon, PlusIcon, PulseIcon, RefreshIcon, SunIcon } from "./icons";
+import { BellIcon, ChevronRightIcon, DotsIcon, GearIcon, GlobeIcon, LinkIcon, MoonIcon, PeopleIcon, PersonIcon, ServicesIcon, PlusIcon, PulseIcon, RefreshIcon, SunIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * I tre controlli in cima: i generi, le novità, il menu.
@@ -35,15 +36,51 @@ const ROUND = "icon-btn relative";
  * il modo in cui un menu si chiude da tastiera in qualunque programma.
  */
 function Backdrop({ onClose }: { onClose: () => void }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  // Chi apre il menu passa una funzione nuova a ogni render: tenuta qui,
+  // l'effetto sotto gira una volta per apertura e non ruba il fuoco.
+  const close = useRef(onClose);
+  close.current = onClose;
+
+  /*
+   * Il menu da tastiera come in qualunque programma: all'apertura il fuoco va
+   * sulla prima voce, le frecce scorrono le voci (Inizio e Fine vanno agli
+   * estremi), Esc chiude e il fuoco torna sul pulsante che l'aveva aperto.
+   * Il menu è il fratello che segue lo sfondo, in tutti e tre i menu.
+   */
   useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
+    const menu = ref.current?.nextElementSibling as HTMLElement | null;
+    const items = () => Array.from(menu?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
+    items()[0]?.focus();
+
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        close.current();
+        return;
+      }
+      const list = items();
+      if (list.length === 0) return;
+      const at = list.indexOf(document.activeElement as HTMLElement);
+      let next = -1;
+      if (e.key === "ArrowDown") next = (at + 1) % list.length;
+      else if (e.key === "ArrowUp") next = (at - 1 + list.length) % list.length;
+      else if (e.key === "Home") next = 0;
+      else if (e.key === "End") next = list.length - 1;
+      else return;
+      e.preventDefault();
+      list[next].focus();
     }
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      if (opener?.isConnected) opener.focus();
+    };
+  }, []);
 
-  return <button type="button" aria-label="Chiudi il menu" className="fixed inset-0 z-40 cursor-default" onClick={onClose} />;
+  return (
+    <button ref={ref} type="button" tabIndex={-1} aria-label={t("menu.close")} className="fixed inset-0 z-40 cursor-default" onClick={() => close.current()} />
+  );
 }
 
 function MenuItem({
@@ -62,8 +99,9 @@ function MenuItem({
   return (
     <button
       type="button"
+      role="menuitem"
       onClick={onClick}
-      className="flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-surface-hover"
+      className="flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-surface-hover focus-visible:bg-surface-hover"
       style={danger ? { color: "var(--danger)" } : undefined}
     >
       {icon && <span className="shrink-0 text-text-faint">{icon}</span>}
@@ -205,7 +243,7 @@ export function AlertsBell() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        aria-label={soon.length ? `Novità: ${soon.length} in arrivo` : "Novità"}
+        aria-label={soon.length ? t("alerts.labelCount", { n: soon.length }) : t("alerts.label")}
         className={ROUND}
       >
         <BellIcon size={17} filled={soon.length > 0} />
@@ -223,7 +261,7 @@ export function AlertsBell() {
           <Backdrop onClose={() => setOpen(false)} />
           <div className={`${PANEL} w-72`} role="menu">
             <p className="px-3.5 pb-1.5 pt-3 text-xs font-medium text-text-faint">
-              In arrivo
+              {t("alerts.soon")}
             </p>
             {soon.length === 0 ? (
               <p className="px-3.5 py-3 text-xs leading-relaxed text-text-faint">
@@ -302,7 +340,7 @@ export function QuickMenu() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
-        aria-label="Altro"
+        aria-label={t("nav.more")}
         className={ROUND}
       >
         <DotsIcon size={17} />
@@ -314,8 +352,8 @@ export function QuickMenu() {
           <div className={PANEL} role="menu">
             <MenuItem
               icon={<PlusIcon size={16} />}
-              label="Aggiungi titolo"
-              hint="A mano, senza passare da TMDB"
+              label={t("nav.addTitle")}
+              hint={t("menu.add.hint")}
               onClick={() => {
                 setOpen(false);
                 openAddSheet();
@@ -324,8 +362,8 @@ export function QuickMenu() {
             <div className="border-t border-border" />
             <MenuItem
               icon={<LinkIcon size={16} />}
-              label="Gestisci Link Host"
-              hint={firstHost ? hostLabel(effectiveUrl(firstHost)) : "Nessun sito configurato"}
+              label={t("menu.linkHost")}
+              hint={firstHost ? hostLabel(effectiveUrl(firstHost)) : t("menu.linkHost.none")}
               onClick={() => {
                 setOpen(false);
                 openSettings("linkhost");
@@ -333,8 +371,8 @@ export function QuickMenu() {
             />
             <MenuItem
               icon={<GlobeIcon size={16} />}
-              label="Apri Web Viewer"
-              hint={firstHost ? "Sul tuo primo sito attivo" : "Prima serve un sito nel Link Host"}
+              label={t("menu.viewer")}
+              hint={firstHost ? t("menu.viewer.hint") : t("menu.viewer.needsHost")}
               onClick={() => {
                 setOpen(false);
                 if (firstHost) openViewer(withProtocol(effectiveUrl(firstHost)));
@@ -343,19 +381,37 @@ export function QuickMenu() {
             />
             <MenuItem
               icon={<RefreshIcon size={16} />}
-              label="Aggiorna contenuti"
-              hint="Riscarica da TMDB, senza toccare la libreria"
+              label={t("menu.refresh")}
+              hint={t("menu.refresh.hint")}
               onClick={() => {
                 clearTmdbCaches();
                 setOpen(false);
-                pushToast("success", "Contenuti aggiornati: TMDB verrà richiesto di nuovo.");
+                pushToast("success", t("menu.refresh.done"));
               }}
             />
 
             <div className="border-t border-border">
               <MenuItem
+                icon={<PeopleIcon size={16} />}
+                label={t("nav.duo")}
+                hint={t("menu.duo.hint")}
+                onClick={() => {
+                  setOpen(false);
+                  navigate("/stasera-in-due");
+                }}
+              />
+              <MenuItem
+                icon={<ServicesIcon size={16} />}
+                label={t("nav.services")}
+                hint={t("menu.services.hint")}
+                onClick={() => {
+                  setOpen(false);
+                  navigate("/abbonamenti");
+                }}
+              />
+              <MenuItem
                 icon={<PersonIcon size={16} />}
-                label="Profilo"
+                label={t("menu.profile")}
                 onClick={() => {
                   setOpen(false);
                   navigate("/tu");
@@ -363,7 +419,7 @@ export function QuickMenu() {
               />
               <MenuItem
                 icon={theme === "dark" ? <SunIcon size={16} /> : <MoonIcon size={16} />}
-                label={theme === "dark" ? "Tema chiaro" : "Tema scuro"}
+                label={theme === "dark" ? t("menu.themeLight") : t("menu.themeDark")}
                 onClick={() => {
                   toggleTheme();
                   setOpen(false);
@@ -371,7 +427,7 @@ export function QuickMenu() {
               />
               <MenuItem
                 icon={<PulseIcon size={16} />}
-                label="Diagnostica"
+                label={t("menu.diagnostics")}
                 onClick={() => {
                   setOpen(false);
                   navigate("/diagnostica");
@@ -379,7 +435,7 @@ export function QuickMenu() {
               />
               <MenuItem
                 icon={<GearIcon size={16} />}
-                label="Impostazioni"
+                label={t("nav.settings")}
                 onClick={() => {
                   setOpen(false);
                   openSettings();

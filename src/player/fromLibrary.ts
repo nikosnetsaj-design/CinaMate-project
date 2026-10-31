@@ -53,10 +53,6 @@ export function streamUrlOf(item: Item, lookup: SourceLookup): string | null {
   return item.links.find(isHlsUrl) ?? null;
 }
 
-export function hasStream(item: Item, lookup: SourceLookup): boolean {
-  return streamUrlOf(item, lookup) !== null;
-}
-
 // A runtime of 0 (the default for a title added by hand without one) would
 // make the marathon bar divide by zero, so fall back to a feature length.
 const FALLBACK_RUNTIME_MIN = 100;

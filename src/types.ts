@@ -30,8 +30,25 @@ export interface Item {
   platform: Platform;
   runtime: number;
   episodes: number | null;
+  /**
+   * Quanti episodi visti. Derivato da `watched` — ne è la lunghezza — e tenuto
+   * scritto per tutto il codice, e per i file di backup, che chiedono solo
+   * «quanti». Chi scrive passa dalle azioni della libreria, che li tengono
+   * allineati.
+   */
   seen: number;
   seasons: number | null;
+  /**
+   * Il registro: quali episodi, e quando. Assente sui record scritti prima che
+   * esistesse — la libreria li migra al caricamento (lib/episodes).
+   */
+  watched?: WatchedEpisode[];
+  /**
+   * Quante puntate ha ciascuna stagione, dalla 1 in avanti (le speciali, la
+   * stagione 0 di TMDB, restano fuori). Serve a dire qual è il prossimo
+   * episodio quando si cambia stagione.
+   */
+  seasonEpisodes?: number[];
   fav: boolean;
   rewatch: number;
   overview: string;
@@ -98,6 +115,23 @@ export interface Item {
   quality?: Quality | null;
 }
 
+export interface WatchedEpisode {
+  season: number;
+  episode: number;
+  /** `yyyy-mm-dd`. */
+  date: string;
+  /**
+   * La data non è stata registrata al momento della visione: è stata
+   * ricostruita (la data in cui il titolo è entrato in libreria).
+   */
+  estimated?: boolean;
+  /**
+   * Messo nella stagione 1 perché la divisione in stagioni non si conosceva:
+   * prende il suo posto vero appena arriva da TMDB.
+   */
+  provisional?: boolean;
+}
+
 export const QUALITIES = ["SD", "720p", "1080p", "4K", "HDR"] as const;
 export type Quality = (typeof QUALITIES)[number];
 
@@ -124,4 +158,11 @@ export interface HistoryEntry {
    * entries written before this field existed — always read it as `?? 1`.
    */
   count?: number;
+  /** Per una voce di un episodio solo: quale. */
+  season?: number;
+  episode?: number;
+  /** Con chi, se vuoi ricordarlo: «Marta», «in famiglia». Scritto da te. */
+  with?: string;
+  /** Dove: «al cinema», «a casa di Luca». Scritto da te. */
+  where?: string;
 }

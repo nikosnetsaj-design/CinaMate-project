@@ -1,4 +1,5 @@
 import type { Item } from "../types";
+import { nextEpisode } from "./episodes";
 import { slugify } from "./sourceTemplate";
 
 /**
@@ -95,7 +96,9 @@ export interface EpisodePosition {
 }
 
 export function defaultPosition(item: Item): EpisodePosition {
-  return { season: 1, episode: (item.seen || 0) + 1 };
+  // Il prossimo episodio del registro: stagione vera, non più sempre la 1.
+  // Una serie finita ricomincia da capo, che è ciò che si chiede rivedendola.
+  return nextEpisode(item) ?? { season: 1, episode: 1 };
 }
 
 function positionFor(item: Item, override?: Partial<EpisodePosition>): EpisodePosition {
@@ -114,12 +117,6 @@ function pad(n: number): string {
 export function episodeTag(item: Item, position?: Partial<EpisodePosition>): string {
   const { season, episode } = positionFor(item, position);
   return `S${pad(season)}E${pad(episode)}`;
-}
-
-/** `2x05`, l'altra notazione diffusa. */
-export function episodeTagX(item: Item, position?: Partial<EpisodePosition>): string {
-  const { season, episode } = positionFor(item, position);
-  return `${season}x${pad(episode)}`;
 }
 
 /**

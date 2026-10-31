@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { motion } from "framer-motion";
+import { useFocusTrap } from "../lib/useFocusTrap";
+import { m } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useWebViewer } from "../store/useWebViewer";
 import { usePlayerSources } from "../store/usePlayerSources";
@@ -161,13 +162,8 @@ function ViewerFrame({
 
   useEffect(() => setDraft(current), [current]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  // Copre tutto: il fuoco resta dentro, Esc chiude (solo lui, se è in cima).
+  const trapRef = useFocusTrap(onClose);
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
@@ -286,8 +282,8 @@ function ViewerFrame({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-80 flex flex-col bg-surface">
-      <motion.div
+    <div ref={trapRef} role="dialog" aria-modal="true" aria-label="Web Viewer" className="fixed inset-0 z-80 flex flex-col bg-surface">
+      <m.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col gap-2.5 bg-surface p-3 shadow-[inset_0_-1px_0_var(--separator)]"
@@ -475,7 +471,7 @@ function ViewerFrame({
             {notice}
           </p>
         )}
-      </motion.div>
+      </m.div>
 
       <div className="relative flex-1 bg-black">
         {mode === "letta" ? (

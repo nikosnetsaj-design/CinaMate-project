@@ -1,12 +1,53 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { RefObject } from 'react';
 
+/*
+ * Il minimo dell'SDK di Google Cast e di AirPlay che questo file usa davvero.
+ * L'SDK arriva da uno script esterno senza tipi: scriverne solo la parte
+ * usata tiene il compilatore utile senza inventare un'API intera.
+ */
+interface CastSession {
+  getCastDevice(): { friendlyName?: string } | null;
+  loadMedia(request: CastLoadRequest): Promise<unknown> | void;
+}
+
+interface CastContextInstance {
+  setOptions(options: { receiverApplicationId: string; autoJoinPolicy: string }): void;
+  addEventListener(type: string, handler: (event: { sessionState: string }) => void): void;
+  getCurrentSession(): CastSession | null;
+  requestSession(): Promise<unknown>;
+}
+
+interface CastFramework {
+  CastContext: { getInstance(): CastContextInstance };
+  CastContextEventType: { SESSION_STATE_CHANGED: string };
+  SessionState: { SESSION_STARTED: string; SESSION_RESUMED: string };
+}
+
+interface CastMediaInfo {
+  metadata: { title?: string } | null;
+}
+
+interface CastLoadRequest {
+  currentTime: number;
+}
+
+interface ChromeCast {
+  media: {
+    DEFAULT_MEDIA_RECEIVER_APP_ID: string;
+    MediaInfo: new (contentId: string, contentType: string) => CastMediaInfo;
+    GenericMediaMetadata: new () => { title?: string };
+    LoadRequest: new (mediaInfo: CastMediaInfo) => CastLoadRequest;
+  };
+  AutoJoinPolicy: { ORIGIN_SCOPED: string };
+}
+
 declare global {
   interface Window {
     __onGCastApiAvailable?: (isAvailable: boolean) => void;
-    chrome?: any;
-    cast?: any;
-    WebKitPlaybackTargetAvailabilityEvent?: any;
+    chrome?: { cast?: ChromeCast };
+    cast?: { framework?: CastFramework };
+    WebKitPlaybackTargetAvailabilityEvent?: unknown;
   }
   interface HTMLVideoElement {
     webkitShowPlaybackTargetPicker?: () => void;
@@ -21,26 +62,28 @@ export function useCast(videoRef: RefObject<HTMLVideoElement | null>, manifestUr
   const [castConnected, setCastConnected] = useState(false);
   const [castDeviceName, setCastDeviceName] = useState<string | null>(null);
   const [airPlayAvailable, setAirPlayAvailable] = useState(false);
-  const sessionRef = useRef<any>(null);
+  const sessionRef = useRef<CastSession | null>(null);
 
   // Load the Google Cast Sender SDK once per app lifetime, and wire up this
   // hook instance to the cast context whenever it becomes available.
   useEffect(() => {
     const setupCastContext = () => {
-      if (!window.cast?.framework) return;
-      const context = window.cast.framework.CastContext.getInstance();
+      const framework = window.cast?.framework;
+      const chromeCast = window.chrome?.cast;
+      if (!framework || !chromeCast) return;
+      const context = framework.CastContext.getInstance();
       context.setOptions({
-        receiverApplicationId: window.chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
-        autoJoinPolicy: window.chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+        receiverApplicationId: chromeCast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+        autoJoinPolicy: chromeCast.AutoJoinPolicy.ORIGIN_SCOPED,
       });
       setCastAvailable(true);
 
       context.addEventListener(
-        window.cast.framework.CastContextEventType.SESSION_STATE_CHANGED,
-        (e: any) => {
+        framework.CastContextEventType.SESSION_STATE_CHANGED,
+        (e) => {
           const connected =
-            e.sessionState === window.cast.framework.SessionState.SESSION_STARTED ||
-            e.sessionState === window.cast.framework.SessionState.SESSION_RESUMED;
+            e.sessionState === framework.SessionState.SESSION_STARTED ||
+            e.sessionState === framework.SessionState.SESSION_RESUMED;
           setCastConnected(connected);
           sessionRef.current = connected ? context.getCurrentSession() : null;
           setCastDeviceName(connected ? sessionRef.current?.getCastDevice()?.friendlyName ?? null : null);
@@ -74,14 +117,14 @@ export function useCast(videoRef: RefObject<HTMLVideoElement | null>, manifestUr
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !window.WebKitPlaybackTargetAvailabilityEvent) return;
-    const handler = (e: any) => setAirPlayAvailable(e.availability === 'available');
+    const handler = (e: Event) => setAirPlayAvailable((e as Event & { availability?: string }).availability === 'available');
     video.addEventListener('webkitplaybacktargetavailabilitychanged', handler);
     return () => video.removeEventListener('webkitplaybacktargetavailabilitychanged', handler);
   }, [videoRef]);
 
   const openCastPicker = useCallback(() => {
     if (!castAvailable) return;
-    window.cast.framework.CastContext.getInstance().requestSession();
+    void window.cast?.framework?.CastContext.getInstance().requestSession();
   }, [castAvailable]);
 
   const openAirPlayPicker = useCallback(() => {
@@ -89,11 +132,13 @@ export function useCast(videoRef: RefObject<HTMLVideoElement | null>, manifestUr
   }, [videoRef]);
 
   const castMedia = useCallback((currentTimeSec: number) => {
-    if (!sessionRef.current || !manifestUrl || !window.chrome) return;
-    const mediaInfo = new window.chrome.cast.media.MediaInfo(manifestUrl, 'application/x-mpegurl');
-    mediaInfo.metadata = new window.chrome.cast.media.GenericMediaMetadata();
-    mediaInfo.metadata.title = title;
-    const request = new window.chrome.cast.media.LoadRequest(mediaInfo);
+    const media = window.chrome?.cast?.media;
+    if (!sessionRef.current || !manifestUrl || !media) return;
+    const mediaInfo = new media.MediaInfo(manifestUrl, 'application/x-mpegurl');
+    const metadata = new media.GenericMediaMetadata();
+    metadata.title = title;
+    mediaInfo.metadata = metadata;
+    const request = new media.LoadRequest(mediaInfo);
     request.currentTime = currentTimeSec;
     sessionRef.current.loadMedia(request);
   }, [manifestUrl, title]);

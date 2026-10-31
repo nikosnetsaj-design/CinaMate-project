@@ -3,6 +3,7 @@ import type { SagaOrders } from "./sagas";
 import type { TmdbSagaPart, DiscoverQuery } from "./tmdb";
 import { MOVIE_GENRES, TV_GENRES } from "./tmdb";
 import { logError } from "./errorLog";
+import { recapPrompt, type RecapRequest } from "./recap";
 
 const ENDPOINT = "https://api.anthropic.com/v1/messages";
 
@@ -227,33 +228,23 @@ Regole:
 }
 
 /**
- * "Dove eravamo rimasti" for a series picked up months later.
+ * «Nelle puntate precedenti» per una serie ripresa dopo mesi.
  *
- * The whole value is in the boundary, so the prompt states it twice and in
- * terms of the episode number: a recap that leaks what happens next is not a
- * slightly worse recap, it is the thing the user was specifically avoiding by
- * asking for one.
+ * Tutto il valore sta nel confine, quindi il prompt (lib/recap) lo nomina come
+ * stagione ed episodio, nel sistema e nella domanda: un riassunto che lascia
+ * scappare il seguito non è un riassunto un po' peggiore, è esattamente quello
+ * che chi lo chiede voleva evitare.
  */
-export async function spoilerFreeRecap(
-  title: string,
-  seenEpisodes: number,
-  totalEpisodes: number | null,
-  apiKey: string,
-  model: string,
-): Promise<string> {
-  const prompt = `La serie è "${title}". L'utente ha visto ${seenEpisodes} episodi${
-    totalEpisodes ? ` su ${totalEpisodes}` : ""
-  } e riprende adesso dopo una pausa.
-
-Scrivi "dove eravamo": un riassunto in italiano, max 150 parole, di dove si trova la storia alla fine dell'episodio ${seenEpisodes}.
-
-Vincoli assoluti:
-- NON rivelare nulla che accada dopo l'episodio ${seenEpisodes}. Nemmeno un accenno, nemmeno "e da lì tutto cambierà".
-- Niente anticipazioni su morti, colpi di scena o rivelazioni future.
-- Se non conosci questa serie abbastanza da rispettare il confine, dillo in una riga invece di inventare.
-- Parla di personaggi e situazioni al punto in cui sono, non della trama complessiva della serie.`;
-
-  return callClaude({ apiKey, model, prompt, maxTokens: 700, effort: "medium" });
+export async function spoilerFreeRecap(request: RecapRequest, apiKey: string, model: string): Promise<string> {
+  const { system, prompt } = recapPrompt(request);
+  return callClaude({
+    apiKey,
+    model,
+    system,
+    prompt,
+    maxTokens: request.detail === "dettagliato" ? 1400 : 800,
+    effort: "medium",
+  });
 }
 
 /**
