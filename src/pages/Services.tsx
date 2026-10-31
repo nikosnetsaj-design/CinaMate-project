@@ -14,6 +14,7 @@ import { ErrorState } from "../components/ErrorState";
 import { PosterArt } from "../components/PosterArt";
 import { RowHeader } from "../components/RowHeader";
 import { CheckIcon } from "../components/icons";
+import { t } from "../lib/i18n";
 
 function ServiceLogo({ service, size = 40 }: { service: Service; size?: number }) {
   const logo = providerLogoUrl(service.logoPath, "w92");
@@ -128,8 +129,8 @@ export function Services() {
     <div className="mx-auto flex max-w-3xl flex-col gap-10 px-[var(--gutter)] py-6 sm:py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="t-display text-text">Abbonamenti</h1>
-          <p className="mt-1 max-w-prose text-sm text-text-muted">Quale conviene, partendo da quello che vuoi vedere.</p>
+          <h1 className="t-display text-text">{t("page.services")}</h1>
+          <p className="mt-1 max-w-prose text-sm text-text-muted">{t("page.services.sub")}</p>
         </div>
         <label className="flex items-center gap-2 text-sm text-text-muted">
           Paese

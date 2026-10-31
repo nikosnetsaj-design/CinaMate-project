@@ -22,6 +22,7 @@ import { CheckIcon, PeopleIcon, PlusIcon, ShareIcon } from "../components/icons"
 // Il disegno su canvas serve solo a chi condivide: si scarica al tocco.
 const YearShareSheet = lazy(() => import("../components/YearShareSheet"));
 import { DiaryHeatmap, DiaryNoteSheet, YearAgoCard } from "../components/DiaryExtras";
+import { intlLocale } from "../lib/i18n";
 
 const KIND_LABELS: Record<string, string> = { film: "Film", serie: "Serie TV", anime: "Anime", doc: "Documentario" };
 /*
@@ -327,10 +328,10 @@ export function DiaryTab({ items, openItem }: { items: Item[]; openItem: (item: 
       <div className="flex flex-col">
         {days.map(({ date, entries }, index) => {
           const d = new Date(`${date}T00:00:00`);
-          const monthLabel = new Intl.DateTimeFormat("it-IT", { month: "long", year: "numeric" }).format(d);
+          const monthLabel = new Intl.DateTimeFormat(intlLocale(), { month: "long", year: "numeric" }).format(d);
           const showMonth = monthLabel !== lastMonth;
           lastMonth = monthLabel;
-          const weekday = new Intl.DateTimeFormat("it-IT", { weekday: "short" }).format(d);
+          const weekday = new Intl.DateTimeFormat(intlLocale(), { weekday: "short" }).format(d);
           return (
             <div key={date} id={`diario-${date}`} className="scroll-mt-20">
               {showMonth && (

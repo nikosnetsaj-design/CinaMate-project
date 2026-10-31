@@ -9,6 +9,7 @@ import { requestNotificationPermission } from "../lib/notify";
 import { PosterArt } from "./PosterArt";
 import { EmptyState } from "./EmptyState";
 import { BellIcon, CalendarIcon } from "./icons";
+import { intlLocale } from "../lib/i18n";
 
 function ReminderToggle({ itemId, title }: { itemId: string; title: string }) {
   const enabled = useReminders((s) => s.enabled.includes(itemId));
@@ -155,7 +156,7 @@ export function UpcomingBoard() {
       {months.map(({ month, entries: monthEntries }) => (
         <section key={month} className="flex flex-col gap-2.5">
           <h2 className="font-display text-lg font-semibold capitalize text-text">
-            {new Intl.DateTimeFormat("it-IT", { month: "long", year: "numeric" }).format(
+            {new Intl.DateTimeFormat(intlLocale(), { month: "long", year: "numeric" }).format(
               new Date(`${month}-01T00:00:00`),
             )}
           </h2>

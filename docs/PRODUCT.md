@@ -403,6 +403,22 @@ non dice «nessun risultato», una riga di Scopri non sparisce, «Dove guardarlo
 non dice «non disponibile» quando è TMDB a non aver risposto — e un errore di
 rete non resta più in cache per ventiquattro ore come «da nessuna parte».
 
+### 3.9-ter Lingue — Utile ✅ (in parte)
+
+Italiano predefinito, inglese a scelta in **Impostazioni → Aspetto → Lingua**.
+I testi stanno in `src/locales/it.ts` e `en.ts`; l'inglese è tipizzato sulle
+chiavi dell'italiano, quindi una frase dimenticata non compila (e un test
+controlla anche che i segnaposto coincidano). Cambiare lingua ricarica l'app e
+svuota la cache di TMDB, che da lì risponde in inglese (`en-US`); date, mesi e
+migliaia seguono la stessa scelta, e `<html lang>` è giusto dal primo pixel.
+
+**Tradotto:** la cornice — navigazione, menu, campanella, titoli e schede
+delle pagine, controlli della Libreria, Impostazioni (gruppi, voci, pannelli,
+aspetto), stati dei titoli, stati d'errore. **Ancora in italiano:** i testi
+lunghi dentro i singoli fogli e pagine (spiegazioni, stati vuoti specifici,
+moduli), i resoconti dell'importazione e le risposte del critico IA. Il
+lavoro che resta è meccanico: spostare le frasi nei due file.
+
 ### 3.10 Prestazioni e batteria — Utile ✅
 
 - **Immagini alla misura giusta.** TMDB ricodifica ogni larghezza a parte, quindi

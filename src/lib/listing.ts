@@ -1,6 +1,7 @@
 import type { Item, Kind } from "../types";
 import { applyFilters, type Filters, type SourceLookup } from "./filters";
 import { matchQuality } from "./search";
+import { t } from "./i18n";
 
 /**
  * Come si ordina e si interroga uno scaffale. Sta qui e non nella pagina
@@ -10,10 +11,10 @@ import { matchQuality } from "./search";
 export type Sort = "recenti" | "voto" | "titolo" | "anno";
 
 export const SORTS: { id: Sort; label: string }[] = [
-  { id: "recenti", label: "Recenti" },
-  { id: "voto", label: "Voto" },
-  { id: "titolo", label: "A–Z" },
-  { id: "anno", label: "Anno" },
+  { id: "recenti", label: t("sort.recent") },
+  { id: "voto", label: t("sort.vote") },
+  { id: "titolo", label: t("sort.title") },
+  { id: "anno", label: t("sort.year") },
 ];
 
 export function isSort(value: unknown): value is Sort {

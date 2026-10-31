@@ -7,6 +7,7 @@ import { useCriticDraft } from "../store/useCriticDraft";
 import { askCritic, ClaudeApiError, MissingApiKeyError } from "../lib/anthropic";
 import type { Item } from "../types";
 import { ArrowRightIcon, BackIcon } from "../components/icons";
+import { t } from "../lib/i18n";
 
 const PROMPTS = [
   "Cosa guardo stasera?",
@@ -77,7 +78,7 @@ export function Critic() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 px-[var(--gutter)] py-6 sm:py-10">
       <div>
-        <h1 className="t-display text-text">Il critico</h1>
+        <h1 className="t-display text-text">{t("page.critic")}</h1>
         <p className="mt-1 text-sm text-text-muted">
           Conosce i tuoi {done.length} titoli visti e i voti che hai dato — usa la tua chiave API Anthropic personale.
         </p>

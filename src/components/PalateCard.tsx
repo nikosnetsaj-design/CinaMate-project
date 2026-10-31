@@ -2,9 +2,10 @@ import { useMemo } from "react";
 import { RowHeader } from "./RowHeader";
 import { buildPalate, disliked, loved, PALATE_MIN_VOTES, type Facet } from "../lib/palate";
 import type { Item } from "../types";
+import { intlLocale } from "../lib/i18n";
 
 function vote(value: number): string {
-  return value.toLocaleString("it-IT", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  return value.toLocaleString(intlLocale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }
 
 function signed(value: number): string {

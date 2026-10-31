@@ -9,6 +9,8 @@ import { clearErrorLog, getErrorLog, subscribeErrorLog, type LoggedError, type E
 import { runSelfTests, type TestResult, type TestStatus } from "../lib/selfTest";
 import { getHosts, computeHostStats, getSwitchLog } from "../player/services/hostStore";
 import { CONFIRM_AFTER_DAYS, CONFIRM_AFTER_LAUNCHES, durable, type Backend, type StorageStatus } from "../lib/durable";
+import { intlLocale } from "../lib/i18n";
+import { t } from "../lib/i18n";
 
 const STATUS_COLOUR: Record<TestStatus, string> = {
   pass: "var(--success)",
@@ -34,7 +36,7 @@ const SCOPE_LABEL: Record<ErrorScope, string> = {
 };
 
 function when(ts: number): string {
-  return new Date(ts).toLocaleString("it-IT", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  return new Date(ts).toLocaleString(intlLocale(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
 function Section({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
@@ -229,7 +231,7 @@ export function Diagnostics() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-10 px-[var(--gutter)] py-6 sm:py-10">
       <div>
-        <h1 className="t-display text-text">Diagnostica</h1>
+        <h1 className="t-display text-text">{t("page.diagnostics")}</h1>
         <p className="mt-1 text-sm text-text-muted">
           Cosa c'è sul dispositivo e cosa sta funzionando. Nessuno di questi dati esce di qui:
           non c'è nessun server a cui mandarli.

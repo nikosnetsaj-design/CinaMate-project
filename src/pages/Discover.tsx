@@ -14,6 +14,7 @@ import { UpcomingBoard } from "../components/UpcomingBoard";
 import { NaturalSearch } from "../components/NaturalSearch";
 import { MoodPicker } from "../components/MoodPicker";
 import { CheckIcon } from "../components/icons";
+import { t } from "../lib/i18n";
 
 const FEEDS: { id: DiscoverFeed; title: string; why: string }[] = [
   { id: "trending", title: "Di cosa si parla", why: "I film più visti questa settimana nel mondo" },
@@ -115,9 +116,9 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
 
 type Tab = "sfoglia" | "chiedi" | "prossimamente";
 const TABS: { id: Tab; label: string }[] = [
-  { id: "sfoglia", label: "Sfoglia" },
-  { id: "chiedi", label: "Chiedi a parole" },
-  { id: "prossimamente", label: "Prossimamente" },
+  { id: "sfoglia", label: t("tabs.discover.browse") },
+  { id: "chiedi", label: t("tabs.discover.ask") },
+  { id: "prossimamente", label: t("tabs.discover.upcoming") },
 ];
 
 export function Discover() {
@@ -128,7 +129,7 @@ export function Discover() {
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-8 px-[var(--gutter)] py-6 sm:py-10">
       <div>
-        <h1 className="t-display text-text">Scopri</h1>
+        <h1 className="t-display text-text">{t("page.discover")}</h1>
         <p className="mt-1 text-sm text-text-muted">
           {tab === "sfoglia"
             ? "Tocca una copertina per aggiungerla alla tua libreria."

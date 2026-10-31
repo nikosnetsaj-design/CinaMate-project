@@ -34,8 +34,10 @@ import { getDailySeconds, restoreDailySeconds } from "../player/services/statsAn
 import { useWatchProgress } from "../store/useWatchProgress";
 import { buildBackup, parseBackup, BackupParseError } from "../lib/backup";
 import { resetAutoLinkAttempts } from "../lib/useAutoLinkTmdb";
+import { clearTmdbCaches } from "../lib/tmdb";
 import { downloadFile } from "../lib/format";
 import { BackIcon, BookIcon, CheckIcon, ChevronDownIcon, ChevronRightIcon, ChevronUpIcon, CompassIcon, DownloadIcon, HomeIcon, InfoIcon, PersonIcon, PlayIcon, PulseIcon, RefreshIcon, SparkleIcon, StackIcon, SunIcon, TrashIcon, UploadIcon } from "./icons";
+import { setLang, t, LANGS, lang } from "../lib/i18n";
 
 /**
  * Where your own sources live, written once instead of pasted per title.
@@ -66,8 +68,30 @@ function AppearanceSettings() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <span className="mb-3 block text-base font-semibold text-text">Tema</span>
-        <div className="segmented segmented-full" role="radiogroup" aria-label="Tema">
+        <span className="mb-3 block text-base font-semibold text-text">{t("settings.language")}</span>
+        <div className="segmented segmented-full" role="radiogroup" aria-label={t("settings.language")}>
+          {LANGS.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              role="radio"
+              lang={option.id}
+              aria-checked={lang === option.id}
+              onClick={() => {
+                // Le risposte di TMDB in cache sono nella lingua di prima.
+                if (lang !== option.id) void setLang(option.id, clearTmdbCaches);
+              }}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        <p className="mt-2 text-xs text-text-muted">{t("settings.language.note")}</p>
+      </div>
+
+      <div>
+        <span className="mb-3 block text-base font-semibold text-text">{t("settings.theme")}</span>
+        <div className="segmented segmented-full" role="radiogroup" aria-label={t("settings.theme")}>
           {(["dark", "light"] as const).map((value) => (
             <button
               key={value}
@@ -78,7 +102,7 @@ function AppearanceSettings() {
                 if (theme !== value) toggleTheme();
               }}
             >
-              {value === "dark" ? "Scuro" : "Chiaro"}
+              {value === "dark" ? t("settings.theme.dark") : t("settings.theme.light")}
             </button>
           ))}
         </div>
@@ -86,12 +110,12 @@ function AppearanceSettings() {
 
       <div>
         <div className="mb-3 flex items-baseline justify-between gap-3">
-          <span className="text-base font-semibold text-text">Colore d'accento</span>
+          <span className="text-base font-semibold text-text">{t("settings.accent")}</span>
           {current && <span className="text-sm text-text-muted">{current.name}</span>}
         </div>
         {/* La tinta scelta ha un anello staccato dal bordo, come su iOS: si
             vede su ogni colore, chiaro o scuro, senza toccarne il riempimento. */}
-        <div className="flex flex-wrap gap-2.5" role="radiogroup" aria-label="Colore d'accento">
+        <div className="flex flex-wrap gap-2.5" role="radiogroup" aria-label={t("settings.accent")}>
           {ACCENTS.map((option) => {
             const swatch = option[theme].accent;
             const active = accent === option.id;
@@ -610,15 +634,15 @@ function PageReaderSetting() {
 type PanelId = "chiavi" | "sorgenti" | "linkhost" | "aspetto" | "home" | "tv" | "genitori" | "dati" | "info";
 
 const PANEL_TITLES: Record<PanelId, string> = {
-  chiavi: "Chiavi e modello",
-  sorgenti: "Indirizzi delle tue sorgenti",
-  linkhost: "Gestisci Link Host",
-  aspetto: "Aspetto",
-  home: "Home su misura",
-  tv: "Televisore",
-  genitori: "Controllo genitori",
-  dati: "Dati e backup",
-  info: "Informazioni",
+  chiavi: t("settings.keys"),
+  sorgenti: t("settings.sourcesPanel"),
+  linkhost: t("settings.linkHost"),
+  aspetto: t("settings.appearance"),
+  home: t("settings.home"),
+  tv: t("settings.tv"),
+  genitori: t("settings.parental"),
+  dati: t("settings.data"),
+  info: t("settings.info"),
 };
 
 function SettingsRow({
@@ -857,7 +881,7 @@ function SettingsForm() {
             <button
               type="button"
               onClick={() => setPanel(null)}
-              aria-label="Torna alle impostazioni"
+              aria-label={t("settings.back")}
               className="icon-btn icon-btn-filled icon-btn-sm shrink-0"
             >
               <BackIcon size={16} />
@@ -870,35 +894,35 @@ function SettingsForm() {
 
         {panel === null && (
           <div className="flex flex-col gap-6">
-            <SettingsGroup label="Catalogo e intelligenza">
+            <SettingsGroup label={t("settings.group.catalog")}>
               <SettingsRow
                 icon={<SparkleIcon size={18} />}
-                title="Chiavi e modello"
-                subtitle="TMDB per copertine e cast, Anthropic per il critico. Restano su questo dispositivo."
+                title={t("settings.keys")}
+                subtitle={t("settings.keys.sub")}
                 onClick={() => setPanel("chiavi")}
               />
             </SettingsGroup>
 
-            <SettingsGroup label="Riproduzione">
+            <SettingsGroup label={t("settings.group.playback")}>
               <SettingsRow
                 icon={<PlayIcon size={18} />}
-                title="Indirizzi delle tue sorgenti"
-                subtitle="Dove stanno i tuoi video: scrivilo una volta e ogni titolo ha il suo pulsante Guarda."
+                title={t("settings.sources")}
+                subtitle={t("settings.sources.sub")}
                 onClick={() => setPanel("sorgenti")}
               />
               <SettingsRow
                 icon={<CompassIcon size={18} />}
-                title="Gestisci Link Host"
-                subtitle="I siti su cui cercare quando le tue sorgenti non hanno il titolo."
+                title={t("settings.linkHost")}
+                subtitle={t("settings.linkHost.sub")}
                 onClick={() => setPanel("linkhost")}
               />
             </SettingsGroup>
 
-            <SettingsGroup label="App">
+            <SettingsGroup label={t("settings.group.app")}>
               <SettingsRow
                 icon={<SunIcon size={18} />}
-                title="Aspetto"
-                subtitle="Tema chiaro o scuro e colore d'accento."
+                title={t("settings.appearance")}
+                subtitle={t("settings.appearance.sub")}
                 onClick={() => setPanel("aspetto")}
               />
               {/* Il primo avvio si può rivedere: è l'unico posto dell'app che
@@ -906,8 +930,8 @@ function SettingsForm() {
                   sarebbe cancellare la libreria. */}
               <SettingsRow
                 icon={<RefreshIcon size={18} />}
-                title="Rivedi il primo avvio"
-                subtitle="Le quattro schermate di benvenuto, compresa la chiave del catalogo."
+                title={t("settings.onboarding")}
+                subtitle={t("settings.onboarding.sub")}
                 onClick={() => {
                   close();
                   replayOnboarding();
@@ -915,45 +939,45 @@ function SettingsForm() {
               />
               <SettingsRow
                 icon={<HomeIcon size={18} />}
-                title="Home su misura"
-                subtitle="Quali righe vedere in Home, e in che ordine."
+                title={t("settings.home")}
+                subtitle={t("settings.home.sub")}
                 onClick={() => setPanel("home")}
               />
               <SettingsRow
                 icon={<StackIcon size={18} />}
-                title="Televisore"
-                subtitle="Comandi grandi e navigazione con le frecce del telecomando."
+                title={t("settings.tv")}
+                subtitle={t("settings.tv.sub")}
                 onClick={() => setPanel("tv")}
               />
               <SettingsRow
                 icon={<PersonIcon size={18} />}
-                title="Controllo genitori"
-                subtitle="Nasconde i titoli sopra una certa età, protetto da un PIN."
+                title={t("settings.parental")}
+                subtitle={t("settings.parental.sub")}
                 onClick={() => setPanel("genitori")}
               />
             </SettingsGroup>
 
-            <SettingsGroup label="Dati">
+            <SettingsGroup label={t("settings.group.data")}>
               <SettingsRow
                 icon={<BookIcon size={18} />}
-                title="Dati e backup"
-                subtitle="Esporta, importa, svuota. Tutto vive solo in questo browser."
+                title={t("settings.data")}
+                subtitle={t("settings.data.sub")}
                 onClick={() => setPanel("dati")}
               />
               <SettingsRow
                 icon={<PulseIcon size={18} />}
-                title="Diagnostica"
-                subtitle="Test automatici, stato degli host e registro degli errori."
+                title={t("settings.diagnostics")}
+                subtitle={t("settings.diagnostics.sub")}
                 to="/diagnostica"
                 onNavigate={close}
               />
             </SettingsGroup>
 
-            <SettingsGroup label="Info">
+            <SettingsGroup label={t("settings.group.info")}>
               <SettingsRow
                 icon={<InfoIcon size={18} />}
-                title="Informazioni sull'app"
-                subtitle="Di cosa è fatta CineMate, con cosa parla e cosa promette sui tuoi dati."
+                title={t("settings.info")}
+                subtitle={t("settings.info.sub")}
                 onClick={() => setPanel("info")}
               />
             </SettingsGroup>

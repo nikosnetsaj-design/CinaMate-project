@@ -2,6 +2,7 @@ import type { Kind } from "../types";
 import { logError } from "./errorLog";
 import { TokenBucket } from "./rateLimit";
 import { TieredCache, TTL } from "./persistentCache";
+import { tmdbLanguage } from "./i18n";
 
 const BASE = "https://api.themoviedb.org/3";
 const IMG_BASE = "https://image.tmdb.org/t/p";
@@ -170,7 +171,7 @@ async function tmdbGet<T>(
   if (!apiKey) throw new MissingTmdbKeyError();
   const url = new URL(`${BASE}${path}`);
   url.searchParams.set("api_key", apiKey);
-  url.searchParams.set("language", "it-IT");
+  url.searchParams.set("language", tmdbLanguage());
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
 
   /**

@@ -9,6 +9,7 @@ import { RowHeader } from "../components/RowHeader";
 import { EmptyState } from "../components/EmptyState";
 import { StarIcon } from "../components/icons";
 import type { Item } from "../types";
+import { t } from "../lib/i18n";
 
 /** Dopo quanti confronti la classifica comincia a voler dire qualcosa. */
 const RANKING_AFTER = 5;
@@ -80,7 +81,7 @@ export function ThisOrThat() {
   if (pool.length < 2) {
     return (
       <div className="mx-auto max-w-3xl px-[var(--gutter)] py-6 sm:py-10">
-        <h1 className="t-display text-text">Questo o quello</h1>
+        <h1 className="t-display text-text">{t("page.thisOrThat")}</h1>
         <EmptyState
           title="Servono almeno due titoli visti."
           description="Segna come visti un paio di film o di serie: poi qui li confronti a due a due, e ne esce la tua classifica."
@@ -92,7 +93,7 @@ export function ThisOrThat() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-10 px-[var(--gutter)] py-6 sm:py-10">
       <div>
-        <h1 className="t-display text-text">Questo o quello</h1>
+        <h1 className="t-display text-text">{t("page.thisOrThat")}</h1>
         <p className="mt-1 max-w-prose text-sm text-text-muted">
           Due titoli che hai visto: tocca quello che preferisci. Dai confronti nasce la tua classifica, e i voti che non le
           somigliano te li faccio notare — senza cambiarli.

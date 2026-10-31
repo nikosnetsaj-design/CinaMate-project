@@ -2,6 +2,7 @@ import type { Item } from "../types";
 import type { UpcomingEntry } from "./upcoming";
 import type { ResumeEntry } from "./continueWatching";
 import { formatRuntime } from "./format";
+import { intlLocale } from "./i18n";
 
 /**
  * Il titolo della vetrina, e la riga che dice perché è lì.
@@ -24,7 +25,7 @@ export interface Featured {
 }
 
 function dateWords(date: string): string {
-  return new Intl.DateTimeFormat("it-IT", { day: "numeric", month: "long" }).format(
+  return new Intl.DateTimeFormat(intlLocale(), { day: "numeric", month: "long" }).format(
     new Date(`${date}T00:00:00`),
   );
 }

@@ -9,6 +9,7 @@ import { PosterArt } from "../components/PosterArt";
 import { RowHeader } from "../components/RowHeader";
 import { EmptyState } from "../components/EmptyState";
 import { CloseIcon, DiceIcon, PeopleIcon, ShareIcon } from "../components/icons";
+import { t } from "../lib/i18n";
 
 const QrCode = lazy(() => import("../components/QrCode").then((m) => ({ default: m.QrCode })));
 
@@ -110,7 +111,7 @@ export function Duo() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-10 px-[var(--gutter)] py-6 sm:py-10">
       <div>
-        <h1 className="t-display text-text">Stasera in due</h1>
+        <h1 className="t-display text-text">{t("page.duo")}</h1>
         <p className="mt-1 max-w-prose text-sm text-text-muted">
           Scambiatevi le liste «Da vedere» e guardate cosa avete in comune. Il codice porta solo gli identificativi del
           catalogo, nell'ordine dei tuoi gusti: niente nomi, voti o diario.

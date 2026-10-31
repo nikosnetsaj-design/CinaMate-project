@@ -1,4 +1,5 @@
 import type { Item } from "../types";
+import { intlLocale } from "./i18n";
 
 /**
  * Il tuo palato: cosa premi e cosa punisci, calcolato qui dai tuoi voti.
@@ -80,7 +81,7 @@ let regions: Intl.DisplayNames | null | undefined;
 export function countryLabel(code: string): string {
   if (regions === undefined) {
     try {
-      regions = new Intl.DisplayNames(["it"], { type: "region" });
+      regions = new Intl.DisplayNames([intlLocale()], { type: "region" });
     } catch {
       regions = null;
     }

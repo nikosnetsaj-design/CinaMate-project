@@ -26,6 +26,9 @@
         var t = localStorage.getItem("cinemate:theme");
         if (t !== "dark" && t !== "light") t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         if (t === "light") document.documentElement.classList.add("light");
+        // La lingua scelta nelle Impostazioni (lib/i18n): lettori di schermo e
+        // sillabazione la leggono da qui.
+        if (localStorage.getItem("cinemate:lang") === "en") document.documentElement.lang = "en";
       } catch (e) {}
     </script>
     <!--

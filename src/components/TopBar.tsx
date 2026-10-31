@@ -14,6 +14,7 @@ import { effectiveUrl, hostLabel, withProtocol } from "../lib/linkHost";
 import { clearTmdbCaches } from "../lib/tmdb";
 import { countdown, dayLabel } from "../lib/format";
 import { BellIcon, ChevronRightIcon, DotsIcon, GearIcon, GlobeIcon, LinkIcon, MoonIcon, PeopleIcon, PersonIcon, ServicesIcon, PlusIcon, PulseIcon, RefreshIcon, SunIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * I tre controlli in cima: i generi, le novità, il menu.
@@ -78,7 +79,7 @@ function Backdrop({ onClose }: { onClose: () => void }) {
   }, []);
 
   return (
-    <button ref={ref} type="button" tabIndex={-1} aria-label="Chiudi il menu" className="fixed inset-0 z-40 cursor-default" onClick={() => close.current()} />
+    <button ref={ref} type="button" tabIndex={-1} aria-label={t("menu.close")} className="fixed inset-0 z-40 cursor-default" onClick={() => close.current()} />
   );
 }
 
@@ -242,7 +243,7 @@ export function AlertsBell() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        aria-label={soon.length ? `Novità: ${soon.length} in arrivo` : "Novità"}
+        aria-label={soon.length ? t("alerts.labelCount", { n: soon.length }) : t("alerts.label")}
         className={ROUND}
       >
         <BellIcon size={17} filled={soon.length > 0} />
@@ -260,7 +261,7 @@ export function AlertsBell() {
           <Backdrop onClose={() => setOpen(false)} />
           <div className={`${PANEL} w-72`} role="menu">
             <p className="px-3.5 pb-1.5 pt-3 text-xs font-medium text-text-faint">
-              In arrivo
+              {t("alerts.soon")}
             </p>
             {soon.length === 0 ? (
               <p className="px-3.5 py-3 text-xs leading-relaxed text-text-faint">
@@ -339,7 +340,7 @@ export function QuickMenu() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
-        aria-label="Altro"
+        aria-label={t("nav.more")}
         className={ROUND}
       >
         <DotsIcon size={17} />
@@ -351,8 +352,8 @@ export function QuickMenu() {
           <div className={PANEL} role="menu">
             <MenuItem
               icon={<PlusIcon size={16} />}
-              label="Aggiungi titolo"
-              hint="A mano, senza passare da TMDB"
+              label={t("nav.addTitle")}
+              hint={t("menu.add.hint")}
               onClick={() => {
                 setOpen(false);
                 openAddSheet();
@@ -361,8 +362,8 @@ export function QuickMenu() {
             <div className="border-t border-border" />
             <MenuItem
               icon={<LinkIcon size={16} />}
-              label="Gestisci Link Host"
-              hint={firstHost ? hostLabel(effectiveUrl(firstHost)) : "Nessun sito configurato"}
+              label={t("menu.linkHost")}
+              hint={firstHost ? hostLabel(effectiveUrl(firstHost)) : t("menu.linkHost.none")}
               onClick={() => {
                 setOpen(false);
                 openSettings("linkhost");
@@ -370,8 +371,8 @@ export function QuickMenu() {
             />
             <MenuItem
               icon={<GlobeIcon size={16} />}
-              label="Apri Web Viewer"
-              hint={firstHost ? "Sul tuo primo sito attivo" : "Prima serve un sito nel Link Host"}
+              label={t("menu.viewer")}
+              hint={firstHost ? t("menu.viewer.hint") : t("menu.viewer.needsHost")}
               onClick={() => {
                 setOpen(false);
                 if (firstHost) openViewer(withProtocol(effectiveUrl(firstHost)));
@@ -380,20 +381,20 @@ export function QuickMenu() {
             />
             <MenuItem
               icon={<RefreshIcon size={16} />}
-              label="Aggiorna contenuti"
-              hint="Riscarica da TMDB, senza toccare la libreria"
+              label={t("menu.refresh")}
+              hint={t("menu.refresh.hint")}
               onClick={() => {
                 clearTmdbCaches();
                 setOpen(false);
-                pushToast("success", "Contenuti aggiornati: TMDB verrà richiesto di nuovo.");
+                pushToast("success", t("menu.refresh.done"));
               }}
             />
 
             <div className="border-t border-border">
               <MenuItem
                 icon={<PeopleIcon size={16} />}
-                label="Stasera in due"
-                hint="Le vostre liste «Da vedere», incrociate"
+                label={t("nav.duo")}
+                hint={t("menu.duo.hint")}
                 onClick={() => {
                   setOpen(false);
                   navigate("/stasera-in-due");
@@ -401,8 +402,8 @@ export function QuickMenu() {
               />
               <MenuItem
                 icon={<ServicesIcon size={16} />}
-                label="Abbonamenti"
-                hint="Quale conviene per la tua lista"
+                label={t("nav.services")}
+                hint={t("menu.services.hint")}
                 onClick={() => {
                   setOpen(false);
                   navigate("/abbonamenti");
@@ -410,7 +411,7 @@ export function QuickMenu() {
               />
               <MenuItem
                 icon={<PersonIcon size={16} />}
-                label="Profilo"
+                label={t("menu.profile")}
                 onClick={() => {
                   setOpen(false);
                   navigate("/tu");
@@ -418,7 +419,7 @@ export function QuickMenu() {
               />
               <MenuItem
                 icon={theme === "dark" ? <SunIcon size={16} /> : <MoonIcon size={16} />}
-                label={theme === "dark" ? "Tema chiaro" : "Tema scuro"}
+                label={theme === "dark" ? t("menu.themeLight") : t("menu.themeDark")}
                 onClick={() => {
                   toggleTheme();
                   setOpen(false);
@@ -426,7 +427,7 @@ export function QuickMenu() {
               />
               <MenuItem
                 icon={<PulseIcon size={16} />}
-                label="Diagnostica"
+                label={t("menu.diagnostics")}
                 onClick={() => {
                   setOpen(false);
                   navigate("/diagnostica");
@@ -434,7 +435,7 @@ export function QuickMenu() {
               />
               <MenuItem
                 icon={<GearIcon size={16} />}
-                label="Impostazioni"
+                label={t("nav.settings")}
                 onClick={() => {
                   setOpen(false);
                   openSettings();

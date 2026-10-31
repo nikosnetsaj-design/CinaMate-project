@@ -21,6 +21,7 @@ import { useAppReady } from "../lib/useAppReady";
 import { useVisibleItems } from "../lib/useVisibleItems";
 import type { Kind, Status } from "../types";
 import { BookmarkIcon, GridIcon, ListIcon, ShareIcon } from "../components/icons";
+import { t } from "../lib/i18n";
 
 /** I tipi che un indirizzo può nominare: di ciò che arriva scritto lì non ci si fida. */
 const KIND_IDS: Kind[] = ["film", "serie", "anime", "doc"];
@@ -95,23 +96,23 @@ export function Library() {
     <div className="mx-auto flex max-w-6xl flex-col gap-5 px-[var(--gutter)] py-6 sm:py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="t-display text-text">Libreria</h1>
-          <p className="mt-1 text-sm tabular text-text-muted">{items.length} titoli in totale</p>
+          <h1 className="t-display text-text">{t("page.library")}</h1>
+          <p className="mt-1 text-sm tabular text-text-muted">{t("page.library.count", { n: items.length })}</p>
         </div>
         {/* Due altri modi di guardare lo stesso scaffale. Sul telefono la barra
             laterale non c'è, e senza questi due collegamenti saghe e liste
             sarebbero raggiungibili solo dal menu. */}
-        <nav aria-label="Altri modi di guardare la libreria" className="flex gap-2">
+        <nav aria-label={t("library.otherViews")} className="flex gap-2">
           <Link to="/saghe" viewTransition className="chip">
-            Saghe
+            {t("nav.sagas")}
           </Link>
           <Link to="/liste" viewTransition className="chip">
-            Liste
+            {t("nav.lists")}
           </Link>
         </nav>
       </div>
 
-      <SearchBar value={q} onChange={setQ} placeholder="Cerca per titolo, regista, genere, attore…" />
+      <SearchBar value={q} onChange={setQ} placeholder={t("library.search")} />
 
       {suggestion && (
         <p className="text-sm text-text-muted">
@@ -134,7 +135,7 @@ export function Library() {
           className="chip"
           data-active={filterCount > 0}
         >
-          Filtri
+          {t("library.filters")}
           {filterCount > 0 && <span className="tabular">{filterCount}</span>}
         </button>
 
@@ -147,7 +148,7 @@ export function Library() {
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as Sort)}
-            aria-label="Ordina per"
+            aria-label={t("library.sortBy")}
             className="field field-sm w-auto"
           >
             {SORTS.map((s) => (
@@ -159,7 +160,7 @@ export function Library() {
           <button
             type="button"
             onClick={() => setGrid((g) => !g)}
-            aria-label={grid ? "Vista elenco" : "Vista griglia"}
+            aria-label={grid ? t("library.viewList") : t("library.viewGrid")}
             className="icon-btn"
           >
             {grid ? <ListIcon size={20} /> : <GridIcon size={20} />}
@@ -173,7 +174,7 @@ export function Library() {
                 const id = createSmart(listName, { filters, q: q.trim() || undefined, sort });
                 navigate(`/liste/${id}`, { viewTransition: true });
               }}
-              aria-label="Salva questa ricerca come lista intelligente"
+              aria-label={t("library.saveSmart")}
               title="Salva come lista intelligente"
               className="icon-btn"
             >
@@ -187,7 +188,7 @@ export function Library() {
             type="button"
             onClick={() => setSharing(true)}
             disabled={list.length === 0}
-            aria-label="Condividi questa lista"
+            aria-label={t("library.share")}
             className="icon-btn disabled:opacity-40"
           >
             <ShareIcon size={20} />

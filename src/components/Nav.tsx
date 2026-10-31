@@ -6,6 +6,7 @@ import { useSettingsSheet } from "../store/useSettingsSheet";
 import { prefetchHandlers } from "../lib/prefetch";
 import { AlertsBell, QuickMenu } from "./TopBar";
 import { CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, ListIcon, MoonIcon, PeopleIcon, ServicesIcon, PersonIcon, PlusIcon, ReelMark, SearchIcon, SparkleIcon, StackIcon, SunIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * Quattro destinazioni, le stesse sul telefono e sul desktop.
@@ -37,10 +38,10 @@ import { CompassIcon, GearIcon, HomeIcon, BookIcon as LibraryIcon, ListIcon, Moo
  *   dove si va quando qualcosa non va, non tre volte al giorno.
  */
 const NAV_ITEMS = [
-  { to: "/", label: "Stasera", icon: HomeIcon, end: true },
-  { to: "/libreria", label: "Libreria", icon: LibraryIcon, end: false },
-  { to: "/cerca", label: "Cerca", icon: SearchIcon, end: false },
-  { to: "/tu", label: "Tu", icon: PersonIcon, end: false },
+  { to: "/", label: t("nav.home"), icon: HomeIcon, end: true },
+  { to: "/libreria", label: t("nav.library"), icon: LibraryIcon, end: false },
+  { to: "/cerca", label: t("nav.search"), icon: SearchIcon, end: false },
+  { to: "/tu", label: t("nav.you"), icon: PersonIcon, end: false },
 ] as const;
 
 /**
@@ -50,12 +51,12 @@ const NAV_ITEMS = [
  * far pesare la scelta principale.
  */
 const SECONDARY = [
-  { to: "/saghe", label: "Saghe", icon: StackIcon },
-  { to: "/liste", label: "Liste", icon: ListIcon },
-  { to: "/stasera-in-due", label: "Stasera in due", icon: PeopleIcon },
-  { to: "/abbonamenti", label: "Abbonamenti", icon: ServicesIcon },
-  { to: "/scopri", label: "Scopri", icon: CompassIcon },
-  { to: "/critico", label: "Critico", icon: SparkleIcon },
+  { to: "/saghe", label: t("nav.sagas"), icon: StackIcon },
+  { to: "/liste", label: t("nav.lists"), icon: ListIcon },
+  { to: "/stasera-in-due", label: t("nav.duo"), icon: PeopleIcon },
+  { to: "/abbonamenti", label: t("nav.services"), icon: ServicesIcon },
+  { to: "/scopri", label: t("nav.discover"), icon: CompassIcon },
+  { to: "/critico", label: t("nav.critic"), icon: SparkleIcon },
 ] as const;
 
 // Stessa barra sulle due sponde: si impara una interfaccia, non due.
@@ -76,7 +77,7 @@ function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      aria-label={theme === "dark" ? "Attiva tema chiaro" : "Attiva tema scuro"}
+      aria-label={theme === "dark" ? t("nav.themeLight") : t("nav.themeDark")}
       className="icon-btn icon-btn-sm"
     >
       {theme === "dark" ? <SunIcon /> : <MoonIcon />}
@@ -107,7 +108,7 @@ export function Nav() {
           className="btn btn-primary mb-2.5"
         >
           <PlusIcon size={16} />
-          Aggiungi titolo
+          {t("nav.addTitle")}
         </button>
 
         {/* Ha la forma di un campo perché si comporta come un campo: si tocca e
@@ -118,11 +119,11 @@ export function Nav() {
           className="mb-5 flex h-10 items-center gap-2 rounded-sm bg-surface-2 px-3 text-sm text-text-faint transition-colors hover:text-text-muted"
         >
           <SearchIcon size={16} />
-          <span className="min-w-0 flex-1 truncate text-left">Titolo, persona, saga</span>
+          <span className="min-w-0 flex-1 truncate text-left">{t("nav.quickSearch")}</span>
           <kbd className="rounded-xs bg-surface px-1.5 py-0.5 font-sans text-xs">⌘K</kbd>
         </button>
 
-        <nav aria-label="Navigazione principale" className="flex flex-1 flex-col gap-1">
+        <nav aria-label={t("nav.main")} className="flex flex-1 flex-col gap-1">
           {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
@@ -140,7 +141,7 @@ export function Nav() {
           {/* Le scorciatoie: stessa raggiungibilità, peso minore. Sul telefono
               queste stanno nel menu dei tre puntini — qui c'è la colonna, e
               una colonna vuota non è una virtù. */}
-          <span className="mt-5 px-3 pb-1 t-label text-text-faint">Altro</span>
+          <span className="mt-5 px-3 pb-1 t-label text-text-faint">{t("nav.more")}</span>
           {SECONDARY.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
@@ -163,7 +164,7 @@ export function Nav() {
           <button
             type="button"
             onClick={() => openSettings()}
-            aria-label="Impostazioni"
+            aria-label={t("nav.settings")}
             className="icon-btn icon-btn-filled icon-btn-sm"
           >
             <GearIcon size={16} />
@@ -205,7 +206,7 @@ export function Nav() {
           che si fa di rado — dalla ricerca si aggiunge dalla scheda — quindi è
           sceso dove stanno le altre azioni sull'app: il menu in cima. */}
       <nav
-        aria-label="Navigazione principale"
+        aria-label={t("nav.main")}
         className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around bg-material pb-[env(safe-area-inset-bottom)] backdrop-blur-xl backdrop-saturate-150 lg:hidden"
         style={{ boxShadow: "inset 0 1px 0 var(--separator)" }}
       >

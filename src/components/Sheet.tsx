@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { m } from "framer-motion";
 import { useFocusTrap } from "../lib/useFocusTrap";
 import { CloseIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * Il foglio: la stanza accanto, non una finestra che salta fuori.
@@ -52,7 +53,7 @@ export function Sheet({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Chiudi"
+          aria-label={t("common.close")}
           className="icon-btn icon-btn-sm icon-btn-filled absolute right-3 top-3 z-20"
         >
           <CloseIcon size={16} />

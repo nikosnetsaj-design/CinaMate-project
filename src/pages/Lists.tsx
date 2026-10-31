@@ -10,6 +10,7 @@ import { PosterCard } from "../components/PosterCard";
 import { EmptyState } from "../components/EmptyState";
 import { ShareSheet } from "../components/ShareSheet";
 import { BackIcon, ChevronDownIcon, ChevronRightIcon, ChevronUpIcon, CloseIcon, PlusIcon, ShareIcon, TrashIcon } from "../components/icons";
+import { t } from "../lib/i18n";
 
 /**
  * Le liste personali: «Da vedere col partner», «Horror di ottobre».
@@ -70,8 +71,8 @@ export function Lists() {
     <div className="mx-auto flex max-w-3xl flex-col gap-6 px-[var(--gutter)] py-6 sm:py-10">
       <div className="flex items-end justify-between gap-3">
         <div>
-          <h1 className="t-display text-text">Liste</h1>
-          <p className="mt-1 text-sm text-text-muted">Per occasione, per compagnia, per stagione.</p>
+          <h1 className="t-display text-text">{t("page.lists")}</h1>
+          <p className="mt-1 text-sm text-text-muted">{t("page.lists.sub")}</p>
         </div>
         <button
           type="button"

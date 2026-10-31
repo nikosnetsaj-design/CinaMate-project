@@ -1,3 +1,5 @@
+import { intlLocale } from "./i18n";
+
 export function formatRuntime(minutes: number): string {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
@@ -25,7 +27,7 @@ export function countdown(dateStr: string): string {
 }
 
 export function monthLabel(dateStr: string): string {
-  return new Intl.DateTimeFormat("it-IT", { month: "long", year: "numeric" }).format(new Date(`${dateStr}T00:00:00`));
+  return new Intl.DateTimeFormat(intlLocale(), { month: "long", year: "numeric" }).format(new Date(`${dateStr}T00:00:00`));
 }
 
 /**
@@ -36,13 +38,13 @@ export function monthLabel(dateStr: string): string {
  * euro» sarebbe una stima inventata al tasso sbagliato.
  */
 export function formatUsd(amount: number): string {
-  return `$${new Intl.NumberFormat("it-IT").format(Math.round(amount))}`;
+  return `$${new Intl.NumberFormat(intlLocale()).format(Math.round(amount))}`;
 }
 
 /** Lo stesso numero dove non c'è spazio: «$370 mln», «$1,2 mld». */
 export function formatUsdShort(amount: number): string {
   const abs = Math.abs(amount);
-  const round = (n: number) => new Intl.NumberFormat("it-IT", { maximumFractionDigits: 1 }).format(n);
+  const round = (n: number) => new Intl.NumberFormat(intlLocale(), { maximumFractionDigits: 1 }).format(n);
   if (abs >= 1_000_000_000) return `$${round(amount / 1_000_000_000)} mld`;
   if (abs >= 1_000_000) return `$${round(amount / 1_000_000)} mln`;
   if (abs >= 1_000) return `$${round(amount / 1_000)} mila`;
@@ -50,14 +52,14 @@ export function formatUsdShort(amount: number): string {
 }
 
 export function dayLabel(dateStr: string): string {
-  return new Intl.DateTimeFormat("it-IT", { weekday: "short", day: "numeric", month: "short" }).format(
+  return new Intl.DateTimeFormat(intlLocale(), { weekday: "short", day: "numeric", month: "short" }).format(
     new Date(`${dateStr}T00:00:00`),
   );
 }
 
 /** «1 titolo», «12 titoli», con le migliaia all'italiana. */
 export function plural(n: number, one: string, many: string): string {
-  return `${n.toLocaleString("it-IT")} ${n === 1 ? one : many}`;
+  return `${n.toLocaleString(intlLocale())} ${n === 1 ? one : many}`;
 }
 
 /**

@@ -9,6 +9,7 @@ import { matchAll, type Match } from "../lib/importMatch";
 import { findExisting, type Accepted } from "../lib/importApply";
 import { isZip, unzip } from "../lib/unzip";
 import { plural } from "../lib/format";
+import { intlLocale } from "../lib/i18n";
 
 /**
  * Portare dentro la storia tenuta altrove: Letterboxd, Trakt, IMDb, TV Time.
@@ -189,7 +190,7 @@ export default function ImportSheet({ onClose }: { onClose: () => void }) {
             <div className="flex items-baseline justify-between text-sm">
               <span className="text-text">Abbinamento</span>
               <span className="tabular text-text-muted" aria-live="polite">
-                {step.done.toLocaleString("it-IT")} di {step.total.toLocaleString("it-IT")}
+                {step.done.toLocaleString(intlLocale())} di {step.total.toLocaleString(intlLocale())}
               </span>
             </div>
             <div
@@ -255,7 +256,7 @@ function Summary({
           ].map(([label, value]) => (
             <div key={label} className="rounded-md bg-surface-2 px-3 py-2.5">
               <dt className="text-xs text-text-muted">{label}</dt>
-              <dd className="t-figure tabular text-text">{(value as number).toLocaleString("it-IT")}</dd>
+              <dd className="t-figure tabular text-text">{(value as number).toLocaleString(intlLocale())}</dd>
             </div>
           ))}
         </dl>
@@ -345,7 +346,7 @@ function Review({ matches, onCommit }: { matches: Match[]; onCommit: (accepted: 
         ].map(([label, value]) => (
           <div key={label} className="rounded-md bg-surface-2 px-3 py-2.5">
             <dt className="text-xs text-text-muted">{label}</dt>
-            <dd className="t-figure tabular text-text">{(value as number).toLocaleString("it-IT")}</dd>
+            <dd className="t-figure tabular text-text">{(value as number).toLocaleString(intlLocale())}</dd>
           </div>
         ))}
       </dl>
@@ -496,7 +497,7 @@ function Report({
               <span className="block text-sm text-text">{label}</span>
               {note && <span className="block text-xs text-text-muted">{note}</span>}
             </span>
-            <span className="t-figure tabular text-text">{value.toLocaleString("it-IT")}</span>
+            <span className="t-figure tabular text-text">{value.toLocaleString(intlLocale())}</span>
           </li>
         ))}
       </ul>

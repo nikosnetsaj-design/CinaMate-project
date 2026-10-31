@@ -18,6 +18,7 @@ import { PosterArt } from "../components/PosterArt";
 import { CheckIcon, CloseIcon, PlayIcon, SearchIcon } from "../components/icons";
 import type { Item } from "../types";
 import { ErrorState } from "../components/ErrorState";
+import { t } from "../lib/i18n";
 
 /**
  * Cerca: una casella, due schede, e — quando la casella è vuota — qualcosa da
@@ -340,7 +341,7 @@ export function Search() {
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-5 px-[var(--gutter)] py-6 sm:py-10">
-      <h1 className="t-display text-text">Cerca</h1>
+      <h1 className="t-display text-text">{t("page.search")}</h1>
 
       {/* La casella resta appesa in alto mentre la griglia scorre: su un
           telefono, correggere una parola non deve costare una risalita. */}
@@ -402,8 +403,8 @@ export function Search() {
 
         <div className="mt-3 flex gap-2" role="tablist" aria-label="Cosa cercare">
           {([
-            { id: "titoli", label: "Film & TV" },
-            { id: "persone", label: "Persone" },
+            { id: "titoli", label: t("tabs.search.titles") },
+            { id: "persone", label: t("tabs.search.people") },
           ] as const).map((t) => (
             <button
               key={t.id}

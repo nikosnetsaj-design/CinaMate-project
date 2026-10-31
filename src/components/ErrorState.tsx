@@ -1,7 +1,5 @@
 import { RefreshCw, WifiOff } from "lucide-react";
-
-const DEFAULT_TITLE = "Il catalogo non risponde";
-const DEFAULT_TEXT = "Sei offline o TMDB è lento. La tua libreria funziona lo stesso; copertine e ricerca tornano con la rete.";
+import { t } from "../lib/i18n";
 
 /**
  * Quando qualcosa che arriva dalla rete non arriva.
@@ -16,8 +14,8 @@ const DEFAULT_TEXT = "Sei offline o TMDB è lento. La tua libreria funziona lo s
  * funziona: una frase e il pulsante, senza occupare lo schermo.
  */
 export function ErrorState({
-  title = DEFAULT_TITLE,
-  description = DEFAULT_TEXT,
+  title = t("error.title"),
+  description = t("error.text"),
   onRetry,
   compact = false,
 }: {
@@ -35,7 +33,7 @@ export function ErrorState({
         {onRetry && (
           <button type="button" onClick={onRetry} className="btn btn-secondary btn-sm shrink-0">
             <RefreshCw size={14} strokeWidth={2} aria-hidden="true" />
-            Riprova
+            {t("common.retry")}
           </button>
         )}
       </div>
@@ -50,7 +48,7 @@ export function ErrorState({
       <p className="max-w-[34ch] text-sm text-text-muted">{description}</p>
       {onRetry && (
         <button type="button" onClick={onRetry} className="btn btn-secondary mt-2">
-          Riprova
+          {t("common.retry")}
         </button>
       )}
     </div>

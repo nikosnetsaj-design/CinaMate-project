@@ -5,6 +5,7 @@ import { useLibrary } from "../store/useLibrary";
 import { dayCounts, heatLevel, noteSuggestions, yearWeeks, type DiaryEntry, type YearAgo } from "../lib/diary";
 import { yearsWithActivity } from "../lib/stats";
 import type { Item } from "../types";
+import { intlLocale } from "../lib/i18n";
 
 const LEVEL_BG = [
   "var(--surface-2)",
@@ -14,9 +15,9 @@ const LEVEL_BG = [
   "var(--accent)",
 ];
 
-const longDay = new Intl.DateTimeFormat("it-IT", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
-const shortDay = new Intl.DateTimeFormat("it-IT", { day: "numeric", month: "long", timeZone: "UTC" });
-const monthShort = new Intl.DateTimeFormat("it-IT", { month: "short", timeZone: "UTC" });
+const longDay = new Intl.DateTimeFormat(intlLocale(), { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+const shortDay = new Intl.DateTimeFormat(intlLocale(), { day: "numeric", month: "long", timeZone: "UTC" });
+const monthShort = new Intl.DateTimeFormat(intlLocale(), { month: "short", timeZone: "UTC" });
 
 function utc(date: string) {
   return new Date(`${date}T00:00:00Z`);
