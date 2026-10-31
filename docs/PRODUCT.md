@@ -310,6 +310,7 @@ sezione: hanno il loro, con la licenza, e meglio. Questo player non è per loro 
 | **Grafico attività** | "Guardo davvero tutte le sere?" | Minuti per giorno, con vista settimana / mese / anno | Essenziale ✅ |
 | **Livello e record personale** | Contare le ore non è un traguardo | Un livello che cresce con le ore e il giorno record, con la striscia di giorni di fila | Utile ✅ |
 | Statistiche + anno in rassegna | I numeri non raccontano | Il tuo anno come storia, anno per anno | Essenziale ✅ |
+| **App installata: scorciatoie, condivisione, numero sull'icona** | Installata, CineMate si apriva sempre dalla Home e non compariva fra le app a cui mandare un link | Pressione lunga sull'icona: «Continua a guardare» (la scheda del titolo a metà), «Aggiungi titolo», «Cerca». Nel foglio «Condividi» di Android: un link di TMDB apre la scheda esatta, IMDb passa dall'id, Letterboxd e JustWatch diventano una ricerca, un link di CineMate si apre com'è, il testo si cerca per aggiungerlo. Il numero sull'icona (Badging API) conta le uscite di oggi dei titoli che segui. Il manifest non blocca più l'orientamento, così tablet e televisori ruotano | Utile ✅ |
 | **L'anno come immagine** | L'anno in rassegna restava dentro l'app | In Tu → Gusti, «Condividi come immagine»: una storia 9:16 o un post 1:1 disegnati su canvas nel browser (titoli completati, ore, episodi, mese più pieno, genere dell'anno e, nella storia, i tuoi tre titoli con le locandine), condivisi con il foglio di sistema (Web Share API) o scaricati in PNG. Niente server che la generi | Utile ✅ |
 | Attori e registi più visti | "Chi guardo davvero?" | Classifica dal tuo storico, ogni nome apre la sua pagina | Utile ✅ |
 | Traguardi | Nessun ritorno emotivo | Riconoscimento delle abitudini, saghe e generi inclusi | Utile ✅ |
@@ -579,7 +580,7 @@ Ultimi aggiunti / Simili sul tuo scaffale**, **obiettivi personali**, **tinte
 d'accento e Home riordinabile**, **condivisione di liste e codice QR**, **liste personali e intelligenti**,
 **importazione da Letterboxd, Trakt, IMDb e TV Time**, **riassunto «Nelle
 puntate precedenti»**, **il tuo palato**, **stasera in due**, **questo o quello**, **quale abbonamento
-conviene**, **diario a quadretti con «un anno fa» e con chi/dove**, **l'anno come immagine 9:16 e 1:1**,
+conviene**, **diario a quadretti con «un anno fa» e con chi/dove**, **l'anno come immagine 9:16 e 1:1**, **scorciatoie, condivisione verso l'app e numero sull'icona**,
 **controllo genitori**, **diagnostica con test e log errori**, **apri sul
 servizio**, **navigazione da telecomando** e **copertina larga nella scheda**, e
 nel player **gesture**, **buffer adattivo** e **host con test

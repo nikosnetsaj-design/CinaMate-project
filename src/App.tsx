@@ -30,6 +30,7 @@ import { useLibrary } from "./store/useLibrary";
 import { useAutoLinkTmdb } from "./lib/useAutoLinkTmdb";
 import { useAutoLinkSagas } from "./lib/useAutoLinkSagas";
 import { useReleaseAlerts } from "./lib/useReleaseAlerts";
+import { useLaunchAction } from "./lib/useLaunchAction";
 import { useSpatialNav } from "./lib/useSpatialNav";
 import { Home } from "./pages/Home";
 import { Library } from "./pages/Library";
@@ -63,6 +64,7 @@ const ListDetail = lazy(() => import("./pages/Lists").then((m) => ({ default: m.
 const Duo = lazy(() => import("./pages/Duo").then((m) => ({ default: m.Duo })));
 const ThisOrThat = lazy(() => import("./pages/ThisOrThat").then((m) => ({ default: m.ThisOrThat })));
 const Services = lazy(() => import("./pages/Services").then((m) => ({ default: m.Services })));
+const ShareTarget = lazy(() => import("./pages/ShareTarget").then((m) => ({ default: m.ShareTarget })));
 
 /**
  * La tavola della proposta di design: fuori dalla navigazione e in un pezzo a
@@ -170,6 +172,7 @@ export default function App() {
   useAutoLinkTmdb();
   useAutoLinkSagas();
   useReleaseAlerts();
+  useLaunchAction();
   // Le frecce muovono il fuoco quando si è su un televisore: un ascoltatore
   // solo, spento del tutto altrove.
   useSpatialNav();
@@ -251,6 +254,14 @@ export default function App() {
               element={
                 <Suspense fallback={<PageSkeleton />}>
                   <Services />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/condividi"
+              element={
+                <Suspense fallback={<PageSkeleton />}>
+                  <ShareTarget />
                 </Suspense>
               }
             />

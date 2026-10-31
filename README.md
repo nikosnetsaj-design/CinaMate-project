@@ -411,6 +411,11 @@ rete che non è la tua.
 - **Ricerca a parole**: scrivi «film di fantascienza anni '90» e Claude la
   traduce in filtri per TMDB, che risponde. Il modello sceglie i filtri, non i
   titoli: così la lista è vera per costruzione.
+- **Da app installata**: tenendo premuta l'icona ci sono *Continua a
+  guardare*, *Aggiungi titolo* e *Cerca*; CineMate compare nel foglio
+  *Condividi* del telefono (un link di TMDB o IMDb apre la scheda del titolo,
+  Letterboxd e JustWatch diventano una ricerca); l'icona mostra quante uscite
+  dei titoli che segui cadono oggi.
 - **L'anno come immagine**: in *Tu → Gusti*, sotto «Il tuo anno», una storia
   9:16 o un post 1:1 da condividere (foglio di sistema) o scaricare in PNG.
   Disegnata nel browser.
