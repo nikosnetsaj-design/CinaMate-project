@@ -128,7 +128,7 @@ export function CatalogStrip() {
         <button
           type="button"
           onClick={dismiss}
-          aria-label="Nascondi l'avviso sul catalogo"
+          aria-label="Non ora: nascondi l'avviso sul catalogo"
           className="btn btn-plain btn-sm font-medium text-text-muted"
         >
           Non ora

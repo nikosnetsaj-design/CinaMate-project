@@ -16,8 +16,46 @@
     <meta name="apple-mobile-web-app-title" content="CineMate" />
     <meta name="description" content="CineMate — la tua libreria personale di film, serie, anime e documentari. Voti, progressi, note e un critico IA su misura. Solo per te, solo sul tuo dispositivo." />
     <title>CineMate — La tua collezione</title>
+    <!--
+      Il tema prima del primo pixel: lo stesso calcolo di useTheme (la scelta
+      salvata, altrimenti quella del sistema). Senza, chi usa il tema chiaro
+      vedeva un lampo scuro a ogni apertura, finché React non partiva.
+    -->
+    <script>
+      try {
+        var t = localStorage.getItem("cinemate:theme");
+        if (t !== "dark" && t !== "light") t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        if (t === "light") document.documentElement.classList.add("light");
+      } catch (e) {}
+    </script>
+    <!--
+      L'ossatura dell'avvio: si disegna appena arriva l'HTML, nei colori
+      dell'app, mentre il codice si scarica e il disco si apre. Su un telefono
+      lento sono secondi che prima erano una pagina vuota. React la toglie al
+      primo render (App.tsx).
+    -->
+    <style>
+      html { background: #131211; }
+      html.light { background: #f6f3ee; }
+      #cm-shell { position: fixed; inset: 0; z-index: 0; padding: max(16px, env(safe-area-inset-top)) 16px 0; background: #131211; color: #f3efe7; font-family: "Iowan Old Style", Georgia, serif; overflow: hidden; }
+      html.light #cm-shell { background: #f6f3ee; color: #1f1b16; }
+      #cm-shell .cm-bar { display: flex; align-items: center; gap: 10px; height: 40px; max-width: 1100px; margin: 0 auto; }
+      #cm-shell .cm-mark { width: 26px; height: 26px; border-radius: 7px; background: #dc7a54; }
+      #cm-shell .cm-word { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; }
+      #cm-shell .cm-block { max-width: 1100px; margin: 24px auto 0; border-radius: 16px; background: #1f1c19; }
+      html.light #cm-shell .cm-block { background: #ebe5dc; }
+      #cm-shell .cm-hero { aspect-ratio: 16 / 9; max-height: 52vh; }
+      #cm-shell .cm-row { display: flex; gap: 12px; max-width: 1100px; margin: 24px auto 0; }
+      #cm-shell .cm-row span { flex: 0 0 auto; width: 30%; max-width: 150px; aspect-ratio: 2 / 3; border-radius: 10px; background: #1f1c19; }
+      html.light #cm-shell .cm-row span { background: #ebe5dc; }
+    </style>
   </head>
   <body>
+    <div id="cm-shell" aria-hidden="true">
+      <div class="cm-bar"><span class="cm-mark"></span><span class="cm-word">CineMate</span></div>
+      <div class="cm-block cm-hero"></div>
+      <div class="cm-row"><span></span><span></span><span></span><span></span></div>
+    </div>
     <div id="root"></div>
     <noscript>
       <div style="padding:2rem;font-family:system-ui,sans-serif;color:#f3efe7;background:#131211">
@@ -39,6 +77,8 @@
         function fail(detail) {
           if (shown || root.childElementCount > 0) return;
           shown = true;
+          var shell = document.getElementById("cm-shell");
+          if (shell) shell.remove();
           root.innerHTML =
             '<div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:1.5rem;' +
             'background:#131211;color:#f3efe7;font-family:system-ui,-apple-system,sans-serif;text-align:center">' +

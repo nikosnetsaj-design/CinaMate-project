@@ -179,6 +179,11 @@ export default function App() {
   // seconds while something plays, and each listener costs a re-read.
   useWatchProgressSync();
 
+  // L'ossatura statica di index.html ha fatto il suo lavoro: l'app è qui.
+  useEffect(() => {
+    document.getElementById("cm-shell")?.remove();
+  }, []);
+
   useEffect(() => {
     // Dark is the base theme, so the light variant is the one that opts in.
     document.documentElement.classList.toggle("light", theme === "light");

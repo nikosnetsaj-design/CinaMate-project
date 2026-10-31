@@ -34,6 +34,16 @@ if (typeof requestIdleCallback === "function") {
   setTimeout(() => void purgeExpired(), 5_000);
 }
 
+function isFirstRun(): boolean {
+  try {
+    if (localStorage.getItem("cinemate:onboarded:v1")) return false;
+    const library = durable.read("library");
+    return !library || library.corrupt || !Array.isArray(library.value) || library.value.length === 0;
+  } catch {
+    return false;
+  }
+}
+
 /*
  * Prima il disco, poi l'app.
  *
@@ -47,6 +57,9 @@ if (typeof requestIdleCallback === "function") {
  */
 async function start() {
   await durable.hydrate();
+  // Al primo avvio la prima cosa sullo schermo è il benvenuto: il suo pezzo
+  // parte insieme a quello dell'app invece di aspettare che l'app disegni.
+  if (isFirstRun()) void import("./components/Onboarding");
   const { default: App } = await import("./App.tsx");
   createRoot(document.getElementById("root")!).render(
     <StrictMode>

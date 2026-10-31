@@ -390,6 +390,13 @@ vale la pena tenere.
   impostazioni, aggiunta, Web Viewer, tavolozza — la prima volta che si aprono
   (`DeferredPortals`); il motore delle animazioni dopo l'avvio (`LazyMotion`
   con i componenti `m.*`).
+- **Il primo pixel subito.** `index.html` imposta il tema prima che arrivi il
+  CSS (niente più lampo scuro per chi usa il chiaro) e disegna un'ossatura
+  statica nei colori dell'app mentre il codice si scarica; React la toglie al
+  primo render. Al primo avvio il pezzo del benvenuto parte insieme all'app.
+  Lighthouse sulla build di produzione: desktop 97 · 100 · 100 (Performance,
+  Accessibilità, Best Practices); telefono simulato (4G lento, CPU ×4) 80–86 ·
+  100 · 100.
 - **Sonno in secondo piano.** I controlli periodici si fermano a pagina nascosta
   e ripartono al ritorno. Su un telefono l'app è quasi sempre nascosta e quasi
   mai chiusa, quindi "nessuno sta guardando" è lo stato normale.
