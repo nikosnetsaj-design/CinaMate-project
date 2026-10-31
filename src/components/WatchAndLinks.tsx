@@ -157,7 +157,7 @@ function WatchProviders({ item }: { item: Item }) {
       {/* Titolo pieno e non maiuscoletto grigio: è una domanda che si fa a voce
           alta — «dove lo guardo?» — e merita lo stesso peso di «Regia e
           troupe» o «Dati finanziari», che le stanno sotto. */}
-      <h3 className="mb-2.5 font-display text-lg font-semibold text-text">Dove guardarlo</h3>
+      <h2 className="mb-2.5 font-display text-lg font-semibold text-text">Dove guardarlo</h2>
       {linked && !tmdbApiKey && <CatalogNote what="Dove danno un titolo lo sa TMDB." />}
       {linked && tmdbApiKey && state === "busy" && (
         <div className="flex items-center gap-2 text-xs text-text-faint">

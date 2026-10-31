@@ -160,6 +160,9 @@ export function Home() {
      * accanto a Riproduci.
      */
     <div className="mx-auto flex max-w-6xl flex-col gap-10 px-[var(--gutter)] py-6 sm:gap-12 sm:py-10">
+      {/* Il titolo della pagina per chi la legge con un lettore di schermo:
+          a vista lo dice la barra, e la pagina comincia dalla vetrina. */}
+      <h1 className="sr-only">Stasera</h1>
       {/* L'unico invito che parte da solo, e si può chiudere per sempre. */}
       <CatalogStrip />
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CloseIcon, ExternalIcon, PictureInPictureIcon } from "./icons";
 import { youtubeWatchUrl } from "../lib/tmdb";
+import { useFocusTrap } from "../lib/useFocusTrap";
 
 const ORIGIN = "https://www.youtube-nocookie.com";
 
@@ -47,20 +48,9 @@ export function TrailerPlayer({ videoKey, title, onClose }: { videoKey: string; 
     return () => window.removeEventListener("message", onMessage);
   }, []);
 
-  /*
-   * Esc chiude *questo* pannello e basta: la scheda del titolo sotto ha il suo
-   * ascoltatore, e senza fermare l'evento in cattura un tasto chiuderebbe
-   * anche quella.
-   */
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key !== "Escape") return;
-      e.stopPropagation();
-      onClose();
-    }
-    document.addEventListener("keydown", onKey, true);
-    return () => document.removeEventListener("keydown", onKey, true);
-  }, [onClose]);
+  // Il fuoco resta nel pannello; Esc chiude lui solo, non la scheda sotto
+  // (useFocusTrap passa i tasti solo al foglio in cima).
+  const trapRef = useFocusTrap(onClose);
 
   function listen() {
     // Chiede al lettore di mandare i suoi aggiornamenti, fra cui la posizione.
@@ -90,7 +80,7 @@ export function TrailerPlayer({ videoKey, title, onClose }: { videoKey: string; 
   )}`;
 
   return (
-    <div className="fixed inset-0 z-80 flex items-center justify-center bg-black/92 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={`Trailer di ${title}`}>
+    <div ref={trapRef} className="fixed inset-0 z-80 flex items-center justify-center bg-black/92 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={`Trailer di ${title}`}>
       <button type="button" aria-label="Chiudi il trailer" tabIndex={-1} className="absolute inset-0 cursor-default" onClick={onClose} />
 
       <button

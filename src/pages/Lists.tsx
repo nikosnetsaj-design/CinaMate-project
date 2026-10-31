@@ -216,7 +216,7 @@ export function ListDetail() {
       </header>
 
       {confirmingDelete && (
-        <div role="alertdialog" aria-labelledby="delete-list" className="rounded-md bg-surface p-4 shadow-[var(--shadow-sm)]">
+        <div role="alert" aria-labelledby="delete-list" className="rounded-md bg-surface p-4 shadow-[var(--shadow-sm)]">
           <p id="delete-list" className="text-sm text-text">
             Elimino la lista «{list.name}». I titoli restano nella libreria.
           </p>

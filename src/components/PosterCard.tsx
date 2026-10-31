@@ -109,7 +109,7 @@ export function PosterCard({
             {item.title}
           </p>
           {item.fav && (
-            <span className="shrink-0 text-accent-text" aria-label="Preferito">
+            <span className="shrink-0 text-accent-text" role="img" aria-label="Preferito">
               <HeartIcon size={12} filled />
             </span>
           )}

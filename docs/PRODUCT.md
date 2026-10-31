@@ -376,6 +376,24 @@ messaggio che l'ha annunciato. Il log è un anello di dimensione fissa: illimita
 finirebbe per mangiarsi la stessa quota dove vive la libreria, che è la cosa che
 vale la pena tenere.
 
+### 3.9-bis Accessibilità — Essenziale ✅
+
+- **Verificata con axe-core** (WCAG 2.1 A/AA e buone pratiche) su dodici pagine,
+  la scheda di un titolo, il menu e le impostazioni, nei due temi: nessuna
+  violazione. Ogni pagina ha il suo `h1` (la Home lo ha per i lettori di
+  schermo), i titoli scendono di un livello alla volta anche dentro i fogli.
+- **Contrasto WCAG AA** su 246 coppie testo/sfondo, controllato in CI
+  (`npm run contrast`).
+- **Fogli e pannelli modali**: tutti trattengono il fuoco e si chiudono con Esc,
+  e quando uno sta sopra un altro (il trailer sopra la scheda, l'importazione
+  sopra le impostazioni) Esc e Tab arrivano solo a quello in cima. Il Web
+  Viewer, il trailer e l'ingrandimento delle immagini ora sono dialoghi veri.
+- **Menu della barra** con le voci annunciate come tali, frecce, Inizio/Fine,
+  Esc che riporta al pulsante.
+- **Meno movimento**: rispettato da CSS, framer-motion e dagli scorrimenti
+  scritti in JavaScript.
+- Le conferme in linea («Svuotare la libreria?») si annunciano da sole.
+
 ### 3.10 Prestazioni e batteria — Utile ✅
 
 - **Immagini alla misura giusta.** TMDB ricodifica ogni larghezza a parte, quindi

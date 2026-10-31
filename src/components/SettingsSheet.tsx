@@ -1201,7 +1201,7 @@ function SettingsForm() {
           )}
 
           {pendingImport && (
-            <div role="alertdialog" aria-labelledby="import-confirm" className="mt-4 rounded-md bg-surface-2 p-4">
+            <div role="alert" aria-labelledby="import-confirm" className="mt-4 rounded-md bg-surface-2 p-4">
               <p id="import-confirm" className="text-sm text-text">
                 Importare {pendingImport.items.length} titoli? La libreria attuale ({items.length} titoli) verrà
                 sostituita{pendingImport.player ? ", insieme alle sorgenti del player e agli host" : ""}.
@@ -1218,7 +1218,7 @@ function SettingsForm() {
           )}
 
           {confirmingClear && (
-            <div role="alertdialog" aria-labelledby="clear-confirm" className="mt-4 rounded-md bg-surface-2 p-4">
+            <div role="alert" aria-labelledby="clear-confirm" className="mt-4 rounded-md bg-surface-2 p-4">
               <p id="clear-confirm" className="text-sm text-text">
                 Svuotare la libreria? {items.length} titoli e tutto il diario verranno eliminati da questo dispositivo.
                 Non si torna indietro.

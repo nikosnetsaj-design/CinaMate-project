@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useFocusTrap } from "../lib/useFocusTrap";
 import { similarInLibrary } from "../lib/recommend";
 import { paletteFor } from "../lib/palette";
-import { formatRuntime } from "../lib/format";
+import { formatRuntime, scrollBehavior } from "../lib/format";
 import { STATUSES } from "../lib/status";
 import { backdropSrcSet, backdropUrl } from "../lib/tmdb";
 import { PosterArt } from "./PosterArt";
@@ -286,7 +286,7 @@ function ItemDetail({ item }: { item: Item }) {
             setTab("dettagli");
             // Sul frame successivo: se la scheda cambia, il blocco dei dati
             // non è ancora nel documento e lo scorrimento non troverebbe nulla.
-            requestAnimationFrame(() => tabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+            requestAnimationFrame(() => tabsRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: "start" }));
           }}
           className="chip mt-4 w-full"
         >
@@ -449,7 +449,7 @@ function ItemDetail({ item }: { item: Item }) {
                   dell'app che sembrasse una pagina web. */}
               {confirmingDelete ? (
                 <div
-                  role="alertdialog"
+                  role="alert"
                   aria-labelledby={`${titleId}-delete`}
                   className="mt-6 rounded-lg p-4"
                   style={{ background: "color-mix(in srgb, var(--danger) 10%, var(--surface))" }}

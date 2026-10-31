@@ -73,3 +73,12 @@ export function downloadFile(data: Blob, fileName: string): void {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+/**
+ * Lo scorrimento animato, tranne per chi ha chiesto meno movimento: il CSS
+ * spegne `scroll-behavior`, ma uno `scrollIntoView({ behavior: "smooth" })`
+ * scritto in JavaScript lo scavalcherebbe.
+ */
+export function scrollBehavior(): ScrollBehavior {
+  return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+}

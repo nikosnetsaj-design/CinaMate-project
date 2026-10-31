@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { scrollBehavior } from "./format";
 import { focusableIn, navScope, nextInDirection, type Direction } from "./spatialNav";
 import { useTvMode } from "../store/useTvMode";
 
@@ -73,7 +74,7 @@ export function useSpatialNav(): void {
 
       e.preventDefault();
       next.focus({ preventScroll: true });
-      next.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+      next.scrollIntoView({ block: "nearest", inline: "nearest", behavior: scrollBehavior() });
     }
 
     document.addEventListener("keydown", handleKeyDown);

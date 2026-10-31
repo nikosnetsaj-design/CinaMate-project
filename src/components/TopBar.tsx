@@ -35,15 +35,51 @@ const ROUND = "icon-btn relative";
  * il modo in cui un menu si chiude da tastiera in qualunque programma.
  */
 function Backdrop({ onClose }: { onClose: () => void }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  // Chi apre il menu passa una funzione nuova a ogni render: tenuta qui,
+  // l'effetto sotto gira una volta per apertura e non ruba il fuoco.
+  const close = useRef(onClose);
+  close.current = onClose;
+
+  /*
+   * Il menu da tastiera come in qualunque programma: all'apertura il fuoco va
+   * sulla prima voce, le frecce scorrono le voci (Inizio e Fine vanno agli
+   * estremi), Esc chiude e il fuoco torna sul pulsante che l'aveva aperto.
+   * Il menu è il fratello che segue lo sfondo, in tutti e tre i menu.
+   */
   useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
+    const menu = ref.current?.nextElementSibling as HTMLElement | null;
+    const items = () => Array.from(menu?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
+    items()[0]?.focus();
+
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        close.current();
+        return;
+      }
+      const list = items();
+      if (list.length === 0) return;
+      const at = list.indexOf(document.activeElement as HTMLElement);
+      let next = -1;
+      if (e.key === "ArrowDown") next = (at + 1) % list.length;
+      else if (e.key === "ArrowUp") next = (at - 1 + list.length) % list.length;
+      else if (e.key === "Home") next = 0;
+      else if (e.key === "End") next = list.length - 1;
+      else return;
+      e.preventDefault();
+      list[next].focus();
     }
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      if (opener?.isConnected) opener.focus();
+    };
+  }, []);
 
-  return <button type="button" aria-label="Chiudi il menu" className="fixed inset-0 z-40 cursor-default" onClick={onClose} />;
+  return (
+    <button ref={ref} type="button" tabIndex={-1} aria-label="Chiudi il menu" className="fixed inset-0 z-40 cursor-default" onClick={() => close.current()} />
+  );
 }
 
 function MenuItem({
@@ -62,8 +98,9 @@ function MenuItem({
   return (
     <button
       type="button"
+      role="menuitem"
       onClick={onClick}
-      className="flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-surface-hover"
+      className="flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-surface-hover focus-visible:bg-surface-hover"
       style={danger ? { color: "var(--danger)" } : undefined}
     >
       {icon && <span className="shrink-0 text-text-faint">{icon}</span>}

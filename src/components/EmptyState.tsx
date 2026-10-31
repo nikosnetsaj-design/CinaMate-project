@@ -24,7 +24,9 @@ export function EmptyState({
       <div className="mb-1 grid h-14 w-14 place-items-center rounded-full bg-surface-2 text-text-muted">
         {icon ?? <Popcorn size={24} strokeWidth={1.75} aria-hidden="true" />}
       </div>
-      <h3 className="t-title text-text">{title}</h3>
+      {/* h2: lo stato vuoto prende il posto del contenuto della pagina, subito
+          sotto il suo titolo. */}
+      <h2 className="t-title text-text">{title}</h2>
       <p className="max-w-[34ch] text-sm text-text-muted">{description}</p>
       {action && <div className="mt-2">{action}</div>}
     </div>

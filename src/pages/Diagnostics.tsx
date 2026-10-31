@@ -174,7 +174,7 @@ function StorageSection() {
 
       {status.backups.length > 0 &&
         (confirming === "restore" ? (
-          <div role="alertdialog" aria-labelledby="restore-confirm" className="rounded-md bg-surface p-4 shadow-[var(--shadow-sm)]">
+          <div role="alert" aria-labelledby="restore-confirm" className="rounded-md bg-surface p-4 shadow-[var(--shadow-sm)]">
             <p id="restore-confirm" className="text-sm text-text">
               Torno ai dati com'erano il giorno della migrazione. Quello che hai aggiunto o segnato dopo si perde.
             </p>

@@ -16,6 +16,7 @@ import { RowHeader } from "../components/RowHeader";
 import { FigureBand } from "../components/Figures";
 import { StatusMark } from "../components/StatusChip";
 import { PalateCard } from "../components/PalateCard";
+import { scrollBehavior } from "../lib/format";
 import { CheckIcon, PeopleIcon, PlusIcon, ShareIcon } from "../components/icons";
 
 // Il disegno su canvas serve solo a chi condivide: si scarica al tocco.
@@ -315,7 +316,7 @@ export function DiaryTab({ items, openItem }: { items: Item[]; openItem: (item: 
 
   // Dal quadretto al giorno: il diario è lungo, e la mappa serve a saltarci dentro.
   function goToDay(date: string) {
-    document.getElementById(`diario-${date}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById(`diario-${date}`)?.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
   }
 
   let lastMonth = "";
