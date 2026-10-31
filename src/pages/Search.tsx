@@ -419,13 +419,16 @@ export function Search() {
             </ul>
           </section>
         ) : (
-          <p className="text-sm text-text-faint">
-            Scrivi un titolo. {!tmdbApiKey && (
-              <button type="button" onClick={() => openSettings()} className="underline underline-offset-2">
-                Con la chiave TMDB cerchi anche fuori dalla tua libreria.
+          <div className="flex flex-col items-start gap-1">
+            <p className="text-sm text-text-faint">Scrivi un titolo.</p>
+            {/* Un pulsante vero, alto 44 px, e non un collegamento nel testo:
+                sul telefono si tocca col pollice. */}
+            {!tmdbApiKey && (
+              <button type="button" onClick={() => openSettings("chiavi")} className="btn btn-plain btn-sm -ml-3 min-h-11 text-left">
+                Con la chiave TMDB cerchi anche fuori dalla tua libreria
               </button>
             )}
-          </p>
+          </div>
         )
       ) : tab === "titoli" ? (
         <TitleResults query={query.trim()} />

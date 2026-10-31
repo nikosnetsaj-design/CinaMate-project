@@ -315,9 +315,10 @@ rete che non è la tua.
   serviva una chiave *fallendo*. Ora c'è una striscia chiudibile in cima alla
   Home, una riga sotto ciò che senza catalogo è solo più povero, e un blocco al
   posto di ciò che senza catalogo non esiste — stesso testo, tre pesi.
-- **Doppio tocco su una locandina: preferito.** Il cuore c'era già, ma per
-  arrivarci servivano tre tocchi e un viaggio nella scheda. Non aggiunge un
-  pixel all'interfaccia, ed è il gesto che tutti hanno già imparato altrove.
+- **Pressione lunga su una locandina: preferito** (o Maiuscolo + clic, o
+  Maiuscolo + Invio). Il tocco apre la scheda subito: prima il preferito stava
+  sul doppio tocco, e ogni apertura aspettava 300 ms per vedere se ne arrivava
+  un secondo.
 - **Aggiorna contenuti**: butta via quello che TMDB ha lasciato in cache — fino a
   sei ore per una stagione, tutta la sessione per una locandina — ed è la
   risposta a «è uscito ieri e qui non lo vedo». La libreria non la tocca.
