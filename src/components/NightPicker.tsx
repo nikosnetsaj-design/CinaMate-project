@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { createPortal } from "react-dom";
 import { useFocusTrap } from "../lib/useFocusTrap";
 import { useLibrary } from "../store/useLibrary";
@@ -32,7 +32,7 @@ function PickerModal({ onClose }: { onClose: () => void }) {
 
   return createPortal(
     <div className="fixed inset-0 z-70 flex items-center justify-center p-6">
-      <motion.div
+      <m.div
         aria-hidden="true"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -40,7 +40,7 @@ function PickerModal({ onClose }: { onClose: () => void }) {
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
-      <motion.div
+      <m.div
         ref={containerRef}
         role="dialog"
         aria-modal="true"
@@ -64,7 +64,7 @@ function PickerModal({ onClose }: { onClose: () => void }) {
         </h2>
         {pick ? (
           <AnimatePresence mode="wait">
-            <motion.div
+            <m.div
               key={spinKey}
               initial={{ opacity: 0, y: 10, rotate: -3 }}
               animate={{ opacity: 1, y: 0, rotate: 0 }}
@@ -77,7 +77,7 @@ function PickerModal({ onClose }: { onClose: () => void }) {
               <p className="text-xs text-text-faint">
                 {pick.year} · {pick.genre}
               </p>
-            </motion.div>
+            </m.div>
           </AnimatePresence>
         ) : (
           <p className="mt-4 text-sm text-text-faint">Aggiungi qualche titolo alla watchlist per iniziare.</p>
@@ -103,7 +103,7 @@ function PickerModal({ onClose }: { onClose: () => void }) {
             </button>
           </div>
         )}
-      </motion.div>
+      </m.div>
     </div>,
     document.body,
   );

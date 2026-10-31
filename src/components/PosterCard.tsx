@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { PosterArt } from "./PosterArt";
 import { VoteBadge } from "./VoteBadge";
 import { StatusChip } from "./StatusChip";
@@ -68,7 +68,7 @@ export function PosterCard({
 
   return (
     <div className="group flex flex-col gap-2">
-      <motion.div
+      <m.div
         role="button"
         tabIndex={0}
         aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
@@ -90,7 +90,7 @@ export function PosterCard({
 
         <AnimatePresence>
           {burst && (
-            <motion.span
+            <m.span
               aria-hidden="true"
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1.15 }}
@@ -99,10 +99,10 @@ export function PosterCard({
               className="pointer-events-none absolute inset-0 flex items-center justify-center text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]"
             >
               <HeartIcon size={54} filled />
-            </motion.span>
+            </m.span>
           )}
         </AnimatePresence>
-      </motion.div>
+      </m.div>
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-1.5">
           <p className="truncate text-sm font-medium text-text" title={item.title}>

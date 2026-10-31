@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { useLibrary } from "../store/useLibrary";
 import { useSettings } from "../store/useSettings";
 import { useOnboarding } from "../store/useOnboarding";
@@ -383,14 +383,14 @@ function OnboardingFlow() {
 
   return createPortal(
     <div className="fixed inset-0 z-70 flex items-end justify-center sm:items-center sm:p-6">
-      <motion.div
+      <m.div
         aria-hidden="true"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="absolute inset-0 backdrop-blur-sm"
         style={{ background: "var(--scrim)" }}
       />
-      <motion.div
+      <m.div
         ref={containerRef}
         role="dialog"
         aria-modal="true"
@@ -417,7 +417,7 @@ function OnboardingFlow() {
         </div>
 
         <AnimatePresence mode="wait">
-          <motion.div
+          <m.div
             key={step}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -431,9 +431,9 @@ function OnboardingFlow() {
               <Catalogue onDone={() => setStep("done")} onSkip={() => setStep("done")} />
             )}
             {step === "done" && <Done added={added} onClose={finish} />}
-          </motion.div>
+          </m.div>
         </AnimatePresence>
-      </motion.div>
+      </m.div>
     </div>,
     document.body,
   );

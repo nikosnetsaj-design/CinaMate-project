@@ -384,6 +384,12 @@ vale la pena tenere.
 - **Precaricamento all'intenzione.** Il chunk del player parte quando il
   puntatore arriva sul link, non quando l'app è ferma: scaricare 600 KB "per
   ogni evenienza" è precisamente ciò che svuota la batteria in mobilità.
+- **Primo caricamento sotto i 200 KB gzip** (era 285, oggi 183), controllato in
+  CI da `npm run budget`: si scaricano all'avvio solo la Home e l'ossatura. Le
+  altre pagine arrivano quando le apri; i fogli — scheda del titolo,
+  impostazioni, aggiunta, Web Viewer, tavolozza — la prima volta che si aprono
+  (`DeferredPortals`); il motore delle animazioni dopo l'avvio (`LazyMotion`
+  con i componenti `m.*`).
 - **Sonno in secondo piano.** I controlli periodici si fermano a pagina nascosta
   e ripartono al ritorno. Su un telefono l'app è quasi sempre nascosta e quasi
   mai chiusa, quindi "nessuno sta guardando" è lo stato normale.

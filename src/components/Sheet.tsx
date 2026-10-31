@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useFocusTrap } from "../lib/useFocusTrap";
 import { CloseIcon } from "./icons";
 
@@ -27,7 +27,7 @@ export function Sheet({
 
   return createPortal(
     <div className="fixed inset-0 z-70 flex items-end justify-center sm:items-center sm:p-6">
-      <motion.div
+      <m.div
         aria-hidden="true"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -37,7 +37,7 @@ export function Sheet({
         style={{ background: "var(--scrim)" }}
         onClick={onClose}
       />
-      <motion.div
+      <m.div
         ref={containerRef}
         role="dialog"
         aria-modal="true"
@@ -58,7 +58,7 @@ export function Sheet({
           <CloseIcon size={16} />
         </button>
         {children}
-      </motion.div>
+      </m.div>
     </div>,
     document.body,
   );

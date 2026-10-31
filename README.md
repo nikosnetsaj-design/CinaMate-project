@@ -56,6 +56,7 @@ npm run lint      # oxlint, e un avviso conta come errore
 npm test          # scripts/tests: migrazioni, episodi, backup, consigli, saghe, filtri, importazione…
 npm run test:e2e  # Playwright: avvio, aggiunta, una puntata segnata, esportazione
 npm run contrast  # WCAG AA su ogni coppia testo/sfondo dei due temi
+npm run budget    # dopo la build: primo caricamento sotto i 200 KB gzip
 ```
 
 `npm run contrast` legge i colori veri da `src/index.css`, compone le

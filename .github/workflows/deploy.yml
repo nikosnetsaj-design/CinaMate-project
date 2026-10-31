@@ -48,6 +48,8 @@ jobs:
       - run: npm run build
         env:
           GITHUB_PAGES: "true"
+      # Il primo caricamento sotto i 200 KB gzip: sopra, la pubblicazione non parte.
+      - run: npm run budget
       # Pages has no server-side routing, so every unknown path must fall back
       # to the app shell or a refresh on /libreria would 404.
       - run: cp dist/index.html dist/404.html

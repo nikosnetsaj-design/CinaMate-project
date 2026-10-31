@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 import { useLibrary } from "../store/useLibrary";
 import { useDuels } from "../store/useDuels";
 import { useSelectedItem } from "../store/useSelectedItem";
@@ -102,7 +102,7 @@ export function ThisOrThat() {
       {pair && (
         <section aria-label="Il confronto" className="flex flex-col gap-4">
           <AnimatePresence mode="wait" initial={false}>
-            <motion.div
+            <m.div
               key={`${pair[0].id}|${pair[1].id}|${turn}`}
               initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -115,7 +115,7 @@ export function ThisOrThat() {
                 o
               </span>
               <Choice item={pair[1]} side="destra" onPick={() => answer(0)} />
-            </motion.div>
+            </m.div>
           </AnimatePresence>
           <div className="flex flex-wrap items-center justify-center gap-2">
             <button type="button" className="btn btn-secondary btn-sm" onClick={() => answer(0.5)} aria-keyshortcuts="ArrowDown">

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 import { useLibrary } from "../store/useLibrary";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { duoUrl, intersect, myDuoList, readDuo, spin, type DuoEntry, type DuoMatch } from "../lib/duo";
@@ -220,7 +220,7 @@ export function Duo() {
 
             <AnimatePresence mode="wait">
               {pick && (
-                <motion.div
+                <m.div
                   key={spins}
                   initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, rotate: -2 }}
                   animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, rotate: 0 }}
@@ -240,7 +240,7 @@ export function Duo() {
                       Apri la scheda
                     </button>
                   </div>
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
 
