@@ -5,6 +5,7 @@ import {
   ArrowUpRight,
   Bell,
   Bookmark,
+  CalendarPlus,
   ChartNoAxesColumn,
   Check,
   ChevronDown,
@@ -238,6 +239,9 @@ export function PlayIcon({ size = 18 }: IconProps) {
   return <Play size={size} strokeWidth={stroke(size)} fill="currentColor" aria-hidden="true" />;
 }
 
+export function CalendarIcon({ size = 16 }: IconProps) {
+  return <Glyph icon={CalendarPlus} size={size} />;
+}
 export function PeopleIcon({ size = 18 }: IconProps) {
   return <Glyph icon={Users} size={size} />;
 }

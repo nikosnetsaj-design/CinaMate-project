@@ -350,6 +350,10 @@ rete che non è la tua.
   TMDB e in evidenza ciò che hai già in libreria.
 - **Prossimamente**: calendario dei nuovi episodi delle serie che segui e delle
   uscite dei film in watchlist, con promemoria e notifiche locali.
+  Il pulsante **Aggiungi al calendario** esporta tutte le uscite in un file
+  `.ics` (eventi di un giorno intero, sul telefono passa dal foglio di
+  condivisione): le uscite con la campanella portano un avviso alle 9, e
+  reimportare il file aggiorna gli eventi invece di doppiarli.
 - **Ricerca intelligente**: una sola barra che trova titoli, saghe, universi,
   attori e registi, con i risultati raggruppati per tipo — e che perdona gli
   errori di battitura, proponendo il titolo che intendevi.

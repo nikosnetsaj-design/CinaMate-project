@@ -55,6 +55,7 @@ resta tua e non ti vende niente.
 | **Maratona in corso** | Una saga guardata in tre settimane sembra tre cose | Una sola corsa, con il segnalibro | Utile ✅ |
 | **Per te** | I consigli generici non ti somigliano | Suggerimenti dal *tuo* storico, con motivazione | Utile ✅ |
 | **Stasera in due** | Scegliere in due vuol dire leggersi a voce le watchlist | Pagina `/stasera-in-due`: la tua lista «Da vedere» diventa un QR e un link che portano solo gli id TMDB, nell'ordine del tuo palato — niente nomi, voti o diario. Chi lo apre vede i titoli in comune ordinati per compatibilità (quanto stanno in alto in tutte e due le liste), ognuno con il suo perché, e una ruota pesata sulla compatibilità. La lista ricevuta vive solo nella sessione e il codice si toglie subito dalla barra degli indirizzi | Utile ✅ |
+| **Calendario .ics** | Le uscite vivevano solo dentro l'app, che non manda notifiche se non la apri | «Aggiungi al calendario» in Prossimamente: un file .ics con eventi di un giorno intero (TMDB dà il giorno, non l'ora), UID stabili così reimportarlo aggiorna invece di doppiare, e l'avviso alle 9 solo sulle uscite con la campanella. Sul telefono passa dal foglio di condivisione | Utile ✅ |
 | **Questo o quello** | Il voto da 1 a 10 si dà un titolo alla volta, a mesi di distanza, e scivola | Due titoli visti alla volta (frecce ← → sulla tastiera, ↓ per «non saprei»): punteggio Elo con coppie scelte fra i meno confrontati e i più vicini, film con film e serie con serie. Ne esce una classifica personale, e i voti che non le somigliano vengono proposti nella tua scala — «gli hai dato 6, nei confronti sta fra i tuoi 9» — con «Metti 9» e «Lascia 6». Mai una modifica automatica. Tu → Gusti, nel backup | Utile ✅ |
 | **Il tuo palato** | «Cosa mi piace?» non aveva una risposta scritta, e i consigli guardavano solo genere, regia e cast | Calcolato in locale dai voti (`lib/palate.ts`), ogni voto pesato per quanto si scosta dalla *tua* media: generi che premi e che punisci, decennio, registi, durata dei film, paesi, e il confronto con il voto di TMDB. Scheda in cima a Tu → Gusti, con media e numero di titoli per riga; sotto i 5 voti dice quanti ne mancano. Le stesse cifre muovono *Per te*, che cita la riga da cui viene il consiglio («Perché gli anni '90 sono il tuo decennio») | Utile ✅ |
 | **Tendenze / Più votati / Nuove uscite** | Scoperta oltre la propria bolla | Cataloghi TMDB curati | Utile ✅ |
@@ -566,7 +567,7 @@ in arrivo, copertine e dati TMDB automatici, provider legali, esporta/importa,
 identità visiva, pubblicazione web installabile, pagina **Scopri**, **saghe e
 collezioni** con i tre ordini di visione, **maratona**, **continua la storia**,
 **universi e timeline**, **pagine di attori e registi**, **calendario
-Prossimamente** con promemoria, **ricerca raggruppata**, statistiche su attori e
+Prossimamente** con promemoria ed **esportazione .ics**, **ricerca raggruppata**, statistiche su attori e
 registi, badge di saga e di genere, **player per le sorgenti proprie** (§3.6),
 **filtri avanzati** (studio, paese, audio, qualità, durata, voti), **correzione
 degli errori di battitura**, **ricerca in linguaggio naturale**, **riassunto
