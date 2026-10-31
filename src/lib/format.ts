@@ -54,3 +54,22 @@ export function dayLabel(dateStr: string): string {
     new Date(`${dateStr}T00:00:00`),
   );
 }
+
+/** «1 titolo», «12 titoli», con le migliaia all'italiana. */
+export function plural(n: number, one: string, many: string): string {
+  return `${n.toLocaleString("it-IT")} ${n === 1 ? one : many}`;
+}
+
+/**
+ * Fa scaricare un file creato qui. L'indirizzo temporaneo si libera dopo un
+ * attimo e non subito: Safari annulla lo scaricamento se lo revochi nello
+ * stesso giro in cui hai fatto clic.
+ */
+export function downloadFile(data: Blob, fileName: string): void {
+  const url = URL.createObjectURL(data);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}

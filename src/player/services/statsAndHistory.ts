@@ -109,11 +109,6 @@ export function saveProgress(contentId: string, positionSec: number, durationSec
   announce();
 }
 
-/** Everything known about a resume point, or null for an untouched title. */
-export function getPlaybackEntry(contentId: string): PlaybackHistoryEntry | null {
-  return getHistory()[contentId] ?? null;
-}
-
 export function getPlaybackHistory(): Record<string, PlaybackHistoryEntry> {
   return getHistory();
 }
@@ -156,10 +151,6 @@ export function markWatched(contentId: string) {
     stats.completedContentIds.push(contentId);
     writeJson(STATS_KEY, stats);
   }
-}
-
-export function getFullHistory(): HistoryEntry[] {
-  return Object.values(getHistory()).sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
 // ---------- Lifetime + session stats ----------
@@ -238,14 +229,6 @@ export function incrementPauseCount() {
   const stats = getLifetimeStats();
   stats.totalPauseCount += 1;
   writeJson(STATS_KEY, stats);
-}
-
-export function markSeriesCompleted(seriesId: string) {
-  const stats = getLifetimeStats();
-  if (!stats.completedSeriesIds.includes(seriesId)) {
-    stats.completedSeriesIds.push(seriesId);
-    writeJson(STATS_KEY, stats);
-  }
 }
 
 export function markMarathonCompleted() {

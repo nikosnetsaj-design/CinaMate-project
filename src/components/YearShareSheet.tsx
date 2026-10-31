@@ -3,6 +3,7 @@ import { Sheet } from "./Sheet";
 import { useLibrary } from "../store/useLibrary";
 import { canvasToBlob, CARD_SIZE, drawYearCard, loadPoster, readTheme, type CardFormat } from "../lib/yearCard";
 import type { YearInReview } from "../lib/stats";
+import { downloadFile } from "../lib/format";
 import { DownloadIcon, ShareIcon } from "./icons";
 
 const FORMATS: { id: CardFormat; label: string }[] = [
@@ -63,7 +64,7 @@ export default function YearShareSheet({ review, onClose }: { review: YearInRevi
       if (navigator.canShare?.({ files: [f] })) {
         await navigator.share({ files: [f], title: `Il mio ${review.year} con CineMate` });
       } else {
-        download(f);
+        downloadFile(f, fileName);
       }
     } catch (e) {
       if (!(e instanceof DOMException && e.name === "AbortError")) pushToast("error", "Non sono riuscito a preparare l'immagine.");
@@ -72,18 +73,10 @@ export default function YearShareSheet({ review, onClose }: { review: YearInRevi
     }
   }
 
-  function download(f: File) {
-    const url = URL.createObjectURL(f);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
 
   async function save() {
     const f = await file();
-    if (f) download(f);
+    if (f) downloadFile(f, fileName);
     else pushToast("error", "Non sono riuscito a preparare l'immagine.");
   }
 

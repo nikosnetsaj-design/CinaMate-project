@@ -34,6 +34,7 @@ import { getDailySeconds, restoreDailySeconds } from "../player/services/statsAn
 import { useWatchProgress } from "../store/useWatchProgress";
 import { buildBackup, parseBackup, BackupParseError } from "../lib/backup";
 import { resetAutoLinkAttempts } from "../lib/useAutoLinkTmdb";
+import { downloadFile } from "../lib/format";
 import { BackIcon, BookIcon, CheckIcon, ChevronDownIcon, ChevronRightIcon, ChevronUpIcon, CompassIcon, DownloadIcon, HomeIcon, InfoIcon, PersonIcon, PlayIcon, PulseIcon, RefreshIcon, SparkleIcon, StackIcon, SunIcon, TrashIcon, UploadIcon } from "./icons";
 
 /**
@@ -786,13 +787,7 @@ function SettingsForm() {
         return { ratings, recent, count, kept };
       })(),
     );
-    const blob = new Blob([backup], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `cinemate-libreria-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadFile(new Blob([backup], { type: "application/json" }), `cinemate-libreria-${new Date().toISOString().slice(0, 10)}.json`);
     pushToast("success", "Libreria esportata.");
   }
 

@@ -554,7 +554,6 @@ export function createDurable(env: DurableEnv = {}) {
   };
 }
 
-export type Durable = ReturnType<typeof createDurable>;
 
 function openChannel(): Channel | null {
   try {

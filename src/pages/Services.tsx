@@ -7,7 +7,7 @@ import { getWatchProviders, providerLogoUrl } from "../lib/tmdb";
 import { bestCombo, onMine, REGIONS, servicesOf, summarize, type Availability, type Service } from "../lib/services";
 import { countryLabel } from "../lib/palate";
 import { useUpcoming } from "../lib/useUpcoming";
-import { dayLabel } from "../lib/format";
+import { dayLabel, plural } from "../lib/format";
 import { CatalogBlock } from "../components/NeedsCatalog";
 import { EmptyState } from "../components/EmptyState";
 import { PosterArt } from "../components/PosterArt";
@@ -28,10 +28,6 @@ function ServiceLogo({ service, size = 40 }: { service: Service; size?: number }
       )}
     </span>
   );
-}
-
-function plural(n: number, one: string, many: string) {
-  return `${n} ${n === 1 ? one : many}`;
 }
 
 /**

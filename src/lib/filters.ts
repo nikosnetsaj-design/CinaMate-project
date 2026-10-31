@@ -31,8 +31,6 @@ export interface Filters {
   tmdbRatingMin?: number;
 }
 
-export const EMPTY_FILTERS: Filters = {};
-
 export function activeFilterCount(filters: Filters): number {
   return Object.values(filters).filter((v) => v !== undefined && v !== "" && v !== false).length;
 }

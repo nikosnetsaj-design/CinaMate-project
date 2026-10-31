@@ -6,7 +6,6 @@ import {
   Bell,
   Bookmark,
   CalendarPlus,
-  ChartNoAxesColumn,
   Check,
   ChevronDown,
   ChevronRight,
@@ -102,9 +101,6 @@ export function MoonIcon({ size = 18 }: IconProps) {
 }
 export function SearchIcon({ size = 18 }: IconProps) {
   return <Glyph icon={Search} size={size} />;
-}
-export function ChartIcon({ size = 18 }: IconProps) {
-  return <Glyph icon={ChartNoAxesColumn} size={size} />;
 }
 /** A heartbeat trace: the page you open when you want to know if it's alive. */
 export function PulseIcon({ size = 18 }: IconProps) {

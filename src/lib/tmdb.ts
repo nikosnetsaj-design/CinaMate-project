@@ -603,10 +603,6 @@ export function setWatchRegion(region: string): void {
   if (/^[A-Z]{2}$/.test(region)) watchRegion = region;
 }
 
-export function getWatchRegion(): string {
-  return watchRegion;
-}
-
 export async function getWatchProviders(
   tmdbId: number,
   mediaType: "movie" | "tv",

@@ -1,4 +1,5 @@
 import type { UpcomingEntry } from "./upcoming";
+import { downloadFile } from "./format";
 
 /**
  * Le uscite di «Prossimamente» come file .ics, il formato che ogni calendario
@@ -120,11 +121,6 @@ export async function deliverIcs(text: string, fileName = "cinemate-prossimament
       if (e instanceof DOMException && e.name === "AbortError") return "cancelled";
     }
   }
-  const url = URL.createObjectURL(file);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = fileName;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  downloadFile(file, fileName);
   return "downloaded";
 }

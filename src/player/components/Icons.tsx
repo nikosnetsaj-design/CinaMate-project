@@ -3,7 +3,6 @@ import {
   Cast,
   Check,
   CircleAlert,
-  FastForward,
   Gauge,
   ListVideo,
   Lock,
@@ -15,7 +14,6 @@ import {
   PictureInPicture,
   PictureInPicture2,
   Play,
-  Rewind,
   Scissors,
   SkipForward,
   SlidersHorizontal,
@@ -52,12 +50,6 @@ export function PlayIcon() {
 }
 export function PauseIcon() {
   return <Glyph icon={Pause} filled />;
-}
-export function RewindIcon() {
-  return <Glyph icon={Rewind} filled />;
-}
-export function ForwardIcon() {
-  return <Glyph icon={FastForward} filled />;
 }
 export function VolumeIcon() {
   return <Glyph icon={Volume2} />;

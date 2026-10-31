@@ -119,12 +119,6 @@ export function episodeTag(item: Item, position?: Partial<EpisodePosition>): str
   return `S${pad(season)}E${pad(episode)}`;
 }
 
-/** `2x05`, l'altra notazione diffusa. */
-export function episodeTagX(item: Item, position?: Partial<EpisodePosition>): string {
-  const { season, episode } = positionFor(item, position);
-  return `${season}x${pad(episode)}`;
-}
-
 /**
  * I metadati messi in fila, così come li leggerebbe un umano nella casella di
  * ricerca del sito. Da qui in poi è solo questione di come vanno codificati.

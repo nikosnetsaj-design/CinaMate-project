@@ -8,6 +8,7 @@ import { ImportFormatError, mergeEntries, parseImportFile, SOURCE_LABEL, type Im
 import { matchAll, type Match } from "../lib/importMatch";
 import { findExisting, type Accepted } from "../lib/importApply";
 import { isZip, unzip } from "../lib/unzip";
+import { plural } from "../lib/format";
 
 /**
  * Portare dentro la storia tenuta altrove: Letterboxd, Trakt, IMDb, TV Time.
@@ -64,10 +65,6 @@ async function readFiles(files: File[]): Promise<{ entries: ImportedEntry[]; rep
     } else parse(file.name, new TextDecoder("utf-8").decode(buffer));
   }
   return { entries: mergeEntries(all), reports };
-}
-
-function plural(n: number, one: string, many: string) {
-  return `${n.toLocaleString("it-IT")} ${n === 1 ? one : many}`;
 }
 
 function entryLine(e: ImportedEntry) {
