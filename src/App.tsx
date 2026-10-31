@@ -57,6 +57,7 @@ const Diagnostics = lazy(() => import("./pages/Diagnostics").then((m) => ({ defa
 // Le liste arrivano con la loro pagina: chi non ne ha non le scarica.
 const Lists = lazy(() => import("./pages/Lists").then((m) => ({ default: m.Lists })));
 const ListDetail = lazy(() => import("./pages/Lists").then((m) => ({ default: m.ListDetail })));
+const Duo = lazy(() => import("./pages/Duo").then((m) => ({ default: m.Duo })));
 
 /**
  * La tavola della proposta di design: fuori dalla navigazione e in un pezzo a
@@ -221,6 +222,14 @@ export default function App() {
               element={
                 <Suspense fallback={<PageSkeleton />}>
                   <ListDetail />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/stasera-in-due"
+              element={
+                <Suspense fallback={<PageSkeleton />}>
+                  <Duo />
                 </Suspense>
               }
             />

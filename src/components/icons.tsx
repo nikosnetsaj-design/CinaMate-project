@@ -49,6 +49,7 @@ import {
   Trash2,
   Tv,
   Upload,
+  Users,
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -237,6 +238,9 @@ export function PlayIcon({ size = 18 }: IconProps) {
   return <Play size={size} strokeWidth={stroke(size)} fill="currentColor" aria-hidden="true" />;
 }
 
+export function PeopleIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Users} size={size} />;
+}
 export function HeartIcon({ size = 18, filled = false }: IconProps & { filled?: boolean }) {
   return <Heart size={size} strokeWidth={stroke(size)} fill={filled ? "currentColor" : "none"} aria-hidden="true" />;
 }

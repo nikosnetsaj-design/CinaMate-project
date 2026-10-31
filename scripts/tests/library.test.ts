@@ -164,5 +164,36 @@ function make(over: Record<string, unknown> = {}): any {
   check("consigli: e lo dice", !!akira && /anni '90|Giappone/.test(akira.reason), akira?.reason);
 }
 
+// --- Stasera in due -------------------------------------------------------
+{
+  const { encodeDuo, decodeDuo, readDuo, intersect, spin, myDuoList } = await import("../../src/lib/duo.ts");
+  const entries = [{ id: 238, media: "movie" }, { id: 1396, media: "tv" }, { id: 157336, media: "movie" }];
+  const code = encodeDuo(entries as any);
+  check("in due: il codice è corto e senza nomi", code === "1.m6m.t12s.m3deg" && !/[A-Z ]/.test(code), code);
+  check("in due: andata e ritorno", JSON.stringify(decodeDuo(code)) === JSON.stringify(entries));
+  check("in due: si legge dal link intero", readDuo(`https://x.io/app/stasera-in-due#due=${code}`)?.length === 3);
+  check("in due: un codice rovinato non è una lista", decodeDuo("1.m6m.x!!") === null && decodeDuo("2.m6m") === null && readDuo("ciao") === null);
+
+  const mine = [
+    make({ id: "a", title: "A", tmdbId: 1, tmdbMediaType: "movie", status: "Da vedere" }),
+    make({ id: "b", title: "B", tmdbId: 2, tmdbMediaType: "movie", status: "Da vedere" }),
+    make({ id: "c", title: "C", tmdbId: 3, tmdbMediaType: "tv", status: "Da vedere" }),
+    make({ id: "d", title: "D", tmdbId: 4, tmdbMediaType: "movie", status: "Da vedere" }),
+    make({ id: "e", title: "E", status: "Da vedere" }),
+    make({ id: "f", title: "F", tmdbId: 6, tmdbMediaType: "movie", status: "Visto" }),
+  ];
+  const list = myDuoList(mine);
+  check("in due: solo i «Da vedere» collegati al catalogo", list.map((i: any) => i.id).sort().join() === "a,b,c,d");
+
+  const theirs = [{ id: 1, media: "movie" }, { id: 3, media: "movie" }, { id: 4, media: "movie" }, { id: 9, media: "tv" }];
+  const both = intersect(mine.slice(0, 4), theirs as any);
+  check("in due: l'intersezione guarda anche il tipo", both.map((m: any) => m.item.id).join() === "a,d", both.map((m: any) => m.item.id).join());
+  check("in due: primo per tutti e due, compatibilità piena", both[0].compat === 100 && both[0].reason === "In cima a tutte e due le liste");
+
+  const spun = spin(both, () => 0.99);
+  check("in due: la ruota sceglie fra i titoli in comune", both.some((m: any) => m.item.id === spun?.item.id));
+  check("in due: «un altro» cambia davvero", spin(both, () => 0, "a")?.item.id === "d");
+}
+
 console.log(failures === 0 ? "\nTutti i controlli passati." : `\n${failures} controlli falliti.`);
 process.exit(failures === 0 ? 0 : 1);

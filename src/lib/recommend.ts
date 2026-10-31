@@ -21,8 +21,19 @@ const WATCHED = new Set(["Visto", "In visione"]);
  * shelf", and a row that recommends things you don't have is a shop.
  */
 export function forYou(items: Item[], limit = 6): Suggestion[] {
+  return rankShelf(items, items.filter((i) => i.status === "Da vedere" || i.status === "In pausa"))
+    .filter((entry) => entry.total > 0)
+    .slice(0, limit)
+    .map(({ item, reason }) => ({ item, reason }));
+}
+
+/**
+ * Il punteggio del palato per ogni candidato, dal più alto, anche a zero: è
+ * l'ordine di *Per te* prima del taglio, e quello con cui «Stasera in due»
+ * mette in fila la tua lista.
+ */
+export function rankShelf(items: Item[], candidates: Item[]): { item: Item; total: number; reason: string }[] {
   const { weights } = buildPalate(items);
-  const candidates = items.filter((i) => i.status === "Da vedere" || i.status === "In pausa");
 
   // Quanto conta ogni dimensione del palato. Regia e cast restano i segnali
   // più forti; decennio, durata e paese spostano poco, e diventano il motivo
@@ -63,11 +74,7 @@ export function forYou(items: Item[], limit = 6): Suggestion[] {
     return { item, total, reason: best?.reason ?? "" };
   });
 
-  return scored
-    .filter((entry) => entry.total > 0)
-    .sort((a, b) => b.total - a.total)
-    .slice(0, limit)
-    .map(({ item, reason }) => ({ item, reason }));
+  return scored.sort((a, b) => b.total - a.total);
 }
 
 /**

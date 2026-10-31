@@ -13,7 +13,7 @@ import { useUpcoming } from "../lib/useUpcoming";
 import { effectiveUrl, hostLabel, withProtocol } from "../lib/linkHost";
 import { clearTmdbCaches } from "../lib/tmdb";
 import { countdown, dayLabel } from "../lib/format";
-import { BellIcon, ChevronRightIcon, DotsIcon, GearIcon, GlobeIcon, LinkIcon, MoonIcon, PersonIcon, PlusIcon, PulseIcon, RefreshIcon, SunIcon } from "./icons";
+import { BellIcon, ChevronRightIcon, DotsIcon, GearIcon, GlobeIcon, LinkIcon, MoonIcon, PeopleIcon, PersonIcon, PlusIcon, PulseIcon, RefreshIcon, SunIcon } from "./icons";
 
 /**
  * I tre controlli in cima: i generi, le novità, il menu.
@@ -353,6 +353,15 @@ export function QuickMenu() {
             />
 
             <div className="border-t border-border">
+              <MenuItem
+                icon={<PeopleIcon size={16} />}
+                label="Stasera in due"
+                hint="Le vostre liste «Da vedere», incrociate"
+                onClick={() => {
+                  setOpen(false);
+                  navigate("/stasera-in-due");
+                }}
+              />
               <MenuItem
                 icon={<PersonIcon size={16} />}
                 label="Profilo"
