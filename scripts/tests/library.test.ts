@@ -293,5 +293,17 @@ function make(over: Record<string, unknown> = {}): any {
   check("note: un campo vuoto si toglie", after[1].where === undefined && !("where" in after[1]));
 }
 
+// --- Anno in rassegna ------------------------------------------------------
+{
+  const { computeYearInReview } = await import("../../src/lib/stats.ts");
+  const a = make({ id: "ya", title: "A", vote: 9, runtime: 100 });
+  const b = make({ id: "yb", title: "B", kind: "serie", vote: 9, runtime: 50 });
+  const c = make({ id: "yc", title: "C", vote: 6, runtime: 120 });
+  const h = (itemId: string, date: string, action: string, count = 1) => ({ id: `${itemId}${date}`, itemId, title: "", kind: "film", date, action, count });
+  const r = computeYearInReview([a, b, c], [h("ya", "2026-02-01", "watched"), h("yb", "2026-03-01", "episode", 4), h("yc", "2026-03-02", "watched"), h("ya", "2025-01-01", "watched")] as any, 2026);
+  check("anno: episodi dell'anno", r.episodes === 4);
+  check("anno: i tre migliori, a pari voto chi ha più episodi", r.top.map((i: any) => i.id).join() === "yb,ya,yc", r.top.map((i: any) => i.id).join());
+}
+
 console.log(failures === 0 ? "\nTutti i controlli passati." : `\n${failures} controlli falliti.`);
 process.exit(failures === 0 ? 0 : 1);

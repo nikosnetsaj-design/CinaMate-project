@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { useLibrary } from "../store/useLibrary";
 import { useSagas } from "../store/useSagas";
 import { useSelectedPerson } from "../store/useSelectedPerson";
@@ -16,7 +16,10 @@ import { RowHeader } from "../components/RowHeader";
 import { FigureBand } from "../components/Figures";
 import { StatusMark } from "../components/StatusChip";
 import { PalateCard } from "../components/PalateCard";
-import { CheckIcon, PeopleIcon, PlusIcon } from "../components/icons";
+import { CheckIcon, PeopleIcon, PlusIcon, ShareIcon } from "../components/icons";
+
+// Il disegno su canvas serve solo a chi condivide: si scarica al tocco.
+const YearShareSheet = lazy(() => import("../components/YearShareSheet"));
 import { DiaryHeatmap, DiaryNoteSheet, YearAgoCard } from "../components/DiaryExtras";
 
 const KIND_LABELS: Record<string, string> = { film: "Film", serie: "Serie TV", anime: "Anime", doc: "Documentario" };
@@ -93,7 +96,8 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
   const maxVoteCount = Math.max(...stats.voteDist.map((d) => d.n), 1);
   const years = yearsWithActivity(history);
   const [year, setYear] = useState(years[0]);
-  const yir = computeYearInReview(items, history, year);
+  const yir = useMemo(() => computeYearInReview(items, history, year), [items, history, year]);
+  const [sharingYear, setSharingYear] = useState(false);
 
   return (
     <div className="flex flex-col gap-10">
@@ -146,16 +150,27 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
         {yir.watchedCount === 0 ? (
           <p className="text-sm text-text-muted">Nessuna attività registrata nel {year}.</p>
         ) : (
-          <FigureBand
-            cols={2}
-            smCols={4}
-            figures={[
-              { value: yir.watchedCount, label: "titoli completati" },
-              { value: `${yir.hours} h`, label: "ore guardate" },
-              ...(yir.topGenre ? [{ value: yir.topGenre, label: "genere più visto" }] : []),
-              ...(yir.busiestMonth ? [{ value: yir.busiestMonth, label: "mese più attivo" }] : []),
-            ]}
-          />
+          <>
+            <FigureBand
+              cols={2}
+              smCols={4}
+              figures={[
+                { value: yir.watchedCount, label: "titoli completati" },
+                { value: `${yir.hours} h`, label: "ore guardate" },
+                ...(yir.topGenre ? [{ value: yir.topGenre, label: "genere più visto" }] : []),
+                ...(yir.busiestMonth ? [{ value: yir.busiestMonth, label: "mese più attivo" }] : []),
+              ]}
+            />
+            <button type="button" className="btn btn-secondary btn-sm self-start" onClick={() => setSharingYear(true)}>
+              <ShareIcon size={15} />
+              Condividi come immagine
+            </button>
+            {sharingYear && (
+              <Suspense fallback={null}>
+                <YearShareSheet review={yir} onClose={() => setSharingYear(false)} />
+              </Suspense>
+            )}
+          </>
         )}
       </Section>
 

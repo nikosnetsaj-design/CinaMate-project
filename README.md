@@ -411,6 +411,9 @@ rete che non è la tua.
 - **Ricerca a parole**: scrivi «film di fantascienza anni '90» e Claude la
   traduce in filtri per TMDB, che risponde. Il modello sceglie i filtri, non i
   titoli: così la lista è vera per costruzione.
+- **L'anno come immagine**: in *Tu → Gusti*, sotto «Il tuo anno», una storia
+  9:16 o un post 1:1 da condividere (foglio di sistema) o scaricare in PNG.
+  Disegnata nel browser.
 - **Diario**: in *Tu → Diario* l'anno a quadretti (un quadretto per giorno,
   più scuro quante più visioni; un tocco porta a quel giorno), «un anno fa
   guardavi…» quando il diario ha qualcosa da ricordare, e per ogni visione,
