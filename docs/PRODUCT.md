@@ -240,6 +240,7 @@ il resto al servizio che ha la licenza.
 |---|---|---|---|
 | **Player HLS** | Hai una sorgente tua (un NAS, un tuo CDN) e ti serve un lettore | Qualità adattiva, selezione manuale, ripresa al secondo, velocità, PiP, mini player, schermo intero | Utile ✅ |
 | **Sottotitoli** | I sottotitoli nativi non si possono davvero impostare | Renderer proprio: dimensione, colore, sfondo, posizione, sincronizzazione | Utile ✅ |
+| **Tracce e ritardo per serie** | Con una preferenza sola, l'anime in giapponese e la serie doppiata si rubavano la lingua a ogni cambio | Lingua dell'audio, sottotitoli (anche «spenti») e ritardo dei sottotitoli ricordati per titolo — per una serie, per tutta la serie — e preferiti alla scelta generale, che resta il punto di partenza per i titoli mai toccati. Ritardo regolabile a decimi di secondo con −/+ e detto a parole («anticipati di 0,3 s»). I marcatori di sigla, riepilogo e titoli di coda, scritti a mano nel pannello Sorgente, valgono già per tutta la serie | Utile ✅ |
 | **Salto intro/recap/crediti** | Riavvolgere a mano ogni episodio | Marker segnati dal punto in cui sei, con un tocco — o saltati da soli, se lo chiedi | Utile ✅ |
 | **Preferenze che restano** | Rimettere lingua, volume e velocità a ogni episodio | Volume, muto, velocità, lingua di audio e sottotitoli, stile dei sottotitoli e tetto di qualità valgono per ogni titolo che apri | Essenziale ✅ |
 | **Controlli di sistema** | Il telefono in tasca non si mette in pausa | Titolo, copertina e comandi sulla schermata di blocco, nelle notifiche e sui tasti multimediali (Media Session) | Essenziale ✅ |
@@ -580,7 +581,7 @@ Ultimi aggiunti / Simili sul tuo scaffale**, **obiettivi personali**, **tinte
 d'accento e Home riordinabile**, **condivisione di liste e codice QR**, **liste personali e intelligenti**,
 **importazione da Letterboxd, Trakt, IMDb e TV Time**, **riassunto «Nelle
 puntate precedenti»**, **il tuo palato**, **stasera in due**, **questo o quello**, **quale abbonamento
-conviene**, **diario a quadretti con «un anno fa» e con chi/dove**, **l'anno come immagine 9:16 e 1:1**, **scorciatoie, condivisione verso l'app e numero sull'icona**,
+conviene**, **diario a quadretti con «un anno fa» e con chi/dove**, **l'anno come immagine 9:16 e 1:1**, **scorciatoie, condivisione verso l'app e numero sull'icona**, **tracce e ritardo dei sottotitoli per serie**,
 **controllo genitori**, **diagnostica con test e log errori**, **apri sul
 servizio**, **navigazione da telecomando** e **copertina larga nella scheda**, e
 nel player **gesture**, **buffer adattivo** e **host con test
