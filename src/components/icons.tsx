@@ -35,6 +35,7 @@ import {
   ListTree,
   MessageSquareQuote,
   Minus,
+  MonitorPlay,
   Moon,
   Music,
   PictureInPicture2,
@@ -239,6 +240,9 @@ export function PlayIcon({ size = 18 }: IconProps) {
   return <Play size={size} strokeWidth={stroke(size)} fill="currentColor" aria-hidden="true" />;
 }
 
+export function ServicesIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={MonitorPlay} size={size} />;
+}
 export function CalendarIcon({ size = 16 }: IconProps) {
   return <Glyph icon={CalendarPlus} size={size} />;
 }

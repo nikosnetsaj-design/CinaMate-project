@@ -228,5 +228,31 @@ function make(over: Record<string, unknown> = {}): any {
   check("classifica: solo chi ha abbastanza confronti", ranking(seen, { s0: { elo: 1100, games: 2 }, s1: { elo: 1200, games: 1 } }).map((x: any) => x.item.id).join() === "s0");
 }
 
+// --- Abbonamenti ----------------------------------------------------------
+{
+  const { summarize, bestCombo, onMine, serviceKey, servicesOf } = await import("../../src/lib/services.ts");
+  const P = (id: number, name: string) => ({ id, name, logoPath: null });
+  const netflix = P(8, "Netflix"), netflixAds = P(1796, "Netflix Standard with Ads"), prime = P(119, "Amazon Prime Video");
+  const disney = P(337, "Disney Plus"), mubi = P(11, "MUBI"), mubiChannel = P(201, "MUBI Amazon Channel");
+  const av = (id: string, streaming: any[], free: any[] = []) => ({ item: make({ id, title: id }), streaming, free });
+  const list = [
+    av("a", [netflix, netflixAds]), av("b", [netflix]), av("c", [netflix, prime]), av("d", [prime]), av("e", [disney]),
+    av("f", [mubiChannel]), av("g", [mubi]), av("h", [], [P(300, "Pluto TV")]), av("i", []),
+  ];
+  check("abbonamenti: le varianti sono lo stesso servizio", serviceKey("Netflix Standard with Ads") === "netflix" && servicesOf(list[0] as any).length === 1);
+  check("abbonamenti: il canale Amazon conta come il servizio", serviceKey("MUBI Amazon Channel") === "mubi");
+  const sum = summarize(list as any);
+  check("abbonamenti: in testa quello con più titoli", sum[0].service.name === "Netflix" && sum[0].items.length === 3);
+  check("abbonamenti: quanti solo lì", sum[0].only === 2 && sum.find((x: any) => x.service.key === "amazon prime video")?.only === 1);
+  check("abbonamenti: due varianti di MUBI fanno due titoli su un servizio", sum.find((x: any) => x.service.key === "mubi")?.items.length === 2);
+  const combo = bestCombo(list as any);
+  check(
+    "abbonamenti: la combinazione aggiunge chi copre di più fra i rimasti",
+    combo.steps.map((s: any) => `${s.service.name}+${s.adds}=${s.total}`).join(" ") === "Netflix+3=3 MUBI+2=5 Amazon Prime Video+1=6",
+    combo.steps.map((s: any) => `${s.service.name}+${s.adds}=${s.total}`).join(" "),
+  );
+  check("abbonamenti: con i miei, più i gratis", onMine(list as any, new Set(["disney plus"])).map((i: any) => i.id).join() === "e,h");
+}
+
 console.log(failures === 0 ? "\nTutti i controlli passati." : `\n${failures} controlli falliti.`);
 process.exit(failures === 0 ? 0 : 1);

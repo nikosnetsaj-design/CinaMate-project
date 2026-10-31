@@ -2,6 +2,9 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { MotionConfig } from "framer-motion";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Nav } from "./components/Nav";
+// Il paese per «dove guardarlo» va impostato prima della prima scheda aperta,
+// non quando si visita la pagina degli abbonamenti.
+import "./store/useServices";
 import { ToastStack } from "./components/ToastStack";
 import { PageSkeleton } from "./components/Skeletons";
 import { CommandPalette } from "./components/CommandPalette";
@@ -59,6 +62,7 @@ const Lists = lazy(() => import("./pages/Lists").then((m) => ({ default: m.Lists
 const ListDetail = lazy(() => import("./pages/Lists").then((m) => ({ default: m.ListDetail })));
 const Duo = lazy(() => import("./pages/Duo").then((m) => ({ default: m.Duo })));
 const ThisOrThat = lazy(() => import("./pages/ThisOrThat").then((m) => ({ default: m.ThisOrThat })));
+const Services = lazy(() => import("./pages/Services").then((m) => ({ default: m.Services })));
 
 /**
  * La tavola della proposta di design: fuori dalla navigazione e in un pezzo a
@@ -239,6 +243,14 @@ export default function App() {
               element={
                 <Suspense fallback={<PageSkeleton />}>
                   <ThisOrThat />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/abbonamenti"
+              element={
+                <Suspense fallback={<PageSkeleton />}>
+                  <Services />
                 </Suspense>
               }
             />

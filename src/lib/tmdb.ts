@@ -590,15 +590,38 @@ function toProviders(raw: RawProviderEntry[] | undefined): TmdbWatchProvider[] {
  * catalogo di streaming cambia, ma non nel giro di una sessione.
  */
 const watchCache = new TieredCache<TmdbWatchInfo>("dove", TTL.metadata);
-export async function getWatchProviders(tmdbId: number, mediaType: "movie" | "tv", apiKey: string): Promise<TmdbWatchInfo> {
-  const key = `${mediaType}:${tmdbId}`;
+
+/*
+ * Il paese in cui si guarda. La disponibilità cambia da un paese all'altro, e
+ * fino a qui era fissata all'Italia: chi vive in Svizzera o in Germania vedeva
+ * servizi che lì non trova. Lo imposta lo store degli abbonamenti, all'avvio e
+ * quando lo cambi; chi non lo tocca resta sull'Italia.
+ */
+let watchRegion = "IT";
+
+export function setWatchRegion(region: string): void {
+  if (/^[A-Z]{2}$/.test(region)) watchRegion = region;
+}
+
+export function getWatchRegion(): string {
+  return watchRegion;
+}
+
+export async function getWatchProviders(
+  tmdbId: number,
+  mediaType: "movie" | "tv",
+  apiKey: string,
+  region: string = watchRegion,
+): Promise<TmdbWatchInfo> {
+  // Il paese nella chiave: le voci salvate prima, senza paese, erano italiane.
+  const key = region === "IT" ? `${mediaType}:${tmdbId}` : `${region}:${mediaType}:${tmdbId}`;
   const hit = await watchCache.get(key);
   if (hit) return hit;
 
   const providers = await tmdbGet<RawProvidersResponse>(`/${mediaType}/${tmdbId}/watch/providers`, apiKey).catch(
     () => ({ results: {} }) as RawProvidersResponse,
   );
-  const it = providers.results?.IT;
+  const it = providers.results?.[region];
   const info: TmdbWatchInfo = {
     streaming: toProviders(it?.flatrate),
     free: toProviders([...(it?.free ?? []), ...(it?.ads ?? [])]),

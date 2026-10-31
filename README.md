@@ -439,6 +439,11 @@ rete che non è la tua.
   mancano. I voti diventano su 10 (le stelle di Letterboxd raddoppiano), il
   diario prende le date vere delle visioni, e alla fine un resoconto dice cosa
   è entrato, cosa è stato completato e cosa è rimasto fuori.
+- **Abbonamenti**: quale servizio conviene per la tua lista «Da vedere», nel
+  tuo paese (si sceglie in cima alla pagina e vale per tutta l'app): quanti
+  titoli su ciascuno e quanti solo lì, la combinazione che ne copre di più
+  scritta con il conto, cosa sta per arrivare e dove, e — segnati i servizi
+  che paghi già — il filtro *Solo sui miei abbonamenti*.
 - **Questo o quello**: da *Tu → Gusti*, due titoli visti alla volta — scegli
   quello che preferisci (o ← e → sulla tastiera). Con il punteggio Elo ne esce
   una classifica tua; i voti che non le somigliano compaiono come proposta,
