@@ -649,6 +649,7 @@ nessuna delle tre è un buco che si sente usando l'app.
 
 **Poi (Utile)**
 1. Universi costruiti a mano dall'utente, oltre a quelli da keyword
+2. Dieci proposte da scegliere, con costo, rischio e regole: [`docs/IDEE.md`](IDEE.md)
 
 **Futuro**
 5. Sync cloud con account

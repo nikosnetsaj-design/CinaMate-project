@@ -59,6 +59,10 @@ npm run contrast  # WCAG AA su ogni coppia testo/sfondo dei due temi
 npm run budget    # dopo la build: primo caricamento sotto i 200 KB gzip
 ```
 
+Il prodotto è descritto in `docs/PRODUCT.md` (funzioni, roadmap, regole,
+fuori perimetro); le proposte ancora da decidere, con costo e rischio, in
+`docs/IDEE.md`.
+
 `npm run contrast` legge i colori veri da `src/index.css`, compone le
 trasparenze sul fondo su cui finiscono e calcola il rapporto secondo WCAG 2.1.
 Esce con codice 1 se una coppia scende sotto soglia (4.5:1 il testo, 3:1 il
