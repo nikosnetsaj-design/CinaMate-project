@@ -195,5 +195,38 @@ function make(over: Record<string, unknown> = {}): any {
   check("in due: «un altro» cambia davvero", spin(both, () => 0, "a")?.item.id === "d");
 }
 
+// --- Questo o quello ------------------------------------------------------
+{
+  const { play, expected, pickPair, ranking, recalibrations, START } = await import("../../src/lib/elo.ts");
+  let r: any = play({}, "a", "b", 1);
+  check("elo: chi vince sale, chi perde scende, del pari", r.a.elo > START && r.b.elo < START && Math.abs(r.a.elo - START - (START - r.b.elo)) < 1e-9);
+  check("elo: un pari fra uguali non muove niente", play({}, "a", "b", 0.5).a.elo === START);
+  check("elo: battere il favorito vale di più", play({ a: { elo: 1200, games: 10 }, b: { elo: 1000, games: 10 } }, "a", "b", 0).b.elo - 1000 > play({}, "a", "b", 1).a.elo - 1000);
+  check("elo: la probabilità attesa è simmetrica", Math.abs(expected(1100, 1000) + expected(1000, 1100) - 1) < 1e-12);
+
+  const seen = Array.from({ length: 8 }, (_, i) => make({ id: `s${i}`, title: `Visto ${i}`, status: "Visto", vote: 9 - i }));
+  const series = make({ id: "tv", title: "Serie", kind: "serie", status: "Visto", vote: 7 });
+  const pair = pickPair([...seen, series], {}, [], () => 0.1);
+  check("coppie: due titoli diversi", !!pair && pair[0].id !== pair[1].id);
+  check("coppie: film con film quando si può", !!pair && pair.every((i: any) => i.kind === "film"));
+  const fresh = pickPair(seen, { s0: { elo: 1000, games: 5 }, s1: { elo: 1000, games: 5 } }, [], () => 0.1);
+  check("coppie: prima chi ha meno confronti", !!fresh && fresh.every((i: any) => i.id !== "s0" && i.id !== "s1"), fresh?.map((i: any) => i.id).join());
+  const avoid = pickPair([seen[0], seen[1], seen[2]], { s0: { elo: 1000, games: 0 }, s1: { elo: 1000, games: 3 }, s2: { elo: 1300, games: 3 } }, ["s0|s1"], () => 0);
+  check("coppie: una coppia appena vista non torna subito", !!avoid && avoid.some((i: any) => i.id === "s2"), avoid?.map((i: any) => i.id).join());
+
+  // I confronti dicono l'ordine inverso dei voti per due titoli.
+  const ratings: any = {};
+  seen.forEach((it: any, i: number) => (ratings[it.id] = { elo: 1400 - i * 50, games: 4 }));
+  ratings.s7 = { elo: 1500, games: 4 }; // votato 2, ma vince tutto
+  ratings.s0 = { elo: 900, games: 4 }; // votato 9, ma perde tutto
+  const fixes = recalibrations(seen, ratings);
+  const low = fixes.find((f: any) => f.item.id === "s7");
+  check("ricalibrare: propone di alzare chi vince i confronti", !!low && low.suggested === 9 && low.vote === 2, JSON.stringify(fixes.map((f: any) => [f.item.id, f.vote, f.suggested])));
+  check("ricalibrare: e di abbassare chi li perde", fixes.some((f: any) => f.item.id === "s0" && f.suggested < 9));
+  check("ricalibrare: «lascia così» vale per quel voto", !recalibrations(seen, ratings, { s7: 2 }).some((f: any) => f.item.id === "s7"));
+  check("ricalibrare: con pochi titoli non dice niente", recalibrations(seen.slice(0, 4), ratings).length === 0);
+  check("classifica: solo chi ha abbastanza confronti", ranking(seen, { s0: { elo: 1100, games: 2 }, s1: { elo: 1200, games: 1 } }).map((x: any) => x.item.id).join() === "s0");
+}
+
 console.log(failures === 0 ? "\nTutti i controlli passati." : `\n${failures} controlli falliti.`);
 process.exit(failures === 0 ? 0 : 1);

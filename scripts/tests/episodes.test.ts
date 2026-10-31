@@ -83,6 +83,13 @@ const back = parseBackup(file);
 check("backup: titoli identici", JSON.stringify(back.items) === JSON.stringify(withRegistry));
 check("backup: diario identico", back.history.length === 2 && back.history[0].count === 2);
 
+// Liste e confronti viaggiano nello stesso file, così come sono.
+const lists = [{ id: "l1", kind: "manual", name: "Da vedere col partner", itemIds: ["s"], createdAt: "2026-10-01" }];
+const duels = { ratings: { s: { elo: 1032, games: 3 } }, recent: ["f|s"], count: 3, kept: { s: 7 } };
+const full = parseBackup(buildBackup(withRegistry, [], undefined, undefined, undefined, lists, duels));
+check("backup: le liste andata e ritorno", JSON.stringify(full.lists) === JSON.stringify(lists));
+check("backup: i confronti andata e ritorno", JSON.stringify(full.duels) === JSON.stringify(duels));
+
 // Un file della versione 5, senza registro: la migrazione lo ricostruisce.
 const v5 = JSON.stringify({ app: "cinemate", version: 5, items: [serie({ seen: 3 })], history: history.slice(0, 2) });
 const old = parseBackup(v5);

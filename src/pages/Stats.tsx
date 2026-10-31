@@ -100,6 +100,14 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
           piace». I numeri sotto dicono quanto, questo dice cosa. */}
       <PalateCard items={items} />
 
+      <section className="flex flex-col gap-4">
+        <RowHeader title="Questo o quello" to="/questo-o-quello" action="Confronta" />
+        <p className="text-sm text-text-muted">
+          Due titoli visti alla volta: scegli quello che preferisci. Ne esce una classifica tua, e i voti che non le somigliano
+          te li faccio notare, senza cambiarli.
+        </p>
+      </section>
+
       <Section title="Il nastro">
         <Panel>
           {/* La finestra è l'anno scelto qui sotto, non "gli ultimi 365 giorni":

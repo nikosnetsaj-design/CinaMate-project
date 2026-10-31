@@ -70,6 +70,12 @@ export interface Backup {
    * le riceve.
    */
   lists?: unknown;
+  /**
+   * I confronti di «Questo o quello»: punteggi, ultime coppie, voti tenuti.
+   * Campo facoltativo nello stesso schema 6 — chi legge con una versione che
+   * non lo conosce lo ignora, e nient'altro cambia.
+   */
+  duels?: unknown;
 }
 
 /**
@@ -90,6 +96,7 @@ export function buildBackup(
   player?: PlayerBackup,
   goals?: unknown,
   lists?: unknown,
+  duels?: unknown,
 ): string {
   return JSON.stringify(
     {
@@ -102,6 +109,7 @@ export function buildBackup(
       player,
       goals,
       lists,
+      duels,
     },
     null,
     2,
@@ -218,6 +226,7 @@ export function parseBackup(raw: string): Backup {
       player?: unknown;
       goals?: unknown;
       lists?: unknown;
+      duels?: unknown;
     };
     const items = record.items.filter(looksLikeItem).map(sanitizeRegistry);
     if (items.length === 0) throw new BackupParseError("Nessun titolo valido trovato nel file.");
@@ -232,6 +241,7 @@ export function parseBackup(raw: string): Backup {
       // Validated by the store that receives it, like the player sections.
       goals: record.goals,
       lists: record.lists,
+      duels: record.duels,
     };
   }
 

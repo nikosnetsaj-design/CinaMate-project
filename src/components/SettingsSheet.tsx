@@ -13,6 +13,7 @@ import { usePlayerSources } from "../store/usePlayerSources";
 import { usePlayerPrefs } from "../store/usePlayerPrefs";
 import { useGoals } from "../store/useGoals";
 import { useLists } from "../store/useLists";
+import { useDuels } from "../store/useDuels";
 import { useTheme } from "../store/useTheme";
 import { useTvMode, type TvPreference } from "../store/useTvMode";
 import { useHomeLayout, HOME_SECTIONS, MAX_ROWS } from "../store/useHomeLayout";
@@ -780,6 +781,10 @@ function SettingsForm() {
       },
       useGoals.getState().goals,
       useLists.getState().lists,
+      (() => {
+        const { ratings, recent, count, kept } = useDuels.getState();
+        return { ratings, recent, count, kept };
+      })(),
     );
     const blob = new Blob([backup], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -846,6 +851,7 @@ function SettingsForm() {
     }
     if (backup.goals !== undefined) useGoals.getState().restore(backup.goals);
     if (backup.lists !== undefined) useLists.getState().restore(backup.lists);
+    if (backup.duels !== undefined) useDuels.getState().restore(backup.duels);
   }
 
   return (

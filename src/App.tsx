@@ -58,6 +58,7 @@ const Diagnostics = lazy(() => import("./pages/Diagnostics").then((m) => ({ defa
 const Lists = lazy(() => import("./pages/Lists").then((m) => ({ default: m.Lists })));
 const ListDetail = lazy(() => import("./pages/Lists").then((m) => ({ default: m.ListDetail })));
 const Duo = lazy(() => import("./pages/Duo").then((m) => ({ default: m.Duo })));
+const ThisOrThat = lazy(() => import("./pages/ThisOrThat").then((m) => ({ default: m.ThisOrThat })));
 
 /**
  * La tavola della proposta di design: fuori dalla navigazione e in un pezzo a
@@ -230,6 +231,14 @@ export default function App() {
               element={
                 <Suspense fallback={<PageSkeleton />}>
                   <Duo />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/questo-o-quello"
+              element={
+                <Suspense fallback={<PageSkeleton />}>
+                  <ThisOrThat />
                 </Suspense>
               }
             />

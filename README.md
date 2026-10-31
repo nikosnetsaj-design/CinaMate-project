@@ -435,6 +435,11 @@ rete che non è la tua.
   mancano. I voti diventano su 10 (le stelle di Letterboxd raddoppiano), il
   diario prende le date vere delle visioni, e alla fine un resoconto dice cosa
   è entrato, cosa è stato completato e cosa è rimasto fuori.
+- **Questo o quello**: da *Tu → Gusti*, due titoli visti alla volta — scegli
+  quello che preferisci (o ← e → sulla tastiera). Con il punteggio Elo ne esce
+  una classifica tua; i voti che non le somigliano compaiono come proposta,
+  nella tua scala, e si cambiano solo con un tocco. I confronti stanno nel
+  backup.
 - **Stasera in due**: dal menu (o dalla barra laterale) la pagina mostra la
   tua lista «Da vedere» come QR e link. Chi la apre — inquadrando il codice o
   incollando il link — vede i titoli che avete in comune, dal più compatibile,
