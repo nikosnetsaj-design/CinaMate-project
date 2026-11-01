@@ -22,9 +22,9 @@ import { CheckIcon, PeopleIcon, PlusIcon, ShareIcon } from "../components/icons"
 // Il disegno su canvas serve solo a chi condivide: si scarica al tocco.
 const YearShareSheet = lazy(() => import("../components/YearShareSheet"));
 import { DiaryHeatmap, DiaryNoteSheet, YearAgoCard } from "../components/DiaryExtras";
-import { intlLocale } from "../lib/i18n";
+import { intlLocale, platformLabel, t } from "../lib/i18n";
 
-const KIND_LABELS: Record<string, string> = { film: "Film", serie: "Serie TV", anime: "Anime", doc: "Documentario" };
+const KIND_LABELS: Record<string, string> = { film: t("Stats.film"), serie: t("Stats.serie_tv"), anime: "Anime", doc: t("Stats.documentario") };
 /*
  * I formati in una barra sola: l'accento al più frequente, poi neutri che
  * schiariscono. Quattro colori diversi — accento, verde, rosso, blu — dicevano
@@ -81,7 +81,7 @@ function PeopleCard({ title, rows }: { title: string; rows: [string, number][] }
             key={name}
             type="button"
             onClick={() => openPerson(name)}
-            aria-label={`Apri la scheda di ${name}`}
+            aria-label={t("Stats.apri_la_scheda_di", { v0: name })}
             className="-mx-2 block rounded-sm px-2 py-2 text-left transition-colors hover:bg-surface-2"
           >
             <RankBar label={name} n={n} max={max} />
@@ -108,14 +108,13 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
       <PalateCard items={items} />
 
       <section className="flex flex-col gap-4">
-        <RowHeader title="Questo o quello" to="/questo-o-quello" action="Confronta" />
+        <RowHeader title={t("Stats.questo_o_quello")} to="/questo-o-quello" action={t("Stats.confronta")} />
         <p className="text-sm text-text-muted">
-          Due titoli visti alla volta: scegli quello che preferisci. Ne esce una classifica tua, e i voti che non le somigliano
-          te li faccio notare, senza cambiarli.
+          {t("Stats.due_titoli_visti_alla")}
         </p>
       </section>
 
-      <Section title="Il nastro">
+      <Section title={t("Stats.il_nastro")}>
         <Panel>
           {/* La finestra è l'anno scelto qui sotto, non "gli ultimi 365 giorni":
               la didascalia diceva «del 2026» sopra un nastro che a febbraio era
@@ -125,19 +124,19 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
             from={`${year}-01-01`}
             to={`${year}-12-31`}
             height={72}
-            caption={`Un filo per ogni sessione del ${year}`}
+            caption={t("Stats.un_filo_per_ogni", { v0: year })}
           />
         </Panel>
       </Section>
 
       <Section
-        title="Il tuo anno"
+        title={t("Stats.il_tuo_anno")}
         trailing={
           years.length > 1 && (
             <select
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
-              aria-label="Anno da mostrare"
+              aria-label={t("Stats.anno_da_mostrare")}
               className="field field-sm w-auto shrink-0 tabular"
             >
               {years.map((y) => (
@@ -150,22 +149,22 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
         }
       >
         {yir.watchedCount === 0 ? (
-          <p className="text-sm text-text-muted">Nessuna attività registrata nel {year}.</p>
+          <p className="text-sm text-text-muted">{t("Stats.nessuna_attivita_registrata_nel")} {year}.</p>
         ) : (
           <>
             <FigureBand
               cols={2}
               smCols={4}
               figures={[
-                { value: yir.watchedCount, label: "titoli completati" },
-                { value: `${yir.hours} h`, label: "ore guardate" },
-                ...(yir.topGenre ? [{ value: yir.topGenre, label: "genere più visto" }] : []),
-                ...(yir.busiestMonth ? [{ value: yir.busiestMonth, label: "mese più attivo" }] : []),
+                { value: yir.watchedCount, label: t("Stats.titoli_completati") },
+                { value: `${yir.hours} h`, label: t("Stats.ore_guardate") },
+                ...(yir.topGenre ? [{ value: yir.topGenre, label: t("Stats.genere_piu_visto") }] : []),
+                ...(yir.busiestMonth ? [{ value: yir.busiestMonth, label: t("Stats.mese_piu_attivo") }] : []),
               ]}
             />
             <button type="button" className="btn btn-secondary btn-sm self-start" onClick={() => setSharingYear(true)}>
               <ShareIcon size={15} />
-              Condividi come immagine
+              {t("Stats.condividi_come_immagine")}
             </button>
             {sharingYear && (
               <Suspense fallback={null}>
@@ -177,12 +176,12 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
       </Section>
 
       <section>
-        <p className="text-sm text-text-muted">Tempo totale davanti allo schermo</p>
+        <p className="text-sm text-text-muted">{t("Stats.tempo_totale_davanti_allo")}</p>
         <p className="t-stat mt-1 text-text">
           {stats.hours}
           <span className="ml-1 text-[0.5em] font-medium text-text-faint">h</span>
         </p>
-        <p className="mt-2 text-sm text-text-muted">circa {stats.days} giorni pieni</p>
+        <p className="mt-2 text-sm text-text-muted">{t("Stats.circa")} {stats.days} {t("Stats.giorni_pieni")}</p>
       </section>
 
       {/* Sei totali, una fascia: gli stati sopra (con il loro segno, lo
@@ -190,19 +189,19 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
       <FigureBand
         cols={3}
         figures={[
-          { value: stats.byStatus.Visto, label: "visti", mark: <StatusMark status="Visto" /> },
-          { value: stats.byStatus["In visione"], label: "in corso", mark: <StatusMark status="In visione" /> },
-          { value: stats.byStatus["Da vedere"], label: "da vedere", mark: <StatusMark status="Da vedere" /> },
-          { value: stats.filmsCompleted, label: "film completati" },
-          { value: stats.seriesCompleted, label: "serie completate" },
-          { value: stats.episodesWatched, label: "episodi visti" },
+          { value: stats.byStatus.Visto, label: t("Stats.visti"), mark: <StatusMark status="Visto" /> },
+          { value: stats.byStatus["In visione"], label: t("Stats.in_corso"), mark: <StatusMark status="In visione" /> },
+          { value: stats.byStatus["Da vedere"], label: t("Stats.da_vedere"), mark: <StatusMark status="Da vedere" /> },
+          { value: stats.filmsCompleted, label: t("Stats.film_completati") },
+          { value: stats.seriesCompleted, label: t("Stats.serie_completate") },
+          { value: stats.episodesWatched, label: t("Stats.episodi_visti") },
         ]}
       />
 
-      <Section title="Come voti">
+      <Section title={t("Stats.come_voti")}>
         <Panel>
           <p className="text-xs text-text-muted">
-            Media su {items.filter((i) => i.vote != null).length} titoli votati
+            {t("Stats.media_su")} {items.filter((i) => i.vote != null).length} {t("Stats.titoli_votati")}
           </p>
           <p className="t-figure text-text">{stats.avgVote != null ? stats.avgVote.toFixed(1) : "—"}</p>
           {/* I colori dei voti sono gli stessi del selettore: qui raccontano
@@ -225,7 +224,7 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
         </Panel>
       </Section>
 
-      <Section title="Formati">
+      <Section title={t("Stats.formati")}>
         <Panel>
           <div className="flex h-2.5 gap-0.5 overflow-hidden rounded-full">
             {stats.byKind.map(([k, n], idx) => (
@@ -245,7 +244,7 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
       </Section>
 
       {stats.byGenre.length > 0 && (
-        <Section title="Generi più frequenti">
+        <Section title={t("Stats.generi_piu_frequenti")}>
           <Panel className="flex flex-col gap-1 py-2">
             {stats.byGenre.slice(0, 6).map(([g, n]) => (
               <div key={g} className="py-2">
@@ -256,14 +255,14 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
         </Section>
       )}
 
-      <PeopleCard title="Attori più visti" rows={stats.byActor} />
-      <PeopleCard title="Registi più visti" rows={stats.byDirector} />
+      <PeopleCard title={t("Stats.attori_piu_visti")} rows={stats.byActor} />
+      <PeopleCard title={t("Stats.registi_piu_visti")} rows={stats.byDirector} />
 
-      <Section title="Piattaforme">
+      <Section title={t("Stats.piattaforme")}>
         <div className="flex flex-wrap gap-2">
           {stats.byPlatform.map(([p, n]) => (
             <div key={p} className="flex h-9 items-center gap-2 rounded-full bg-surface-2 px-3.5 text-sm">
-              <span className="text-text">{p}</span>
+              <span className="text-text">{platformLabel(p)}</span>
               <span className="tabular text-text-muted">{n}</span>
             </div>
           ))}
@@ -271,14 +270,14 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
       </Section>
 
       {stats.top.length > 0 && (
-        <Section title="La tua top 5">
+        <Section title={t("Stats.la_tua_top_5")}>
           <ol className="list-group" style={{ "--row-inset": "92px" } as React.CSSProperties}>
             {stats.top.map((item, idx) => (
               <li key={item.id}>
                 <button
                   type="button"
                   onClick={() => openItem(item)}
-                  aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
+                  aria-label={t("Stats.apri_dettagli_di", { v0: item.title, v1: item.year })}
                   className="list-row"
                 >
                   <span className="w-5 shrink-0 text-center text-sm font-medium tabular text-text-faint">{idx + 1}</span>
@@ -309,8 +308,8 @@ export function DiaryTab({ items, openItem }: { items: Item[]; openItem: (item: 
   if (days.length === 0) {
     return (
       <EmptyState
-        title="Il tuo diario è vuoto"
-        description="Segna un titolo come visto o registra un episodio per iniziare a costruire il tuo diario."
+        title={t("Stats.il_tuo_diario_e")}
+        description={t("Stats.segna_un_titolo_come")}
       />
     );
   }
@@ -347,22 +346,22 @@ export function DiaryTab({ items, openItem }: { items: Item[]; openItem: (item: 
                 <ul className="flex min-w-0 flex-1 flex-col gap-2">
                   {entries.map((entry) => {
                     const { item, action, count } = entry;
-                    const note = [entry.with && `con ${entry.with}`, entry.where].filter(Boolean).join(" · ");
+                    const note = [entry.with && t("Stats.con", { v0: entry.with }), entry.where].filter(Boolean).join(" · ");
                     return (
                       <li key={`${item.id}-${action}`} className="flex items-center gap-1">
                         <button
                           type="button"
                           onClick={() => openItem(item)}
-                          aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
+                          aria-label={t("Stats.apri_dettagli_di", { v0: item.title, v1: item.year })}
                           className="flex min-w-0 flex-1 items-center gap-3 rounded-sm text-left transition-transform duration-200 active:scale-[0.99]"
                         >
                           <PosterArt item={item} size="sm" showTitle={false} className="w-10 shrink-0" />
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-medium text-text">{item.title}</p>
                             <p className="truncate text-xs text-text-muted">
-                              {action === "watched" && "Completato"}
-                              {action === "episode" && `${count} episod${count === 1 ? "io" : "i"}`}
-                              {action === "rewatch" && "Rivisto"}
+                              {action === "watched" && t("Stats.completato")}
+                              {action === "episode" && t(count === 1 ? "Stats.episodio" : "Stats.episodi", { v0: count })}
+                              {action === "rewatch" && t("Stats.rivisto")}
                               {note && ` · ${note}`}
                             </p>
                           </div>
@@ -370,7 +369,7 @@ export function DiaryTab({ items, openItem }: { items: Item[]; openItem: (item: 
                         <button
                           type="button"
                           onClick={() => setNoting({ entry, date })}
-                          aria-label={note ? `Modifica con chi e dove per ${item.title}` : `Aggiungi con chi e dove per ${item.title}`}
+                          aria-label={note ? t("Stats.modifica_con_chi_e", { v0: item.title }) : t("Stats.aggiungi_con_chi_e", { v0: item.title })}
                           className="icon-btn icon-btn-sm shrink-0 text-text-faint hover:text-text"
                         >
                           {note ? <PeopleIcon size={15} /> : <PlusIcon size={15} />}
@@ -397,7 +396,7 @@ export function AchievementsTab({ items }: { items: Item[] }) {
 
   return (
     <section className="flex flex-col gap-4">
-      <RowHeader title="Traguardi" note={`${earnedCount} su ${achievements.length} sbloccati`} />
+      <RowHeader title={t("Stats.traguardi")} note={t("Stats.su_sbloccati", { v0: earnedCount, v1: achievements.length })} />
       {/* Un elenco, non quindici riquadri uguali: si scorre con l'occhio
           come un elenco, e quelli già presi si riconoscono dall'icona accesa
           invece che da una cornice colorata. */}
@@ -422,7 +421,7 @@ export function AchievementsTab({ items }: { items: Item[] }) {
               {a.earned ? (
                 <span className="flex shrink-0 items-center gap-1 pt-0.5 text-xs font-medium text-accent-text">
                   <CheckIcon size={14} />
-                  Sbloccato
+                  {t("Stats.sbloccato")}
                 </span>
               ) : (
                 <span className="shrink-0 pt-0.5 text-xs tabular text-text-faint">{a.progress}</span>

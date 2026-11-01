@@ -6,6 +6,7 @@ import { enabledLinkHosts } from "../store/useLinkHosts";
 import { effectiveUrl } from "./linkHost";
 import { probeRedirect } from "./hostRedirect";
 import type { RedirectStatus } from "./hostRedirect";
+import { t } from "./i18n";
 
 export type TestStatus = "pass" | "warn" | "fail" | "skip";
 
@@ -31,7 +32,7 @@ export interface TestResult {
  */
 
 async function testLocalStorage(): Promise<TestResult> {
-  const base = { id: "storage", label: "Memoria del browser" };
+  const base = { id: "storage", label: t("selfTest.memoria_del_browser") };
   try {
     const probe = "cinemate:__probe";
     localStorage.setItem(probe, "1");
@@ -40,7 +41,7 @@ async function testLocalStorage(): Promise<TestResult> {
     return {
       ...base,
       status: "fail",
-      detail: "Non riesco a scrivere. Spazio esaurito, o navigazione privata: i dati non verranno salvati.",
+      detail: t("selfTest.non_riesco_a_scrivere"),
     };
   }
 
@@ -59,8 +60,8 @@ async function testLocalStorage(): Promise<TestResult> {
     status: kb > 3500 ? "warn" : "pass",
     detail:
       kb > 3500
-        ? `${kb} KB usati: vicino al limite del browser. Esporta un backup e valuta di svuotare la cronologia degli host.`
-        : `${kb} KB usati.`,
+        ? t("selfTest.kb_usati_vicino_al", { v0: kb })
+        : t("selfTest.kb_usati", { v0: kb }),
   };
 }
 
@@ -70,81 +71,81 @@ async function testLocalStorage(): Promise<TestResult> {
  * ma ha un tetto di circa 5 MB che una libreria lunga raggiunge.
  */
 function testLibraryStore(): TestResult {
-  const base = { id: "library-store", label: "Archivio della libreria" };
+  const base = { id: "library-store", label: t("selfTest.archivio_della_libreria") };
   const s = durable.status();
   if (s.backend === "unavailable") {
-    return { ...base, status: "fail", detail: s.reason ?? "Il database dei tuoi dati non si apre: ricarica la pagina." };
+    return { ...base, status: "fail", detail: s.reason ?? t("selfTest.il_database_dei_tuoi") };
   }
   if (s.backend === "local") {
-    return { ...base, status: "warn", detail: s.reason ?? "In localStorage: funziona, ma con un tetto di circa 5 MB." };
+    return { ...base, status: "warn", detail: s.reason ?? t("selfTest.in_localstorage_funziona_ma") };
   }
   return {
     ...base,
     status: "pass",
     detail: s.backups.length
-      ? "Su IndexedDB. La copia di prima della migrazione è ancora qui, finché non si conferma da sola."
+      ? t("selfTest.su_indexeddb_la_copia")
       : "Su IndexedDB.",
   };
 }
 
 async function testIndexedDb(): Promise<TestResult> {
-  const base = { id: "indexeddb", label: "Archivio dei download" };
+  const base = { id: "indexeddb", label: t("selfTest.archivio_dei_download") };
   if (!("indexedDB" in window)) {
-    return { ...base, status: "warn", detail: "IndexedDB non disponibile: i download offline non funzioneranno." };
+    return { ...base, status: "warn", detail: t("selfTest.indexeddb_non_disponibile_i") };
   }
   return new Promise((resolve) => {
     try {
       const request = indexedDB.open("cinemate:__probe", 1);
       request.onerror = () =>
-        resolve({ ...base, status: "warn", detail: "IndexedDB rifiuta di aprirsi — spesso è la navigazione privata." });
+        resolve({ ...base, status: "warn", detail: t("selfTest.indexeddb_rifiuta_di_aprirsi") });
       request.onsuccess = () => {
         request.result.close();
         indexedDB.deleteDatabase("cinemate:__probe");
-        resolve({ ...base, status: "pass", detail: "Disponibile." });
+        resolve({ ...base, status: "pass", detail: t("selfTest.disponibile") });
       };
     } catch {
-      resolve({ ...base, status: "warn", detail: "IndexedDB non accessibile." });
+      resolve({ ...base, status: "warn", detail: t("selfTest.indexeddb_non_accessibile") });
     }
   });
 }
 
 async function testTmdb(apiKey: string): Promise<TestResult> {
-  const base = { id: "tmdb", label: "Chiave TMDB" };
-  if (!apiKey) return { ...base, status: "skip", detail: "Non configurata. Copertine e catalogo restano spenti." };
+  const base = { id: "tmdb", label: t("selfTest.chiave_tmdb") };
+  if (!apiKey) return { ...base, status: "skip", detail: t("selfTest.non_configurata_copertine_e") };
   try {
     await searchTitles("matrix", apiKey);
-    return { ...base, status: "pass", detail: "Valida, TMDB risponde." };
+    return { ...base, status: "pass", detail: t("selfTest.valida_tmdb_risponde") };
   } catch (e) {
-    return { ...base, status: "fail", detail: e instanceof Error ? e.message : "TMDB non risponde." };
+    return { ...base, status: "fail", detail: e instanceof Error ? e.message : t("selfTest.tmdb_non_risponde") };
   }
 }
 
 function testAnthropic(apiKey: string): TestResult {
-  const base = { id: "anthropic", label: "Chiave Anthropic" };
-  if (!apiKey) return { ...base, status: "skip", detail: "Non configurata. Critico, ricerca a parole e riassunti restano spenti." };
+  const base = { id: "anthropic", label: t("selfTest.chiave_anthropic") };
+  if (!apiKey) return { ...base, status: "skip", detail: t("selfTest.non_configurata_critico_ricerca") };
   // Deliberately not verified with a live call: the cheapest possible request
   // still costs the user money, and running it on every diagnostics press
   // would make this page an expense. Shape is all we check here.
   return apiKey.startsWith("sk-ant-")
-    ? { ...base, status: "pass", detail: "Presente. Si verifica davvero al primo uso." }
-    : { ...base, status: "warn", detail: "Non sembra una chiave Anthropic: di solito iniziano con sk-ant-." };
+    ? { ...base, status: "pass", detail: t("selfTest.presente_si_verifica_davvero") }
+    : { ...base, status: "warn", detail: t("selfTest.non_sembra_una_chiave") };
 }
 
 async function testHosts(): Promise<TestResult> {
-  const base = { id: "hosts", label: "Host configurati" };
+  const base = { id: "hosts", label: t("selfTest.host_configurati") };
   const hosts = getHosts();
-  if (hosts.length === 0) return { ...base, status: "skip", detail: "Nessun host. Il player usa gli indirizzi in Impostazioni." };
+  if (hosts.length === 0) return { ...base, status: "skip", detail: t("selfTest.nessun_host_il_player") };
 
   const results = await Promise.all(hosts.map((h) => checkHost(h)));
   const down = results.filter((r) => !r.httpOk);
-  if (down.length === 0) return { ...base, status: "pass", detail: `${hosts.length} host, tutti raggiungibili.` };
+  if (down.length === 0) return { ...base, status: "pass", detail: t("selfTest.host_tutti_raggiungibili", { v0: hosts.length }) };
   if (down.length === hosts.length) {
-    return { ...base, status: "fail", detail: "Nessun host risponde. Niente da riprodurre finché non torna almeno uno." };
+    return { ...base, status: "fail", detail: t("selfTest.nessun_host_risponde_niente") };
   }
   return {
     ...base,
     status: "warn",
-    detail: `${down.length} di ${hosts.length} non rispondono. Il failover coprirà, ma senza margine.`,
+    detail: t("selfTest.di_non_rispondono_il", { v0: down.length, v1: hosts.length }),
   };
 }
 
@@ -159,7 +160,7 @@ async function testLinkHosts(): Promise<TestResult> {
   const base = { id: "link-host", label: "Link Host" };
   const hosts = enabledLinkHosts();
   if (hosts.length === 0) {
-    return { ...base, status: "skip", detail: "Nessuno configurato. La ricerca automatica sui siti è spenta." };
+    return { ...base, status: "skip", detail: t("selfTest.nessuno_configurato_la_ricerca") };
   }
 
   const probes = await Promise.all(hosts.map((h) => probeRedirect(effectiveUrl(h))));
@@ -177,38 +178,38 @@ async function testLinkHosts(): Promise<TestResult> {
       // Il DoH ha già separato i due casi: dirlo qui invece di rimandare
       // l'utente a indagare è tutto il punto di averlo interrogato.
       detail: noName
-        ? `Nessuno dei ${hosts.length} risponde, e ${noName} ${noName === 1 ? "ha un nome che non esiste" : "hanno nomi che non esistono"} nemmeno per un resolver pubblico: non è il tuo DNS.`
-        : `Nessuno dei ${hosts.length} risponde. I nomi si risolvono, i server dietro no.`,
+        ? t("selfTest.nessuno_dei_risponde_e", { v0: hosts.length, v1: noName, v2: noName === 1 ? t("selfTest.ha_un_nome_che_non") : t("selfTest.hanno_nomi_che_non") })
+        : t("selfTest.nessuno_dei_risponde_i", { v0: hosts.length }),
     };
   }
   const notes = [
-    moved ? `${moved} ha traslocato (l'aggiornamento va accettato in Impostazioni)` : "",
-    opaque ? `${opaque} risponde ma non si lascia leggere: lì resta il Web Viewer` : "",
-    noName ? `${noName} ha un nome che non esiste più` : "",
-    mute ? `${mute} risolve ma il server non risponde` : "",
+    moved ? t("selfTest.ha_traslocato_l_aggiornamento", { v0: moved }) : "",
+    opaque ? t("selfTest.risponde_ma_non_si", { v0: opaque }) : "",
+    noName ? t("selfTest.ha_un_nome_che", { v0: noName }) : "",
+    mute ? t("selfTest.risolve_ma_il_server", { v0: mute }) : "",
   ].filter(Boolean);
   return {
     ...base,
     status: notes.length ? "warn" : "pass",
-    detail: notes.length ? `${hosts.length} configurati — ${notes.join("; ")}.` : `${hosts.length} configurati, tutti raggiungibili e leggibili.`,
+    detail: notes.length ? t("selfTest.configurati", { v0: hosts.length, v1: notes.join("; ") }) : t("selfTest.configurati_tutti_raggiungibili_e", { v0: hosts.length }),
   };
 }
 
 function testNotifications(): TestResult {
-  const base = { id: "notifiche", label: "Notifiche dei promemoria" };
-  if (!("Notification" in window)) return { ...base, status: "skip", detail: "Il browser non le supporta." };
+  const base = { id: "notifiche", label: t("selfTest.notifiche_dei_promemoria") };
+  if (!("Notification" in window)) return { ...base, status: "skip", detail: t("selfTest.il_browser_non_le") };
   if (Notification.permission === "granted") return { ...base, status: "pass", detail: "Consentite." };
   if (Notification.permission === "denied") {
-    return { ...base, status: "warn", detail: "Bloccate: i promemoria delle uscite non arriveranno." };
+    return { ...base, status: "warn", detail: t("selfTest.bloccate_i_promemoria_delle") };
   }
-  return { ...base, status: "skip", detail: "Non ancora richieste." };
+  return { ...base, status: "skip", detail: t("selfTest.non_ancora_richieste") };
 }
 
 function testOnline(): TestResult {
-  const base = { id: "rete", label: "Connessione" };
+  const base = { id: "rete", label: t("selfTest.connessione") };
   return navigator.onLine
     ? { ...base, status: "pass", detail: "Online." }
-    : { ...base, status: "warn", detail: "Offline. La libreria funziona; catalogo e player in rete no." };
+    : { ...base, status: "warn", detail: t("selfTest.offline_la_libreria_funziona") };
 }
 
 /** Runs everything and returns the results in a stable order. */

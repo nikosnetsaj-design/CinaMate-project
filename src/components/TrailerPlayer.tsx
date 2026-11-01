@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { CloseIcon, ExternalIcon, PictureInPictureIcon } from "./icons";
 import { youtubeWatchUrl } from "../lib/tmdb";
 import { useFocusTrap } from "../lib/useFocusTrap";
+import { t } from "../lib/i18n";
 
 const ORIGIN = "https://www.youtube-nocookie.com";
 
@@ -80,13 +81,13 @@ export function TrailerPlayer({ videoKey, title, onClose }: { videoKey: string; 
   )}`;
 
   return (
-    <div ref={trapRef} className="fixed inset-0 z-80 flex items-center justify-center bg-black/92 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={`Trailer di ${title}`}>
-      <button type="button" aria-label="Chiudi il trailer" tabIndex={-1} className="absolute inset-0 cursor-default" onClick={onClose} />
+    <div ref={trapRef} className="fixed inset-0 z-80 flex items-center justify-center bg-black/92 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={t("TrailerPlayer.trailer_di", { v0: title })}>
+      <button type="button" aria-label={t("TrailerPlayer.chiudi_il_trailer")} tabIndex={-1} className="absolute inset-0 cursor-default" onClick={onClose} />
 
       <button
         type="button"
         onClick={onClose}
-        aria-label="Chiudi il trailer"
+        aria-label={t("TrailerPlayer.chiudi_il_trailer")}
         className="icon-btn icon-btn-media absolute right-4 top-4 z-10"
         style={{ top: "max(1rem, env(safe-area-inset-top))" }}
       >
@@ -111,7 +112,7 @@ export function TrailerPlayer({ videoKey, title, onClose }: { videoKey: string; 
             {pip && (
               <button type="button" onClick={() => void openPip()} className="btn btn-sm text-white/85 hover:bg-white/10">
                 <PictureInPictureIcon size={16} />
-                Immagine nell'immagine
+                {t("TrailerPlayer.immagine_nell_immagine")}
               </button>
             )}
             <a
@@ -120,12 +121,12 @@ export function TrailerPlayer({ videoKey, title, onClose }: { videoKey: string; 
               rel="noopener noreferrer"
               className="btn btn-sm text-white/85 hover:bg-white/10"
             >
-              YouTube
+              {t("TrailerPlayer.youtube")}
               <ExternalIcon size={14} />
             </a>
           </span>
         </div>
-        {pipError && <p className="mt-2 text-sm text-white/70">Il browser non ha aperto la finestra: riprova dal pulsante.</p>}
+        {pipError && <p className="mt-2 text-sm text-white/70">{t("TrailerPlayer.il_browser_non_ha")}</p>}
       </div>
     </div>
   );

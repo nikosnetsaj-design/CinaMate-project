@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { isRecord, readJson, writeJson } from "../lib/localStore";
+import { statusLabel, t } from "../lib/i18n";
 
 const KEY = "cinemate:home-layout:v1";
 
@@ -27,22 +28,22 @@ export type HomeSectionId =
   | "watchlist";
 
 export const HOME_SECTIONS: { id: HomeSectionId; label: string; description: string }[] = [
-  { id: "vetrina", label: "In vetrina", description: "Un titolo solo, grande, con il perché" },
-  { id: "nastro", label: "Il Nastro", description: "La tua visione come oggetto visivo" },
-  { id: "maratona", label: "Maratona in corso", description: "La saga che stai attraversando" },
-  { id: "statistiche", label: "Statistiche", description: "Titoli, voto medio, ore, preferiti" },
+  { id: "vetrina", label: t("useHomeLayout.in_vetrina"), description: t("useHomeLayout.un_titolo_solo_grande") },
+  { id: "nastro", label: t("useHomeLayout.il_nastro"), description: t("useHomeLayout.la_tua_visione_come") },
+  { id: "maratona", label: t("useHomeLayout.maratona_in_corso"), description: t("useHomeLayout.la_saga_che_stai") },
+  { id: "statistiche", label: t("useHomeLayout.statistiche"), description: t("useHomeLayout.titoli_voto_medio_ore") },
   // Keeps the id `riprendi` although the row is now called "Continua a
   // guardare": the id is what stored layouts hold, and renaming it would have
   // reset the row order of every install to win nothing.
-  { id: "riprendi", label: "Continua a guardare", description: "Riparte dal punto esatto in cui hai smesso" },
-  { id: "saga", label: "Continua la saga", description: "Il prossimo capitolo, già scelto" },
-  { id: "arrivo", label: "In arrivo", description: "Nuovi episodi e uscite che segui" },
-  { id: "perTe", label: "Per te", description: "Consigli dal tuo scaffale, con il perché" },
-  { id: "perche", label: "Perché hai guardato…", description: "Somiglianze con l'ultimo titolo finito" },
-  { id: "preferiti", label: "I tuoi preferiti", description: "Quelli che hai segnato col cuore" },
-  { id: "piuVisti", label: "Più visti", description: "Dove sono finite le tue ore" },
-  { id: "ultimiAggiunti", label: "Ultimi aggiunti", description: "Le ultime cose entrate in libreria" },
-  { id: "watchlist", label: "Watchlist", description: "Da vedere" },
+  { id: "riprendi", label: t("useHomeLayout.continua_a_guardare"), description: t("useHomeLayout.riparte_dal_punto_esatto") },
+  { id: "saga", label: t("useHomeLayout.continua_la_saga"), description: t("useHomeLayout.il_prossimo_capitolo_gia") },
+  { id: "arrivo", label: t("useHomeLayout.in_arrivo"), description: t("useHomeLayout.nuovi_episodi_e_uscite") },
+  { id: "perTe", label: t("useHomeLayout.per_te"), description: t("useHomeLayout.consigli_dal_tuo_scaffale") },
+  { id: "perche", label: t("useHomeLayout.perche_hai_guardato"), description: t("useHomeLayout.somiglianze_con_l_ultimo") },
+  { id: "preferiti", label: t("useHomeLayout.i_tuoi_preferiti"), description: t("useHomeLayout.quelli_che_hai_segnato") },
+  { id: "piuVisti", label: t("useHomeLayout.piu_visti"), description: t("useHomeLayout.dove_sono_finite_le") },
+  { id: "ultimiAggiunti", label: t("useHomeLayout.ultimi_aggiunti"), description: t("useHomeLayout.le_ultime_cose_entrate") },
+  { id: "watchlist", label: "Watchlist", description: statusLabel("Da vedere") },
 ];
 
 /**

@@ -63,7 +63,7 @@ export function compareBy(sort: Sort, a: Item, b: Item): number {
   return b.added.localeCompare(a.added);
 }
 
-const KIND_NAMES: Record<Kind, string> = { film: "Film", serie: "Serie TV", anime: "Anime", doc: "Documentari" };
+const KIND_NAMES: Record<Kind, string> = { film: t("listing.film"), serie: t("listing.serie_tv"), anime: "Anime", doc: t("listing.documentari") };
 
 /**
  * Una ricerca salvata detta a parole, una pastiglia per condizione: è ciò che
@@ -81,13 +81,13 @@ export function describeQuery(query: ShelfQuery): string[] {
   if (f.country) out.push(f.country);
   if (f.audioLang) out.push(`audio ${f.audioLang}`);
   if (f.quality) out.push(f.quality);
-  if (f.hasSubtitles) out.push("con sottotitoli");
+  if (f.hasSubtitles) out.push(t("listing.con_sottotitoli"));
   if (f.yearFrom !== undefined && f.yearTo !== undefined) out.push(`${f.yearFrom}–${f.yearTo}`);
-  else if (f.yearFrom !== undefined) out.push(`dal ${f.yearFrom}`);
-  else if (f.yearTo !== undefined) out.push(`fino al ${f.yearTo}`);
-  if (f.runtimeMin !== undefined) out.push(`oltre ${f.runtimeMin} min`);
-  if (f.runtimeMax !== undefined) out.push(`sotto ${f.runtimeMax} min`);
-  if (f.voteMin !== undefined) out.push(`tuo voto ≥ ${f.voteMin}`);
+  else if (f.yearFrom !== undefined) out.push(t("listing.dal", { v0: f.yearFrom }));
+  else if (f.yearTo !== undefined) out.push(t("listing.fino_al", { v0: f.yearTo }));
+  if (f.runtimeMin !== undefined) out.push(t("listing.oltre_min", { v0: f.runtimeMin }));
+  if (f.runtimeMax !== undefined) out.push(t("listing.sotto_min", { v0: f.runtimeMax }));
+  if (f.voteMin !== undefined) out.push(t("listing.tuo_voto", { v0: f.voteMin }));
   if (f.tmdbRatingMin !== undefined) out.push(`TMDB ≥ ${f.tmdbRatingMin}`);
   return out;
 }

@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 /**
  * Riferimento sul DNS cifrato: DoH (DNS over HTTPS) e DoT (DNS over TLS).
  *
@@ -48,7 +49,7 @@ export const RESOLVERS: Resolver[] = [
     ipv6: ["2606:4700:4700::1111", "2606:4700:4700::1001"],
     doh: "https://cloudflare-dns.com/dns-query",
     dot: "one.one.one.one",
-    note: "Nessun filtro. Log delle query cancellati entro 24 ore, per policy dichiarata e sottoposta ad audit.",
+    note: t("dnsGuide.nessun_filtro_log_delle"),
   },
   {
     name: "Google Public DNS",
@@ -56,7 +57,7 @@ export const RESOLVERS: Resolver[] = [
     ipv6: ["2001:4860:4860::8888", "2001:4860:4860::8844"],
     doh: "https://dns.google/dns-query",
     dot: "dns.google",
-    note: "Nessun filtro. Il più vecchio dei resolver pubblici, e quello con più presenza geografica.",
+    note: t("dnsGuide.nessun_filtro_il_piu"),
   },
   {
     name: "Quad9",
@@ -64,7 +65,7 @@ export const RESOLVERS: Resolver[] = [
     ipv6: ["2620:fe::fe", "2620:fe::9"],
     doh: "https://dns.quad9.net/dns-query",
     dot: "dns.quad9.net",
-    note: "Blocca i domini associati a malware e phishing, su liste di threat intelligence. Fondazione svizzera senza scopo di lucro.",
+    note: t("dnsGuide.blocca_i_domini_associati"),
   },
   {
     name: "AdGuard DNS",
@@ -72,7 +73,7 @@ export const RESOLVERS: Resolver[] = [
     ipv6: ["2a10:50c0::ad1:ff", "2a10:50c0::ad2:ff"],
     doh: "https://dns.adguard-dns.com/dns-query",
     dot: "dns.adguard-dns.com",
-    note: "Blocca pubblicità e tracker a livello di nome. È un ad-block che vale per tutto il dispositivo, app comprese.",
+    note: t("dnsGuide.blocca_pubblicita_e_tracker"),
   },
   {
     name: "OpenDNS",
@@ -80,7 +81,7 @@ export const RESOLVERS: Resolver[] = [
     ipv6: ["2620:119:35::35", "2620:119:53::53"],
     doh: "https://doh.opendns.com/dns-query",
     dot: "dns.opendns.com",
-    note: "Di Cisco. Infrastruttura stabile e filtri di sicurezza opzionali, configurabili da un account.",
+    note: t("dnsGuide.di_cisco_infrastruttura_stabile"),
   },
   {
     name: "CleanBrowsing",
@@ -88,7 +89,7 @@ export const RESOLVERS: Resolver[] = [
     ipv6: ["2a0d:2a00:1::2", "2a0d:2a00:2::2"],
     doh: "https://doh.cleanbrowsing.org/doh/security-filter/",
     dot: "security-filter-dns.cleanbrowsing.org",
-    note: "Tre profili distinti — sicurezza, famiglia, adulti — e quello elencato qui è il profilo sicurezza.",
+    note: t("dnsGuide.tre_profili_distinti_sicurezza"),
   },
 ];
 
@@ -102,70 +103,70 @@ export interface Platform {
 export const PLATFORM_STEPS: Platform[] = [
   {
     name: "Android 9 e successivi",
-    supports: "DoT, di sistema",
+    supports: t("dnsGuide.dot_di_sistema"),
     steps: [
-      "Impostazioni → Rete e Internet → DNS privato",
-      "«Nome host del provider DNS privato»",
-      "Scrivi l'hostname DoT della colonna corrispondente (per esempio one.one.one.one)",
-      "Vale su Wi-Fi e su rete mobile insieme, per tutte le app",
+      t("dnsGuide.impostazioni_rete_e_internet"),
+      t("dnsGuide.nome_host_del_provider"),
+      t("dnsGuide.scrivi_l_hostname_dot"),
+      t("dnsGuide.vale_su_wi_fi"),
     ],
   },
   {
     name: "iOS e iPadOS 14 e successivi",
-    supports: "DoH e DoT, tramite profilo",
+    supports: t("dnsGuide.doh_e_dot_tramite"),
     steps: [
-      "iOS non ha un campo nelle impostazioni: serve un profilo di configurazione DNS",
-      "Cloudflare e AdGuard pubblicano la propria app ufficiale, che installa il profilo",
-      "Impostazioni → Generali → VPN e gestione dispositivo per vedere e rimuovere il profilo",
-      "Impostazioni → Generali → VPN e gestione dispositivo → DNS per scegliere quale è attivo",
+      t("dnsGuide.ios_non_ha_un"),
+      t("dnsGuide.cloudflare_e_adguard_pubblicano"),
+      t("dnsGuide.impostazioni_generali_vpn_e"),
+      t("dnsGuide.impostazioni_generali_vpn_e_2"),
     ],
   },
   {
     name: "Windows 11",
-    supports: "DoH, di sistema",
+    supports: t("dnsGuide.doh_di_sistema"),
     steps: [
-      "Impostazioni → Rete e Internet → scheda in uso → Modifica assegnazione server DNS",
-      "Passa da Automatico a Manuale, attiva IPv4",
-      "Scrivi i due indirizzi IPv4 del resolver",
-      "In «DNS su HTTPS» scegli «Attivo (modello automatico)»: Windows riconosce i resolver noti dall'IP",
+      t("dnsGuide.impostazioni_rete_e_internet_2"),
+      t("dnsGuide.passa_da_automatico_a"),
+      t("dnsGuide.scrivi_i_due_indirizzi"),
+      t("dnsGuide.in_dns_su_https"),
     ],
   },
   {
     name: "macOS",
-    supports: "DoH e DoT, tramite profilo",
+    supports: t("dnsGuide.doh_e_dot_tramite"),
     steps: [
-      "In chiaro: Impostazioni di Sistema → Rete → Dettagli → DNS, e aggiungi gli IPv4",
-      "Cifrato: serve un profilo `.mobileconfig`, che i resolver pubblicano sui propri siti",
-      "Impostazioni di Sistema → Generali → VPN e gestione dispositivo per verificarlo o rimuoverlo",
+      t("dnsGuide.in_chiaro_impostazioni_di"),
+      t("dnsGuide.cifrato_serve_un_profilo"),
+      t("dnsGuide.impostazioni_di_sistema_generali"),
     ],
   },
   {
     name: "Firefox",
-    supports: "DoH, solo per il browser",
+    supports: t("dnsGuide.doh_solo_per_il"),
     steps: [
-      "Impostazioni → Privacy e sicurezza → in fondo, «DNS su HTTPS»",
-      "«Protezione massima» usa solo DoH e non ripiega sul DNS di sistema",
-      "«Personalizzato» accetta l'URL della colonna DoH",
-      "Attenzione: vale solo dentro Firefox. Il resto del dispositivo continua col DNS di sistema",
+      t("dnsGuide.impostazioni_privacy_e_sicurezza"),
+      t("dnsGuide.protezione_massima_usa_solo"),
+      t("dnsGuide.personalizzato_accetta_l_url"),
+      t("dnsGuide.attenzione_vale_solo_dentro"),
     ],
   },
   {
-    name: "Chrome ed Edge",
-    supports: "DoH, solo per il browser",
+    name: t("dnsGuide.chrome_ed_edge"),
+    supports: t("dnsGuide.doh_solo_per_il"),
     steps: [
-      "Impostazioni → Privacy e sicurezza → Sicurezza → «Usa DNS sicuro»",
-      "Scegli un fornitore dall'elenco, o incolla l'URL della colonna DoH",
-      "Come Firefox: è il browser, non il dispositivo",
+      t("dnsGuide.impostazioni_privacy_e_sicurezza_2"),
+      t("dnsGuide.scegli_un_fornitore_dall"),
+      t("dnsGuide.come_firefox_e_il"),
     ],
   },
   {
-    name: "Il router",
-    supports: "In chiaro per tutta la rete; DoH/DoT dipende dal modello",
+    name: t("dnsGuide.il_router"),
+    supports: t("dnsGuide.in_chiaro_per_tutta"),
     steps: [
-      "È l'unico punto in cui la modifica vale per ogni dispositivo di casa, TV e console comprese",
-      "Pannello del router → WAN o LAN → server DNS, e scrivi i due IPv4",
-      "Molti router degli operatori non permettono di cambiarli: in quel caso resta la modifica per dispositivo",
-      "Il DNS cifrato sul router richiede firmware che lo supporti (OpenWRT, pfSense, alcuni AVM e ASUS)",
+      t("dnsGuide.e_l_unico_punto"),
+      t("dnsGuide.pannello_del_router_wan"),
+      t("dnsGuide.molti_router_degli_operatori"),
+      t("dnsGuide.il_dns_cifrato_sul"),
     ],
   },
 ];
@@ -177,27 +178,27 @@ export interface FaqEntry {
 
 export const DNS_FAQ: FaqEntry[] = [
   {
-    q: "Che differenza c'è fra DoH e DoT?",
-    a: "Cifrano la stessa cosa in due modi. DoT usa una porta sua, la 853: è pulito da amministrare e facile da distinguere sulla rete, quindi anche facile da bloccare. DoH viaggia sulla 443 insieme a tutto il traffico HTTPS: è indistinguibile dal resto, e per questo è quello che i browser hanno adottato. Sul piano della riservatezza sono equivalenti.",
+    q: t("dnsGuide.che_differenza_c_e"),
+    a: t("dnsGuide.cifrano_la_stessa_cosa"),
   },
   {
-    q: "Se CineMate sa già interrogare il DoH, perché devo configurare qualcosa?",
-    a: "Perché sono due cose diverse. La casella qui sotto interroga un resolver pubblico e ti dice cosa risponde: è una diagnosi, e serve a distinguere «il sito è spento» da «il nome non si traduce». Non cambia come il browser risolve i nomi quando apre una pagina — quella decisione è del sistema operativo, o del browser se ha il DoH acceso nelle sue impostazioni. Nessuna pagina web può dirottare la propria risoluzione dei nomi, e sarebbe grave se potesse.",
+    q: t("dnsGuide.se_cinemate_sa_gia"),
+    a: t("dnsGuide.perche_sono_due_cose"),
   },
   {
-    q: "Cambiare DNS mi rende anonimo?",
-    a: "No, e la distinzione è netta. Sposta soltanto chi vede le tue richieste di risoluzione: dal resolver dell'operatore a quello che scegli tu. Il tuo indirizzo IP resta il tuo, i siti che apri continuano a vederlo, e il tuo operatore continua a vedere verso quali IP ti colleghi — anche col DNS cifrato, perché l'instradamento è un altro strato.",
+    q: t("dnsGuide.cambiare_dns_mi_rende"),
+    a: t("dnsGuide.no_e_la_distinzione"),
   },
   {
-    q: "Rallenta la navigazione?",
-    a: "Di norma no, e spesso è il contrario: i resolver pubblici hanno più presenza geografica e cache più calde di quelli di molti operatori. Il costo è la stretta di mano TLS della prima richiesta, che si paga una volta per connessione.",
+    q: t("dnsGuide.rallenta_la_navigazione"),
+    a: t("dnsGuide.di_norma_no_e"),
   },
   {
-    q: "Serve a raggiungere qualcosa che non raggiungo?",
-    a: "Dipende da cosa lo impedisce, ed è utile essere precisi. Se un nome non si risolve, un resolver diverso può risolverlo. Se il blocco è sull'indirizzo IP, sull'instradamento o applicato dal servizio stesso, il DNS non c'entra e cambiarlo non cambia niente. In ogni caso non cambia cosa è lecito guardare: quello dipende da chi ha i diritti su ciò che stai aprendo, non da chi ti risolve i nomi.",
+    q: t("dnsGuide.serve_a_raggiungere_qualcosa"),
+    a: t("dnsGuide.dipende_da_cosa_lo"),
   },
   {
-    q: "Come verifico che sia attivo davvero?",
-    a: "Cloudflare pubblica 1.1.1.1/help, che dice quale resolver stai usando e se la connessione è cifrata. Google ha dns.google. Se la pagina mostra ancora il resolver dell'operatore, l'impostazione non è quella attiva — succede spesso quando si è cambiato il browser ma non il sistema, o viceversa.",
+    q: t("dnsGuide.come_verifico_che_sia"),
+    a: t("dnsGuide.cloudflare_pubblica_1_1"),
   },
 ];

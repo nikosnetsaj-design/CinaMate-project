@@ -8,6 +8,7 @@ import { posterUrl } from "../lib/tmdb";
 import { paletteFor } from "../lib/palette";
 import type { Item } from "../types";
 import { CheckIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * Prequel e sequel come una linea da percorrere, non come un elenco.
@@ -58,7 +59,7 @@ function Chapter({ entry, current, onOpen }: { entry: SagaEntry; current: boolea
                 posterPath: part.posterPath,
               })
         }
-        aria-label={item ? `Apri ${part.title}` : `Apri la scheda di ${part.title}`}
+        aria-label={item ? t("SagaLine.apri", { v0: part.title }) : t("SagaLine.apri_la_scheda_di", { v0: part.title })}
         aria-current={current ? "true" : undefined}
         className="relative block w-full"
       >
@@ -97,7 +98,7 @@ function Chapter({ entry, current, onOpen }: { entry: SagaEntry; current: boolea
           )}
           {state === "assente" && (
             <span className="absolute inset-x-0 bottom-0 bg-black/60 py-1 text-xs font-semibold text-white">
-              Vedi scheda
+              {t("SagaLine.vedi_scheda")}
             </span>
           )}
         </span>
@@ -106,7 +107,7 @@ function Chapter({ entry, current, onOpen }: { entry: SagaEntry; current: boolea
       <p className="mt-1.5 line-clamp-2 text-xs font-medium leading-snug text-text">{part.title}</p>
       {current && (
         <p className="mt-0.5 text-xs font-bold" style={{ color: "var(--accent-text)" }}>
-          Sei qui
+          {t("SagaLine.sei_qui")}
         </p>
       )}
     </div>
@@ -135,7 +136,7 @@ export function SagaLine({ item }: { item: Item }) {
   return (
     <section className="mt-1">
       <h2 className="font-display text-lg font-semibold text-text">
-        Prequel &amp; Sequel <span className="text-sm font-normal text-text-faint">· {entries.length}</span>
+        {t("SagaLine.prequel_amp_sequel")} <span className="text-sm font-normal text-text-faint">· {entries.length}</span>
       </h2>
 
       <div className="relative mt-3">

@@ -11,6 +11,7 @@ import { buildEntries, nextChapterAfter, orderParts, type SagaEntry } from "../l
 import { draftFromTmdb } from "../lib/addFromTmdb";
 import { PosterArt } from "./PosterArt";
 import { CloseIcon, PlayIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * "Continua la storia": the moment a chapter is finished, the next one in its
@@ -47,7 +48,7 @@ function Prompt({ finishedTitle, entry, onDismiss }: {
       );
       onDismiss();
     } catch {
-      pushToast("error", "Non è stato possibile leggere questo titolo da TMDB.");
+      pushToast("error", t("NextChapterPrompt.non_e_stato_possibile"));
     }
     setAdding(false);
   }
@@ -63,12 +64,12 @@ function Prompt({ finishedTitle, entry, onDismiss }: {
     >
       <div className="flex items-start justify-between gap-3">
         <p className="text-xs text-text-muted">
-          Hai finito <span className="font-semibold text-text">{finishedTitle}</span>
+          {t("NextChapterPrompt.hai_finito")} <span className="font-semibold text-text">{finishedTitle}</span>
         </p>
         <button
           type="button"
           onClick={onDismiss}
-          aria-label="Chiudi il suggerimento"
+          aria-label={t("NextChapterPrompt.chiudi_il_suggerimento")}
           className="-mt-1 shrink-0 px-1 text-text-faint hover:text-text"
         >
           <CloseIcon size={16} />
@@ -84,10 +85,10 @@ function Prompt({ finishedTitle, entry, onDismiss }: {
         />
         <div className="min-w-0 flex-1">
           <p className="text-xs text-text-faint">
-            Capitolo {entry.number}
+            {t("NextChapterPrompt.capitolo")} {entry.number}
           </p>
           <p className="truncate font-display text-sm font-semibold text-text">{entry.part.title}</p>
-          <p className="font-mono tabular text-xs text-text-faint">{entry.part.year ?? "in arrivo"}</p>
+          <p className="font-mono tabular text-xs text-text-faint">{entry.part.year ?? t("NextChapterPrompt.in_arrivo")}</p>
         </div>
       </div>
 
@@ -98,7 +99,7 @@ function Prompt({ finishedTitle, entry, onDismiss }: {
         className="btn btn-primary mt-3 w-full"
       >
         <PlayIcon size={14} />
-        {entry.item ? "Continua con il prossimo capitolo" : "Aggiungi il prossimo capitolo"}
+        {entry.item ? t("NextChapterPrompt.continua_con_il_prossimo") : t("NextChapterPrompt.aggiungi_il_prossimo_capitolo")}
       </button>
     </m.div>,
     document.body,

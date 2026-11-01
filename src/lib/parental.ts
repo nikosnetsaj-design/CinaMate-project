@@ -1,4 +1,5 @@
 import type { Item } from "../types";
+import { t } from "./i18n";
 
 /**
  * Age ratings, and the honest limits of turning them into one number.
@@ -37,11 +38,11 @@ export const AGE_LEVELS = [0, 6, 12, 14, 18] as const;
 export type AgeLevel = (typeof AGE_LEVELS)[number];
 
 export const AGE_LABELS: Record<AgeLevel, string> = {
-  0: "Per tutti",
-  6: "Dai 6 anni",
-  12: "Dai 12 anni",
-  14: "Dai 14 anni",
-  18: "Solo adulti",
+  0: t("parental.per_tutti"),
+  6: t("parental.dai_6_anni"),
+  12: t("parental.dai_12_anni"),
+  14: t("parental.dai_14_anni"),
+  18: t("parental.solo_adulti"),
 };
 
 /**

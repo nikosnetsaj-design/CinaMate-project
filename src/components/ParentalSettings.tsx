@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParental } from "../store/useParental";
 import { useLibrary } from "../store/useLibrary";
 import { AGE_LABELS, AGE_LEVELS, type AgeLevel } from "../lib/parental";
+import { t } from "../lib/i18n";
 
 const PIN_LENGTH = 4;
 
@@ -49,11 +50,11 @@ export function ParentalSettings() {
 
   const enable = async () => {
     if (pin.length !== PIN_LENGTH) {
-      pushToast("error", `Il PIN deve avere ${PIN_LENGTH} cifre.`);
+      pushToast("error", t("ParentalSettings.il_pin_deve_avere", { v0: PIN_LENGTH }));
       return;
     }
     if (pin !== confirmPin) {
-      pushToast("error", "I due PIN non coincidono.");
+      pushToast("error", t("ParentalSettings.i_due_pin_non"));
       return;
     }
     setBusy(true);
@@ -61,7 +62,7 @@ export function ParentalSettings() {
     setBusy(false);
     setPin("");
     setConfirmPin("");
-    pushToast("success", "Controllo genitori attivo.");
+    pushToast("success", t("ParentalSettings.controllo_genitori_attivo"));
   };
 
   const disable = async () => {
@@ -69,7 +70,7 @@ export function ParentalSettings() {
     const ok = await state.disable(pin);
     setBusy(false);
     setPin("");
-    pushToast(ok ? "success" : "error", ok ? "Controllo genitori disattivato." : "PIN errato.");
+    pushToast(ok ? "success" : "error", ok ? t("ParentalSettings.controllo_genitori_disattivato") : t("ParentalSettings.pin_errato"));
   };
 
   const unlock = async () => {
@@ -77,40 +78,36 @@ export function ParentalSettings() {
     const ok = await state.unlock(pin);
     setBusy(false);
     setPin("");
-    pushToast(ok ? "success" : "error", ok ? "Sbloccato fino alla chiusura dell’app." : "PIN errato.");
+    pushToast(ok ? "success" : "error", ok ? t("ParentalSettings.sbloccato_fino_alla_chiusura") : t("ParentalSettings.pin_errato"));
   };
 
   return (
     <div>
       <span className="mb-1 block text-base font-semibold text-text">
-        Controllo genitori
+        {t("ParentalSettings.controllo_genitori")}
       </span>
       <p className="mb-4 text-sm text-text-muted">
-        Nasconde i titoli oltre l'età scelta, usando la classificazione del film — quella italiana
-        quando c'è, altrimenti quella americana. Da dire con chiarezza: tutto vive in questo
-        browser, quindi chi sa aprire gli strumenti per sviluppatori può aggirarlo. È una serratura
-        da armadietto, non una cassaforte: per farne una servirebbe un account e un server, che
-        quest'app non ha per scelta.
+        {t("ParentalSettings.nasconde_i_titoli_oltre")}
       </p>
 
       {state.enabled ? (
         <div className="flex flex-col gap-3">
           <div className="rounded-md bg-surface-2 px-4 py-3 text-sm">
             <p className="text-text">
-              Attivo · {AGE_LABELS[state.maxAge]}
-              {state.allowUnrated ? " · i non classificati sono visibili" : " · i non classificati sono nascosti"}
+              {t("ParentalSettings.attivo")} {AGE_LABELS[state.maxAge]}
+              {state.allowUnrated ? t("ParentalSettings.i_non_classificati_sono") : t("ParentalSettings.i_non_classificati_sono_2")}
             </p>
             <p className="mt-0.5 text-xs text-text-muted">
               {state.unlocked
-                ? "Sbloccato: stai vedendo tutto. Si richiude da solo alla chiusura dell'app."
-                : "Bloccato: i titoli oltre il limite non compaiono in Home, Libreria, ricerca e Player."}
+                ? t("ParentalSettings.sbloccato_stai_vedendo_tutto")
+                : t("ParentalSettings.bloccato_i_titoli_oltre")}
             </p>
           </div>
 
           {state.unlocked ? (
             <>
               <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-text-muted">Limite di età</span>
+                <span className="text-sm font-medium text-text-muted">{t("ParentalSettings.limite_di_eta")}</span>
                 <div className="flex flex-wrap gap-2">
                   {AGE_LEVELS.map((level) => (
                     <button
@@ -133,7 +130,7 @@ export function ParentalSettings() {
                   onChange={(e) => state.setRules({ allowUnrated: e.target.checked })}
                   className="h-5 w-5 shrink-0"
                 />
-                Mostra anche i titoli senza classificazione
+                {t("ParentalSettings.mostra_anche_i_titoli")}
               </label>
 
               <button
@@ -141,19 +138,19 @@ export function ParentalSettings() {
                 onClick={state.lock}
                 className="btn btn-secondary w-full"
               >
-                Richiudi adesso
+                {t("ParentalSettings.richiudi_adesso")}
               </button>
             </>
           ) : (
             <>
-              <PinInput id="parental-unlock" value={pin} onChange={setPin} label="PIN per sbloccare" />
+              <PinInput id="parental-unlock" value={pin} onChange={setPin} label={t("ParentalSettings.pin_per_sbloccare")} />
               <button
                 type="button"
                 onClick={unlock}
                 disabled={busy || pin.length !== PIN_LENGTH}
                 className="btn btn-primary w-full"
               >
-                Sblocca
+                {t("ParentalSettings.sblocca")}
               </button>
             </>
           )}
@@ -164,13 +161,13 @@ export function ParentalSettings() {
             disabled={busy || pin.length !== PIN_LENGTH}
             className="btn btn-danger w-full disabled:opacity-40"
           >
-            Disattiva (serve il PIN)
+            {t("ParentalSettings.disattiva_serve_il_pin")}
           </button>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium text-text-muted">Limite di età</span>
+            <span className="text-sm font-medium text-text-muted">{t("ParentalSettings.limite_di_eta")}</span>
             <div className="flex flex-wrap gap-2">
               {AGE_LEVELS.map((level) => (
                 <button
@@ -194,16 +191,15 @@ export function ParentalSettings() {
               className="mt-0.5 h-5 w-5 shrink-0"
             />
             <span>
-              Mostra anche i titoli senza classificazione
+              {t("ParentalSettings.mostra_anche_i_titoli")}
               <span className="mt-0.5 block text-xs text-text-muted">
-                Spento per scelta: un titolo che TMDB non ha classificato non è un titolo sicuro, è
-                un titolo di cui non si sa nulla.
+                {t("ParentalSettings.spento_per_scelta_un")}
               </span>
             </span>
           </label>
 
-          <PinInput id="parental-pin" value={pin} onChange={setPin} label="Scegli un PIN" />
-          <PinInput id="parental-pin-confirm" value={confirmPin} onChange={setConfirmPin} label="Ripetilo" />
+          <PinInput id="parental-pin" value={pin} onChange={setPin} label={t("ParentalSettings.scegli_un_pin")} />
+          <PinInput id="parental-pin-confirm" value={confirmPin} onChange={setConfirmPin} label={t("ParentalSettings.ripetilo")} />
 
           <button
             type="button"
@@ -211,7 +207,7 @@ export function ParentalSettings() {
             disabled={busy || pin.length !== PIN_LENGTH}
             className="btn btn-primary w-full"
           >
-            Attiva controllo genitori
+            {t("ParentalSettings.attiva_controllo_genitori")}
           </button>
         </div>
       )}

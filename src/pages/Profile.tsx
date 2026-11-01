@@ -23,6 +23,7 @@ import { RowHeader } from "../components/RowHeader";
 import { FigureBand } from "../components/Figures";
 import { useAppReady } from "../lib/useAppReady";
 import { useVisibleItems } from "../lib/useVisibleItems";
+import { t } from "../lib/i18n";
 
 /**
  * L'attesa, disegnata come la pagina che sta arrivando.
@@ -72,7 +73,7 @@ function ActivityChart({ range, minutes }: { range: ActivityRange; minutes: Map<
     <div>
       {/* Il totale sopra il grafico, come una risposta: prima quanto, poi
           come si è distribuito. */}
-      <p className="text-xs text-text-muted">In questo periodo</p>
+      <p className="text-xs text-text-muted">{t("Profile.in_questo_periodo")}</p>
       <p className="t-figure text-text">{total > 0 ? formatRuntime(total) : "—"}</p>
       <div className="mt-4 flex h-32 items-end gap-[3px]">
         {buckets.map((b, idx) => (
@@ -92,7 +93,7 @@ function ActivityChart({ range, minutes }: { range: ActivityRange; minutes: Map<
         ))}
       </div>
       <p className="mt-2 text-xs text-text-faint">
-        {total > 0 ? `Picco ${formatRuntime(peak)} in un giorno.` : "Nessuna attività registrata in questo periodo."}
+        {total > 0 ? t("Profile.picco_in_un_giorno", { v0: formatRuntime(peak) }) : t("Profile.nessuna_attivita_registrata_in")}
       </p>
     </div>
   );
@@ -112,10 +113,10 @@ export function ProfileHeader() {
       <div className="min-w-0 flex-1">
         <h1 className="t-display truncate text-text">{level.title}</h1>
         <p className="mt-1 truncate text-sm text-text-muted">
-          {displayName?.trim() ? displayName : "Tu"} · livello {level.level} ·{" "}
+          {displayName?.trim() && displayName !== "Tu" ? displayName : t("Profile.tu")} {t("Profile.livello")} {level.level} ·{" "}
           {level.hoursToNext != null
-            ? `${level.hoursToNext} h a «${level.nextTitle}»`
-            : "hai raggiunto l'ultimo livello"}
+            ? t("Profile.h_a", { v0: level.hoursToNext, v1: level.nextTitle ?? "" })
+            : t("Profile.hai_raggiunto_l_ultimo")}
         </p>
       </div>
     </header>
@@ -153,23 +154,23 @@ export function ProfileSummary() {
     <div className="flex flex-col gap-10">
       {items.length === 0 && history.length === 0 ? (
         <EmptyState
-          title="Il diario comincia col primo voto."
-          description="Segna un titolo come visto, o guarda qualcosa dal lettore: da lì in poi ore, grafico e record si riempiono da soli."
+          title={t("Profile.il_diario_comincia_col")}
+          description={t("Profile.segna_un_titolo_come")}
         />
       ) : (
         <>
           {/* --- Total hours ---------------------------------------------- */}
           <section>
-            <p className="text-sm text-text-muted">Ore totali</p>
+            <p className="text-sm text-text-muted">{t("Profile.ore_totali")}</p>
             <p className="t-stat mt-1 text-text">
               {totalHours}
               <span className="ml-1 text-[0.5em] font-medium text-text-faint">h</span>
             </p>
             <p className="mt-2 text-sm text-text-muted">
               {playerHours >= 0.1
-                ? `di cui ${playerHours.toFixed(1)} h misurate dal player`
-                : "in gran parte stimate dalla tua libreria"}
-              {streak > 0 && ` · ${streak} giorn${streak === 1 ? "o" : "i"} di fila`}
+                ? t("Profile.di_cui_h_misurate", { v0: playerHours.toFixed(1) })
+                : t("Profile.in_gran_parte_stimate")}
+              {streak > 0 && t(streak === 1 ? "Profile.giorno_di_fila" : "Profile.giorni_di_fila", { v0: streak })}
             </p>
           </section>
 
@@ -178,18 +179,18 @@ export function ProfileSummary() {
           <FigureBand
             cols={3}
             figures={[
-              { value: stats.filmsCompleted, label: "film visti" },
-              { value: stats.seriesCompleted, label: "serie completate" },
-              { value: stats.episodesWatched, label: "episodi visti" },
+              { value: stats.filmsCompleted, label: t("Profile.film_visti") },
+              { value: stats.seriesCompleted, label: t("Profile.serie_completate") },
+              { value: stats.episodesWatched, label: t("Profile.episodi_visti") },
             ]}
           />
 
           {/* --- Activity chart ------------------------------------------- */}
           <section className="flex flex-col gap-4">
             <RowHeader
-              title="Attività"
+              title={t("Profile.attivita")}
               trailing={
-                <div className="segmented" role="tablist" aria-label="Periodo del grafico">
+                <div className="segmented" role="tablist" aria-label={t("Profile.periodo_del_grafico")}>
                   {ACTIVITY_RANGES.map((r) => (
                     <button
                       key={r.id}
@@ -210,9 +211,9 @@ export function ProfileSummary() {
               {/* --- Personal record ------------------------------------ */}
               <div className="-mx-4 -mb-4 mt-4 flex items-center justify-between gap-3 px-4 py-3.5 shadow-[inset_0_1px_0_var(--separator)]">
                 <div className="min-w-0">
-                  <p className="text-sm text-text">Record personale</p>
+                  <p className="text-sm text-text">{t("Profile.record_personale")}</p>
                   <p className="truncate text-xs text-text-muted first-letter:uppercase">
-                    {record ? formatDay(record.date) : "Arriva con la prima visione."}
+                    {record ? formatDay(record.date) : t("Profile.arriva_con_la_prima")}
                   </p>
                 </div>
                 {record && <span className="t-figure shrink-0 text-text">{formatRuntime(record.minutes)}</span>}
@@ -223,7 +224,7 @@ export function ProfileSummary() {
           {/* --- Continue watching ---------------------------------------- */}
           {resume.length > 0 && (
             <section className="flex flex-col gap-4">
-              <RowHeader title="Continua a guardare" />
+              <RowHeader title={t("Profile.continua_a_guardare")} />
               <div className="shelf">
                 {resume.map((entry) => (
                   <ContinueWatchingCard key={entry.item.id} entry={entry} />
@@ -235,7 +236,7 @@ export function ProfileSummary() {
           {/* --- Series ranking ------------------------------------------- */}
           {ranking.length > 0 && (
             <section className="flex flex-col gap-4">
-              <RowHeader title="Le tue serie, per episodi" />
+              <RowHeader title={t("Profile.le_tue_serie_per")} />
               {/* Il filo parte dal titolo: numero (20) + copertina (32) + i
                   due spazi e il margine. */}
               <ol className="list-group" style={{ "--row-inset": "92px" } as React.CSSProperties}>
@@ -244,7 +245,7 @@ export function ProfileSummary() {
                     <button
                       type="button"
                       onClick={() => openItem(item)}
-                      aria-label={`Apri dettagli di ${item.title}, ${episodes} episodi visti`}
+                      aria-label={t("Profile.apri_dettagli_di_episodi", { v0: item.title, v1: episodes })}
                       className="list-row"
                     >
                       <span className="w-5 shrink-0 text-center text-sm font-medium tabular text-text-faint">{idx + 1}</span>
@@ -254,7 +255,7 @@ export function ProfileSummary() {
                           <span className="truncate text-sm font-medium text-text">{item.title}</span>
                           <span className="shrink-0 text-xs tabular text-text-faint">
                             {episodes}
-                            {item.episodes ? `/${item.episodes}` : ""} ep · {formatRuntime(mins)}
+                            {item.episodes ? `/${item.episodes}` : ""} {t("Profile.ep")} {formatRuntime(mins)}
                           </span>
                         </div>
                         <span className="mt-2 block h-1 overflow-hidden rounded-full bg-surface-2">
@@ -273,9 +274,9 @@ export function ProfileSummary() {
 
           {/* --- Library shortcut ------------------------------------------ */}
           <section className="flex flex-col gap-4">
-            <RowHeader title="Completati" to="/libreria" action="Libreria" />
+            <RowHeader title={t("Profile.completati")} to="/libreria" action={t("Profile.libreria")} />
             {finished.length === 0 ? (
-              <p className="text-sm text-text-muted">Niente di completato, per ora.</p>
+              <p className="text-sm text-text-muted">{t("Profile.niente_di_completato_per")}</p>
             ) : (
               <div className="shelf gap-3">
                 {finished.map((item) => (
@@ -283,7 +284,7 @@ export function ProfileSummary() {
                     key={item.id}
                     type="button"
                     onClick={() => openItem(item)}
-                    aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
+                    aria-label={t("Profile.apri_dettagli_di", { v0: item.title, v1: item.year })}
                     className="w-20 shrink-0 transition-transform duration-200 active:scale-[0.98]"
                   >
                     <PosterArt item={item} size="sm" showTitle={false} className="w-20" />
@@ -294,8 +295,7 @@ export function ProfileSummary() {
           </section>
 
           <p className="max-w-prose text-xs text-text-faint">
-            Le statistiche partono da quando è stata installata questa versione: le visioni precedenti restano nella
-            libreria e nel diario, ma non nel conteggio delle ore misurate dal player.
+            {t("Profile.le_statistiche_partono_da")}
           </p>
         </>
       )}

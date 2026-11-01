@@ -1,5 +1,5 @@
 import type { Item } from "../types";
-import { intlLocale } from "./i18n";
+import { intlLocale, lang, t } from "./i18n";
 
 /**
  * Il tuo palato: cosa premi e cosa punisci, calcolato qui dai tuoi voti.
@@ -56,16 +56,17 @@ export function decadeOf(year: number): string | null {
 
 export function decadeLabel(decade: string): string {
   const d = Number(decade);
+  if (lang === "en") return d < 2000 ? `'${String(d % 100).padStart(2, "0")}s` : `${d}s`;
   return d < 2000 ? `anni '${String(d % 100).padStart(2, "0")}` : `anni ${d}`;
 }
 
 export type RuntimeBucket = "breve" | "classico" | "lungo" | "fiume";
 
 const RUNTIME_LABEL: Record<RuntimeBucket, string> = {
-  breve: "sotto l'ora e mezza",
-  classico: "fra un'ora e mezza e due ore",
-  lungo: "fra due ore e due ore e mezza",
-  fiume: "oltre le due ore e mezza",
+  breve: t("palate.sotto_l_ora_e"),
+  classico: t("palate.fra_un_ora_e"),
+  lungo: t("palate.fra_due_ore_e"),
+  fiume: t("palate.oltre_le_due_ore"),
 };
 
 export function runtimeBucket(item: Pick<Item, "kind" | "runtime">): RuntimeBucket | null {
@@ -209,51 +210,66 @@ export function disliked(facets: Facet[], limit = 2): Facet[] {
  * d'azione». Prima la frase era «voti alto i animazione».
  */
 const GENRE_PHRASE: Record<string, string> = {
-  Azione: "i film d'azione",
-  Avventura: "i film d'avventura",
-  Animazione: "l'animazione",
-  Commedia: "le commedie",
-  Crime: "i crime",
-  Documentario: "i documentari",
-  Dramma: "i drammi",
-  Drammatico: "i drammi",
-  Famiglia: "i film per famiglie",
-  Fantasy: "il fantasy",
-  Storia: "i film storici",
-  Horror: "gli horror",
-  Musica: "i film musicali",
-  Mistero: "i gialli",
-  Romantico: "i film romantici",
-  Fantascienza: "la fantascienza",
-  "Film TV": "i film per la TV",
-  Thriller: "i thriller",
-  Guerra: "i film di guerra",
-  Western: "i western",
-  "Action & Adventure": "l'azione e l'avventura",
-  Kids: "i titoli per ragazzi",
-  Reality: "i reality",
-  "Sci-Fi & Fantasy": "la fantascienza e il fantasy",
-  Soap: "le soap",
-  "War & Politics": "la guerra e la politica",
+  Azione: t("palate.i_film_d_azione"),
+  Avventura: t("palate.i_film_d_avventura"),
+  Animazione: t("palate.l_animazione"),
+  Commedia: t("palate.le_commedie"),
+  Crime: t("palate.i_crime"),
+  Documentario: t("palate.i_documentari"),
+  Dramma: t("palate.i_drammi"),
+  Drammatico: t("palate.i_drammi"),
+  Famiglia: t("palate.i_film_per_famiglie"),
+  Fantasy: t("palate.il_fantasy"),
+  Storia: t("palate.i_film_storici"),
+  Horror: t("palate.gli_horror"),
+  Musica: t("palate.i_film_musicali"),
+  Mistero: t("palate.i_gialli"),
+  Romantico: t("palate.i_film_romantici"),
+  Fantascienza: t("palate.la_fantascienza"),
+  "Film TV": t("palate.i_film_per_la"),
+  Thriller: t("palate.i_thriller"),
+  Guerra: t("palate.i_film_di_guerra"),
+  Western: t("palate.i_western"),
+  "Action & Adventure": t("palate.l_azione_e_l"),
+  Kids: t("palate.i_titoli_per_ragazzi"),
+  Reality: t("palate.i_reality"),
+  "Sci-Fi & Fantasy": t("palate.la_fantascienza_e_il"),
+  Soap: t("palate.le_soap"),
+  "War & Politics": t("palate.la_guerra_e_la"),
+  // I nomi con cui TMDB risponde in inglese, per chi usa l'app in inglese.
+  Action: t("palate.i_film_d_azione"),
+  Adventure: t("palate.i_film_d_avventura"),
+  Animation: t("palate.l_animazione"),
+  Comedy: t("palate.le_commedie"),
+  Documentary: t("palate.i_documentari"),
+  Drama: t("palate.i_drammi"),
+  Family: t("palate.i_film_per_famiglie"),
+  History: t("palate.i_film_storici"),
+  Music: t("palate.i_film_musicali"),
+  Mystery: t("palate.i_gialli"),
+  Romance: t("palate.i_film_romantici"),
+  "Science Fiction": t("palate.la_fantascienza"),
+  "TV Movie": t("palate.i_film_per_la"),
+  War: t("palate.i_film_di_guerra"),
 };
 
 export function genrePhrase(genre: string): string {
-  return GENRE_PHRASE[genre] ?? `il genere ${genre.toLowerCase()}`;
+  return GENRE_PHRASE[genre] ?? t("palate.il_genere", { v0: genre.toLowerCase() });
 }
 
 /** Il motivo, scritto, per un contributo di una dimensione a un consiglio. */
 export function palateReason(dimension: Dimension, key: string): string {
   switch (dimension) {
     case "genre":
-      return `Perché voti alto ${genrePhrase(key)}`;
+      return t("palate.perche_voti_alto", { v0: genrePhrase(key) });
     case "decade":
-      return `Perché gli ${decadeLabel(key)} sono il tuo decennio`;
+      return t("palate.perche_gli_sono_il", { v0: decadeLabel(key) });
     case "director":
-      return `Perché ti è piaciuto il cinema di ${key}`;
+      return t("palate.perche_ti_e_piaciuto", { v0: key });
     case "runtime":
-      return `Della durata che premi: ${RUNTIME_LABEL[key as RuntimeBucket] ?? key}`;
+      return t("palate.della_durata_che_premi", { v0: RUNTIME_LABEL[key as RuntimeBucket] ?? key });
     case "country":
-      return `Dal paese che premi di più: ${countryLabel(key)}`;
+      return t("palate.dal_paese_che_premi", { v0: countryLabel(key) });
   }
 }
 

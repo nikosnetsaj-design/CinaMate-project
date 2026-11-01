@@ -10,30 +10,31 @@ import { parseNaturalQuery, MissingApiKeyError, ClaudeApiError, type ParsedQuery
 import { discoverTitles, MOVIE_GENRES, TV_GENRES, type TmdbSearchResult } from "../lib/tmdb";
 import { draftFromTmdb } from "../lib/addFromTmdb";
 import { CheckIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 const EXAMPLES = [
-  "film di fantascienza anni '90",
-  "commedie italiane sotto le due ore",
-  "thriller con Denzel Washington",
-  "serie fantasy uscite dal 2020",
-  "i migliori horror di sempre",
+  t("NaturalSearch.film_di_fantascienza_anni"),
+  t("NaturalSearch.commedie_italiane_sotto_le"),
+  t("NaturalSearch.thriller_con_denzel_washington"),
+  t("NaturalSearch.serie_fantasy_uscite_dal"),
+  t("NaturalSearch.i_migliori_horror_di"),
 ];
 
 /** Restates the parsed filters as chips, so a wrong reading is visible before scrolling. */
 function QueryChips({ query }: { query: ParsedQuery }) {
   const table = query.mediaType === "tv" ? TV_GENRES : MOVIE_GENRES;
   const chips: string[] = [
-    query.mediaType === "tv" ? "Serie" : "Film",
+    query.mediaType === "tv" ? t("NaturalSearch.serie") : t("NaturalSearch.film"),
     ...query.genreIds.map((id) => table[id]).filter(Boolean),
   ];
 
   if (query.yearFrom && query.yearTo) chips.push(`${query.yearFrom}–${query.yearTo}`);
-  else if (query.yearFrom) chips.push(`dal ${query.yearFrom}`);
-  else if (query.yearTo) chips.push(`fino al ${query.yearTo}`);
+  else if (query.yearFrom) chips.push(t("NaturalSearch.dal", { v0: query.yearFrom }));
+  else if (query.yearTo) chips.push(t("NaturalSearch.fino_al", { v0: query.yearTo }));
 
-  if (query.runtimeMax) chips.push(`sotto ${query.runtimeMax}′`);
-  if (query.runtimeMin) chips.push(`oltre ${query.runtimeMin}′`);
-  if (query.voteMin) chips.push(`voto ≥ ${query.voteMin}`);
+  if (query.runtimeMax) chips.push(t("NaturalSearch.sotto", { v0: query.runtimeMax }));
+  if (query.runtimeMin) chips.push(t("NaturalSearch.oltre", { v0: query.runtimeMin }));
+  if (query.voteMin) chips.push(t("NaturalSearch.voto", { v0: query.voteMin }));
   if (query.person) chips.push(query.person);
   if (query.keywords) chips.push(`“${query.keywords}”`);
 
@@ -79,9 +80,9 @@ export function NaturalSearch() {
       setQuery(parsed);
       setResults(await discoverTitles(parsed, tmdbApiKey));
     } catch (e) {
-      if (e instanceof MissingApiKeyError) setError("Serve la chiave Anthropic per la ricerca in linguaggio naturale.");
+      if (e instanceof MissingApiKeyError) setError(t("NaturalSearch.serve_la_chiave_anthropic"));
       else if (e instanceof ClaudeApiError) setError(e.message);
-      else setError("Ricerca non riuscita. Riprova.");
+      else setError(t("NaturalSearch.ricerca_non_riuscita_riprova"));
     } finally {
       setBusy(false);
     }
@@ -103,7 +104,7 @@ export function NaturalSearch() {
         }),
       );
     } catch {
-      setError("Non sono riuscito a caricare i dettagli di questo titolo.");
+      setError(t("NaturalSearch.non_sono_riuscito_a"));
     }
     setPicking(null);
   };
@@ -111,15 +112,15 @@ export function NaturalSearch() {
   if (!apiKey) {
     return (
       <EmptyState
-        title="Serve la tua chiave Anthropic"
-        description="La ricerca a frasi traduce quello che scrivi in filtri per TMDB: Claude sceglie i filtri, il catalogo risponde. La chiave resta su questo dispositivo."
+        title={t("NaturalSearch.serve_la_tua_chiave")}
+        description={t("NaturalSearch.la_ricerca_a_frasi")}
         action={
           <button
             type="button"
             onClick={() => openSettings()}
             className="btn btn-primary"
           >
-            Aggiungi la chiave
+            {t("NaturalSearch.aggiungi_la_chiave")}
           </button>
         }
       />
@@ -138,8 +139,8 @@ export function NaturalSearch() {
         <input
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="film di fantascienza anni '90"
-          aria-label="Descrivi cosa cerchi"
+          placeholder={t("NaturalSearch.film_di_fantascienza_anni")}
+          aria-label={t("NaturalSearch.descrivi_cosa_cerchi")}
           className="field min-w-0 flex-1"
         />
         <button
@@ -147,7 +148,7 @@ export function NaturalSearch() {
           disabled={busy || !question.trim()}
           className="btn btn-primary shrink-0"
         >
-          {busy ? "Cerco…" : "Cerca"}
+          {busy ? t("NaturalSearch.cerco") : t("NaturalSearch.cerca")}
         </button>
       </form>
 
@@ -177,15 +178,14 @@ export function NaturalSearch() {
 
       {query && (
         <div className="flex flex-col gap-2 rounded-lg bg-surface-2 p-3.5">
-          <p className="text-sm text-text">{query.explanation || "Ecco cosa ho cercato."}</p>
+          <p className="text-sm text-text">{query.explanation || t("NaturalSearch.ecco_cosa_ho_cercato")}</p>
           <QueryChips query={query} />
         </div>
       )}
 
       {results && results.length === 0 && (
         <p className="text-sm text-text-muted">
-          Nessun titolo con questi filtri. Prova a chiedere in modo meno stretto — spesso è un anno
-          o una durata di troppo.
+          {t("NaturalSearch.nessun_titolo_con_questi")}
         </p>
       )}
 
@@ -199,7 +199,7 @@ export function NaturalSearch() {
                 type="button"
                 onClick={() => choose(r)}
                 disabled={picking !== null}
-                aria-label={owned ? `${r.title} — già in libreria, apri` : `Aggiungi ${r.title} alla libreria`}
+                aria-label={owned ? t("NaturalSearch.gia_in_libreria_apri", { v0: r.title }) : t("NaturalSearch.aggiungi_alla_libreria", { v0: r.title })}
                 className="text-left disabled:opacity-60"
               >
                 <div className="relative">

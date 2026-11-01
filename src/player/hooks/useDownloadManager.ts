@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import type { DownloadItem, DownloadQuality, MediaContent } from '../types';
 import * as downloadService from '../services/downloadService';
 import { UnsupportedPlaylistError } from '../services/hlsManifest';
+import { t } from "../../lib/i18n";
 
 // Starting a download reads the title's playlist, which can fail for reasons
 // the user can act on — so it's reported, not swallowed into a rejected promise
@@ -9,12 +10,12 @@ import { UnsupportedPlaylistError } from '../services/hlsManifest';
 function describeFailure(error: unknown): string {
   if (error instanceof UnsupportedPlaylistError) {
     if (error.reason === 'encrypted')
-      return 'Questa sorgente è cifrata (EXT-X-KEY): il download offline non la supporta.';
+      return t("player_useDownloadManager.questa_sorgente_e_cifrata");
     if (error.reason === 'byteranges')
-      return 'Questa sorgente usa EXT-X-BYTERANGE: il download offline non la supporta.';
-    return 'La playlist di questa sorgente non elenca segmenti scaricabili.';
+      return t("player_useDownloadManager.questa_sorgente_usa_ext");
+    return t("player_useDownloadManager.la_playlist_di_questa");
   }
-  return 'Non riesco a leggere la playlist di questa sorgente. Controlla l’indirizzo e i permessi CORS dell’host.';
+  return t("player_useDownloadManager.non_riesco_a_leggere");
 }
 
 /** Shortest gap between two quota checks while a download is running. */

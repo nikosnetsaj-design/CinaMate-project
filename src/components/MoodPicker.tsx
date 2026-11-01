@@ -3,6 +3,7 @@ import { PosterRow } from "./PosterRow";
 import { RowHeader } from "./RowHeader";
 import { useVisibleItems } from "../lib/useVisibleItems";
 import { MOODS, itemsForMood, moodCounts, type MoodId } from "../lib/moods";
+import { t } from "../lib/i18n";
 
 /**
  * «Che serata è?» — la scoperta per stato d'animo.
@@ -34,12 +35,12 @@ export function MoodPicker() {
 
   return (
     <section className="flex flex-col gap-4">
-      <RowHeader title="Che serata è?" note={current ? current.blurb : "Scegli l'aria che tira, non il genere"} />
+      <RowHeader title={t("MoodPicker.che_serata_e")} note={current ? current.blurb : t("MoodPicker.scegli_l_aria_che")} />
 
       <div
         className="shelf gap-2"
         role="group"
-        aria-label="Scegli lo stato d'animo"
+        aria-label={t("MoodPicker.scegli_lo_stato_d")}
       >
         {available.map((mood) => {
           const on = mood.id === active;

@@ -21,7 +21,7 @@ import { useAppReady } from "../lib/useAppReady";
 import { useVisibleItems } from "../lib/useVisibleItems";
 import type { Kind, Status } from "../types";
 import { BookmarkIcon, GridIcon, ListIcon, ShareIcon } from "../components/icons";
-import { t } from "../lib/i18n";
+import { platformLabel, t } from "../lib/i18n";
 
 /** I tipi che un indirizzo può nominare: di ciò che arriva scritto lì non ci si fida. */
 const KIND_IDS: Kind[] = ["film", "serie", "anime", "doc"];
@@ -90,7 +90,7 @@ export function Library() {
   // when it is actually four horror films would be worse than useless to
   // whoever opens it.
   const listName =
-    q.trim() || (filterCount > 0 ? describeQuery({ filters, sort }).join(" · ") || "Selezione dalla mia libreria" : "La mia libreria");
+    q.trim() || (filterCount > 0 ? describeQuery({ filters, sort }).join(" · ") || t("Library.selezione_dalla_mia_libreria") : t("Library.la_mia_libreria"));
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-5 px-[var(--gutter)] py-6 sm:py-10">
@@ -116,7 +116,7 @@ export function Library() {
 
       {suggestion && (
         <p className="text-sm text-text-muted">
-          Forse cercavi{" "}
+          {t("Library.forse_cercavi")}{" "}
           <button
             type="button"
             onClick={() => setQ(suggestion)}
@@ -143,7 +143,7 @@ export function Library() {
           {/* Il conteggio compare solo quando dice qualcosa di nuovo: senza filtri
               né ricerca ripeteva i «titoli in totale» scritti appena sopra. */}
           {list.length !== items.length && (
-            <span className="mr-1 whitespace-nowrap text-xs text-text-faint tabular">{list.length} titoli</span>
+            <span className="mr-1 whitespace-nowrap text-xs text-text-faint tabular">{list.length} {t("Library.titoli")}</span>
           )}
           <select
             value={sort}
@@ -175,7 +175,7 @@ export function Library() {
                 navigate(`/liste/${id}`, { viewTransition: true });
               }}
               aria-label={t("library.saveSmart")}
-              title="Salva come lista intelligente"
+              title={t("Library.salva_come_lista_intelligente")}
               className="icon-btn"
             >
               <BookmarkIcon size={20} />
@@ -203,11 +203,11 @@ export function Library() {
            Home — era una delle quattro frasi diverse per dire «non c'è niente» —
            e quella filtrata dice cosa fare invece di constatare. */
         <EmptyState
-          title={items.length === 0 ? "Lo scaffale è tuo da riempire." : "Niente con questi filtri"}
+          title={items.length === 0 ? t("Library.lo_scaffale_e_tuo") : t("Library.niente_con_questi_filtri")}
           description={
             items.length === 0
-              ? "Cerca un film o una serie che hai visto: copertina, trama, cast e durata arrivano da soli."
-              : "Prova a toglierne uno, o a cercare con un'altra parola."
+              ? t("Library.cerca_un_film_o")
+              : t("Library.prova_a_toglierne_uno")
           }
           action={
             <button
@@ -222,7 +222,7 @@ export function Library() {
               }}
               className={items.length === 0 ? "btn btn-primary" : "btn btn-secondary"}
             >
-              {items.length === 0 ? "Aggiungi il primo titolo" : "Togli filtri e ricerca"}
+              {items.length === 0 ? t("Library.aggiungi_il_primo_titolo") : t("Library.togli_filtri_e_ricerca")}
             </button>
           }
         />
@@ -239,14 +239,14 @@ export function Library() {
               <button
                 type="button"
                 onClick={() => openItem(item)}
-                aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
+                aria-label={t("Library.apri_dettagli_di", { v0: item.title, v1: item.year })}
                 className="list-row gap-4"
               >
                 <PosterArt item={item} size="sm" showTitle={false} className="w-12 shrink-0 rounded-xs" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-base font-medium text-text">{item.title}</p>
                   <p className="mt-0.5 truncate text-sm tabular text-text-muted">
-                    {[item.year, item.genre, item.platform].filter(Boolean).join(" · ")}
+                    {[item.year, item.genre, item.platform && platformLabel(item.platform)].filter(Boolean).join(" · ")}
                   </p>
                   <div className="mt-1.5">
                     <StatusChip status={item.status} size="sm" />

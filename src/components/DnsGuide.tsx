@@ -5,6 +5,7 @@ import { DNS_FAQ, PLATFORM_STEPS, PORTS, RESOLVERS } from "../lib/dnsGuide";
 import { DOH_LABEL, JSON_CAPABLE, resolveEverywhere } from "../lib/doh";
 import type { DohResult } from "../lib/doh";
 import { ChevronRightIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * La scheda di riferimento sul DNS cifrato.
@@ -23,7 +24,7 @@ export function DnsGuideButton() {
         onClick={() => setOpen(true)}
         className="btn btn-plain btn-sm -ml-3 gap-0.5"
       >
-        DNS cifrato: DoH, DoT e i resolver pubblici
+        {t("DnsGuide.dns_cifrato_doh_dot")}
         <ChevronRightIcon size={16} />
       </button>
       {open && <DnsGuideSheet onClose={() => setOpen(false)} />}
@@ -56,12 +57,10 @@ function Lookup() {
   return (
     <section>
       <h3 className="mb-1 text-base font-semibold text-text">
-        Prova un nome
+        {t("DnsGuide.prova_un_nome")}
       </h3>
       <p className="mb-3 text-sm text-text-muted">
-        Chiede a Cloudflare e a Google, via DoH, cosa risponde per un nome. Serve a distinguere due
-        guasti che da fuori sembrano lo stesso: un sito spento, e un nome che sulla risoluzione che
-        stai usando non diventa un indirizzo. Non cambia il DNS di questo dispositivo.
+        {t("DnsGuide.chiede_a_cloudflare_e")}
       </p>
       <form
         className="flex gap-2"
@@ -77,8 +76,8 @@ function Lookup() {
           autoComplete="off"
           autoCapitalize="off"
           spellCheck={false}
-          aria-label="Nome da risolvere"
-          placeholder="esempio.tld"
+          aria-label={t("DnsGuide.nome_da_risolvere")}
+          placeholder={t("DnsGuide.esempio_tld")}
           className="field field-sm min-w-0 flex-1 font-mono"
         />
         <button
@@ -86,7 +85,7 @@ function Lookup() {
           disabled={busy || !name.trim()}
           className="btn btn-primary btn-sm shrink-0"
         >
-          {busy ? "Chiedo…" : "Risolvi"}
+          {busy ? t("DnsGuide.chiedo") : t("DnsGuide.risolvi")}
         </button>
       </form>
       {results && (
@@ -96,7 +95,7 @@ function Lookup() {
               <p className="text-sm text-text">
                 <span className="font-medium">{r.resolver}</span>{" "}
                 <span className="text-text-muted">— {DOH_LABEL[r.verdict]}</span>
-                {r.ms > 0 && <span className="tabular text-text-muted"> · {r.ms} ms</span>}
+                {r.ms > 0 && <span className="tabular text-text-muted"> · {r.ms} {t("DnsGuide.ms")}</span>}
               </p>
               {r.addresses.length > 0 && (
                 <p className="mt-0.5 break-all font-mono text-xs text-text-muted">
@@ -117,9 +116,9 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
   async function copy(value: string) {
     try {
       await navigator.clipboard.writeText(value);
-      pushToast("success", "Copiato.");
+      pushToast("success", t("DnsGuide.copiato"));
     } catch {
-      pushToast("error", "Il browser non ha concesso gli appunti.");
+      pushToast("error", t("DnsGuide.il_browser_non_ha"));
     }
   }
 
@@ -128,16 +127,12 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
       <div className="flex flex-col gap-8 p-5 pt-8 sm:p-6">
         <div>
           <h2 id="dns-guide-title" className="t-title text-text">
-            DNS cifrato
+            {t("DnsGuide.dns_cifrato")}
           </h2>
           <p className="mt-2 text-sm text-text-muted">
-            Il DNS è il passaggio in cui un nome diventa un indirizzo, e per trent'anni è viaggiato
-            in chiaro: chiunque sia sul percorso legge cosa stai per aprire, e su una rete che non è
-            tua può anche rispondere al posto del resolver.{" "}
-            <strong className="font-medium text-text-muted">DoH</strong> (DNS su HTTPS) e{" "}
-            <strong className="font-medium text-text-muted">DoT</strong> (DNS su TLS) cifrano quella
-            domanda. Cambiare resolver sposta chi la vede — non ti rende anonimo e non cambia cosa è
-            lecito guardare.
+            {t("DnsGuide.il_dns_e_il")}{" "}
+            <strong className="font-medium text-text-muted">{t("DnsGuide.doh")}</strong> {t("DnsGuide.dns_su_https_e")}{" "}
+            <strong className="font-medium text-text-muted">{t("DnsGuide.dot")}</strong> {t("DnsGuide.dns_su_tls_cifrano")}
           </p>
         </div>
 
@@ -145,22 +140,19 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
 
         <section>
           <h3 className="mb-1 text-base font-semibold text-text">
-            Resolver pubblici
+            {t("DnsGuide.resolver_pubblici")}
           </h3>
           <p className="mb-3 text-sm text-text-muted">
-            DoH viaggia sulla porta {PORTS.doh}, la stessa di tutto il traffico HTTPS, quindi non si
-            distingue dal resto della navigazione. DoT ha la sua, la {PORTS.dot}: più pulita da
-            amministrare, e per lo stesso motivo più facile da bloccare. Sul piano della
-            riservatezza sono equivalenti.
+            {t("DnsGuide.doh_viaggia_sulla_porta")} {PORTS.doh}{t("DnsGuide.la_stessa_di_tutto")} {PORTS.dot}{t("DnsGuide.piu_pulita_da_amministrare")}
           </p>
           <div className="-mx-1 overflow-x-auto px-1">
             <table className="w-full min-w-[36rem] border-collapse text-left text-xs">
               <thead>
                 <tr className="text-text-muted shadow-[inset_0_-1px_0_var(--separator)]">
-                  <th className="py-1.5 pr-3 font-medium">Servizio</th>
-                  <th className="py-1.5 pr-3 font-medium">IPv4</th>
-                  <th className="py-1.5 pr-3 font-medium">DoH</th>
-                  <th className="py-1.5 font-medium">DoT</th>
+                  <th className="py-1.5 pr-3 font-medium">{t("DnsGuide.servizio")}</th>
+                  <th className="py-1.5 pr-3 font-medium">{t("DnsGuide.ipv4")}</th>
+                  <th className="py-1.5 pr-3 font-medium">{t("DnsGuide.doh")}</th>
+                  <th className="py-1.5 font-medium">{t("DnsGuide.dot")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -173,7 +165,7 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
                             chi la casella qui sopra può davvero interrogare. */}
                         {JSON_CAPABLE.has(r.name) && (
                           <span className="ml-1.5 text-xs font-normal text-text-muted">
-                            interrogabile da qui
+                            {t("DnsGuide.interrogabile_da_qui")}
                           </span>
                         )}
                       </span>
@@ -187,7 +179,7 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
                           key={ip}
                           type="button"
                           onClick={() => copy(ip)}
-                          title="Copia"
+                          title={t("DnsGuide.copia")}
                           className="block hover:underline"
                         >
                           {ip}
@@ -203,7 +195,7 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
                       <button
                         type="button"
                         onClick={() => copy(r.doh)}
-                        title="Copia"
+                        title={t("DnsGuide.copia")}
                         className="break-all text-left font-mono text-xs text-text-muted hover:underline"
                       >
                         {r.doh}
@@ -213,7 +205,7 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
                       <button
                         type="button"
                         onClick={() => copy(r.dot)}
-                        title="Copia"
+                        title={t("DnsGuide.copia")}
                         className="break-all text-left font-mono text-xs text-text-muted hover:underline"
                       >
                         {r.dot}
@@ -224,12 +216,12 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
               </tbody>
             </table>
           </div>
-          <p className="mt-2 text-xs text-text-muted">Tocca un valore per copiarlo.</p>
+          <p className="mt-2 text-xs text-text-muted">{t("DnsGuide.tocca_un_valore_per")}</p>
         </section>
 
         <section>
           <h3 className="mb-1 text-base font-semibold text-text">
-            Dove si scrivono
+            {t("DnsGuide.dove_si_scrivono")}
           </h3>
           <div className="flex flex-col gap-2.5">
             {PLATFORM_STEPS.map((p) => (
@@ -248,7 +240,7 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
 
         <section>
           <h3 className="mb-1 text-base font-semibold text-text">
-            Domande che tornano
+            {t("DnsGuide.domande_che_tornano")}
           </h3>
           <dl className="flex flex-col gap-4">
             {DNS_FAQ.map((f) => (
@@ -265,7 +257,7 @@ function DnsGuideSheet({ onClose }: { onClose: () => void }) {
           onClick={onClose}
           className="btn btn-secondary btn-sm"
         >
-          Chiudi
+          {t("DnsGuide.chiudi")}
         </button>
       </div>
     </Sheet>

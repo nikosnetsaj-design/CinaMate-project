@@ -2,6 +2,7 @@ import type { Item } from "../types";
 import { posterUrl } from "../lib/tmdb";
 import type { MediaContent } from "./types";
 import type { Recommendation } from "./services/recommendationService";
+import { t } from "../lib/i18n";
 
 const MAX_RECOMMENDATIONS = 4;
 
@@ -47,7 +48,7 @@ export function recommendFromLibrary(
       .filter((i) => i.collectionId === current.collectionId)
       .sort((a, b) => Number(a.status === "Visto") - Number(b.status === "Visto") || byPlayable(a, b));
     for (const item of sameSaga) {
-      add(item, "next_saga", current.collectionName ? `Da ${current.collectionName}` : "Dalla stessa saga");
+      add(item, "next_saga", current.collectionName ? `Da ${current.collectionName}` : t("player_recommendFromLibrary.dalla_stessa_saga"));
     }
   }
 
@@ -55,14 +56,14 @@ export function recommendFromLibrary(
   if (current?.similar.length) {
     const wanted = new Set(current.similar.map((t) => t.toLowerCase()));
     for (const item of others.filter((i) => wanted.has(i.title.toLowerCase())).sort(byPlayable)) {
-      add(item, "similar", "Simile a quello che hai appena visto");
+      add(item, "similar", t("player_recommendFromLibrary.simile_a_quello_che"));
     }
   }
 
   // 3. Same director, which is how people actually pick a second film.
   if (current?.director) {
     for (const item of others.filter((i) => i.director === current.director).sort(byPlayable)) {
-      add(item, "related", `Ancora ${current.director}`);
+      add(item, "related", t("player_recommendFromLibrary.ancora", { v0: current.director }));
     }
   }
 
@@ -71,14 +72,14 @@ export function recommendFromLibrary(
     const sameGenre = others
       .filter((i) => i.genre === current.genre && i.status !== "Visto")
       .sort((a, b) => byPlayable(a, b) || (b.vote ?? 0) - (a.vote ?? 0));
-    for (const item of sameGenre) add(item, "related", `Ancora ${current.genre}`);
+    for (const item of sameGenre) add(item, "related", t("player_recommendFromLibrary.ancora", { v0: current.genre }));
   }
 
   // 5. Nothing matched (a standalone title, or a library of one): fall back to
   //    whatever else is playable, so the end screen isn't a dead end.
   if (picked.size === 0) {
     for (const item of others.filter((i) => playableIds.has(i.id))) {
-      add(item, "related", "Altro con una sorgente");
+      add(item, "related", t("player_recommendFromLibrary.altro_con_una_sorgente"));
     }
   }
 

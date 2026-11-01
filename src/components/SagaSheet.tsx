@@ -27,6 +27,7 @@ import { useSagas, type SagaKey } from "../store/useSagas";
 import { PosterArt } from "./PosterArt";
 import { SagaTimeline } from "./SagaTimeline";
 import { BackIcon, CheckIcon, ClockIcon, ListIcon, PlayIcon, PlusIcon, TimelineIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 
 /** Lo stato di un capitolo, in un'icona: visto, in corso, in libreria, assente. */
@@ -89,8 +90,8 @@ function EntryRow({ entry, onOpen, onAdd, adding }: {
           disabled={adding}
           aria-label={
             entry.item
-              ? `Apri dettagli di ${entry.part.title}`
-              : `Aggiungi ${entry.part.title} alla libreria`
+              ? t("SagaSheet.apri_dettagli_di", { v0: entry.part.title })
+              : t("SagaSheet.aggiungi_alla_libreria", { v0: entry.part.title })
           }
           className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:opacity-60"
         >
@@ -103,7 +104,7 @@ function EntryRow({ entry, onOpen, onAdd, adding }: {
           <div className="min-w-0 flex-1">
             <p className="truncate font-display text-sm font-semibold text-text">{entry.part.title}</p>
             <p className="mt-0.5 font-mono tabular text-xs text-text-faint">
-              {entry.part.year ?? "in arrivo"}
+              {entry.part.year ?? t("SagaSheet.in_arrivo")}
               {entry.item?.vote != null ? ` · ${entry.item.vote}/10` : ""}
             </p>
             {entry.pct !== null && entry.state === "in-visione" && (
@@ -178,9 +179,9 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
     setComputing(true);
     try {
       setOrders(sagaKey, await computeSagaOrders(view.name, view.parts, apiKey, model));
-      pushToast("success", "Ordini di visione calcolati.");
+      pushToast("success", t("SagaSheet.ordini_di_visione_calcolati"));
     } catch (err) {
-      pushToast("error", err instanceof Error ? err.message : "Calcolo non riuscito.");
+      pushToast("error", err instanceof Error ? err.message : t("SagaSheet.calcolo_non_riuscito"));
     }
     setComputing(false);
   }
@@ -201,7 +202,7 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
       );
       close();
     } catch {
-      pushToast("error", "Non è stato possibile leggere questo titolo da TMDB.");
+      pushToast("error", t("SagaSheet.non_e_stato_possibile"));
     }
     setAdding(null);
   }
@@ -223,7 +224,7 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
       // Resume where the saga actually stands rather than at chapter one.
       index: Math.max(0, entries.findIndex((e) => e.state !== "visto")),
     });
-    pushToast("success", `Maratona avviata: ${view.name}.`);
+    pushToast("success", t("SagaSheet.maratona_avviata", { v0: view.name }));
     close();
   }
 
@@ -260,7 +261,7 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
       <button
         type="button"
         onClick={close}
-        aria-label="Torna indietro"
+        aria-label={t("SagaSheet.torna_indietro")}
         className="icon-btn fixed left-3 top-3 z-20 bg-black/45 text-white backdrop-blur-md hover:bg-black/65 hover:text-white"
       >
         <BackIcon />
@@ -280,12 +281,12 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
           )}
           <div className="min-w-0 flex-1 pb-1">
             <p className="text-sm text-text-muted">
-              {view?.isUniverse ? "Universo" : "Saga"}
+              {view?.isUniverse ? t("SagaSheet.universo") : t("SagaSheet.saga")}
             </p>
             <h1 id={titleId} className="t-display mt-0.5 text-text">
               {view?.name ?? (
                 <span role="status" className="block">
-                  <span className="sr-only">Caricamento…</span>
+                  <span className="sr-only">{t("SagaSheet.caricamento")}</span>
                   <span aria-hidden="true" className="skeleton mt-1 block h-7 w-48 rounded-xs" />
                 </span>
               )}
@@ -314,9 +315,9 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
         {view && (
           <>
             <p className="mt-3 text-sm text-text-muted">
-              <span className="font-mono tabular">{progress.watched}</span> di{" "}
-              <span className="font-mono tabular">{progress.total}</span> capitoli visti ·{" "}
-              <span className="font-mono tabular">{progress.owned}</span> in libreria
+              <span className="font-mono tabular">{progress.watched}</span> {t("SagaSheet.di")}{" "}
+              <span className="font-mono tabular">{progress.total}</span> {t("SagaSheet.capitoli_visti")}{" "}
+              <span className="font-mono tabular">{progress.owned}</span> {t("SagaSheet.in_libreria")}
             </p>
 
             {view.overview && (
@@ -326,7 +327,7 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
             {/* Ordine di visione */}
             <div className="mt-5">
               <span className="mb-2 block text-xs font-medium text-text-faint">
-                Ordine di visione
+                {t("SagaSheet.ordine_di_visione")}
               </span>
               <div className="flex flex-wrap gap-2">
                 {WATCH_ORDERS.map((o) => {
@@ -358,12 +359,12 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
                   disabled={computing}
                   className="btn btn-secondary mt-2.5 w-full"
                 >
-                  {computing ? "Claude sta ordinando la saga…" : "Calcola l'ordine con Claude"}
+                  {computing ? t("SagaSheet.claude_sta_ordinando_la") : t("SagaSheet.calcola_l_ordine_con")}
                 </button>
               )}
               {needsOrders && !apiKey && (
                 <p className="mt-1.5 text-xs text-text-faint">
-                  Ordine di uscita mostrato nel frattempo: serve la chiave Anthropic per gli altri due.
+                  {t("SagaSheet.ordine_di_uscita_mostrato")}
                 </p>
               )}
             </div>
@@ -377,23 +378,23 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
             >
               <PlayIcon size={16} />
               {isRunning
-                ? "Riavvia la maratona"
+                ? t("SagaSheet.riavvia_la_maratona")
                 : progress.watched > 0
-                  ? "Continua la saga"
-                  : `Guarda tutta la ${view.isUniverse ? "raccolta" : "saga"}`}
+                  ? t("SagaSheet.continua_la_saga")
+                  : t("SagaSheet.guarda_tutta_la", { v0: view.isUniverse ? t("SagaSheet.raccolta") : t("SagaSheet.saga_2") })}
             </button>
 
             {/* Lista / timeline */}
             <div className="mt-6 flex items-center justify-between">
               <span className="text-xs font-medium text-text-faint">
-                {progress.total} capitoli
+                {progress.total} {t("SagaSheet.capitoli")}
               </span>
               <div className="flex gap-1.5">
                 <button
                   type="button"
                   onClick={() => setMode("lista")}
                   aria-pressed={mode === "lista"}
-                  aria-label="Vista elenco"
+                  aria-label={t("SagaSheet.vista_elenco")}
                   className="btn btn-secondary"
                   style={mode === "lista" ? { color: accent, borderColor: accent } : { color: "var(--text-faint)" }}
                 >
@@ -403,7 +404,7 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
                   type="button"
                   onClick={() => setMode("timeline")}
                   aria-pressed={mode === "timeline"}
-                  aria-label="Vista timeline"
+                  aria-label={t("SagaSheet.vista_timeline")}
                   className="btn btn-secondary"
                   style={mode === "timeline" ? { color: accent, borderColor: accent } : { color: "var(--text-faint)" }}
                 >

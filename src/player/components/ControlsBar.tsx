@@ -5,6 +5,7 @@ import {
   EpisodesIcon, ExitFullscreenIcon, FullscreenIcon, MiniPlayerIcon, MuteIcon, NextEpisodeIcon,
   PipIcon, ScissorsIcon, SettingsIcon, SpeedIcon, SubtitlesIcon, VolumeIcon,
 } from './Icons';
+import { t } from "../../lib/i18n";
 
 /**
  * La fascia in fondo: l'avanzamento, e sotto le cose che si fanno *a* ciò che
@@ -48,28 +49,28 @@ export default function ControlsBar({
       {progress}
 
       <div className="pv-actions">
-        <button type="button" className="pv-action" aria-label="Ritaglia" onClick={onOpenClip}>
+        <button type="button" className="pv-action" aria-label={t("player_ControlsBar.ritaglia")} onClick={onOpenClip}>
           <ScissorsIcon />
-          <span>Ritaglia</span>
+          <span>{t("player_ControlsBar.ritaglia")}</span>
         </button>
-        <button type="button" className="pv-action" aria-label="Velocità di riproduzione" onClick={() => onOpenSettings('speed')}>
+        <button type="button" className="pv-action" aria-label={t("player_ControlsBar.velocita_di_riproduzione")} onClick={() => onOpenSettings('speed')}>
           <SpeedIcon />
-          <span>Velocità ({player.playbackRate}x)</span>
+          <span>{t("player_ControlsBar.velocita")}{player.playbackRate}x)</span>
         </button>
         {hasEpisodes && (
-          <button type="button" className="pv-action" aria-label="Episodi" onClick={onOpenEpisodes}>
+          <button type="button" className="pv-action" aria-label={t("player_ControlsBar.episodi")} onClick={onOpenEpisodes}>
             <EpisodesIcon />
-            <span>Episodi</span>
+            <span>{t("player_ControlsBar.episodi")}</span>
           </button>
         )}
-        <button type="button" className="pv-action" aria-label="Audio e sottotitoli" onClick={() => onOpenSettings('audio')}>
+        <button type="button" className="pv-action" aria-label={t("player_ControlsBar.audio_e_sottotitoli")} onClick={() => onOpenSettings('audio')}>
           <SubtitlesIcon />
-          <span>Audio e sottotitoli</span>
+          <span>{t("player_ControlsBar.audio_e_sottotitoli")}</span>
         </button>
         {onNext && (
-          <button type="button" className="pv-action" aria-label="Prossimo episodio" onClick={onNext}>
+          <button type="button" className="pv-action" aria-label={t("player_ControlsBar.prossimo_episodio")} onClick={onNext}>
             <NextEpisodeIcon />
-            <span>Pross. ep.</span>
+            <span>{t("player_ControlsBar.pross_ep")}</span>
           </button>
         )}
 
@@ -80,12 +81,12 @@ export default function ControlsBar({
             di lasciare un pulsante orfano su una riga tutta sua. */}
         <div className="pv-actions-tools">
           <div className="pv-volume">
-            <button className="pv-icon-btn" aria-label={player.muted ? 'Riattiva l’audio' : 'Muto'} onClick={player.toggleMute}>
+            <button className="pv-icon-btn" aria-label={player.muted ? t("player_ControlsBar.riattiva_l_audio") : t("player_ControlsBar.muto")} onClick={player.toggleMute}>
               {player.muted || player.volume === 0 ? <MuteIcon /> : <VolumeIcon />}
             </button>
             <input
               type="range" min={0} max={1} step={0.05}
-              aria-label="Volume"
+              aria-label={t("player_ControlsBar.volume")}
               value={player.muted ? 0 : player.volume}
               onChange={e => player.setVolume(Number(e.target.value))}
             />
@@ -94,37 +95,37 @@ export default function ControlsBar({
           {player.pipSupported && (
             <button
               className="pv-icon-btn"
-              aria-label="Immagine nell'immagine"
-              title="Immagine nell'immagine: il video esce in una finestrella sopra le altre app"
+              aria-label={t("player_ControlsBar.immagine_nell_immagine")}
+              title={t("player_ControlsBar.immagine_nell_immagine_il")}
               onClick={async () => {
                 const esito = await player.togglePiP();
                 if (esito === 'non-ora') {
-                  onNotice('L’immagine nell’immagine ha bisogno di un video già avviato.');
+                  onNotice(t("player_ControlsBar.l_immagine_nell_immagine"));
                 } else if (esito === 'non-supportato') {
-                  onNotice('Questo browser non concede l’immagine nell’immagine.');
+                  onNotice(t("player_ControlsBar.questo_browser_non_concede"));
                 }
               }}
             >
               <PipIcon />
-              <span className="pv-tool-label">Finestrella</span>
+              <span className="pv-tool-label">{t("player_ControlsBar.finestrella")}</span>
             </button>
           )}
           <button
             className="pv-icon-btn"
-            aria-label="Mini player"
-            title="Mini player: la scena si rimpicciolisce in un angolo di CineMate"
+            aria-label={t("player_ControlsBar.mini_player")}
+            title={t("player_ControlsBar.mini_player_la_scena")}
             onClick={onToggleMini}
           >
             <MiniPlayerIcon />
-            <span className="pv-tool-label">Mini</span>
+            <span className="pv-tool-label">{t("player_ControlsBar.mini")}</span>
           </button>
-          <button className="pv-icon-btn" aria-label="Impostazioni" onClick={() => onOpenSettings('quality')}>
+          <button className="pv-icon-btn" aria-label={t("player_ControlsBar.impostazioni")} onClick={() => onOpenSettings('quality')}>
             <SettingsIcon />
           </button>
           {player.fullscreenSupported && (
             <button
               className="pv-icon-btn"
-              aria-label={player.isFullscreen ? 'Esci da schermo intero' : 'Schermo intero'}
+              aria-label={player.isFullscreen ? t("player_ControlsBar.esci_da_schermo_intero") : t("player_ControlsBar.schermo_intero")}
               onClick={onToggleFullscreen}
             >
               {player.isFullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}

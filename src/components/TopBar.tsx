@@ -14,7 +14,7 @@ import { effectiveUrl, hostLabel, withProtocol } from "../lib/linkHost";
 import { clearTmdbCaches } from "../lib/tmdb";
 import { countdown, dayLabel } from "../lib/format";
 import { BellIcon, ChevronRightIcon, DotsIcon, GearIcon, GlobeIcon, LinkIcon, MoonIcon, PeopleIcon, PersonIcon, ServicesIcon, PlusIcon, PulseIcon, RefreshIcon, SunIcon } from "./icons";
-import { t } from "../lib/i18n";
+import { statusLabel, t } from "../lib/i18n";
 
 /**
  * I tre controlli in cima: i generi, le novità, il menu.
@@ -172,7 +172,7 @@ function GenreMenu() {
   return (
     <div className="relative">
       <button ref={buttonRef} type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-haspopup="menu" className={CHIP}>
-        Generi
+        {t("TopBar.generi")}
         <span aria-hidden="true" className="text-text-faint">
           ⌄
         </span>
@@ -265,8 +265,7 @@ export function AlertsBell() {
             </p>
             {soon.length === 0 ? (
               <p className="px-3.5 py-3 text-xs leading-relaxed text-text-faint">
-                Niente in uscita nelle prossime settimane, fra le serie e i film che segui. Quando TMDB fissa una
-                data, compare qui.
+                {t("TopBar.niente_in_uscita_nelle")}
               </p>
             ) : (
               soon.map((entry) => (
@@ -283,7 +282,7 @@ export function AlertsBell() {
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-text">{entry.item.title}</span>
                     <span className="block truncate text-xs text-text-faint">
-                      {entry.season != null && entry.episode != null ? `S${entry.season}E${entry.episode} · ` : ""}
+                      {entry.season != null && entry.episode != null ? t("TopBar.s_e", { v0: entry.season, v1: entry.episode }) : ""}
                       {dayLabel(entry.date)}
                     </span>
                   </span>
@@ -302,7 +301,7 @@ export function AlertsBell() {
               className="flex w-full items-center justify-between border-t border-border px-3.5 py-2.5 text-left text-xs font-medium"
               style={{ color: "var(--accent-text)" }}
             >
-              Apri il calendario
+              {t("TopBar.apri_il_calendario")}
               <ChevronRightIcon size={14} />
             </button>
           </div>
@@ -468,9 +467,9 @@ export function BrowseChips() {
 
   const has = (test: (i: (typeof items)[number]) => boolean) => items.some(test);
   const shortcuts = [
-    { label: "Serie TV", to: "/libreria?tipo=serie", show: has((i) => i.kind === "serie" || i.kind === "anime") },
-    { label: "Film", to: "/libreria?tipo=film", show: has((i) => i.kind === "film") },
-    { label: "Da vedere", to: "/libreria?stato=Da+vedere", show: has((i) => i.status === "Da vedere") },
+    { label: t("TopBar.serie_tv"), to: "/libreria?tipo=serie", show: has((i) => i.kind === "serie" || i.kind === "anime") },
+    { label: t("TopBar.film"), to: "/libreria?tipo=film", show: has((i) => i.kind === "film") },
+    { label: statusLabel("Da vedere"), to: "/libreria?stato=Da+vedere", show: has((i) => i.status === "Da vedere") },
   ].filter((s) => s.show);
 
   return (

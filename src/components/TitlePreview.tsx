@@ -4,6 +4,7 @@ import { getDetails, TmdbApiError, type TmdbDetails, type TmdbSearchResult } fro
 import { formatRuntime } from "../lib/format";
 import { serviceLinkFor } from "../lib/deepLinks";
 import { BackIcon, CheckIcon, ExternalIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * The full card of a title you have not added — and may decide not to.
@@ -41,7 +42,7 @@ export function TitlePreview({
       })
       .catch((e) => {
         if (cancelled) return;
-        setError(e instanceof TmdbApiError ? e.message : "Impossibile caricare i dettagli.");
+        setError(e instanceof TmdbApiError ? e.message : t("TitlePreview.impossibile_caricare_i_dettagli"));
       });
     return () => {
       cancelled = true;
@@ -62,7 +63,7 @@ export function TitlePreview({
         className="btn btn-plain btn-sm -ml-3 w-fit text-text-muted"
       >
         <BackIcon size={16} />
-        Torna ai risultati
+        {t("TitlePreview.torna_ai_risultati")}
       </button>
 
       <div className="flex gap-4">
@@ -82,9 +83,9 @@ export function TitlePreview({
           {details && (
             <p className="mt-1 text-sm text-text-muted">
               {[
-                details.seasons ? `${details.seasons} stagion${details.seasons === 1 ? "e" : "i"}` : null,
-                details.episodes ? `${details.episodes} episodi` : null,
-                details.tmdbRating ? `TMDB ${details.tmdbRating.toFixed(1)}` : null,
+                details.seasons ? t(details.seasons === 1 ? "TitlePreview.stagione" : "TitlePreview.stagioni", { v0: details.seasons }) : null,
+                details.episodes ? t("TitlePreview.episodi", { v0: details.episodes }) : null,
+                details.tmdbRating ? t("TitlePreview.tmdb", { v0: details.tmdbRating.toFixed(1) }) : null,
                 details.certification || null,
               ]
                 .filter(Boolean)
@@ -94,7 +95,7 @@ export function TitlePreview({
           {alreadyInLibrary && (
             <p className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-text">
               <CheckIcon size={16} />
-              È già nella tua libreria
+              {t("TitlePreview.e_gia_nella_tua")}
             </p>
           )}
         </div>
@@ -116,17 +117,17 @@ export function TitlePreview({
         <div className="flex flex-col gap-1.5 text-sm">
           {details.director && (
             <p className="text-text-muted">
-              <span className="text-text">Regia</span> · {details.director}
+              <span className="text-text">{t("TitlePreview.regia")}</span> · {details.director}
             </p>
           )}
           {details.cast.length > 0 && (
             <p className="text-text-muted">
-              <span className="text-text">Cast</span> · {details.cast.slice(0, 6).join(", ")}
+              <span className="text-text">{t("TitlePreview.cast")}</span> · {details.cast.slice(0, 6).join(", ")}
             </p>
           )}
           {details.studio && (
             <p className="text-text-muted">
-              <span className="text-text">Studio</span> · {details.studio}
+              <span className="text-text">{t("TitlePreview.studio")}</span> · {details.studio}
             </p>
           )}
         </div>
@@ -134,7 +135,7 @@ export function TitlePreview({
 
       {details && details.watchProviders.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-sm text-text-muted">Dove guardarlo:</span>
+          <span className="text-sm text-text-muted">{t("TitlePreview.dove_guardarlo")}</span>
           {details.watchProviders.slice(0, 5).map((p) => {
             // Apribile anche da qui: capita di cercare un titolo per guardarlo
             // stasera, non per metterlo in libreria.
@@ -145,7 +146,7 @@ export function TitlePreview({
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                title={`Apri ${details.title} su ${link.service}`}
+                title={t("TitlePreview.apri_su", { v0: details.title, v1: link.service })}
                 className="chip"
                 style={{ color: "var(--accent-text)" }}
               >
@@ -168,7 +169,7 @@ export function TitlePreview({
           disabled={!details || adding}
           className="btn btn-primary flex-1"
         >
-          {adding ? "…" : alreadyInLibrary ? "Aggiungi comunque" : "Aggiungi alla libreria"}
+          {adding ? "…" : alreadyInLibrary ? t("TitlePreview.aggiungi_comunque") : t("TitlePreview.aggiungi_alla_libreria")}
         </button>
         {details?.trailerUrl && (
           <a
@@ -177,7 +178,7 @@ export function TitlePreview({
             rel="noreferrer"
             className="btn btn-secondary"
           >
-            Trailer
+            {t("TitlePreview.trailer")}
           </a>
         )}
       </div>

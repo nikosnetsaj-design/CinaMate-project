@@ -133,7 +133,7 @@ export function Services() {
           <p className="mt-1 max-w-prose text-sm text-text-muted">{t("page.services.sub")}</p>
         </div>
         <label className="flex items-center gap-2 text-sm text-text-muted">
-          Paese
+          {t("Services.paese")}
           <select value={region} onChange={(e) => setRegion(e.target.value)} className="field field-sm w-auto">
             {REGIONS.map((r) => (
               <option key={r} value={r}>
@@ -148,13 +148,13 @@ export function Services() {
         <CatalogBlock />
       ) : wanted.length === 0 ? (
         <EmptyState
-          title="La lista «Da vedere» è vuota."
-          description="Metti in lista qualche titolo collegato al catalogo: qui vedi su quale servizio ce ne sono di più."
+          title={t("Services.la_lista_da_vedere")}
+          description={t("Services.metti_in_lista_qualche")}
         />
       ) : !ready ? (
         <div className="flex flex-col gap-3" aria-live="polite">
           <p className="text-sm text-text-muted">
-            Controllo dove stanno i tuoi titoli in {countryLabel(region)}… {state?.done ?? 0} di {tracked.length}
+            {t("Services.controllo_dove_stanno_i")} {countryLabel(region)}… {state?.done ?? 0} {t("Services.di")} {tracked.length}
           </p>
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="skeleton h-[72px] rounded-md" aria-hidden="true" />
@@ -162,8 +162,8 @@ export function Services() {
         </div>
       ) : missing === list.length ? (
         <ErrorState
-          title="TMDB non ha risposto"
-          description="Senza le risposte del catalogo non so su quale servizio stanno i tuoi titoli. La libreria funziona lo stesso."
+          title={t("Services.tmdb_non_ha_risposto")}
+          description={t("Services.senza_le_risposte_del")}
           onRetry={() => setAttempt((n) => n + 1)}
         />
       ) : (
@@ -171,35 +171,35 @@ export function Services() {
           {missing > 0 && (
             <ErrorState
               compact
-              title={`${plural(missing, "titolo è rimasto", "titoli sono rimasti")} senza risposta`}
-              description="Il conto qui sotto è fatto sugli altri."
+              title={t("Services.senza_risposta", { v0: plural(missing, "titolo è rimasto", "titoli sono rimasti") })}
+              description={t("Services.il_conto_qui_sotto")}
               onRetry={() => setAttempt((n) => n + 1)}
             />
           )}
           {/* --- Il consiglio ------------------------------------------ */}
           {combo.steps.length > 0 ? (
             <section className="flex flex-col gap-3 rounded-lg bg-surface p-5 shadow-[var(--shadow-sm)]">
-              <p className="text-sm text-text-muted">Il consiglio</p>
+              <p className="text-sm text-text-muted">{t("Services.il_consiglio")}</p>
               <p className="t-title text-text">
-                Con {combo.steps[0].service.name} vedi {combo.steps[0].total} dei tuoi {wanted.length} titoli da vedere
-                {combo.steps[1] ? `; aggiungendo ${combo.steps[1].service.name} arrivi a ${combo.steps[1].total}` : ""}
-                {combo.steps[2] ? `, con ${combo.steps[2].service.name} a ${combo.steps[2].total}` : ""}.
+                {t("Services.con")} {combo.steps[0].service.name} {t("Services.vedi")} {combo.steps[0].total} {t("Services.dei_tuoi")} {wanted.length} {t("Services.titoli_da_vedere")}
+                {combo.steps[1] ? t("Services.aggiungendo_arrivi_a", { v0: combo.steps[1].service.name, v1: combo.steps[1].total }) : ""}
+                {combo.steps[2] ? t("Services.con_a", { v0: combo.steps[2].service.name, v1: combo.steps[2].total }) : ""}.
               </p>
               <p className="text-xs text-text-muted">
-                Conto fatto in {countryLabel(region)} sui titoli in abbonamento, non a noleggio.
-                {nowhere > 0 && ` ${plural(nowhere, "titolo non è", "titoli non sono")} in abbonamento da nessuna parte, per ora.`}
+                {t("Services.conto_fatto_in")} {countryLabel(region)} {t("Services.sui_titoli_in_abbonamento")}
+                {nowhere > 0 && t("Services.in_abbonamento_da_nessuna", { v0: plural(nowhere, "titolo non è", "titoli non sono") })}
               </p>
             </section>
           ) : (
             <p className="text-sm text-text-muted">
-              Nessuno dei tuoi titoli da vedere è in abbonamento in {countryLabel(region)}, per ora: solo a noleggio o al cinema.
+              {t("Services.nessuno_dei_tuoi_titoli")} {countryLabel(region)}{t("Services.per_ora_solo_a")}
             </p>
           )}
 
           {/* --- I miei abbonamenti -------------------------------------- */}
           {services.length > 0 && (
             <section className="flex flex-col gap-3">
-              <RowHeader title="I tuoi abbonamenti" note="Segna quelli che paghi già." />
+              <RowHeader title={t("Services.i_tuoi_abbonamenti")} note={t("Services.segna_quelli_che_paghi")} />
               <div className="flex flex-wrap gap-2">
                 {services.map((s) => {
                   const on = mineSet.has(s.key);
@@ -217,7 +217,7 @@ export function Services() {
 
           {/* --- Per servizio ---------------------------------------- */}
           <section className="flex flex-col gap-4">
-            <RowHeader title="Per servizio" />
+            <RowHeader title={t("Services.per_servizio")} />
             <ul className="list-group" style={{ "--row-inset": "68px" } as React.CSSProperties}>
               {summary.map(({ service, items: its, only }) => {
                 return (
@@ -227,16 +227,16 @@ export function Services() {
                       <div className="flex items-baseline justify-between gap-3">
                         <span className="truncate text-sm font-medium text-text">
                           {service.name}
-                          {mineSet.has(service.key) && <span className="ml-1.5 text-xs font-normal text-text-muted">· ce l'hai</span>}
+                          {mineSet.has(service.key) && <span className="ml-1.5 text-xs font-normal text-text-muted">{t("Services.ce_l_hai")}</span>}
                         </span>
                         <span className="t-figure shrink-0 tabular text-text">{its.length}</span>
                       </div>
                       <p className="text-xs text-text-muted">
-                        {plural(its.length, "titolo", "titoli")} della tua lista{only > 0 ? `, ${only} solo qui` : ""}
+                        {plural(its.length, t("Services.titolo"), t("Services.titoli"))} {t("Services.della_tua_lista")}{only > 0 ? t("Services.solo_qui", { v0: only }) : ""}
                       </p>
                       <div className="no-scrollbar mt-2 flex gap-1.5 overflow-x-auto">
                         {its.slice(0, 8).map((i) => (
-                          <button key={i.id} type="button" onClick={() => openItem(i)} aria-label={`Apri dettagli di ${i.title}`} className="shrink-0">
+                          <button key={i.id} type="button" onClick={() => openItem(i)} aria-label={t("Services.apri_dettagli_di", { v0: i.title })} className="shrink-0">
                             <PosterArt item={i} size="sm" showTitle={false} className="w-9" />
                           </button>
                         ))}
@@ -251,7 +251,7 @@ export function Services() {
           {/* --- In arrivo -------------------------------------------- */}
           {arriving.size > 0 && (
             <section className="flex flex-col gap-4">
-              <RowHeader title="In arrivo" note="Le uscite dei titoli che segui, sul servizio dove stanno." />
+              <RowHeader title={t("Services.in_arrivo")} note={t("Services.le_uscite_dei_titoli")} />
               <ul className="list-group" style={{ "--row-inset": "68px" } as React.CSSProperties}>
                 {[...arriving.entries()].map(([key, entries]) => {
                   const service = services.find((s) => s.key === key);
@@ -281,7 +281,7 @@ export function Services() {
 
           {/* --- Già stasera ------------------------------------------ */}
           <section className="flex flex-col gap-4">
-            <RowHeader title="Con quello che hai" count={onlyMine ? watchable.length : undefined} />
+            <RowHeader title={t("Services.con_quello_che_hai")} count={onlyMine ? watchable.length : undefined} />
             <button
               type="button"
               role="switch"
@@ -289,21 +289,21 @@ export function Services() {
               onClick={() => setOnlyMine(!onlyMine)}
               className="flex min-h-11 items-center justify-between gap-3 rounded-lg bg-surface px-4 text-left text-sm text-text shadow-[var(--shadow-sm)]"
             >
-              Solo sui miei abbonamenti
+              {t("Services.solo_sui_miei_abbonamenti")}
               <span aria-hidden="true" className="switch shrink-0" data-on={onlyMine} />
             </button>
             {!onlyMine ? (
               <p className="text-sm text-text-muted">
-                Accendi il filtro per vedere i titoli della tua lista che stanno sui servizi che hai segnato, o gratis.
+                {t("Services.accendi_il_filtro_per")}
               </p>
             ) : mine.length === 0 ? (
-              <p className="text-sm text-text-muted">Segna prima i tuoi abbonamenti qui sopra.</p>
+              <p className="text-sm text-text-muted">{t("Services.segna_prima_i_tuoi")}</p>
             ) : watchable.length === 0 ? (
-              <p className="text-sm text-text-muted">Niente della tua lista è sui tuoi abbonamenti, per ora.</p>
+              <p className="text-sm text-text-muted">{t("Services.niente_della_tua_lista")}</p>
             ) : (
               <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
                 {watchable.map((i) => (
-                  <button key={i.id} type="button" onClick={() => openItem(i)} aria-label={`Apri dettagli di ${i.title}`} className="text-left">
+                  <button key={i.id} type="button" onClick={() => openItem(i)} aria-label={t("Services.apri_dettagli_di", { v0: i.title })} className="text-left">
                     <PosterArt item={i} size="sm" showTitle={false} className="w-full" />
                     <span className="mt-1 block truncate text-xs text-text">{i.title}</span>
                   </button>

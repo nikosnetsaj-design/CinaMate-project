@@ -4,6 +4,7 @@ import { Sheet } from "./Sheet";
 import { useLists } from "../store/useLists";
 import type { Item } from "../types";
 import { PlusIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * In quali liste sta questo titolo. Un interruttore per lista: si mette e si
@@ -24,9 +25,9 @@ export function ListPickerSheet({ item, onClose }: { item: Item; onClose: () => 
       <div className="flex flex-col gap-5 p-5 pt-8 sm:p-6">
         <div>
           <h2 id={titleId} className="t-title text-text">
-            Liste
+            {t("ListPickerSheet.liste")}
           </h2>
-          <p className="mt-1 text-sm text-text-muted">Dove tenere «{item.title}».</p>
+          <p className="mt-1 text-sm text-text-muted">{t("ListPickerSheet.dove_tenere")}{item.title}».</p>
         </div>
 
         {manual.length > 0 && (
@@ -45,7 +46,7 @@ export function ListPickerSheet({ item, onClose }: { item: Item; onClose: () => 
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-medium text-text">{list.name}</span>
                       <span className="block text-xs tabular text-text-muted">
-                        {list.itemIds.length} {list.itemIds.length === 1 ? "titolo" : "titoli"}
+                        {list.itemIds.length} {list.itemIds.length === 1 ? t("ListPickerSheet.titolo") : t("ListPickerSheet.titoli")}
                       </span>
                     </span>
                     <span aria-hidden="true" className="switch" data-on={inside} />
@@ -60,25 +61,25 @@ export function ListPickerSheet({ item, onClose }: { item: Item; onClose: () => 
           className="flex gap-2"
           onSubmit={(e) => {
             e.preventDefault();
-            createManual(name.trim() || "Nuova lista", [item.id]);
+            createManual(name.trim() || t("ListPickerSheet.nuova_lista"), [item.id]);
             setName("");
           }}
         >
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Nuova lista, es. Da vedere col partner"
-            aria-label="Nome della nuova lista"
+            placeholder={t("ListPickerSheet.nuova_lista_es_da")}
+            aria-label={t("ListPickerSheet.nome_della_nuova_lista")}
             className="field min-w-0 flex-1"
           />
-          <button type="submit" className="btn btn-secondary shrink-0" aria-label="Crea la lista con questo titolo">
+          <button type="submit" className="btn btn-secondary shrink-0" aria-label={t("ListPickerSheet.crea_la_lista_con")}>
             <PlusIcon size={16} />
-            Crea
+            {t("ListPickerSheet.crea")}
           </button>
         </form>
 
         <Link to="/liste" onClick={onClose} className="btn btn-plain btn-sm -ml-3 self-start">
-          Tutte le liste
+          {t("ListPickerSheet.tutte_le_liste")}
         </Link>
       </div>
     </Sheet>

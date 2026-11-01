@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useFocusTrap } from '../../lib/useFocusTrap';
 import { CloseIcon, PlayIcon } from './Icons';
 import SeriesEpisodes, { type SeriesEpisodesProps } from './SeriesEpisodes';
+import { t } from "../../lib/i18n";
 
 /**
  * La lista di cosa altro c'è da riprodurre, senza uscire dal player.
@@ -48,13 +49,13 @@ export default function EpisodesPanel({ entries, currentId, onSelect, onClose, s
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Episodi e titoli da riprodurre"
+        aria-label={t("player_EpisodesPanel.episodi_e_titoli_da")}
         className="pv-side-panel"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="pv-side-header">
-          <h3>Episodi</h3>
-          <button className="pv-icon-btn" aria-label="Chiudi l'elenco" onClick={onClose}>
+          <h3>{t("player_EpisodesPanel.episodi")}</h3>
+          <button className="pv-icon-btn" aria-label={t("player_EpisodesPanel.chiudi_l_elenco")} onClick={onClose}>
             <CloseIcon />
           </button>
         </div>
@@ -65,19 +66,19 @@ export default function EpisodesPanel({ entries, currentId, onSelect, onClose, s
               type="button"
               role="tab"
               aria-selected={tab === 'serie'}
-              className={tab === 'serie' ? 'active' : ''}
+              className={tab === 'serie' ? "active" : ''}
               onClick={() => setTab('serie')}
             >
-              Questa serie
+              {t("player_EpisodesPanel.questa_serie")}
             </button>
             <button
               type="button"
               role="tab"
               aria-selected={tab === 'altro'}
-              className={tab === 'altro' ? 'active' : ''}
+              className={tab === 'altro' ? "active" : ''}
               onClick={() => setTab('altro')}
             >
-              Da riprodurre
+              {t("player_EpisodesPanel.da_riprodurre")}
             </button>
           </div>
         )}
@@ -92,7 +93,7 @@ export default function EpisodesPanel({ entries, currentId, onSelect, onClose, s
               <li key={entry.id}>
                 <button
                   type="button"
-                  className={`pv-episode ${current ? 'active' : ''}`}
+                  className={`pv-episode ${current ? "active" : ''}`}
                   aria-current={current}
                   onClick={() => {
                     if (!current) onSelect(entry.id);
@@ -111,7 +112,7 @@ export default function EpisodesPanel({ entries, currentId, onSelect, onClose, s
                     <strong>{entry.title}</strong>
                     {entry.subtitle && <span className="pv-dim">{entry.subtitle}</span>}
                   </span>
-                  {current && <span className="pv-episode-flag">In riproduzione</span>}
+                  {current && <span className="pv-episode-flag">{t("player_EpisodesPanel.in_riproduzione")}</span>}
                 </button>
               </li>
             );

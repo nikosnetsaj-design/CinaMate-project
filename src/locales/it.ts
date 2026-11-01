@@ -4,10 +4,12 @@
  * averle tutte, e il compilatore lo controlla.
  *
  * Qui c'è la cornice dell'app — navigazione, menu, impostazioni, titoli delle
- * pagine, stati, stati dei titoli. I testi lunghi dentro i singoli fogli sono
- * ancora scritti nei componenti, in italiano.
+ * pagine, stati dei titoli. I testi dei singoli fogli e delle pagine stanno in
+ * `it.ui.ts`, estratti dai componenti da scripts/i18n-extract.cjs.
  */
-const it = {
+import itUi from "./it.ui";
+
+const frame = {
   // Navigazione
   "nav.home": "Stasera",
   "nav.library": "Libreria",
@@ -90,6 +92,7 @@ const it = {
   "status.toWatch": "Da vedere",
   "status.dropped": "Abbandonato",
   "status.paused": "In pausa",
+  "platform.other": "Altro",
 
   // Stati delle pagine
   "error.title": "Il catalogo non risponde",
@@ -138,5 +141,7 @@ const it = {
   "settings.accent": "Colore d'accento",
   "settings.language.note": "Cambiare lingua ricarica l'app. I testi lunghi dentro alcuni fogli e le risposte del critico restano in italiano.",
 } as const;
+
+const it = { ...frame, ...itUi };
 
 export default it;

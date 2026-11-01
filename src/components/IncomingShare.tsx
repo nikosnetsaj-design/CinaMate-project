@@ -4,6 +4,7 @@ import { useAddSheet } from "../store/useAddSheet";
 import { useLibrary } from "../store/useLibrary";
 import { readSharedList, readSharedTitle, type SharedEntry, type SharedList } from "../lib/share";
 import { CheckIcon, PlusIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * Handles a link someone sent you, or a QR code you scanned.
@@ -64,8 +65,7 @@ export function IncomingShare() {
             {list.n}
           </h2>
           <p className="mt-1 text-sm text-text-muted">
-            {list.e.length} titoli condivisi con te. Tocca quelli che vuoi aggiungere: niente entra
-            in libreria da solo.
+            {list.e.length} {t("IncomingShare.titoli_condivisi_con_te")}
           </p>
         </div>
 
@@ -87,12 +87,12 @@ export function IncomingShare() {
                   {already ? (
                     <span className="inline-flex shrink-0 items-center gap-1 text-xs text-text-muted">
                       <CheckIcon size={14} />
-                      In libreria
+                      {t("IncomingShare.in_libreria")}
                     </span>
                   ) : (
                     <span className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-accent-text">
                       <PlusIcon size={16} />
-                      Aggiungi
+                      {t("IncomingShare.aggiungi")}
                     </span>
                   )}
                 </button>
@@ -106,7 +106,7 @@ export function IncomingShare() {
           onClick={() => setList(null)}
           className="btn btn-secondary w-full"
         >
-          Chiudi
+          {t("IncomingShare.chiudi")}
         </button>
       </div>
     </Sheet>

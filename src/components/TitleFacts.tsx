@@ -7,6 +7,7 @@ import { profileUrl, providerLogoUrl, type TmdbCompany, type TmdbCrewCredit } fr
 import { MediaGallery } from "./MediaGallery";
 import type { Item } from "../types";
 import { ChevronRightIcon, MusicIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * I dati del titolo che non stanno nella libreria: chi l'ha fatto, quanto è
@@ -31,7 +32,7 @@ function CrewCard({ person }: { person: TmdbCrewCredit }) {
         closeItem();
         openPerson(person.name);
       }}
-      aria-label={`Apri la scheda di ${person.name}`}
+      aria-label={t("TitleFacts.apri_la_scheda_di", { v0: person.name })}
       className="flex items-center gap-3 rounded-lg bg-surface-2 p-2.5 text-left transition-colors hover:bg-surface-hover"
     >
       <span className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-surface-hover">
@@ -71,21 +72,21 @@ function MoneyPanel({ budget, revenue }: { budget: number; revenue: number }) {
     ratio == null
       ? null
       : ratio >= 2.5
-        ? { text: `Ha incassato ${ratio.toFixed(1).replace(".", ",")}× il budget: un successo pieno.`, color: "var(--status-done)" }
+        ? { text: t("TitleFacts.ha_incassato_il_budget", { v0: ratio.toFixed(1).replace(".", ",") }), color: "var(--status-done)" }
         : ratio >= 2
-          ? { text: `Ha incassato ${ratio.toFixed(1).replace(".", ",")}× il budget: il pareggio in sala sta più o meno qui.`, color: "var(--yellow)" }
-          : { text: `Ha incassato ${ratio.toFixed(1).replace(".", ",")}× il budget: in sala non è rientrato.`, color: "var(--danger)" };
+          ? { text: t("TitleFacts.ha_incassato_il_budget_2", { v0: ratio.toFixed(1).replace(".", ",") }), color: "var(--yellow)" }
+          : { text: t("TitleFacts.ha_incassato_il_budget_3", { v0: ratio.toFixed(1).replace(".", ",") }), color: "var(--danger)" };
 
   const scale = Math.max(budget, revenue, 1);
 
   return (
     <section className="mt-5">
-      <h2 className="font-display text-lg font-semibold text-text">Dati finanziari</h2>
+      <h2 className="font-display text-lg font-semibold text-text">{t("TitleFacts.dati_finanziari")}</h2>
       <div className="mt-2.5 rounded-lg bg-surface-2 p-4">
         <div className="flex flex-col gap-3">
           {[
             { label: "Budget", value: budget, color: "var(--text-muted)" },
-            { label: "Incassi", value: revenue, color: "var(--accent)" },
+            { label: t("TitleFacts.incassi"), value: revenue, color: "var(--accent)" },
           ]
             .filter((r) => r.value > 0)
             .map((r) => (
@@ -112,8 +113,8 @@ function MoneyPanel({ budget, revenue }: { budget: number; revenue: number }) {
           </p>
         )}
         <p className="mt-2 text-xs text-text-faint">
-          Cifre in dollari come le pubblica TMDB, non aggiustate per l'inflazione.
-          {revenue > 0 && budget > 0 && ` Differenza: ${formatUsdShort(revenue - budget)}.`}
+          {t("TitleFacts.cifre_in_dollari_come")}
+          {revenue > 0 && budget > 0 && t("TitleFacts.differenza", { v0: formatUsdShort(revenue - budget) })}
         </p>
       </div>
     </section>
@@ -135,7 +136,7 @@ function StudioRow({ companies }: { companies: TmdbCompany[] }) {
 
   return (
     <section className="mt-5">
-      <h2 className="font-display text-lg font-semibold text-text">Studi di produzione</h2>
+      <h2 className="font-display text-lg font-semibold text-text">{t("TitleFacts.studi_di_produzione")}</h2>
       <div className="mt-2.5 flex flex-wrap gap-2">
         {withLogo.map((c) => (
           <span
@@ -185,8 +186,8 @@ function SoundtrackLink({ title, composer }: { title: string; composer?: string 
         <MusicIcon size={20} />
       </span>
       <p className="min-w-0 flex-1 text-sm leading-snug text-text-muted">
-        Trova la colonna sonora su Spotify
-        {composer && <span className="block truncate text-xs text-text-faint">Musiche di {composer}</span>}
+        {t("TitleFacts.trova_la_colonna_sonora")}
+        {composer && <span className="block truncate text-xs text-text-faint">{t("TitleFacts.musiche_di")} {composer}</span>}
       </p>
       <a
         href={url}
@@ -194,7 +195,7 @@ function SoundtrackLink({ title, composer }: { title: string; composer?: string 
         rel="noopener noreferrer"
         className="btn btn-primary shrink-0"
       >
-        Apri
+        {t("TitleFacts.apri")}
       </a>
     </div>
   );
@@ -229,14 +230,14 @@ export function TitleFacts({ item }: { item: Item }) {
 
       {extras.originalTitle && extras.originalTitle.toLowerCase() !== item.title.toLowerCase() && (
         <p className="mt-2 text-xs text-text-faint">
-          Titolo originale · <span className="text-text-muted">{extras.originalTitle}</span>
+          {t("TitleFacts.titolo_originale")} <span className="text-text-muted">{extras.originalTitle}</span>
         </p>
       )}
 
       {crew.length > 0 && (
         <section className="mt-5">
           <div className="flex items-baseline justify-between gap-3">
-            <h2 className="font-display text-lg font-semibold text-text">Regia e troupe</h2>
+            <h2 className="font-display text-lg font-semibold text-text">{t("TitleFacts.regia_e_troupe")}</h2>
             {extras.crew.length > VISIBLE_CREW && (
               <button
                 type="button"
@@ -244,7 +245,7 @@ export function TitleFacts({ item }: { item: Item }) {
                 className="inline-flex items-center gap-0.5 text-xs font-medium"
                 style={{ color: "var(--accent-text)" }}
               >
-                {allCrew ? "mostra meno" : "mostra tutti"}
+                {allCrew ? t("TitleFacts.mostra_meno") : t("TitleFacts.mostra_tutti")}
                 {!allCrew && <ChevronRightIcon size={14} />}
               </button>
             )}

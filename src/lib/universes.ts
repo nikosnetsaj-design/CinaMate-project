@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 /**
  * Universes are the layer above sagas: a single story world told across several
  * collections plus standalone entries, which TMDB models as neither. What it
@@ -26,42 +27,42 @@ export const UNIVERSES: UniverseDef[] = [
     id: "mcu",
     name: "Marvel Cinematic Universe",
     keyword: "marvel cinematic universe",
-    blurb: "Una sola linea temporale, da Iron Man in avanti.",
+    blurb: t("universes.una_sola_linea_temporale"),
     accent: "var(--danger)",
   },
   {
     id: "dceu",
     name: "DC Extended Universe",
     keyword: "dc extended universe",
-    blurb: "L'universo condiviso DC da L'uomo d'acciaio in poi.",
+    blurb: t("universes.l_universo_condiviso_dc"),
     accent: "var(--status-watching)",
   },
   {
     id: "wizarding",
     name: "Wizarding World",
     keyword: "wizarding world",
-    blurb: "Harry Potter e Animali fantastici nello stesso mondo.",
+    blurb: t("universes.harry_potter_e_animali"),
     accent: "var(--yellow)",
   },
   {
     id: "middle-earth",
-    name: "Terra di Mezzo",
+    name: t("universes.terra_di_mezzo"),
     keyword: "middle-earth",
-    blurb: "Lo Hobbit e Il Signore degli Anelli, un'unica saga.",
+    blurb: t("universes.lo_hobbit_e_il"),
     accent: "var(--status-done)",
   },
   {
     id: "monsterverse",
     name: "MonsterVerse",
     keyword: "monsterverse",
-    blurb: "Godzilla, Kong e il resto dei titani.",
+    blurb: t("universes.godzilla_kong_e_il"),
     accent: "var(--cyan)",
   },
   {
     id: "conjuring",
     name: "The Conjuring Universe",
     keyword: "the conjuring universe",
-    blurb: "Gli Warren, Annabelle e tutti gli spin-off.",
+    blurb: t("universes.gli_warren_annabelle_e"),
     accent: "var(--accent)",
   },
 ];

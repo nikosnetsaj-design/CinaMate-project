@@ -1,4 +1,5 @@
 import type { ContentRating } from '../types';
+import { t } from "../../lib/i18n";
 
 /**
  * Il cartello dei primi secondi: per chi è questo titolo, e perché.
@@ -13,7 +14,7 @@ export default function RatingCard({ rating }: { rating: ContentRating }) {
   const second = rating.descriptors.length ? rating.descriptors.join(', ') : rating.ageLabel;
   return (
     <div className="pv-rating-card" role="note">
-      <span className="pv-rating-cert">Classificazione {rating.certification}</span>
+      <span className="pv-rating-cert">{t("player_RatingCard.classificazione")} {rating.certification}</span>
       {second && <span className="pv-rating-detail">{second}</span>}
     </div>
   );

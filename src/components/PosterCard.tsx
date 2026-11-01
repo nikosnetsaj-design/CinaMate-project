@@ -8,6 +8,7 @@ import { HeartIcon } from "./icons";
 import { useLibrary } from "../store/useLibrary";
 import type { Item } from "../types";
 import type { PosterBadge } from "../lib/homeBadges";
+import { t } from "../lib/i18n";
 
 export function PosterCard({
   item,
@@ -52,8 +53,8 @@ export function PosterCard({
       <m.div
         role="button"
         tabIndex={0}
-        aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
-        aria-description={item.fav ? "Fra i preferiti. Maiuscolo + Invio lo toglie." : "Maiuscolo + Invio lo mette fra i preferiti."}
+        aria-label={t("PosterCard.apri_dettagli_di", { v0: item.title, v1: item.year })}
+        aria-description={item.fav ? t("PosterCard.fra_i_preferiti_maiuscolo") : t("PosterCard.maiuscolo_invio_lo_mette")}
         {...press}
         onKeyDown={(e) => {
           // Invio apre; Maiuscolo + Invio è la pressione lunga della tastiera.
@@ -91,7 +92,7 @@ export function PosterCard({
             {item.title}
           </p>
           {item.fav && (
-            <span className="shrink-0 text-accent-text" role="img" aria-label="Preferito">
+            <span className="shrink-0 text-accent-text" role="img" aria-label={t("PosterCard.preferito")}>
               <HeartIcon size={12} filled />
             </span>
           )}
@@ -106,7 +107,7 @@ export function PosterCard({
               <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--accent)" }} />
             </div>
             <div className="mt-1 text-xs tabular text-text-faint">
-              {item.seen || 0}/{item.episodes} episodi
+              {item.seen || 0}/{item.episodes} {t("PosterCard.episodi")}
             </div>
           </div>
         )}

@@ -10,6 +10,7 @@ import { startDownload } from "../player/services/downloadService";
 import type { DownloadQuality } from "../player/types";
 import type { Item } from "../types";
 import { DownloadIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * «Scarica» dalla scheda del titolo, senza passare dal player.
@@ -54,21 +55,21 @@ export function DownloadButton({ item }: { item: Item }) {
         position: { season: source.searchSeason, episode: source.searchEpisode },
       });
       if (!resolved.source) {
-        pushToast("error", `Non trovo una sorgente per «${item.title}»: controlla gli indirizzi in Impostazioni.`);
+        pushToast("error", t("DownloadButton.non_trovo_una_sorgente", { v0: item.title }));
         return;
       }
       const [content] = buildPlayerCatalog([item], lookup, null, addresses);
       if (!content) {
-        pushToast("error", "Questo titolo non ha una sorgente da scaricare.");
+        pushToast("error", t("DownloadButton.questo_titolo_non_ha"));
         return;
       }
       await startDownload({ ...content, manifestUrl: resolved.source.url }, quality);
-      pushToast("success", `«${item.title}» in scaricamento. L'avanzamento è nel player, pannello Download.`);
+      pushToast("success", t("DownloadButton.in_scaricamento_l_avanzamento", { v0: item.title }));
     } catch {
       // Il messaggio del servizio non è leggibile (è un errore di rete o di
       // playlist): quello che conta è che il download non è partito e dove
       // andare a vedere.
-      pushToast("error", "Il download non è partito. La sorgente potrebbe non permettere le richieste da questa pagina.");
+      pushToast("error", t("DownloadButton.il_download_non_e"));
     } finally {
       setBusy(false);
     }
@@ -82,7 +83,7 @@ export function DownloadButton({ item }: { item: Item }) {
         className="btn btn-secondary btn-sm mt-2.5 w-full font-medium text-text-muted"
       >
         <DownloadIcon />
-        Scarica — prima dimmi dov'è il tuo server
+        {t("DownloadButton.scarica_prima_dimmi_dov")}
       </button>
     );
   }
@@ -97,7 +98,7 @@ export function DownloadButton({ item }: { item: Item }) {
         className="btn btn-secondary mt-2.5 w-full disabled:opacity-60"
       >
         <DownloadIcon />
-        {busy ? "Preparo il download…" : "Scarica"}
+        {busy ? t("DownloadButton.preparo_il_download") : t("DownloadButton.scarica")}
       </button>
 
       {picking && (

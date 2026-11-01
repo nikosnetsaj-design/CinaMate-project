@@ -1,6 +1,7 @@
 import { useFocusTrap } from '../../lib/useFocusTrap';
 import { SHORTCUTS } from '../hooks/usePlayerShortcuts';
 import { CloseIcon } from './Icons';
+import { t } from "../../lib/i18n";
 
 /**
  * The keyboard map, on `?`.
@@ -18,13 +19,13 @@ export default function ShortcutsHelp({ onClose }: { onClose: () => void }) {
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Scorciatoie da tastiera"
+        aria-label={t("player_ShortcutsHelp.scorciatoie_da_tastiera")}
         className="pv-settings-panel pv-shortcuts-panel"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="pv-settings-header">
-          <h3 className="pv-shortcuts-title">Scorciatoie</h3>
-          <button className="pv-icon-btn" aria-label="Chiudi" onClick={onClose}>
+          <h3 className="pv-shortcuts-title">{t("player_ShortcutsHelp.scorciatoie")}</h3>
+          <button className="pv-icon-btn" aria-label={t("player_ShortcutsHelp.chiudi")} onClick={onClose}>
             <CloseIcon />
           </button>
         </div>

@@ -1,3 +1,4 @@
+import { t } from "../lib/i18n";
 /*
  * Gli scheletri hanno la forma esatta di quello che arriva — stessa proporzione
  * della locandina, stesse righe di testo — così quando arriva non salta niente.
@@ -34,7 +35,7 @@ export function PosterGridSkeleton({ count = 10 }: { count?: number }) {
 export function PageSkeleton({ variant = "list" }: { variant?: "list" | "player" }) {
   return (
     <div role="status" className="mx-auto max-w-4xl px-[var(--gutter)] py-6 sm:py-10">
-      <span className="sr-only">Caricamento…</span>
+      <span className="sr-only">{t("Skeletons.caricamento")}</span>
       <div aria-hidden="true" className="flex flex-col gap-4">
         {variant === "player" ? (
           <>

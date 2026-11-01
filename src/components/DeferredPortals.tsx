@@ -85,6 +85,13 @@ export function DeferredPortals() {
   const onboardingDone = useOnboarding((s) => s.done);
   const replaying = useOnboarding((s) => s.replaying);
   const [emptyAtStart] = useState(() => useLibrary.getState().items.length === 0);
+  const showOnboarding = replaying || (!onboardingDone && emptyAtStart);
+
+  // Il benvenuto statico di index.html lo toglie il foglio vero quando arriva;
+  // se il foglio non deve arrivare (la libreria c'era già), lo si toglie qui.
+  useEffect(() => {
+    if (!showOnboarding) document.getElementById("cm-welcome")?.remove();
+  }, [showOnboarding]);
 
   /*
    * La scheda di un titolo è il foglio che si apre di più: la si scarica
@@ -129,7 +136,7 @@ export function DeferredPortals() {
       <Deferred open={settings} loader={settingsSheet} />
       {/* Il primo minuto: copre tutto, e si mostra da sé solo a libreria
           vuota (o quando lo si rivede dalle Impostazioni). */}
-      <Deferred open={replaying || (!onboardingDone && emptyAtStart)} loader={onboarding} />
+      <Deferred open={showOnboarding} loader={onboarding} />
       {/* In fondo a tutto: il Web Viewer copre lo schermo intero da
           qualunque punto parta, senza portarsi via la pagina sotto. */}
       <Deferred open={viewer} loader={webViewer} />

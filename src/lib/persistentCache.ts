@@ -1,4 +1,5 @@
 import { logError } from "./errorLog";
+import { t } from "./i18n";
 
 /**
  * La cache che sopravvive al ricaricamento.
@@ -251,7 +252,7 @@ export async function purgeExpired(): Promise<number> {
       tx.oncomplete = () => resolve(removed);
       tx.onerror = () => resolve(removed);
     } catch (e) {
-      logError("storage", "Pulizia della cache non riuscita", String(e));
+      logError("storage", t("persistentCache.pulizia_della_cache_non"), String(e));
       resolve(0);
     }
   });

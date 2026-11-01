@@ -36,6 +36,7 @@ import ResumeBar from './ResumeBar';
 import ShortcutsHelp from './ShortcutsHelp';
 import type { Recommendation } from '../services/recommendationService';
 import { PlayIcon, PauseIcon, ExpandIcon, UnlockIcon } from './Icons';
+import { t } from "../../lib/i18n";
 
 type Props = {
   content: MediaContent;
@@ -388,7 +389,7 @@ export default function VideoPlayer({
       // focusable div tells a screen reader nothing about what it just landed on.
       tabIndex={0}
       role="region"
-      aria-label={`Player video — ${content.title}`}
+      aria-label={t("player_VideoPlayer.player_video", { v0: content.title })}
       className={`pv-shell ${isMini ? 'pv-shell--mini' : ''} ${player.inPageFullscreen ? 'pv-shell--fullpage' : ''} ${controlsVisible ? '' : 'pv-controls-hidden'}`}
       style={{ '--pv-picture-brightness': gestures.brightness } as CSSProperties}
       onMouseMove={handleActivity}
@@ -443,11 +444,11 @@ export default function VideoPlayer({
           <button
             type="button"
             className="pv-lock-btn"
-            aria-label="Sblocca i comandi"
+            aria-label={t("player_VideoPlayer.sblocca_i_comandi")}
             onClick={() => setLocked(false)}
           >
             <UnlockIcon />
-            <span>Comandi bloccati</span>
+            <span>{t("player_VideoPlayer.comandi_bloccati")}</span>
           </button>
         </div>
       )}
@@ -630,11 +631,11 @@ export default function VideoPlayer({
 
       {isMini && (
         <div className="pv-mini-controls">
-          <button className="pv-icon-btn" aria-label={player.isPlaying ? 'Pausa' : 'Play'} onClick={player.togglePlay}>
+          <button className="pv-icon-btn" aria-label={player.isPlaying ? t("player_VideoPlayer.pausa") : t("player_VideoPlayer.play")} onClick={player.togglePlay}>
             {player.isPlaying ? <PauseIcon /> : <PlayIcon />}
           </button>
           <span className="pv-mini-title">{content.title}</span>
-          <button className="pv-icon-btn" aria-label="Esci dal mini player" onClick={() => setIsMini(false)}><ExpandIcon /></button>
+          <button className="pv-icon-btn" aria-label={t("player_VideoPlayer.esci_dal_mini_player")} onClick={() => setIsMini(false)}><ExpandIcon /></button>
         </div>
       )}
     </div>

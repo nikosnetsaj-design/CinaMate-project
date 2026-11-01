@@ -1,3 +1,4 @@
+import { t } from "../lib/i18n";
 /**
  * Il voto, in cifre.
  *
@@ -10,7 +11,7 @@ export function VoteBadge({ vote, size = "md" }: { vote: number | null; size?: "
   if (!vote) return null;
   const cls = size === "lg" ? "text-3xl" : size === "sm" ? "text-sm" : "text-base";
   return (
-    <span className={`tabular font-semibold text-text ${cls}`} aria-label={`Voto ${vote} su 10`}>
+    <span className={`tabular font-semibold text-text ${cls}`} aria-label={t("VoteBadge.voto_su_10", { v0: vote })}>
       {vote}
       {size === "lg" && <span className="text-sm font-normal text-text-faint">/10</span>}
     </span>

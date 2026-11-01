@@ -12,6 +12,7 @@ import { CheckIcon, PlayIcon, StarIcon } from "./icons";
 import { isWatched, nextEpisode } from "../lib/episodes";
 import { useLongPress } from "../lib/useLongPress";
 import type { Item } from "../types";
+import { t } from "../lib/i18n";
 
 /**
  * Gli episodi di una stagione, con la puntata come unità invece che come
@@ -99,9 +100,9 @@ function EpisodeRow({
               <span className="font-semibold text-text">{episode.rating.toFixed(1)}</span>
             </span>
           )}
-          {episode.runtime && <span>{episode.runtime} min</span>}
+          {episode.runtime && <span>{episode.runtime} {t("EpisodeList.min")}</span>}
           {unreleased && episode.airDate && (
-            <span style={{ color: "var(--accent-text)" }}>esce {countdown(episode.airDate)}</span>
+            <span style={{ color: "var(--accent-text)" }}>{t("EpisodeList.esce")} {countdown(episode.airDate)}</span>
           )}
         </p>
       </div>
@@ -116,8 +117,8 @@ function EpisodeRow({
             type="button"
             onClick={() => onPlay(episode)}
             {...prefetchHandlers("/player")}
-            aria-label={`Riproduci episodio ${episode.episodeNumber}, ${episode.title}`}
-            title="Riproduci"
+            aria-label={t("EpisodeList.riproduci_episodio", { v0: episode.episodeNumber, v1: episode.title })}
+            title={t("EpisodeList.riproduci")}
             className="icon-btn icon-btn-filled text-accent-text hover:text-accent-text"
           >
             <PlayIcon size={16} />
@@ -127,8 +128,8 @@ function EpisodeRow({
           type="button"
           {...press}
           aria-pressed={watched}
-          aria-label={`Episodio ${episode.episodeNumber}${watched ? ", visto" : ""}. Tieni premuto per segnare anche i precedenti`}
-          title="Tocca per segnarlo, tieni premuto per segnare anche i precedenti"
+          aria-label={t("EpisodeList.episodio_tieni_premuto_per", { v0: episode.episodeNumber, v1: watched ? ", visto" : "" })}
+          title={t("EpisodeList.tocca_per_segnarlo_tieni")}
           className="icon-btn icon-btn-sm"
           style={
             watched
@@ -191,11 +192,11 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
     return (
       <div className="flex flex-col items-start gap-2 rounded-md bg-surface-2 p-4 text-sm text-text-muted">
         {tmdbApiKey
-          ? "Questo titolo non è collegato a TMDB, quindi titoli e trame delle puntate non ci sono. La griglia qui sotto funziona lo stesso."
-          : "Titoli, trame e miniature delle puntate arrivano da TMDB. La griglia qui sotto funziona anche senza."}
+          ? t("EpisodeList.questo_titolo_non_e")
+          : t("EpisodeList.titoli_trame_e_miniature")}
         {!tmdbApiKey && (
           <button type="button" onClick={() => openSettings("chiavi")} className="btn btn-plain btn-sm -ml-3">
-            Aggiungi la chiave
+            {t("EpisodeList.aggiungi_la_chiave")}
           </button>
         )}
       </div>
@@ -230,7 +231,7 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
             aria-haspopup="listbox"
             className="btn btn-secondary"
           >
-            Stagione {season}
+            {t("EpisodeList.stagione")} {season}
             <span aria-hidden="true" className="text-text-faint">
               ⌄
             </span>
@@ -240,13 +241,13 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
             <>
               <button
                 type="button"
-                aria-label="Chiudi l'elenco delle stagioni"
+                aria-label={t("EpisodeList.chiudi_l_elenco_delle")}
                 className="fixed inset-0 z-30 cursor-default"
                 onClick={() => setSeasonMenu(false)}
               />
               <ul
                 role="listbox"
-                aria-label="Stagioni"
+                aria-label={t("EpisodeList.stagioni")}
                 className="absolute left-0 top-full z-40 mt-1 max-h-64 min-w-44 overflow-y-auto rounded-md bg-surface py-1 shadow-[var(--shadow-md),0_0_0_1px_var(--separator)]"
               >
                 {seasons.map((s) => (
@@ -264,7 +265,7 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
                       <span className="w-4 shrink-0" style={{ color: "var(--accent-text)" }}>
                         {s === season ? <CheckIcon size={14} /> : null}
                       </span>
-                      Stagione {s}
+                      {t("EpisodeList.stagione")} {s}
                     </button>
                   </li>
                 ))}
@@ -277,8 +278,8 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
       {failed ? (
         <ErrorState
           compact
-          title="Questa stagione non è arrivata"
-          description="TMDB non ha risposto. La griglia qui sopra funziona lo stesso."
+          title={t("EpisodeList.questa_stagione_non_e")}
+          description={t("EpisodeList.tmdb_non_ha_risposto")}
           onRetry={() => setAttempt((n) => n + 1)}
         />
       ) : episodes === null ? (
@@ -288,7 +289,7 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
           ))}
         </div>
       ) : episodes.length === 0 ? (
-        <p className="text-xs text-text-faint">TMDB non elenca episodi per questa stagione.</p>
+        <p className="text-xs text-text-faint">{t("EpisodeList.tmdb_non_elenca_episodi")}</p>
       ) : (
         <ul className="flex flex-col gap-1">
           {episodes.map((episode) => (

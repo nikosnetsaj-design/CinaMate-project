@@ -5,9 +5,10 @@ import { canvasToBlob, CARD_SIZE, drawYearCard, loadPoster, readTheme, type Card
 import type { YearInReview } from "../lib/stats";
 import { downloadFile } from "../lib/format";
 import { DownloadIcon, ShareIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 const FORMATS: { id: CardFormat; label: string }[] = [
-  { id: "story", label: "Storia 9:16" },
+  { id: "story", label: t("YearShareSheet.storia_9_16") },
   { id: "square", label: "Post 1:1" },
 ];
 
@@ -62,12 +63,12 @@ export default function YearShareSheet({ review, onClose }: { review: YearInRevi
       const f = await file();
       if (!f) throw new Error("vuoto");
       if (navigator.canShare?.({ files: [f] })) {
-        await navigator.share({ files: [f], title: `Il mio ${review.year} con CineMate` });
+        await navigator.share({ files: [f], title: t("YearShareSheet.il_mio_con_cinemate", { v0: review.year }) });
       } else {
         downloadFile(f, fileName);
       }
     } catch (e) {
-      if (!(e instanceof DOMException && e.name === "AbortError")) pushToast("error", "Non sono riuscito a preparare l'immagine.");
+      if (!(e instanceof DOMException && e.name === "AbortError")) pushToast("error", t("YearShareSheet.non_sono_riuscito_a"));
     } finally {
       setBusy(false);
     }
@@ -77,7 +78,7 @@ export default function YearShareSheet({ review, onClose }: { review: YearInRevi
   async function save() {
     const f = await file();
     if (f) downloadFile(f, fileName);
-    else pushToast("error", "Non sono riuscito a preparare l'immagine.");
+    else pushToast("error", t("YearShareSheet.non_sono_riuscito_a"));
   }
 
   const size = CARD_SIZE[format];
@@ -86,9 +87,9 @@ export default function YearShareSheet({ review, onClose }: { review: YearInRevi
     <Sheet onClose={onClose} titleId={titleId} maxWidthClass="max-w-md">
       <div className="flex flex-col gap-4 p-5 pt-8 sm:p-6">
         <h2 id={titleId} className="t-title text-text">
-          Il tuo {review.year} come immagine
+          {t("YearShareSheet.il_tuo")} {review.year} {t("YearShareSheet.come_immagine")}
         </h2>
-        <div className="segmented segmented-full" role="radiogroup" aria-label="Formato">
+        <div className="segmented segmented-full" role="radiogroup" aria-label={t("YearShareSheet.formato")}>
           {FORMATS.map((f) => (
             <button key={f.id} type="button" role="radio" aria-checked={format === f.id} onClick={() => setFormat(f.id)}>
               {f.label}
@@ -100,7 +101,7 @@ export default function YearShareSheet({ review, onClose }: { review: YearInRevi
           <canvas
             ref={canvas}
             role="img"
-            aria-label={`Anteprima: ${review.watchedCount} titoli completati nel ${review.year}, ${review.hours} ore`}
+            aria-label={t("YearShareSheet.anteprima_titoli_completati_nel", { v0: review.watchedCount, v1: review.year, v2: review.hours })}
             className={`h-auto max-w-full rounded-sm shadow-[var(--shadow-md)] ${posters === null ? "hidden" : ""}`}
             style={{ aspectRatio: `${size.w} / ${size.h}`, maxHeight: "min(52dvh, 420px)" }}
           />
@@ -108,11 +109,11 @@ export default function YearShareSheet({ review, onClose }: { review: YearInRevi
         <div className="flex gap-2">
           <button type="button" className="btn btn-primary flex-1" disabled={busy || posters === null} onClick={() => void share()}>
             <ShareIcon size={16} />
-            Condividi
+            {t("YearShareSheet.condividi")}
           </button>
           <button type="button" className="btn btn-secondary flex-1" disabled={posters === null} onClick={() => void save()}>
             <DownloadIcon size={16} />
-            Scarica
+            {t("YearShareSheet.scarica")}
           </button>
         </div>
       </div>

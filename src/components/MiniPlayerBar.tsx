@@ -7,6 +7,7 @@ import { continueWatching, lastSeenDates } from "../lib/continueWatching";
 import { prefetchHandlers } from "../lib/prefetch";
 import { PosterArt } from "./PosterArt";
 import { PlayIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * La riga che dice cosa hai lasciato a metà, e da cui ci si rientra.
@@ -72,7 +73,7 @@ export function MiniPlayerBar() {
             <span className="block truncate t-caption tabular text-text-muted">
               {label} ·{" "}
               <span className="t-numeral">
-                {remainingMin > 0 ? `${remainingMin} min alla fine` : "quasi finito"}
+                {remainingMin > 0 ? t("MiniPlayerBar.min_alla_fine", { v0: remainingMin }) : t("MiniPlayerBar.quasi_finito")}
               </span>
             </span>
           </span>
@@ -82,7 +83,7 @@ export function MiniPlayerBar() {
           type="button"
           {...prefetchHandlers("/player")}
           onClick={() => navigate(`/player?titolo=${encodeURIComponent(item.id)}`)}
-          aria-label={`Riprendi ${item.title}`}
+          aria-label={t("MiniPlayerBar.riprendi", { v0: item.title })}
           className="icon-btn"
           style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
         >

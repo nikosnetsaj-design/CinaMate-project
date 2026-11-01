@@ -5,6 +5,7 @@ import { useSelectedPerson } from "../store/useSelectedPerson";
 import { getCast, profileUrl, type TmdbCastMember } from "../lib/tmdb";
 import type { Item } from "../types";
 import { ChevronRightIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * Il cast con le facce e i personaggi, e la regia accanto.
@@ -31,7 +32,7 @@ function CastCircle({ member }: { member: TmdbCastMember }) {
         closeItem();
         openPerson(member.name);
       }}
-      aria-label={`Apri la scheda di ${member.name}`}
+      aria-label={t("CastRow.apri_la_scheda_di", { v0: member.name })}
       className="w-20 shrink-0 text-center"
     >
       <span className="block aspect-square overflow-hidden rounded-full bg-surface-2">
@@ -66,7 +67,7 @@ function NameChips({ names, prefix }: { names: string[]; prefix?: string }) {
             closeItem();
             openPerson(name);
           }}
-          aria-label={`Apri la scheda di ${name}`}
+          aria-label={t("CastRow.apri_la_scheda_di", { v0: name })}
           className="chip"
         >
           {prefix && <span className="text-text-faint">{prefix} </span>}
@@ -117,7 +118,7 @@ export function CastRow({ item }: { item: Item }) {
       {hasCircles && (
         <>
           <div className="flex items-baseline justify-between gap-3">
-            <span className="text-xs font-medium text-text-faint">Cast</span>
+            <span className="text-xs font-medium text-text-faint">{t("CastRow.cast")}</span>
             {cast.length > 6 && (
               <button
                 type="button"
@@ -125,7 +126,7 @@ export function CastRow({ item }: { item: Item }) {
                 className="inline-flex items-center gap-0.5 text-xs font-medium"
                 style={{ color: "var(--accent-text)" }}
               >
-                {all ? "mostra meno" : "mostra tutti"}
+                {all ? t("CastRow.mostra_meno") : t("CastRow.mostra_tutti")}
                 {!all && <ChevronRightIcon size={14} />}
               </button>
             )}
@@ -140,7 +141,7 @@ export function CastRow({ item }: { item: Item }) {
 
       {/* La regia resta una pastiglia anche quando il cast ha le facce: è una
           persona sola e in un cerchio da ottanta pixel si perderebbe. */}
-      <NameChips names={directors} prefix="Regia ·" />
+      <NameChips names={directors} prefix={t("CastRow.regia")} />
       {!hasCircles && <NameChips names={fallbackCast} />}
     </div>
   );

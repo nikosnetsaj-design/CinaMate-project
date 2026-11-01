@@ -1,4 +1,5 @@
 import { compareEpisodes, episodeLabel, type EpisodeRef } from "./episodes";
+import { lang, replyLanguage, t } from "./i18n";
 
 /**
  * «Nelle puntate precedenti»: le regole del riassunto, senza rete.
@@ -17,9 +18,9 @@ import { compareEpisodes, episodeLabel, type EpisodeRef } from "./episodes";
 export type RecapDetail = "breve" | "normale" | "dettagliato";
 
 export const RECAP_DETAILS: { id: RecapDetail; label: string; words: number }[] = [
-  { id: "breve", label: "Breve", words: 60 },
-  { id: "normale", label: "Normale", words: 150 },
-  { id: "dettagliato", label: "Dettagliato", words: 300 },
+  { id: "breve", label: t("recap.breve"), words: 60 },
+  { id: "normale", label: t("recap.normale"), words: 150 },
+  { id: "dettagliato", label: t("recap.dettagliato"), words: 300 },
 ];
 
 export interface EpisodeSynopsis extends EpisodeRef {
@@ -65,7 +66,7 @@ export function recapPrompt(r: RecapRequest): { system: string; prompt: string }
   const prompt = `Serie: «${r.title}»${r.year ? ` (${r.year})` : ""}.
 L'ultimo episodio visto è: ${where}. In tutto ha visto ${r.watchedCount} episodi.
 ${synopses ? `\nSinossi ufficiali degli episodi visti più di recente (fonte TMDB), tutte entro il confine:\n${synopses}\n` : ""}
-Scrivi in italiano il riassunto di dove si trova la storia alla fine di ${where}. ${style} Al massimo ${words} parole, in prosa, senza titoli né elenchi.
+Scrivi in ${replyLanguage()} il riassunto di dove si trova la storia alla fine di ${where}. ${style} Al massimo ${words} parole, in prosa, senza titoli né elenchi.
 
 Vincolo: non rivelare nulla che accada dopo ${where}.`;
 
@@ -82,7 +83,8 @@ const CACHE_LIMIT = 40;
  * livello. Segnare un altro episodio sposta il confine, e la chiave con lui.
  */
 export function recapKey(itemId: string, last: EpisodeRef, detail: RecapDetail): string {
-  return `${itemId}|${last.season}x${last.episode}|${detail}`;
+  // In inglese è un altro riassunto: la chiave porta la lingua, l'italiano resta com'era.
+  return `${itemId}|${last.season}x${last.episode}|${detail}${lang === "en" ? "|en" : ""}`;
 }
 
 type Cache = Record<string, { text: string; at: number }>;

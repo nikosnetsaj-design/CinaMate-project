@@ -4,6 +4,7 @@ import { episodeLabel, isWatched, nextEpisode, seasonLayout, watchedList, type E
 import { useLongPress } from "../lib/useLongPress";
 import type { Item } from "../types";
 import { CheckIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * Le stagioni come griglia: un quadrato per puntata.
@@ -29,7 +30,7 @@ function Cell({ item, ref_, next }: { item: Item; ref_: EpisodeRef; next: boolea
       type="button"
       {...press}
       aria-pressed={watched}
-      aria-label={`${episodeLabel(ref_)}${watched ? ", visto" : ""}${next ? ", il prossimo" : ""}`}
+      aria-label={`${episodeLabel(ref_)}${watched ? t("EpisodeGrid.visto") : ""}${next ? t("EpisodeGrid.il_prossimo") : ""}`}
       className="flex aspect-square min-h-11 items-center justify-center rounded-sm text-sm font-medium tabular transition-[background-color,color,transform] duration-200 active:scale-95"
       style={
         watched
@@ -64,7 +65,7 @@ export function EpisodeGrid({ item }: { item: Item }) {
   return (
     <div className="flex flex-col gap-3">
       {seasons.length > 1 && (
-        <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1" role="tablist" aria-label="Stagioni">
+        <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1" role="tablist" aria-label={t("EpisodeGrid.stagioni")}>
           {seasons.map((s) => {
             const done = doneIn(s.season);
             return (
@@ -87,19 +88,19 @@ export function EpisodeGrid({ item }: { item: Item }) {
       )}
 
       {current && current.count > 0 ? (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(44px,1fr))] gap-1.5" role="group" aria-label={`Stagione ${current.season}`}>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(44px,1fr))] gap-1.5" role="group" aria-label={t("EpisodeGrid.stagione", { v0: current.season })}>
           {Array.from({ length: current.count }, (_, i) => {
             const ref = { season: current.season, episode: i + 1 };
             return <Cell key={i} item={item} ref_={ref} next={!!next && next.season === ref.season && next.episode === ref.episode} />;
           })}
         </div>
       ) : (
-        <p className="text-sm text-text-muted">TMDB non elenca ancora puntate per questa stagione.</p>
+        <p className="text-sm text-text-muted">{t("EpisodeGrid.tmdb_non_elenca_ancora")}</p>
       )}
 
       <p className="text-xs text-text-muted">
-        Tocca una puntata per segnarla, tieni premuto per segnare anche quelle prima.
-        {!layout && " La divisione in stagioni arriva da TMDB: fino ad allora le puntate stanno in fila."}
+        {t("EpisodeGrid.tocca_una_puntata_per")}
+        {!layout && t("EpisodeGrid.la_divisione_in_stagioni")}
       </p>
     </div>
   );

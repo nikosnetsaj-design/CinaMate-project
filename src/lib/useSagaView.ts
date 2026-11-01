@@ -3,6 +3,7 @@ import { useSagas, type SagaKey } from "../store/useSagas";
 import { useSettings } from "../store/useSettings";
 import { findKeywordId, getKeywordMovies, getSaga, type TmdbSagaPart } from "./tmdb";
 import { MIN_ENTRIES, universeById } from "./universes";
+import { t } from "./i18n";
 
 export interface SagaView {
   key: SagaKey;
@@ -63,7 +64,7 @@ export function useSagaView(key: SagaKey | null): { view: SagaView | null; loadi
         if (parts.length < MIN_ENTRIES) throw new Error("universo non disponibile");
         if (!cancelled) setUniverse(parsed.id, parts);
       } catch {
-        if (!cancelled) setError("Non è stato possibile caricare questa raccolta da TMDB.");
+        if (!cancelled) setError(t("useSagaView.non_e_stato_possibile"));
       } finally {
         if (!cancelled) setLoading(false);
       }

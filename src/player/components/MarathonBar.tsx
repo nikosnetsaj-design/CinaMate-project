@@ -1,4 +1,5 @@
 import type { useMarathonMode } from '../hooks/useMarathonMode';
+import { t } from "../../lib/i18n";
 
 type Props = { marathon: ReturnType<typeof useMarathonMode>; onJumpTo: (index: number) => void };
 
@@ -12,11 +13,11 @@ export default function MarathonBar({ marathon, onJumpTo }: Props) {
         <div className="pv-marathon-fill" style={{ width: `${completionPercent}%` }} />
       </div>
       <div className="pv-marathon-info">
-        <span className="pv-num">Maratona · {completionPercent.toFixed(0)}%</span>
-        <span className="pv-dim">Rimangono {formatDuration(remainingSec)}</span>
+        <span className="pv-num">{t("player_MarathonBar.maratona")} {completionPercent.toFixed(0)}%</span>
+        <span className="pv-dim">{t("player_MarathonBar.rimangono")} {formatDuration(remainingSec)}</span>
         {hasNext && (
           <button className="pv-btn-tiny" onClick={() => { next(); onJumpTo(index + 1); }}>
-            Prossimo ▸
+            {t("player_MarathonBar.prossimo")}
           </button>
         )}
       </div>

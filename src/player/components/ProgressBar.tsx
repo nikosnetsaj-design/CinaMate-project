@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import type { SkipMarker, ThumbnailSprite } from '../types';
+import { t } from "../../lib/i18n";
 
 type Props = {
   currentTime: number;
@@ -71,11 +72,11 @@ export default function ProgressBar({ currentTime, duration, bufferedEnd, skipMa
         aria-describedby="pv-remaining"
         role="slider"
         tabIndex={0}
-        aria-label="Avanzamento"
+        aria-label={t("player_ProgressBar.avanzamento")}
         aria-valuemin={0}
         aria-valuemax={Math.round(duration) || 0}
         aria-valuenow={Math.round(currentTime)}
-        aria-valuetext={`${formatTime(currentTime)} di ${formatTime(duration)}`}
+        aria-valuetext={t("player_ProgressBar.di", { v0: formatTime(currentTime), v1: formatTime(duration) })}
         onMouseMove={handleMove}
         onMouseLeave={() => setHoverX(null)}
         onClick={handleClick}

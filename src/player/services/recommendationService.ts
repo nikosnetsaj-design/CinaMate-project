@@ -1,4 +1,5 @@
 import type { MediaContent } from '../types';
+import { t } from "../../lib/i18n";
 
 export type Recommendation = {
   id: string;
@@ -30,7 +31,7 @@ export async function getEndScreenRecommendations(content: MediaContent): Promis
       posterUrl: content.nextEpisode.posterUrl,
       type: 'next_episode',
       playable: true,
-      reason: 'Episodio successivo',
+      reason: t("player_recommendationService.episodio_successivo"),
     });
   }
   if (content.nextInSaga) {
@@ -40,7 +41,7 @@ export async function getEndScreenRecommendations(content: MediaContent): Promis
       posterUrl: content.nextInSaga.posterUrl,
       type: 'next_saga',
       playable: true,
-      reason: 'Prossimo nella saga',
+      reason: t("player_recommendationService.prossimo_nella_saga"),
     });
   }
   return fallback;

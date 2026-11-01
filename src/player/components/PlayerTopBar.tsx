@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { useCast } from '../hooks/useCast';
 import type { Reaction } from '../types';
 import { CastIcon, CloseIcon, LockIcon, ThumbDownIcon, ThumbUpDoubleIcon, ThumbUpIcon } from './Icons';
+import { t } from "../../lib/i18n";
 
 /**
  * La riga in cima alla scena: dove sei, cosa ne pensi, e le tre uscite.
@@ -25,7 +26,7 @@ type Props = {
 };
 
 const REACTIONS: { id: Reaction; label: string; Icon: () => ReactNode }[] = [
-  { id: 'down', label: 'Non fa per me', Icon: ThumbDownIcon },
+  { id: 'down', label: t("player_PlayerTopBar.non_fa_per_me"), Icon: ThumbDownIcon },
   { id: 'up', label: 'Mi piace', Icon: ThumbUpIcon },
   { id: 'love', label: 'Adoro', Icon: ThumbUpDoubleIcon },
 ];
@@ -39,12 +40,12 @@ export default function PlayerTopBar({ label, reaction, onReact, cast, onLock, o
           pollice dato qui è il voto che poi si legge in libreria, non una
           reazione parallela che non conta da nessuna parte. */}
       {onReact && (
-        <div className="pv-reactions" role="group" aria-label="Il tuo voto">
+        <div className="pv-reactions" role="group" aria-label={t("player_PlayerTopBar.il_tuo_voto")}>
           {REACTIONS.map(({ id, label: name, Icon }) => (
             <button
               key={id}
               type="button"
-              className={`pv-reaction ${reaction === id ? 'active' : ''}`}
+              className={`pv-reaction ${reaction === id ? "active" : ''}`}
               aria-label={name}
               aria-pressed={reaction === id}
               title={name}
@@ -60,8 +61,8 @@ export default function PlayerTopBar({ label, reaction, onReact, cast, onLock, o
         {(cast.castAvailable || cast.airPlayAvailable) && (
           <button
             type="button"
-            className={`pv-icon-btn ${cast.castConnected ? 'active' : ''}`}
-            aria-label="Trasmetti"
+            className={`pv-icon-btn ${cast.castConnected ? "active" : ''}`}
+            aria-label={t("player_PlayerTopBar.trasmetti")}
             onClick={cast.airPlayAvailable ? cast.openAirPlayPicker : cast.openCastPicker}
           >
             <CastIcon />
@@ -70,11 +71,11 @@ export default function PlayerTopBar({ label, reaction, onReact, cast, onLock, o
         {/* Blocca i comandi, non lo schermo: il telefono in mano durante un
             film riceve decine di tocchi involontari, e questo è l'unico modo
             per farli finire nel vuoto senza mettere via il telefono. */}
-        <button type="button" className="pv-icon-btn" aria-label="Blocca i comandi" onClick={onLock}>
+        <button type="button" className="pv-icon-btn" aria-label={t("player_PlayerTopBar.blocca_i_comandi")} onClick={onLock}>
           <LockIcon />
         </button>
         {onClose && (
-          <button type="button" className="pv-icon-btn" aria-label="Chiudi il player" onClick={onClose}>
+          <button type="button" className="pv-icon-btn" aria-label={t("player_PlayerTopBar.chiudi_il_player")} onClick={onClose}>
             <CloseIcon />
           </button>
         )}

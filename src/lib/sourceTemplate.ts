@@ -1,5 +1,6 @@
 import type { Item } from "../types";
 import { nextEpisode } from "./episodes";
+import { t } from "./i18n";
 
 /**
  * Addresses for your own sources, written once in Settings instead of pasted
@@ -28,14 +29,14 @@ export interface TemplateField {
 }
 
 export const TEMPLATE_FIELDS: TemplateField[] = [
-  { token: "{titolo}", label: "Titolo così com'è", example: "Il Padrino" },
-  { token: "{slug}", label: "Titolo minuscolo con i trattini", example: "il-padrino" },
-  { token: "{anno}", label: "Anno di uscita", example: "1972" },
-  { token: "{tmdb}", label: "Id TMDB, quando il titolo è collegato", example: "238" },
-  { token: "{s}", label: "Stagione — sempre 1: la libreria conta gli episodi, non le stagioni", example: "1" },
-  { token: "{e}", label: "Episodio: il prossimo da vedere", example: "4" },
-  { token: "{ss}", label: "Stagione a due cifre", example: "01" },
-  { token: "{ee}", label: "Episodio a due cifre", example: "04" },
+  { token: "{titolo}", label: t("sourceTemplate.titolo_cosi_com_e"), example: t("sourceTemplate.il_padrino") },
+  { token: "{slug}", label: t("sourceTemplate.titolo_minuscolo_con_i"), example: t("sourceTemplate.il_padrino_slug") },
+  { token: "{anno}", label: t("sourceTemplate.anno_di_uscita"), example: "1972" },
+  { token: "{tmdb}", label: t("sourceTemplate.id_tmdb_quando_il"), example: "238" },
+  { token: "{s}", label: t("sourceTemplate.stagione_sempre_1_la"), example: "1" },
+  { token: "{e}", label: t("sourceTemplate.episodio_il_prossimo_da"), example: "4" },
+  { token: "{ss}", label: t("sourceTemplate.stagione_a_due_cifre"), example: "01" },
+  { token: "{ee}", label: t("sourceTemplate.episodio_a_due_cifre"), example: "04" },
 ];
 
 /** Lowercase, accents stripped, non-alphanumerics collapsed to single dashes. */
@@ -237,7 +238,7 @@ export function candidatesFor(item: Item, addresses: string[], pick: EpisodePick
 }
 
 const SAMPLE: Pick<Item, "title" | "year" | "tmdbId" | "seen" | "seasons" | "kind"> = {
-  title: "Il Padrino",
+  title: t("sourceTemplate.il_padrino"),
   year: 1972,
   tmdbId: 238,
   seen: 3,

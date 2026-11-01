@@ -99,7 +99,7 @@ export function Nav() {
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col bg-surface px-3 py-5 lg:flex">
         <div className="flex items-center gap-2.5 px-2 pb-6">
           <ReelMark />
-          <span className="font-display text-xl text-text">CineMate</span>
+          <span className="font-display text-xl text-text">{t("Nav.cinemate")}</span>
         </div>
 
         <button
@@ -192,7 +192,7 @@ export function Nav() {
       >
         <div className="flex min-w-0 items-center gap-2">
           <ReelMark size={22} />
-          <span className="font-display text-xl text-text">CineMate</span>
+          <span className="font-display text-xl text-text">{t("Nav.cinemate")}</span>
         </div>
         <div className="-mr-2 flex items-center">
           <AlertsBell />

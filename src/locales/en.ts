@@ -1,7 +1,8 @@
 import type it from "./it";
+import enUi from "./en.ui";
 
 /** English. Every key of `it.ts` must be here: the compiler checks it. */
-const en: Record<keyof typeof it, string> = {
+const frame = {
   "nav.home": "Tonight",
   "nav.library": "Library",
   "nav.search": "Search",
@@ -80,6 +81,7 @@ const en: Record<keyof typeof it, string> = {
   "status.toWatch": "To watch",
   "status.dropped": "Dropped",
   "status.paused": "Paused",
+  "platform.other": "Other",
 
   "error.title": "The catalogue isn't answering",
   "error.text": "You're offline or TMDB is slow. Your library still works; covers and search come back with the network.",
@@ -126,5 +128,7 @@ const en: Record<keyof typeof it, string> = {
   "settings.accent": "Accent colour",
   "settings.language.note": "Changing language reloads the app. Some longer texts inside sheets and the critic's answers stay in Italian.",
 };
+
+const en: Record<keyof typeof it, string> = { ...frame, ...enUi };
 
 export default en;

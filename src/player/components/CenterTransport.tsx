@@ -1,4 +1,5 @@
 import { PauseIcon, PlayIcon } from './Icons';
+import { t } from "../../lib/i18n";
 
 /**
  * I tre comandi che si usano davvero, al centro della scena e grandi.
@@ -49,7 +50,7 @@ export default function CenterTransport({ isPlaying, onTogglePlay, onSeekBy }: P
       <button
         type="button"
         className="pv-transport-btn"
-        aria-label="Indietro di 10 secondi"
+        aria-label={t("player_CenterTransport.indietro_di_10_secondi")}
         onClick={() => onSeekBy(-10)}
       >
         <SeekIcon direction={-1} />
@@ -57,7 +58,7 @@ export default function CenterTransport({ isPlaying, onTogglePlay, onSeekBy }: P
       <button
         type="button"
         className="pv-transport-btn pv-transport-play"
-        aria-label={isPlaying ? 'Pausa' : 'Riproduci'}
+        aria-label={isPlaying ? t("player_CenterTransport.pausa") : t("player_CenterTransport.riproduci")}
         onClick={onTogglePlay}
       >
         {isPlaying ? <PauseIcon /> : <PlayIcon />}
@@ -65,7 +66,7 @@ export default function CenterTransport({ isPlaying, onTogglePlay, onSeekBy }: P
       <button
         type="button"
         className="pv-transport-btn"
-        aria-label="Avanti di 10 secondi"
+        aria-label={t("player_CenterTransport.avanti_di_10_secondi")}
         onClick={() => onSeekBy(10)}
       >
         <SeekIcon direction={1} />

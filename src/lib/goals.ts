@@ -1,5 +1,6 @@
 import type { HistoryEntry, Item } from "../types";
 import type { Goal } from "../store/useGoals";
+import { t } from "./i18n";
 
 export interface GoalProgress {
   goal: Goal;
@@ -20,9 +21,9 @@ export interface GoalProgress {
 }
 
 const WINDOW_LABELS: Record<Goal["period"], string> = {
-  settimana: "questa settimana",
-  mese: "questo mese",
-  anno: "quest’anno",
+  settimana: t("goals.questa_settimana"),
+  mese: t("goals.questo_mese"),
+  anno: t("goals.quest_anno"),
 };
 
 /**

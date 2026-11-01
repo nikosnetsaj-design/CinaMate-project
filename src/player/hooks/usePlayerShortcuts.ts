@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import type { KeyboardEvent } from 'react';
+import { t } from "../../lib/i18n";
 
 type Actions = {
   togglePlay: () => void;
@@ -31,18 +32,18 @@ function isTypingTarget(target: EventTarget | null): boolean {
 
 /** What the help overlay lists — declared here so it can never drift from the bindings. */
 export const SHORTCUTS: { keys: string; label: string }[] = [
-  { keys: 'Spazio · K', label: 'Play / pausa' },
-  { keys: '← →', label: 'Indietro / avanti di 10s' },
-  { keys: 'J · L', label: 'Indietro / avanti di 10s' },
+  { keys: t("player_usePlayerShortcuts.spazio_k"), label: t("player_usePlayerShortcuts.play_pausa") },
+  { keys: '← →', label: t("player_usePlayerShortcuts.indietro_avanti_di_10s") },
+  { keys: 'J · L', label: t("player_usePlayerShortcuts.indietro_avanti_di_10s") },
   { keys: '↑ ↓', label: 'Volume' },
-  { keys: '0 – 9', label: 'Salta al 0%…90% del titolo' },
-  { keys: 'M', label: 'Muto' },
-  { keys: 'F', label: 'Schermo intero' },
-  { keys: 'C', label: 'Cambia sottotitoli' },
+  { keys: '0 – 9', label: t("player_usePlayerShortcuts.salta_al_0_90") },
+  { keys: 'M', label: t("player_usePlayerShortcuts.muto") },
+  { keys: 'F', label: t("player_usePlayerShortcuts.schermo_intero") },
+  { keys: 'C', label: t("player_usePlayerShortcuts.cambia_sottotitoli") },
   { keys: 'P', label: 'Picture in Picture' },
-  { keys: '< >', label: 'Velocità di riproduzione' },
-  { keys: 'N', label: 'Prossimo episodio' },
-  { keys: '?', label: 'Questo elenco' },
+  { keys: '< >', label: t("player_usePlayerShortcuts.velocita_di_riproduzione") },
+  { keys: 'N', label: t("player_usePlayerShortcuts.prossimo_episodio") },
+  { keys: '?', label: t("player_usePlayerShortcuts.questo_elenco") },
 ];
 
 /**

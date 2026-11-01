@@ -3,6 +3,7 @@ import { m, useReducedMotion } from "framer-motion";
 import { useLibrary } from "../store/useLibrary";
 import { voteColor } from "../lib/vote";
 import type { HistoryEntry, Item } from "../types";
+import { t } from "../lib/i18n";
 
 interface Stripe {
   key: string;
@@ -95,7 +96,7 @@ export function Nastro({
       <div className="flex flex-col gap-2">
         <div className="w-full rounded-sm bg-surface-2" style={{ height }} aria-hidden="true" />
         <p className="text-xs text-text-faint">
-          Il nastro si tesse da solo: segna un titolo come visto e comparirà il primo filo.
+          {t("Nastro.il_nastro_si_tesse")}
         </p>
       </div>
     );
@@ -108,7 +109,7 @@ export function Nastro({
           it being made. Skipped entirely when reduced motion is requested. */}
       <m.div
         role="img"
-        aria-label={`Nastro: ${stripes.length} sessioni, ${hours} ore guardate.`}
+        aria-label={t("Nastro.nastro_sessioni_ore_guardate", { v0: stripes.length, v1: hours })}
         className="relative flex w-full overflow-hidden rounded-sm"
         style={{ height, transformOrigin: "left center" }}
         initial={reduceMotion ? false : { scaleX: 0 }}
@@ -126,9 +127,9 @@ export function Nastro({
 
       </m.div>
       <figcaption className="flex items-baseline justify-between gap-3 text-xs text-text-faint">
-        <span>{fellBack ? "Le tue ultime sessioni" : (caption ?? `Ultimi ${days} giorni`)}</span>
+        <span>{fellBack ? t("Nastro.le_tue_ultime_sessioni") : (caption ?? t("Nastro.ultimi_giorni", { v0: days }))}</span>
         <span className="tabular">
-          {stripes.length} sessioni · {hours}h
+          {stripes.length} {t("Nastro.sessioni")} {hours}h
         </span>
       </figcaption>
     </figure>

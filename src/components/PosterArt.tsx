@@ -4,6 +4,7 @@ import type { PosterBadge } from "../lib/homeBadges";
 import { paletteFor } from "../lib/palette";
 import { posterUrl, posterSrcSet, type PosterSize } from "../lib/tmdb";
 import { AnimeKindIcon, DocKindIcon, FilmKindIcon, SerieKindIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 const KIND_ICON: Record<Kind, (props: { size?: number }) => ReactNode> = {
   film: FilmKindIcon,
@@ -96,7 +97,7 @@ export function PosterArt({
           src={src}
           srcSet={posterSrcSet(item.posterPath, SRCSET_WIDTHS[size])}
           sizes={SIZES_ATTR[size]}
-          alt={`Copertina di ${item.title}`}
+          alt={t("PosterArt.copertina_di", { v0: item.title })}
           loading={priority ? "eager" : "lazy"}
           // Off the main thread, so decoding a grid of posters doesn't compete
           // with the scroll that revealed them.

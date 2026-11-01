@@ -10,6 +10,7 @@ import { draftFromTmdb } from "../lib/addFromTmdb";
 import { findLibraryMatch, WATCH_ORDERS } from "../lib/sagas";
 import { PosterArt } from "./PosterArt";
 import { PlayIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * A marathon in an app that plays nothing is a queue with a bookmark: it tells
@@ -55,7 +56,7 @@ export function MarathonCard() {
     const isLast = run.index + 1 >= run.queue.length;
     pushToast(
       isLast ? "success" : "info",
-      isLast ? `Maratona completata: ${saga.name}.` : "Prossimo capitolo pronto.",
+      isLast ? t("MarathonCard.maratona_completata", { v0: saga.name }) : t("MarathonCard.prossimo_capitolo_pronto"),
     );
   }
 
@@ -71,14 +72,14 @@ export function MarathonCard() {
         }),
       );
     } catch {
-      pushToast("error", "Non è stato possibile leggere questo titolo da TMDB.");
+      pushToast("error", t("MarathonCard.non_e_stato_possibile"));
     }
     setAdding(false);
   }
 
   return (
     <section
-      aria-label="Maratona in corso"
+      aria-label={t("MarathonCard.maratona_in_corso")}
       className="rounded-lg bg-surface p-4 shadow-[var(--shadow-sm)]"
     >
       <div className="flex items-center justify-between gap-3">
@@ -86,9 +87,9 @@ export function MarathonCard() {
           type="button"
           onClick={() => openSaga(marathon.key)}
           className="min-w-0 text-left"
-          aria-label={`Apri la saga ${view.name}`}
+          aria-label={t("MarathonCard.apri_la_saga", { v0: view.name })}
         >
-          <p className="text-xs font-medium text-text-faint">Maratona · ordine {orderLabel}</p>
+          <p className="text-xs font-medium text-text-faint">{t("MarathonCard.maratona_ordine")} {orderLabel}</p>
           <p className="t-title truncate text-text">{view.name}</p>
         </button>
         <button
@@ -96,7 +97,7 @@ export function MarathonCard() {
           onClick={stop}
           className="btn btn-secondary btn-sm shrink-0"
         >
-          Termina
+          {t("MarathonCard.termina")}
         </button>
       </div>
 
@@ -118,10 +119,10 @@ export function MarathonCard() {
         />
         <div className="min-w-0 flex-1">
           <p className="text-xs text-text-faint">
-            Capitolo {marathon.index + 1} di {marathon.queue.length}
+            {t("MarathonCard.capitolo")} {marathon.index + 1} {t("MarathonCard.di")} {marathon.queue.length}
           </p>
           <p className="truncate text-sm font-medium text-text">{current.title}</p>
-          <p className="tabular text-xs text-text-faint">{current.year ?? "in arrivo"}</p>
+          <p className="tabular text-xs text-text-faint">{current.year ?? t("MarathonCard.in_arrivo")}</p>
         </div>
       </div>
 
@@ -133,7 +134,7 @@ export function MarathonCard() {
             className="btn btn-secondary btn-sm flex-1"
           >
             <PlayIcon size={13} />
-            Dove guardarlo
+            {t("MarathonCard.dove_guardarlo")}
           </button>
         ) : (
           <button
@@ -142,7 +143,7 @@ export function MarathonCard() {
             disabled={adding || !tmdbApiKey}
             className="btn btn-secondary btn-sm flex-1 disabled:opacity-60"
           >
-            {adding ? "…" : "Aggiungi in libreria"}
+            {adding ? "…" : t("MarathonCard.aggiungi_in_libreria")}
           </button>
         )}
         <button
@@ -150,7 +151,7 @@ export function MarathonCard() {
           onClick={finishAndAdvance}
           className="btn btn-primary btn-sm flex-[1.4]"
         >
-          {currentItem ? "Visto → prossimo" : "Salta al prossimo"}
+          {currentItem ? t("MarathonCard.visto_prossimo") : t("MarathonCard.salta_al_prossimo")}
         </button>
       </div>
     </section>

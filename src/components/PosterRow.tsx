@@ -6,6 +6,7 @@ import { useSelectedItem } from "../store/useSelectedItem";
 import type { Item } from "../types";
 import type { Suggestion } from "../lib/recommend";
 import type { PosterBadge } from "../lib/homeBadges";
+import { t } from "../lib/i18n";
 
 /**
  * A horizontal shelf of titles. Takes suggestions rather than bare items so a
@@ -42,7 +43,7 @@ export function PosterRow({
             key={item.id}
             type="button"
             onClick={() => openItem(item)}
-            aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
+            aria-label={t("PosterRow.apri_dettagli_di", { v0: item.title, v1: item.year })}
             className="group w-32 text-left sm:w-36"
           >
             <PosterArt

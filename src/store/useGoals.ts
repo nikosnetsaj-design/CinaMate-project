@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { isRecord, readJson, writeJson } from "../lib/localStore";
+import { t } from "../lib/i18n";
 
 const KEY = "cinemate:goals:v1";
 
@@ -24,15 +25,15 @@ export interface Goal {
 }
 
 export const GOAL_METRICS: { value: GoalMetric; label: string; unit: string }[] = [
-  { value: "titoli", label: "Titoli finiti", unit: "titoli" },
-  { value: "ore", label: "Ore guardate", unit: "ore" },
-  { value: "episodi", label: "Episodi visti", unit: "episodi" },
+  { value: "titoli", label: t("useGoals.titoli_finiti"), unit: t("useGoals.titoli") },
+  { value: "ore", label: t("useGoals.ore_guardate"), unit: t("useGoals.ore") },
+  { value: "episodi", label: t("useGoals.episodi_visti"), unit: t("useGoals.episodi") },
 ];
 
 export const GOAL_PERIODS: { value: GoalPeriod; label: string }[] = [
-  { value: "settimana", label: "a settimana" },
-  { value: "mese", label: "al mese" },
-  { value: "anno", label: "all’anno" },
+  { value: "settimana", label: t("useGoals.a_settimana") },
+  { value: "mese", label: t("useGoals.al_mese") },
+  { value: "anno", label: t("useGoals.all_anno") },
 ];
 
 function isGoal(value: unknown): value is Goal {
