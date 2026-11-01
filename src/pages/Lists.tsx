@@ -32,8 +32,8 @@ function ListRow({ list, index, total }: { list: PersonalList; index: number; to
         <span className="min-w-0 flex-1">
           <span className="block truncate text-base font-medium text-text">{list.name}</span>
           <span className="block truncate text-sm tabular text-text-muted">
-            {items.length} {items.length === 1 ? "titolo" : "titoli"}
-            {list.kind === "smart" ? " · si aggiorna da sola" : ""}
+            {items.length} {items.length === 1 ? t("Lists.titolo") : t("Lists.titoli")}
+            {list.kind === "smart" ? t("Lists.si_aggiorna_da_sola") : ""}
           </span>
         </span>
         <ChevronRightIcon size={16} />
@@ -43,7 +43,7 @@ function ListRow({ list, index, total }: { list: PersonalList; index: number; to
           type="button"
           onClick={() => moveList(list.id, -1)}
           disabled={index === 0}
-          aria-label={`Sposta ${list.name} in alto`}
+          aria-label={t("Lists.sposta_in_alto", { v0: list.name })}
           className="flex h-6 w-10 items-center justify-center rounded-xs text-text-muted hover:text-text disabled:opacity-25"
         >
           <ChevronUpIcon size={16} />
@@ -52,7 +52,7 @@ function ListRow({ list, index, total }: { list: PersonalList; index: number; to
           type="button"
           onClick={() => moveList(list.id, 1)}
           disabled={index === total - 1}
-          aria-label={`Sposta ${list.name} in basso`}
+          aria-label={t("Lists.sposta_in_basso", { v0: list.name })}
           className="flex h-6 w-10 items-center justify-center rounded-xs text-text-muted hover:text-text disabled:opacity-25"
         >
           <ChevronDownIcon size={16} />
@@ -80,17 +80,17 @@ export function Lists() {
           className="btn btn-primary shrink-0"
         >
           <PlusIcon size={16} />
-          Nuova lista
+          {t("Lists.nuova_lista")}
         </button>
       </div>
 
       {lists.length === 0 ? (
         <EmptyState
-          title="Nessuna lista, per ora."
-          description="Creane una qui, aggiungi un titolo dalla sua scheda, o salva una ricerca della Libreria come lista intelligente: si aggiorna da sola."
+          title={t("Lists.nessuna_lista_per_ora")}
+          description={t("Lists.creane_una_qui_aggiungi")}
           action={
             <Link to="/libreria" className="btn btn-secondary">
-              Vai alla Libreria
+              {t("Lists.vai_alla_libreria")}
             </Link>
           }
         />
@@ -124,11 +124,11 @@ export function ListDetail() {
     return (
       <div className="mx-auto max-w-3xl px-[var(--gutter)] py-10">
         <EmptyState
-          title="Questa lista non c'è più."
-          description="Forse è stata eliminata, o il link arriva da un altro dispositivo."
+          title={t("Lists.questa_lista_non_c")}
+          description={t("Lists.forse_e_stata_eliminata")}
           action={
             <Link to="/liste" className="btn btn-secondary">
-              Tutte le liste
+              {t("Lists.tutte_le_liste")}
             </Link>
           }
         />
@@ -142,13 +142,13 @@ export function ListDetail() {
     <div className="mx-auto flex max-w-6xl flex-col gap-6 px-[var(--gutter)] py-6 sm:py-10">
       <Link to="/liste" viewTransition className="btn btn-plain btn-sm -ml-3 self-start text-text-muted">
         <BackIcon size={16} />
-        Liste
+        {t("Lists.liste")}
       </Link>
 
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end">
         <ListMosaic items={items} className="w-36 shrink-0 shadow-[var(--shadow-md)] sm:w-44" />
         <div className="min-w-0 flex-1">
-          <p className="text-sm text-text-muted">{list.kind === "smart" ? "Lista intelligente" : "Lista"}</p>
+          <p className="text-sm text-text-muted">{list.kind === "smart" ? t("Lists.lista_intelligente") : t("Lists.lista")}</p>
           {editing ? (
             <form
               className="mt-1 flex gap-2"
@@ -162,11 +162,11 @@ export function ListDetail() {
                 autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                aria-label="Nome della lista"
+                aria-label={t("Lists.nome_della_lista")}
                 className="field min-w-0 flex-1"
               />
               <button type="submit" disabled={!name.trim()} className="btn btn-primary shrink-0">
-                Salva
+                {t("Lists.salva")}
               </button>
             </form>
           ) : (
@@ -177,16 +177,16 @@ export function ListDetail() {
                 setEditing(true);
               }}
               className="mt-1 block text-left"
-              aria-label={`Rinomina ${list.name}`}
+              aria-label={t("Lists.rinomina", { v0: list.name })}
             >
               <h1 className="t-display text-text">{list.name}</h1>
             </button>
           )}
           <p className="mt-1 text-sm tabular text-text-muted">
-            {items.length} {items.length === 1 ? "titolo" : "titoli"}
+            {items.length} {items.length === 1 ? t("Lists.titolo") : t("Lists.titoli")}
           </p>
           {criteria.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-1.5" aria-label="Cosa tiene questa lista">
+            <div className="mt-3 flex flex-wrap gap-1.5" aria-label={t("Lists.cosa_tiene_questa_lista")}>
               {criteria.map((c) => (
                 <span key={c} className="rounded-full bg-surface-2 px-3 py-1 text-sm text-text">
                   {c}
@@ -200,7 +200,7 @@ export function ListDetail() {
             type="button"
             onClick={() => setSharing(true)}
             disabled={items.length === 0}
-            aria-label="Condividi questa lista"
+            aria-label={t("Lists.condividi_questa_lista")}
             className="icon-btn icon-btn-filled disabled:opacity-40"
           >
             <ShareIcon size={18} />
@@ -208,7 +208,7 @@ export function ListDetail() {
           <button
             type="button"
             onClick={() => setConfirmingDelete(true)}
-            aria-label="Elimina questa lista"
+            aria-label={t("Lists.elimina_questa_lista")}
             className="icon-btn icon-btn-filled"
           >
             <TrashIcon size={18} />
@@ -219,11 +219,11 @@ export function ListDetail() {
       {confirmingDelete && (
         <div role="alert" aria-labelledby="delete-list" className="rounded-md bg-surface p-4 shadow-[var(--shadow-sm)]">
           <p id="delete-list" className="text-sm text-text">
-            Elimino la lista «{list.name}». I titoli restano nella libreria.
+            {t("Lists.elimino_la_lista")}{list.name}{t("Lists.i_titoli_restano_nella")}
           </p>
           <div className="mt-3 flex justify-end gap-2">
             <button type="button" onClick={() => setConfirmingDelete(false)} className="btn btn-secondary btn-sm">
-              Annulla
+              {t("Lists.annulla")}
             </button>
             <button
               type="button"
@@ -233,7 +233,7 @@ export function ListDetail() {
               }}
               className="btn btn-danger-fill btn-sm"
             >
-              Elimina
+              {t("Lists.elimina")}
             </button>
           </div>
         </div>
@@ -241,11 +241,11 @@ export function ListDetail() {
 
       {items.length === 0 ? (
         <EmptyState
-          title={list.kind === "smart" ? "Oggi nessun titolo risponde." : "Ancora vuota."}
+          title={list.kind === "smart" ? t("Lists.oggi_nessun_titolo_risponde") : t("Lists.ancora_vuota")}
           description={
             list.kind === "smart"
-              ? "Quando un titolo dello scaffale corrisponderà a queste condizioni, comparirà qui da solo."
-              : "Apri un titolo e tocca «Liste» per metterlo qui."
+              ? t("Lists.quando_un_titolo_dello")
+              : t("Lists.apri_un_titolo_e")
           }
         />
       ) : list.kind === "smart" ? (
@@ -263,7 +263,7 @@ export function ListDetail() {
                 <button
                   type="button"
                   onClick={() => openItem(item)}
-                  aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
+                  aria-label={t("Lists.apri_dettagli_di", { v0: item.title, v1: item.year })}
                   className="flex min-w-0 flex-1 items-center gap-3 text-left"
                 >
                   <PosterArt item={item} size="sm" showTitle={false} className="w-10 shrink-0 rounded-xs" />
@@ -280,7 +280,7 @@ export function ListDetail() {
                       type="button"
                       onClick={() => moveItem(list.id, item.id, -1)}
                       disabled={i === 0}
-                      aria-label={`Sposta ${item.title} in alto`}
+                      aria-label={t("Lists.sposta_in_alto", { v0: item.title })}
                       className="flex h-6 w-10 items-center justify-center rounded-xs text-text-muted hover:text-text disabled:opacity-25"
                     >
                       <ChevronUpIcon size={16} />
@@ -289,7 +289,7 @@ export function ListDetail() {
                       type="button"
                       onClick={() => moveItem(list.id, item.id, 1)}
                       disabled={i === items.length - 1}
-                      aria-label={`Sposta ${item.title} in basso`}
+                      aria-label={t("Lists.sposta_in_basso", { v0: item.title })}
                       className="flex h-6 w-10 items-center justify-center rounded-xs text-text-muted hover:text-text disabled:opacity-25"
                     >
                       <ChevronDownIcon size={16} />
@@ -298,7 +298,7 @@ export function ListDetail() {
                   <button
                     type="button"
                     onClick={() => toggleItem(list.id, item.id)}
-                    aria-label={`Togli ${item.title} dalla lista`}
+                    aria-label={t("Lists.togli_dalla_lista", { v0: item.title })}
                     className="icon-btn icon-btn-sm text-text-muted"
                   >
                     <CloseIcon size={16} />

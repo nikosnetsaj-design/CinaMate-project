@@ -8,6 +8,7 @@ import { effectiveUrl, hostLabel, searchUrlsFor, buildQuery, defaultPosition } f
 import { searchOnLinkHosts, outcomeMessage } from "../searchOnLinkHost";
 import type { SearchOutcome } from "../searchOnLinkHost";
 import type { Item } from "../../types";
+import { t } from "../../lib/i18n";
 
 /**
  * Il pannello «Siti» del player: cosa è successo quando ha cercato, e i tre
@@ -57,7 +58,7 @@ export function LinkHostPanel({
     return (
       <div className="pv-panel">
         <p className="pv-empty">
-          Lo stream di test non è un titolo della libreria, quindi non c'è niente da cercare.
+          {t("player_LinkHostPanel.lo_stream_di_test")}
         </p>
       </div>
     );
@@ -79,29 +80,27 @@ export function LinkHostPanel({
       // trovato una volta non ha motivo di essere ricercato al riavvio, e da lì
       // è la prima sorgente che il player guarda.
       patchSource(item.id, { manifestUrl: result.url });
-      pushToast("success", "Flusso trovato e collegato al titolo.");
+      pushToast("success", t("player_LinkHostPanel.flusso_trovato_e_collegato"));
     }
   }
 
   return (
     <div className="pv-panel">
       <div className="pv-panel-header">
-        <h3>Siti</h3>
+        <h3>{t("player_LinkHostPanel.siti")}</h3>
         <button type="button" className="pv-btn-secondary" onClick={() => openSettings()}>
-          Gestisci in Impostazioni
+          {t("player_LinkHostPanel.gestisci_in_impostazioni")}
         </button>
       </div>
 
       {enabled.length === 0 ? (
         <p className="pv-empty">
-          Nessun Link Host attivo. Un Link Host è l'indirizzo di un sito su cui cercare: i metadati
-          del titolo diventano la sua ricerca, e se la pagina che risponde contiene un .m3u8 finisce
-          qui nel lettore. Si aggiunge in Impostazioni → Link Host.
+          {t("player_LinkHostPanel.nessun_link_host_attivo")}
         </p>
       ) : (
         <>
           <p className="pv-dim" style={{ fontSize: "0.8rem", lineHeight: 1.5 }}>
-            La domanda per «{item.title}»:{" "}
+            {t("player_LinkHostPanel.la_domanda_per")}{item.title}»:{" "}
             <span className="pv-mono">{buildQuery(item, enabled[0].recipe, position)}</span>
           </p>
 
@@ -117,7 +116,7 @@ export function LinkHostPanel({
           {item.kind !== "film" && (
             <div style={{ display: "flex", gap: 10, alignItems: "flex-end", flexWrap: "wrap" }}>
               <label className="pv-field" style={{ padding: 0, maxWidth: 110 }}>
-                <span>Stagione</span>
+                <span>{t("player_LinkHostPanel.stagione")}</span>
                 <input
                   type="number"
                   min={1}
@@ -128,7 +127,7 @@ export function LinkHostPanel({
                 />
               </label>
               <label className="pv-field" style={{ padding: 0, maxWidth: 110 }}>
-                <span>Episodio</span>
+                <span>{t("player_LinkHostPanel.episodio")}</span>
                 <input
                   type="number"
                   min={1}
@@ -146,7 +145,7 @@ export function LinkHostPanel({
                     patchSource(item.id, { searchSeason: undefined, searchEpisode: undefined })
                   }
                 >
-                  Torna a S{String(fallback.season).padStart(2, "0")}E
+                  {t("player_LinkHostPanel.torna_a_s")}{String(fallback.season).padStart(2, "0")}E
                   {String(fallback.episode).padStart(2, "0")}
                 </button>
               )}
@@ -178,7 +177,7 @@ export function LinkHostPanel({
                       {urls.length > 1 && (
                         <span className="pv-dim" style={{ fontFamily: "inherit" }}>
                           {" "}
-                          e altri {urls.length - 1} percorsi
+                          {t("player_LinkHostPanel.e_altri")} {urls.length - 1} {t("player_LinkHostPanel.percorsi")}
                         </span>
                       )}
                     </span>
@@ -190,7 +189,7 @@ export function LinkHostPanel({
                         className="pv-btn-tiny"
                         onClick={() => openViewer(urls[0], { itemId: item.id, title: item.title })}
                       >
-                        Apri la ricerca nel Web Viewer
+                        {t("player_LinkHostPanel.apri_la_ricerca_nel")}
                       </button>
                     )}
                     <button
@@ -200,7 +199,7 @@ export function LinkHostPanel({
                         openViewer(effectiveUrl(host), { itemId: item.id, title: item.title })
                       }
                     >
-                      Apri il sito
+                      {t("player_LinkHostPanel.apri_il_sito")}
                     </button>
                   </div>
                 </div>
@@ -210,7 +209,7 @@ export function LinkHostPanel({
 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             <button type="button" onClick={retry} disabled={retrying || busy}>
-              {retrying || busy ? "Cerco…" : "Cerca di nuovo"}
+              {retrying || busy ? t("player_LinkHostPanel.cerco") : t("player_LinkHostPanel.cerca_di_nuovo")}
             </button>
             {shown && shown.kind !== "niente-host" && (
               <span className="pv-dim" style={{ fontSize: "0.78rem", flex: 1, minWidth: 200, lineHeight: 1.45 }}>
@@ -222,7 +221,7 @@ export function LinkHostPanel({
           {shown?.kind === "solo-pagina" && shown.candidates.length > 1 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               <span className="pv-dim" style={{ fontSize: "0.78rem" }}>
-                Altre pagine che somigliano al titolo:
+                {t("player_LinkHostPanel.altre_pagine_che_somigliano")}
               </span>
               {shown.candidates.slice(1).map((c) => (
                 <button
@@ -241,9 +240,7 @@ export function LinkHostPanel({
       )}
 
       <p className="pv-dim" style={{ fontSize: "0.72rem", lineHeight: 1.5 }}>
-        I siti si interrogano solo dopo che i tuoi indirizzi non hanno dato niente. La lettura di
-        una pagina di un altro dominio dipende dai suoi header CORS: quando mancano, il browser la
-        blocca e resta il Web Viewer, che quella pagina la mostra senza leggerla.
+        {t("player_LinkHostPanel.i_siti_si_interrogano")}
       </p>
     </div>
   );

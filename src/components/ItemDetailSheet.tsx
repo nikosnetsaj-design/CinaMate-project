@@ -35,6 +35,7 @@ import { useAddSheet } from "../store/useAddSheet";
 import { useCriticDraft } from "../store/useCriticDraft";
 import { useTitleLogo } from "../lib/useTitleLogo";
 import type { Item, Status } from "../types";
+import { platformLabel, statusLabel, t } from "../lib/i18n";
 
 /**
  * Un'azione tonda della riga sotto ai pulsanti: icona grande, parola sotto.
@@ -112,10 +113,10 @@ function ItemDetail({ item }: { item: Item }) {
   const watchedMinutes = item.kind === "film" ? (item.status === "Visto" ? item.runtime : 0) : (item.seen || 0) * item.runtime;
 
   const TABS: { id: Tab; label: string }[] = [
-    ...(isSeries ? [{ id: "episodi" as const, label: "Episodi" }] : []),
-    { id: "dettagli", label: "Dettagli" },
-    ...(item.collectionId != null ? [{ id: "saga" as const, label: "Saga" }] : []),
-    { id: "simili", label: "Simili" },
+    ...(isSeries ? [{ id: "episodi" as const, label: t("ItemDetailSheet.episodi_2") }] : []),
+    { id: "dettagli", label: t("ItemDetailSheet.dettagli") },
+    ...(item.collectionId != null ? [{ id: "saga" as const, label: t("ItemDetailSheet.saga") }] : []),
+    { id: "simili", label: t("ItemDetailSheet.simili") },
   ];
 
   return createPortal(
@@ -144,7 +145,7 @@ function ItemDetail({ item }: { item: Item }) {
             close();
             navigate(`/player?titolo=${encodeURIComponent(item.id)}`);
           }}
-          aria-label={`Riproduci ${item.title}`}
+          aria-label={t("ItemDetailSheet.riproduci", { v0: item.title })}
           className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md transition-transform duration-200 hover:scale-105 active:scale-95"
         >
           <PlayIcon size={28} />
@@ -174,7 +175,7 @@ function ItemDetail({ item }: { item: Item }) {
                 className="btn btn-sm mb-0.5 ml-auto bg-black/45 text-white backdrop-blur-md hover:bg-black/65"
               >
                 <PlayIcon size={14} />
-                Trailer
+                {t("ItemDetailSheet.trailer")}
               </button>
             )}
           </div>
@@ -184,14 +185,14 @@ function ItemDetail({ item }: { item: Item }) {
       <button
         type="button"
         onClick={close}
-        aria-label="Torna indietro"
+        aria-label={t("ItemDetailSheet.torna_indietro")}
         className="icon-btn fixed left-3 top-3 z-20 bg-black/45 text-white backdrop-blur-md hover:bg-black/65 hover:text-white"
       >
         <BackIcon />
       </button>
 
       <div className="mx-auto max-w-3xl px-4 pb-28 pt-4 sm:px-6">
-        <span className="text-sm font-medium text-text-muted">{item.platform}</span>
+        <span className="text-sm font-medium text-text-muted">{platformLabel(item.platform)}</span>
         <div className="mt-0.5 flex items-start justify-between gap-3">
           {/* Il logo disegnato quando TMDB ce l'ha, il titolo scritto quando
               non c'è. L'`h1` resta in entrambi i casi: l'immagine porta il
@@ -213,7 +214,7 @@ function ItemDetail({ item }: { item: Item }) {
           {[
             item.year || null,
             item.certification || null,
-            isSeries && item.seasons ? `${item.seasons} stagion${item.seasons === 1 ? "e" : "i"}` : null,
+            isSeries && item.seasons ? t(item.seasons === 1 ? "ItemDetailSheet.stagione" : "ItemDetailSheet.stagioni", { v0: item.seasons }) : null,
             item.runtime ? formatRuntime(item.runtime) + (isSeries ? "/ep" : "") : null,
             item.genre || null,
             item.quality || null,
@@ -241,14 +242,14 @@ function ItemDetail({ item }: { item: Item }) {
             la sua riga di pastiglie in Dettagli, e un interruttore a due valori
             avrebbe dovuto inventare uno stato "non in lista" che non esiste. */}
         <div className="mt-6 flex flex-wrap justify-around gap-2">
-          <RoundAction label="Preferito" active={item.fav} onClick={() => toggleFav(item.id)}>
+          <RoundAction label={t("ItemDetailSheet.preferito")} active={item.fav} onClick={() => toggleFav(item.id)}>
             <HeartIcon size={17} filled={item.fav} />
           </RoundAction>
-          <RoundAction label="Voto" active={item.vote != null} onClick={() => openEdit(item)}>
+          <RoundAction label={t("ItemDetailSheet.voto")} active={item.vote != null} onClick={() => openEdit(item)}>
             <StarIcon size={17} filled={item.vote != null} />
           </RoundAction>
           <RoundAction
-            label="Guardato"
+            label={t("ItemDetailSheet.guardato")}
             active={item.status === "Visto"}
             // Coppia onesta: "l'ho visto" e "voglio vederlo" sono i due stati
             // fra cui questo pulsante può spostarti senza inventare nulla.
@@ -256,10 +257,10 @@ function ItemDetail({ item }: { item: Item }) {
           >
             <EyeIcon size={17} />
           </RoundAction>
-          <RoundAction label="Liste" active={inLists} onClick={() => setPickingList(true)}>
+          <RoundAction label={t("ItemDetailSheet.liste")} active={inLists} onClick={() => setPickingList(true)}>
             <ListIcon size={17} />
           </RoundAction>
-          <RoundAction label="Condividi" onClick={() => setSharing(true)}>
+          <RoundAction label={t("ItemDetailSheet.condividi")} onClick={() => setSharing(true)}>
             <ShareIcon size={17} />
           </RoundAction>
         </div>
@@ -297,7 +298,7 @@ function ItemDetail({ item }: { item: Item }) {
           className="chip mt-4 w-full"
         >
           <InfoIcon size={17} />
-          Maggiori informazioni
+          {t("ItemDetailSheet.maggiori_informazioni")}
         </button>
 
         {/* Gli stessi segmenti di Tu, Cerca e Scopri: un modo solo, in tutta
@@ -306,7 +307,7 @@ function ItemDetail({ item }: { item: Item }) {
           ref={tabsRef}
           className="no-scrollbar mt-6 flex scroll-mt-4 gap-2 overflow-x-auto"
           role="tablist"
-          aria-label="Sezioni del titolo"
+          aria-label={t("ItemDetailSheet.sezioni_del_titolo")}
         >
           {TABS.map((t) => (
             <button
@@ -332,7 +333,7 @@ function ItemDetail({ item }: { item: Item }) {
               {item.episodes ? (
                 <div className="rounded-lg bg-surface p-4 shadow-[var(--shadow-sm)]">
                   <div className="flex items-baseline justify-between">
-                    <span className="text-sm font-medium text-text">Avanzamento</span>
+                    <span className="text-sm font-medium text-text">{t("ItemDetailSheet.avanzamento")}</span>
                     <span className="tabular text-sm font-semibold text-text-muted">{pct}%</span>
                   </div>
                   <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-hover">
@@ -340,9 +341,9 @@ function ItemDetail({ item }: { item: Item }) {
                   </div>
                   <div className="mt-1.5 flex justify-between text-xs tabular text-text-muted">
                     <span>
-                      {item.seen || 0} di {item.episodes} episodi
+                      {item.seen || 0} {t("ItemDetailSheet.di")} {item.episodes} {t("ItemDetailSheet.episodi")}
                     </span>
-                    <span>{formatRuntime(watchedMinutes)} guardate</span>
+                    <span>{formatRuntime(watchedMinutes)} {t("ItemDetailSheet.guardate")}</span>
                   </div>
                   <div className="mt-4">
                     <EpisodeGrid item={item} />
@@ -352,11 +353,11 @@ function ItemDetail({ item }: { item: Item }) {
                       type="button"
                       onClick={() => decrementEpisode(item.id)}
                       disabled={(item.seen || 0) === 0}
-                      aria-label="Togli l'ultimo episodio segnato"
+                      aria-label={t("ItemDetailSheet.togli_l_ultimo_episodio")}
                       className="btn btn-secondary btn-sm flex-1 disabled:opacity-40"
                     >
                       <MinusIcon size={16} />
-                      Togli
+                      {t("ItemDetailSheet.togli")}
                     </button>
                     <button
                       type="button"
@@ -364,7 +365,7 @@ function ItemDetail({ item }: { item: Item }) {
                       disabled={!nextUp}
                       className="btn btn-primary btn-sm flex-[2] disabled:opacity-40"
                     >
-                      {nextUp ? `Segna ${episodeLabel(nextUp)}` : "Tutto visto"}
+                      {nextUp ? t("ItemDetailSheet.segna", { v0: episodeLabel(nextUp) }) : t("ItemDetailSheet.tutto_visto")}
                     </button>
                   </div>
                 </div>
@@ -375,7 +376,7 @@ function ItemDetail({ item }: { item: Item }) {
           {tab === "dettagli" && (
             <div className="flex flex-col">
               <div>
-                <span className="mb-2 block text-sm font-medium text-text">Stato</span>
+                <span className="mb-2 block text-sm font-medium text-text">{t("ItemDetailSheet.stato")}</span>
                 <div className="flex flex-wrap gap-2">
                   {STATUSES.map((s: Status) => (
                     <button
@@ -386,7 +387,7 @@ function ItemDetail({ item }: { item: Item }) {
                       className="chip"
                     >
                       <StatusMark status={s} />
-                      {s}
+                      {statusLabel(s)}
                     </button>
                   ))}
                 </div>
@@ -395,16 +396,16 @@ function ItemDetail({ item }: { item: Item }) {
               <div className="mt-4 flex gap-3">
                 <div className="flex flex-1 items-center justify-between gap-3 rounded-lg bg-surface-2 p-3 pl-4">
                   <div>
-                    <span className="block text-sm font-medium text-text">Rivisto</span>
+                    <span className="block text-sm font-medium text-text">{t("ItemDetailSheet.rivisto")}</span>
                     <span className="tabular text-sm text-text-muted">
-                      {item.rewatch || 0} {(item.rewatch || 0) === 1 ? "volta" : "volte"}
+                      {item.rewatch || 0} {(item.rewatch || 0) === 1 ? t("ItemDetailSheet.volta") : t("ItemDetailSheet.volte")}
                     </span>
                   </div>
                   <div className="flex gap-1.5">
                     <button
                       type="button"
                       onClick={() => setRewatch(item.id, (item.rewatch || 0) - 1)}
-                      aria-label="Una volta in meno"
+                      aria-label={t("ItemDetailSheet.una_volta_in_meno")}
                       disabled={(item.rewatch || 0) === 0}
                       className="icon-btn bg-surface-hover disabled:opacity-40"
                     >
@@ -413,7 +414,7 @@ function ItemDetail({ item }: { item: Item }) {
                     <button
                       type="button"
                       onClick={() => setRewatch(item.id, (item.rewatch || 0) + 1)}
-                      aria-label="Una volta in più"
+                      aria-label={t("ItemDetailSheet.una_volta_in_piu")}
                       className="icon-btn bg-surface-hover"
                     >
                       <PlusIcon />
@@ -427,7 +428,7 @@ function ItemDetail({ item }: { item: Item }) {
                     className="btn btn-secondary btn-sm flex-1"
                   >
                     <StarIcon size={14} />
-                    Dai un voto
+                    {t("ItemDetailSheet.dai_un_voto")}
                   </button>
                 )}
               </div>
@@ -436,7 +437,7 @@ function ItemDetail({ item }: { item: Item }) {
 
               {item.notes && (
                 <div className="mt-4 rounded-lg bg-surface p-4 shadow-[var(--shadow-sm)]">
-                  <span className="mb-1.5 block text-sm font-medium text-text-muted">Le tue note</span>
+                  <span className="mb-1.5 block text-sm font-medium text-text-muted">{t("ItemDetailSheet.le_tue_note")}</span>
                   <p className="text-sm italic leading-relaxed text-text">{item.notes}</p>
                 </div>
               )}
@@ -461,11 +462,11 @@ function ItemDetail({ item }: { item: Item }) {
                   style={{ background: "color-mix(in srgb, var(--danger) 10%, var(--surface))" }}
                 >
                   <p id={`${titleId}-delete`} className="text-sm text-text">
-                    Tolgo «{item.title}» dalla libreria? Voto, note e avanzamento spariscono con lui.
+                    {t("ItemDetailSheet.tolgo")}{item.title}{t("ItemDetailSheet.dalla_libreria_voto_note")}
                   </p>
                   <div className="mt-3 flex gap-2">
                     <button type="button" onClick={() => setConfirmingDelete(false)} className="btn btn-secondary flex-1">
-                      Annulla
+                      {t("ItemDetailSheet.annulla")}
                     </button>
                     <button
                       type="button"
@@ -475,17 +476,17 @@ function ItemDetail({ item }: { item: Item }) {
                       }}
                       className="btn btn-danger-fill flex-1"
                     >
-                      Elimina
+                      {t("ItemDetailSheet.elimina")}
                     </button>
                   </div>
                 </div>
               ) : (
                 <div className="mt-6 flex gap-2">
                   <button type="button" onClick={() => openEdit(item)} className="btn btn-secondary flex-1">
-                    Modifica
+                    {t("ItemDetailSheet.modifica")}
                   </button>
                   <button type="button" onClick={() => setConfirmingDelete(true)} className="btn btn-danger flex-1">
-                    Elimina
+                    {t("ItemDetailSheet.elimina")}
                   </button>
                 </div>
               )}
@@ -513,7 +514,7 @@ function ItemDetail({ item }: { item: Item }) {
               {shelfMates.length > 0 && (
                 <div>
                   <span className="mb-2 block text-sm font-medium text-text">
-                    {isSeries ? "Serie simili sul tuo scaffale" : "Film simili sul tuo scaffale"}
+                    {isSeries ? t("ItemDetailSheet.serie_simili_sul_tuo") : t("ItemDetailSheet.film_simili_sul_tuo")}
                   </span>
                   <div className="shelf gap-3">
                     {shelfMates.map(({ item: other, reason }) => (
@@ -521,7 +522,7 @@ function ItemDetail({ item }: { item: Item }) {
                         key={other.id}
                         type="button"
                         onClick={() => open(other)}
-                        aria-label={`Apri dettagli di ${other.title}, ${other.year}`}
+                        aria-label={t("ItemDetailSheet.apri_dettagli_di", { v0: other.title, v1: other.year })}
                         className="w-28 text-left"
                       >
                         <PosterArt item={other} size="sm" className="w-full" />
@@ -539,7 +540,7 @@ function ItemDetail({ item }: { item: Item }) {
                   titoli invece di tre. */}
               {item.similar.length > 0 && item.tmdbId == null && (
                 <div>
-                  <span className="mb-2 block text-sm font-medium text-text">Se ti è piaciuto — da aggiungere</span>
+                  <span className="mb-2 block text-sm font-medium text-text">{t("ItemDetailSheet.se_ti_e_piaciuto")}</span>
                   <div className="flex flex-wrap gap-1.5">
                     {item.similar.map((s) => (
                       <button
@@ -562,14 +563,14 @@ function ItemDetail({ item }: { item: Item }) {
               <button
                 type="button"
                 onClick={() => {
-                  setCriticQuestion(`Parlami di "${item.title}" e consigliami cosa guardare dopo`);
+                  setCriticQuestion(t("ItemDetailSheet.parlami_di_e_consigliami", { v0: item.title }));
                   close();
                   navigate("/critico");
                 }}
                 className="btn btn-secondary w-full"
               >
                 <SparkleIcon size={18} />
-                Chiedi al critico
+                {t("ItemDetailSheet.chiedi_al_critico")}
               </button>
             </div>
           )}
@@ -579,7 +580,7 @@ function ItemDetail({ item }: { item: Item }) {
       {sharing && <ShareSheet target={{ kind: "item", item }} onClose={() => setSharing(false)} />}
       {pickingList && <ListPickerSheet item={item} onClose={() => setPickingList(false)} />}
       {trailerOpen && trailerKey && (
-        <TrailerPlayer videoKey={trailerKey} title={`${item.title} — trailer`} onClose={() => setTrailerOpen(false)} />
+        <TrailerPlayer videoKey={trailerKey} title={t("ItemDetailSheet.trailer_2", { v0: item.title })} onClose={() => setTrailerOpen(false)} />
       )}
     </div>,
     document.body,

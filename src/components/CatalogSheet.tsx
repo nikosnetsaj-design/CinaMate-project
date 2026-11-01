@@ -18,6 +18,7 @@ import { RelatedRow } from "./RelatedRow";
 import { WatchProvidersBlock } from "./WatchAndLinks";
 import { BackIcon, ChevronRightIcon, PlayIcon, PlusIcon, StarIcon } from "./icons";
 import type { Item } from "../types";
+import { t } from "../lib/i18n";
 
 /**
  * La scheda di un titolo che non hai — la stessa di quelli che hai, meno le
@@ -97,7 +98,7 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
         if (!cancelled) setDetails(d);
       })
       .catch((e) => {
-        if (!cancelled) setError(e instanceof TmdbApiError ? e.message : "Non è stato possibile leggere questo titolo.");
+        if (!cancelled) setError(e instanceof TmdbApiError ? e.message : t("CatalogSheet.non_e_stato_possibile"));
       });
     return () => {
       cancelled = true;
@@ -142,7 +143,7 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
           <button
             type="button"
             onClick={() => window.open(item.trailerUrl!, "_blank", "noopener")}
-            aria-label={`Guarda il trailer di ${item.title}`}
+            aria-label={t("CatalogSheet.guarda_il_trailer_di", { v0: item.title })}
             className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/85 bg-black/35 text-white backdrop-blur-[2px] transition-transform hover:scale-105"
           >
             <PlayIcon size={26} />
@@ -157,7 +158,7 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
       <button
         type="button"
         onClick={close}
-        aria-label="Torna indietro"
+        aria-label={t("CatalogSheet.torna_indietro")}
         className="icon-btn fixed left-3 top-3 z-20 bg-black/45 text-white backdrop-blur-md hover:bg-black/65 hover:text-white"
       >
         <BackIcon />
@@ -165,7 +166,7 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
 
       <div className="mx-auto max-w-3xl px-4 pb-28 pt-4 sm:px-6">
         <span className="text-xs font-semibold" style={{ color: "var(--accent-text)" }}>
-          {isSeries ? "Serie · non in libreria" : "Film · non in libreria"}
+          {isSeries ? t("CatalogSheet.serie_non_in_libreria") : t("CatalogSheet.film_non_in_libreria")}
         </span>
 
         <h1 id={titleId} className="mt-0.5 font-display text-2xl font-semibold leading-tight text-text">
@@ -180,7 +181,7 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
           {[
             item.year || null,
             item.certification || null,
-            isSeries && item.seasons ? `${item.seasons} stagion${item.seasons === 1 ? "e" : "i"}` : null,
+            isSeries && item.seasons ? t(item.seasons === 1 ? "CatalogSheet.stagione" : "CatalogSheet.stagioni", { v0: item.seasons }) : null,
             item.runtime ? formatRuntime(item.runtime) + (isSeries ? "/ep" : "") : null,
             item.genre || null,
           ]
@@ -209,7 +210,7 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
             }}
             className="btn btn-secondary btn-lg mt-4 w-full"
           >
-            Ce l'hai già — apri la tua scheda
+            {t("CatalogSheet.ce_l_hai_gia")}
             <ChevronRightIcon />
           </button>
         ) : (
@@ -229,13 +230,13 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
             className="btn btn-primary btn-lg mt-4 w-full"
           >
             <PlusIcon size={18} />
-            {adding !== null ? "Preparo la scheda…" : "Aggiungi alla libreria"}
+            {adding !== null ? t("CatalogSheet.preparo_la_scheda") : t("CatalogSheet.aggiungi_alla_libreria")}
           </button>
         )}
 
         {!tmdbApiKey && (
           <div className="mt-3">
-            <CatalogNote what="Trama, cast e disponibilità arrivano da TMDB." />
+            <CatalogNote what={t("CatalogSheet.trama_cast_e_disponibilita")} />
           </div>
         )}
         {error && <p className="mt-3 text-sm text-text-muted">{error}</p>}

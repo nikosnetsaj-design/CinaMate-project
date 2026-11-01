@@ -15,6 +15,7 @@ import {
   type RecapDetail,
 } from "../lib/recap";
 import type { Item } from "../types";
+import { t } from "../lib/i18n";
 
 function Panel({ children }: { children: React.ReactNode }) {
   return <div className="mt-4 rounded-lg bg-surface-2 p-4">{children}</div>;
@@ -78,19 +79,19 @@ export function SpoilerFreeRecap({ item }: { item: Item }) {
       storeRecap(key, text);
       setFresh((f) => ({ ...f, [key]: text }));
     } catch (e) {
-      setError(e instanceof ClaudeApiError ? e.message : "Riassunto non riuscito.");
+      setError(e instanceof ClaudeApiError ? e.message : t("AiItemExtras.riassunto_non_riuscito"));
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <section className="rounded-lg bg-surface p-4 shadow-[var(--shadow-sm)]" aria-label="Nelle puntate precedenti">
-      <Label>Nelle puntate precedenti</Label>
+    <section className="rounded-lg bg-surface p-4 shadow-[var(--shadow-sm)]" aria-label={t("AiItemExtras.nelle_puntate_precedenti")}>
+      <Label>{t("AiItemExtras.nelle_puntate_precedenti")}</Label>
       <p className="text-xs leading-relaxed text-text-muted">
-        Fino alla fine di {episodeLabel(last)}, l'ultimo che hai segnato. Niente di quello che viene dopo.
+        {t("AiItemExtras.fino_alla_fine_di")} {episodeLabel(last)}{t("AiItemExtras.l_ultimo_che_hai")}
       </p>
-      <div className="segmented segmented-full mt-3" role="radiogroup" aria-label="Quanto dettaglio">
+      <div className="segmented segmented-full mt-3" role="radiogroup" aria-label={t("AiItemExtras.quanto_dettaglio")}>
         {RECAP_DETAILS.map((d) => (
           <button
             key={d.id}
@@ -110,7 +111,7 @@ export function SpoilerFreeRecap({ item }: { item: Item }) {
         <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-text">{recap}</p>
       ) : (
         <button type="button" onClick={load} disabled={busy} className="btn btn-secondary mt-3 w-full">
-          {busy ? "Sto ricostruendo…" : "Ricordami dove eravamo"}
+          {busy ? t("AiItemExtras.sto_ricostruendo") : t("AiItemExtras.ricordami_dove_eravamo")}
         </button>
       )}
       {error && (
@@ -146,12 +147,12 @@ export function TranslateOverview({ item }: { item: Item }) {
     try {
       const english = await getOverviewInEnglish(item.tmdbId!, item.tmdbMediaType!, tmdbApiKey);
       if (!english) {
-        setError("Su TMDB non c'è nessuna sinossi, nemmeno in inglese.");
+        setError(t("AiItemExtras.su_tmdb_non_c"));
         return;
       }
       updateItem(item.id, { overview: await translateOverview(item.title, english, apiKey, model) });
     } catch (e) {
-      setError(e instanceof ClaudeApiError ? e.message : "Traduzione non riuscita.");
+      setError(e instanceof ClaudeApiError ? e.message : t("AiItemExtras.traduzione_non_riuscita"));
     } finally {
       setBusy(false);
     }
@@ -159,10 +160,9 @@ export function TranslateOverview({ item }: { item: Item }) {
 
   return (
     <Panel>
-      <Label>Sinossi mancante</Label>
+      <Label>{t("AiItemExtras.sinossi_mancante")}</Label>
       <p className="text-xs leading-relaxed text-text-faint">
-        TMDB non ha la trama in italiano per questo titolo. Posso prendere quella inglese e
-        tradurla: resta salvata, quindi si fa una volta sola.
+        {t("AiItemExtras.tmdb_non_ha_la")}
       </p>
       <button
         type="button"
@@ -170,7 +170,7 @@ export function TranslateOverview({ item }: { item: Item }) {
         disabled={busy}
         className="btn btn-secondary mt-2.5 w-full disabled:opacity-50"
       >
-        {busy ? "Traduco…" : "Traduci la sinossi"}
+        {busy ? t("AiItemExtras.traduco") : t("AiItemExtras.traduci_la_sinossi")}
       </button>
       {error && (
         <p role="alert" className="mt-2 text-xs" style={{ color: "var(--danger)" }}>

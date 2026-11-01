@@ -1,4 +1,5 @@
 import type { Status } from "../types";
+import { t } from "./i18n";
 
 /**
  * Leggere quello che le altre app esportano.
@@ -317,18 +318,18 @@ export function parseImportFile(fileName: string, text: string): { source: Impor
     try {
       data = JSON.parse(trimmed);
     } catch {
-      throw new ImportFormatError(`${fileName}: non è un JSON leggibile.`);
+      throw new ImportFormatError(t("importers.non_e_un_json", { v0: fileName }));
     }
     const rows = Array.isArray(data) ? data : [];
     if (rows.length > 0 && rows.some((r) => r && typeof r === "object" && ("movie" in r || "show" in r))) {
       // Le liste personali e le collezioni hanno la stessa forma della
       // watchlist, ma non sono «da vedere»: restano fuori.
       if (/(^|[/\\])(lists?|collection)[-_.]/i.test(fileName)) {
-        throw new ImportFormatError(`${fileName}: le liste e le collezioni di Trakt non sono la tua cronologia, le lascio fuori.`);
+        throw new ImportFormatError(t("importers.le_liste_e_le", { v0: fileName }));
       }
       return { source: "trakt", entries: fromTrakt(rows as TraktRow[]) };
     }
-    throw new ImportFormatError(`${fileName}: questo JSON non sembra un backup di Trakt.`);
+    throw new ImportFormatError(t("importers.questo_json_non_sembra", { v0: fileName }));
   }
 
   const records = csvRecords(text);
@@ -336,7 +337,7 @@ export function parseImportFile(fileName: string, text: string): { source: Impor
   if (isLetterboxd(keys)) return { source: "letterboxd", entries: fromLetterboxd(records, fileName) };
   if (isImdb(keys)) return { source: "imdb", entries: fromImdb(records) };
   if (isTvTime(keys)) return { source: "tvtime", entries: fromTvTime(records) };
-  throw new ImportFormatError(`${fileName}: non riconosco questo file. Servono i CSV di Letterboxd, IMDb o TV Time, o i JSON di Trakt.`);
+  throw new ImportFormatError(t("importers.non_riconosco_questo_file", { v0: fileName }));
 }
 
 // --- unione -------------------------------------------------------------------------

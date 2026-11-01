@@ -11,15 +11,16 @@ import { backdropUrl } from "../lib/tmdb";
 import { PosterArt } from "./PosterArt";
 import { RowHeader } from "./RowHeader";
 import { DotsIcon, InfoIcon, PlayIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 const MAX_SHOWN = 12;
 
 /** "3 min", "1h 12min", or the honest nothing when the runtime is unknown. */
 function remainingText(entry: ResumeEntry): string | null {
   if (!entry.remainingMin) return null;
-  if (entry.hasPlayhead) return `restano ${formatRuntime(entry.remainingMin)}`;
+  if (entry.hasPlayhead) return t("ContinueWatchingRow.restano", { v0: formatRuntime(entry.remainingMin) });
   const left = entry.item.episodes ? (entry.item.episodes - (entry.item.seen || 0)) : 0;
-  if (left > 0) return `${left} episod${left === 1 ? "io" : "i"} · ${formatRuntime(entry.remainingMin)}`;
+  if (left > 0) return t(left === 1 ? "ContinueWatchingRow.episodio" : "ContinueWatchingRow.episodi", { v0: left, v1: formatRuntime(entry.remainingMin) });
   return formatRuntime(entry.remainingMin);
 }
 
@@ -51,8 +52,8 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
         onClick={() => navigate(`/player?titolo=${encodeURIComponent(item.id)}`)}
         aria-label={
           entry.hasPlayhead
-            ? `Riprendi ${item.title} da ${Math.floor(entry.positionSec / 60)} minuti`
-            : `Guarda ${item.title}`
+            ? t("ContinueWatchingRow.riprendi_da_minuti", { v0: item.title, v1: Math.floor(entry.positionSec / 60) })
+            : t("ContinueWatchingRow.guarda", { v0: item.title })
         }
         className="block w-full text-left"
       >
@@ -95,7 +96,7 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
               <span
                 className="rounded-xs bg-black/65 px-1.5 py-0.5 text-xs font-semibold text-white backdrop-blur-sm"
               >
-                Da iniziare
+                {t("ContinueWatchingRow.da_iniziare")}
               </span>
             )}
             {badge && (
@@ -134,7 +135,7 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
         <button
           type="button"
           onClick={() => openItem(item)}
-          aria-label={`Scheda di ${item.title}`}
+          aria-label={t("ContinueWatchingRow.scheda_di", { v0: item.title })}
           className="icon-btn icon-btn-sm bg-black/45 text-white backdrop-blur-md hover:bg-black/65 hover:text-white"
         >
           <InfoIcon size={16} />
@@ -142,7 +143,7 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
         <button
           type="button"
           onClick={() => setMenuOpen((v) => !v)}
-          aria-label={`Altre azioni per ${item.title}`}
+          aria-label={t("ContinueWatchingRow.altre_azioni_per", { v0: item.title })}
           aria-expanded={menuOpen}
           className="icon-btn icon-btn-sm bg-black/45 text-white backdrop-blur-md hover:bg-black/65 hover:text-white"
         >
@@ -155,7 +156,7 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
           {/* Chiude toccando altrove, come ogni menu dell'app. */}
           <button
             type="button"
-            aria-label="Chiudi il menu"
+            aria-label={t("ContinueWatchingRow.chiudi_il_menu")}
             className="fixed inset-0 z-40 cursor-default"
             onClick={() => setMenuOpen(false)}
           />
@@ -168,7 +169,7 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
               }}
               className="list-row min-h-11 py-2 text-sm text-text"
             >
-              Segna come visto
+              {t("ContinueWatchingRow.segna_come_visto")}
             </button>
             {entry.hasPlayhead && (
               <button
@@ -179,7 +180,7 @@ export function ContinueWatchingCard({ entry, badge }: { entry: ResumeEntry; bad
                 }}
                 className="list-row min-h-11 py-2 text-sm text-text"
               >
-                Togli da Continua a guardare
+                {t("ContinueWatchingRow.togli_da_continua_a")}
               </button>
             )}
           </div>
@@ -211,9 +212,9 @@ export function ContinueWatchingRow({ badges }: { badges?: Record<string, Poster
   return (
     <section className="flex flex-col gap-4">
       <RowHeader
-        title="Continua a guardare"
+        title={t("ContinueWatchingRow.continua_a_guardare")}
         count={entries.length}
-        note="Riparte dal punto esatto in cui hai smesso"
+        note={t("ContinueWatchingRow.riparte_dal_punto_esatto")}
         to="/tu"
       />
 

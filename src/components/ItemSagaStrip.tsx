@@ -5,6 +5,7 @@ import { useSelectedItem } from "../store/useSelectedItem";
 import { buildEntries, orderParts, sagaProgress } from "../lib/sagas";
 import { ChevronRightIcon, StackIcon } from "./icons";
 import type { Item } from "../types";
+import { t } from "../lib/i18n";
 
 /**
  * The saga a title belongs to, seen from inside the title: where this chapter
@@ -35,7 +36,7 @@ export function ItemSagaStrip({ item }: { item: Item }) {
         closeItem();
         openSaga(key);
       }}
-      aria-label={`Apri la saga ${saga.name}`}
+      aria-label={t("ItemSagaStrip.apri_la_saga", { v0: saga.name })}
       className="mt-4 flex w-full items-center gap-3 rounded-lg bg-surface-2 p-3.5 text-left transition-colors hover:bg-surface-hover"
     >
       <span
@@ -46,7 +47,7 @@ export function ItemSagaStrip({ item }: { item: Item }) {
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-xs text-text-faint">
-          {here ? `Capitolo ${here.number} di ${progress.total}` : "Fa parte della saga"}
+          {here ? t("ItemSagaStrip.capitolo_di", { v0: here.number, v1: progress.total }) : t("ItemSagaStrip.fa_parte_della_saga")}
         </p>
         <p className="truncate font-display text-sm font-semibold text-text">{saga.name}</p>
         <div className="mt-1.5 flex items-center gap-2">

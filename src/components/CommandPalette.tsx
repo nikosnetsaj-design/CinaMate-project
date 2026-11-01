@@ -10,6 +10,7 @@ import { useFocusTrap } from "../lib/useFocusTrap";
 import { GROUP_LABELS, smartSearch, type SearchGroup, type SearchHit } from "../lib/search";
 import { PersonIcon, SearchIcon, StackIcon } from "./icons";
 import { useVisibleItems } from "../lib/useVisibleItems";
+import { t } from "../lib/i18n";
 
 const GROUP_ORDER: SearchGroup[] = ["titolo", "saga", "persona"];
 
@@ -80,7 +81,7 @@ function PaletteDialog() {
         ref={containerRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Cerca nella libreria"
+        aria-label={t("CommandPalette.cerca_nella_libreria")}
         initial={{ opacity: 0, y: -12, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -8, scale: 0.98 }}
@@ -110,17 +111,17 @@ function PaletteDialog() {
               setQuery(e.target.value);
               setHighlighted(0);
             }}
-            placeholder="Titolo, saga, attore, regista, genere…"
-            aria-label="Cerca nella libreria"
+            placeholder={t("CommandPalette.titolo_saga_attore_regista")}
+            aria-label={t("CommandPalette.cerca_nella_libreria")}
             className="no-focus-ring flex-1 bg-transparent text-base text-text placeholder:text-text-faint outline-none"
           />
-          <kbd className="rounded-xs bg-surface-2 px-1.5 py-0.5 text-xs text-text-faint">esc</kbd>
+          <kbd className="rounded-xs bg-surface-2 px-1.5 py-0.5 text-xs text-text-faint">{t("CommandPalette.esc")}</kbd>
         </div>
 
-        <ul role="listbox" aria-label="Risultati" className="max-h-80 overflow-y-auto py-1.5">
+        <ul role="listbox" aria-label={t("CommandPalette.risultati")} className="max-h-80 overflow-y-auto py-1.5">
           {results.length === 0 && (
             <li className="px-4 py-6 text-center text-sm text-text-muted">
-              Nessun risultato per &ldquo;{query}&rdquo;.
+              {t("CommandPalette.nessun_risultato_per_ldquo")}{query}{t("CommandPalette.rdquo")}
             </li>
           )}
           {grouped.map(({ group, hits }) => (

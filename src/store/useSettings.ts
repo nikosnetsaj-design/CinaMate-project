@@ -1,11 +1,12 @@
 import { create } from "zustand";
+import { t } from "../lib/i18n";
 
 const STORAGE_KEY = "cinemate:settings";
 
 export const MODELS = [
-  { id: "claude-opus-5", label: "Claude Opus 5", hint: "il più capace" },
+  { id: "claude-opus-5", label: "Claude Opus 5", hint: t("useSettings.il_piu_capace") },
   { id: "claude-sonnet-5", label: "Claude Sonnet 5", hint: "veloce ed economico" },
-  { id: "claude-haiku-4-5", label: "Claude Haiku 4.5", hint: "il più rapido" },
+  { id: "claude-haiku-4-5", label: "Claude Haiku 4.5", hint: t("useSettings.il_piu_rapido") },
 ] as const;
 
 export type ModelId = (typeof MODELS)[number]["id"];

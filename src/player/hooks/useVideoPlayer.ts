@@ -4,6 +4,7 @@ import type { QualityLevel, AudioTrack, MediaContent, NetworkQuality } from '../
 import { getPlaybackPrefs, normaliseLang, setPlaybackPrefs } from '../services/playbackPrefs';
 import { describeFailure, type PlayerFailure } from '../services/playerErrors';
 import { getTitleTracks, rememberTitleTracks } from '../services/titleTracks';
+import { t } from "../../lib/i18n";
 
 export type VideoPlayerOptions = {
   dataSaverMode?: boolean;
@@ -219,10 +220,10 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
           );
           if (hls.audioTracks?.length) {
             setAudioTracks(
-              hls.audioTracks.map((t, i) => ({
+              hls.audioTracks.map((track, i) => ({
                 id: String(i),
-                language: t.lang || 'und',
-                label: t.name || t.lang || `Traccia ${i + 1}`,
+                language: track.lang || 'und',
+                label: track.name || track.lang || t("player_useVideoPlayer.traccia", { v0: i + 1 }),
               }))
             );
 
@@ -289,8 +290,8 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
         if (options.startAtSec) v.currentTime = options.startAtSec;
       } else {
         setFailure({
-          message: 'Questo browser non sa riprodurre flussi adattivi.',
-          hint: 'Serve il supporto a Media Source Extensions. Aggiorna il browser, oppure aprilo in Chrome, Firefox o Safari recenti.',
+          message: t("player_useVideoPlayer.questo_browser_non_sa"),
+          hint: t("player_useVideoPlayer.serve_il_supporto_a"),
           transient: false,
         });
       }
@@ -726,5 +727,5 @@ function labelForHeight(h: number, bitrate: number): string {
   if (h >= 720) return '720p';
   if (h >= 480) return '480p';
   if (h > 0) return `${h}p`;
-  return bitrate > 0 ? `${Math.round(bitrate / 1000)} kbps` : 'Unica';
+  return bitrate > 0 ? `${Math.round(bitrate / 1000)} kbps` : t("player_useVideoPlayer.unica");
 }

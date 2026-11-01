@@ -1,5 +1,6 @@
 import { BRIGHTNESS_MAX, BRIGHTNESS_MIN } from '../hooks/usePlayerGestures';
 import { BrightnessIcon } from './Icons';
+import { t } from "../../lib/i18n";
 
 /**
  * La colonna della luminosità, sul bordo sinistro della scena.
@@ -28,7 +29,7 @@ export default function BrightnessRail({ value, onChange }: Props) {
         max={BRIGHTNESS_MAX}
         step={0.05}
         value={value}
-        aria-label="Luminosità dell'immagine"
+        aria-label={t("player_BrightnessRail.luminosita_dell_immagine")}
         aria-valuetext={`${pct}%`}
         onChange={(e) => onChange(Number(e.target.value))}
       />

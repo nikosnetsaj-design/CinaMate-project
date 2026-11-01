@@ -2,6 +2,7 @@ import type { HistoryEntry, Item } from "../types";
 import { computeMinutes } from "./stats";
 import { buildEntries, sagaProgress } from "./sagas";
 import type { TmdbSaga } from "./tmdb";
+import { t } from "./i18n";
 
 export interface Achievement {
   id: string;
@@ -18,10 +19,10 @@ export interface Achievement {
  * not care about ("Fantascienza" vs "Science Fiction" on unlinked titles).
  */
 const GENRE_BADGES: { id: string; title: string; icon: string; needles: string[]; target: number }[] = [
-  { id: "horror", title: "Esperto di horror", icon: "🩸", needles: ["horror"], target: 15 },
-  { id: "fantascienza", title: "Esperto di fantascienza", icon: "🛸", needles: ["fantascienza", "science fiction"], target: 15 },
-  { id: "commedia", title: "Esperto di commedia", icon: "🎭", needles: ["commedia", "comedy"], target: 15 },
-  { id: "thriller", title: "Esperto di thriller", icon: "🔪", needles: ["thriller", "crime", "poliziesco"], target: 15 },
+  { id: "horror", title: t("achievements.esperto_di_horror"), icon: "🩸", needles: ["horror"], target: 15 },
+  { id: "fantascienza", title: t("achievements.esperto_di_fantascienza"), icon: "🛸", needles: ["fantascienza", "science fiction"], target: 15 },
+  { id: "commedia", title: t("achievements.esperto_di_commedia"), icon: "🎭", needles: ["commedia", "comedy"], target: 15 },
+  { id: "thriller", title: t("achievements.esperto_di_thriller"), icon: "🔪", needles: ["thriller", "crime", "poliziesco"], target: 15 },
 ];
 
 function countGenre(items: Item[], needles: string[]): number {
@@ -77,32 +78,32 @@ export function computeAchievements(
   return [
     {
       id: "centurione",
-      title: "Cento film",
-      description: "Completa 100 film",
+      title: t("achievements.cento_film"),
+      description: t("achievements.completa_100_film"),
       icon: "💯",
       earned: filmsWatched >= 100,
       progress: `${Math.min(filmsWatched, 100)}/100`,
     },
     {
       id: "saga-completa",
-      title: "Saga completata",
-      description: "Guarda ogni capitolo di una saga",
+      title: t("achievements.saga_completata"),
+      description: t("achievements.guarda_ogni_capitolo_di"),
       icon: "🗝️",
       earned: completedSagas >= 1,
       progress: completedSagas >= 1 ? `${completedSagas} complete` : "0/1",
     },
     {
       id: "collezionista",
-      title: "Collezionista di saghe",
-      description: "Completa 3 saghe diverse",
+      title: t("achievements.collezionista_di_saghe"),
+      description: t("achievements.completa_3_saghe_diverse"),
       icon: "🏛️",
       earned: completedSagas >= 3,
       progress: `${Math.min(completedSagas, 3)}/3`,
     },
     {
       id: "serie-finite",
-      title: "Chi ben comincia, finisce",
-      description: "Porta a termine 10 serie",
+      title: t("achievements.chi_ben_comincia_finisce"),
+      description: t("achievements.porta_a_termine_10"),
       icon: "📺",
       earned: seriesFinished >= 10,
       progress: `${Math.min(seriesFinished, 10)}/10`,
@@ -112,7 +113,7 @@ export function computeAchievements(
       return {
         id,
         title,
-        description: `Guarda ${target} titoli del genere`,
+        description: t("achievements.guarda_titoli_del_genere", { v0: target }),
         icon,
         earned: n >= target,
         progress: `${Math.min(n, target)}/${target}`,
@@ -120,56 +121,56 @@ export function computeAchievements(
     }),
     {
       id: "maratoneta",
-      title: "Maratoneta",
-      description: "Guarda 5+ episodi nello stesso giorno",
+      title: t("achievements.maratoneta"),
+      description: t("achievements.guarda_5_episodi_nello"),
       icon: "🔥",
       earned: maxEpisodesPerDay >= 5,
       progress: `${Math.min(maxEpisodesPerDay, 5)}/5`,
     },
     {
       id: "esploratore",
-      title: "Esploratore di generi",
-      description: "Guarda titoli di 6+ generi diversi",
+      title: t("achievements.esploratore_di_generi"),
+      description: t("achievements.guarda_titoli_di_6"),
       icon: "🧭",
       earned: genres.size >= 6,
       progress: `${Math.min(genres.size, 6)}/6`,
     },
     {
       id: "cinefilo",
-      title: "Cinefilo instancabile",
-      description: "Supera 100 ore totali davanti allo schermo",
+      title: t("achievements.cinefilo_instancabile"),
+      description: t("achievements.supera_100_ore_totali"),
       icon: "🎬",
       earned: totalHours >= 100,
       progress: `${Math.min(Math.round(totalHours), 100)}/100h`,
     },
     {
       id: "otaku",
-      title: "Amante degli anime",
-      description: "Guarda 5+ anime",
+      title: t("achievements.amante_degli_anime"),
+      description: t("achievements.guarda_5_anime"),
       icon: "⛩️",
       earned: animeWatched >= 5,
       progress: `${Math.min(animeWatched, 5)}/5`,
     },
     {
       id: "fedelissimo",
-      title: "Fedelissimo",
-      description: "Rivedi lo stesso titolo 3+ volte",
+      title: t("achievements.fedelissimo"),
+      description: t("achievements.rivedi_lo_stesso_titolo"),
       icon: "💫",
       earned: maxRewatch >= 3,
       progress: `${Math.min(maxRewatch, 3)}/3`,
     },
     {
       id: "costante",
-      title: "Costante",
-      description: "Registra attività in 10+ giorni diversi negli ultimi 30",
+      title: t("achievements.costante"),
+      description: t("achievements.registra_attivita_in_10"),
       icon: "📆",
       earned: recentDays.size >= 10,
       progress: `${Math.min(recentDays.size, 10)}/10`,
     },
     {
       id: "critico",
-      title: "Critico esigente",
-      description: "Vota almeno 15 titoli con una media sotto 6",
+      title: t("achievements.critico_esigente"),
+      description: t("achievements.vota_almeno_15_titoli"),
       icon: "🧐",
       earned: voted.length >= 15 && avgVote < 6,
       progress: voted.length >= 15 ? `media ${avgVote.toFixed(1)}` : `${voted.length}/15`,

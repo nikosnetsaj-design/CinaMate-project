@@ -1,4 +1,5 @@
 import type { Item } from "../types";
+import { t } from "./i18n";
 
 /**
  * Sharing without a server.
@@ -72,7 +73,7 @@ export function decodeList(encoded: string): SharedList | null {
       (entry): entry is SharedEntry => !!entry && typeof (entry as SharedEntry).t === "string",
     );
     if (entries.length === 0) return null;
-    return { n: typeof record.n === "string" ? record.n : "Lista condivisa", e: entries };
+    return { n: typeof record.n === "string" ? record.n : t("share.lista_condivisa"), e: entries };
   } catch {
     // A truncated link — mail clients love to wrap long URLs — decodes to
     // nonsense rather than throwing anything specific. Either way: not a list.

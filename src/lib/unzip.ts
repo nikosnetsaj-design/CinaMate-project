@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 /**
  * Il minimo per aprire uno ZIP nel browser, senza librerie: quello che
  * Letterboxd manda è uno ZIP di CSV, e chiedere di scompattarlo a mano prima
@@ -33,7 +34,7 @@ export async function unzip(buffer: ArrayBuffer, accept: (name: string) => boole
       break;
     }
   }
-  if (end < 0) throw new Error("Lo ZIP non ha un indice leggibile.");
+  if (end < 0) throw new Error(t("unzip.lo_zip_non_ha"));
 
   const count = view.getUint16(end + 10, true);
   let offset = view.getUint32(end + 16, true);

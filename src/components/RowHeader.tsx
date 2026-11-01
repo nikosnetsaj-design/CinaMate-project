@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRightIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * L'attacco di una riga: il titolo in serif, il conteggio accanto, una riga
@@ -16,7 +17,7 @@ export function RowHeader({
   count,
   note,
   to,
-  action = "Vedi tutti",
+  action = t("RowHeader.vedi_tutti"),
   id,
   trailing,
 }: {

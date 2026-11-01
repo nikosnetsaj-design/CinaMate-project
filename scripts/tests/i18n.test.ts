@@ -1,7 +1,8 @@
 // Le lingue: chiavi complete, segnaposto, stati dei titoli.
 const { default: it } = await import("../../src/locales/it.ts");
 const { default: en } = await import("../../src/locales/en.ts");
-const { t, statusLabel, intlLocale, lang } = await import("../../src/lib/i18n.ts");
+const { t, statusLabel, intlLocale, lang, registerMessages, replyLanguage } = await import("../../src/lib/i18n.ts");
+const { loadMessages } = await import("../vite-i18n.ts");
 
 let failures = 0;
 function check(name: string, cond: boolean, detail = "") {
@@ -21,6 +22,18 @@ check("predefinita: italiano", lang === "it" && intlLocale() === "it-IT");
 check("segnaposto riempiti", t("page.library.count", { n: 24 }) === "24 titoli in totale");
 check("segnaposto mancante resta visibile", t("page.library.count") === "{n} titoli in totale");
 check("stati dei titoli", statusLabel("Da vedere") === "Da vedere" && statusLabel("In visione") === "In visione");
+check("frasi dei componenti: italiano invariato", t("Duo.confronta") === "Confronta" && t("format.tra_giorni", { v0: 3 }) === "tra 3 giorni");
+check("risposte dell'IA in italiano", replyLanguage() === "italiano");
+
+// Il plugin di Vite legge gli stessi dizionari, con l'inglese accanto.
+const pairs = loadMessages();
+check("plugin: tutte le chiavi, in due lingue", pairs.size === Object.keys(it).length && pairs.get("Duo.confronta")?.[1] === "Compare");
+check("plugin: nessun inglese uguale alla chiave", [...pairs].every(([k, [, e]]) => e !== k));
+
+// Una frase che nessun modulo ha registrato si vede come chiave, non come testo sbagliato.
+registerMessages({ "prova.chiave": ["Ciao", "Hello"] });
+check("registrazione: la frase arriva", t("prova.chiave" as never) === "Ciao");
+check("chiave sconosciuta: si vede la chiave", t("prova.inesistente" as never) === "prova.inesistente");
 
 console.log(failures === 0 ? "\nTutti i controlli passati." : `\n${failures} controlli falliti.`);
 process.exit(failures === 0 ? 0 : 1);

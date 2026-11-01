@@ -3,6 +3,7 @@ import { Sheet } from "./Sheet";
 import { useLibrary } from "../store/useLibrary";
 import { itemShareUrl, listShareUrl, shareOrCopy } from "../lib/share";
 import type { Item } from "../types";
+import { t } from "../lib/i18n";
 
 /**
  * The QR encoder is only ever needed by this sheet, so it loads with it rather
@@ -16,9 +17,9 @@ type Target =
   | { kind: "list"; name: string; items: Item[] };
 
 const OUTCOME_TEXT: Record<"shared" | "copied" | "failed", string> = {
-  shared: "Condiviso.",
-  copied: "Link copiato negli appunti.",
-  failed: "Non è stato possibile condividere. Copia il link a mano.",
+  shared: t("ShareSheet.condiviso"),
+  copied: t("ShareSheet.link_copiato_negli_appunti"),
+  failed: t("ShareSheet.non_e_stato_possibile"),
 };
 
 /**
@@ -37,13 +38,13 @@ export function ShareSheet({ target, onClose }: { target: Target; onClose: () =>
       return {
         url: itemShareUrl(target.item),
         title: target.item.title,
-        subtitle: "Il link apre questo titolo su un altro dispositivo.",
+        subtitle: t("ShareSheet.il_link_apre_questo"),
       };
     }
     return {
       url: listShareUrl(target.name, target.items),
       title: target.name,
-      subtitle: `${target.items.length} titoli. La lista viaggia dentro il link: non passa da nessun server.`,
+      subtitle: t("ShareSheet.titoli_la_lista_viaggia", { v0: target.items.length }),
     };
   }, [target]);
 
@@ -56,7 +57,7 @@ export function ShareSheet({ target, onClose }: { target: Target; onClose: () =>
   const handleShare = async () => {
     const outcome = await shareOrCopy({
       title,
-      text: target.kind === "list" ? `La mia lista: ${title}` : title,
+      text: target.kind === "list" ? t("ShareSheet.la_mia_lista", { v0: title }) : title,
       url,
     });
     if (outcome === "copied") setCopied(true);
@@ -68,19 +69,18 @@ export function ShareSheet({ target, onClose }: { target: Target; onClose: () =>
       <div className="flex flex-col items-center gap-4 p-5 pt-8 sm:p-6">
         <div className="text-center">
           <h2 id="share-title" className="t-title text-text">
-            Condividi «{title}»
+            {t("ShareSheet.condividi")}{title}»
           </h2>
           <p className="mt-1 text-sm text-text-muted">{subtitle}</p>
         </div>
 
         {tooLongForQr ? (
           <p className="rounded-md bg-surface-2 px-4 py-3 text-center text-sm text-text-muted">
-            Questa lista è troppo lunga per un codice QR: il link resta valido, ma va inviato come
-            link. Per il QR, condividi una lista più corta.
+            {t("ShareSheet.questa_lista_e_troppo")}
           </p>
         ) : (
           <Suspense fallback={<div className="skeleton h-[216px] w-[216px] rounded-sm" aria-hidden />}>
-            <QrCode value={url} size={216} label={`Codice QR per ${title}`} />
+            <QrCode value={url} size={216} label={t("ShareSheet.codice_qr_per", { v0: title })} />
           </Suspense>
         )}
 
@@ -93,7 +93,7 @@ export function ShareSheet({ target, onClose }: { target: Target; onClose: () =>
           onClick={handleShare}
           className="btn btn-primary w-full"
         >
-          {copied ? "Copia di nuovo" : "Condividi o copia"}
+          {copied ? t("ShareSheet.copia_di_nuovo") : t("ShareSheet.condividi_o_copia")}
         </button>
       </div>
     </Sheet>

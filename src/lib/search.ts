@@ -2,6 +2,7 @@ import type { Item } from "../types";
 import type { TmdbSaga } from "./tmdb";
 import { sagaKey, universeKey, type SagaKey } from "../store/useSagas";
 import { UNIVERSES } from "./universes";
+import { t } from "./i18n";
 
 function fold(value: string): string {
   return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -139,9 +140,9 @@ export function didYouMean(query: string, items: Item[]): string | null {
 export type SearchGroup = "titolo" | "saga" | "persona";
 
 export const GROUP_LABELS: Record<SearchGroup, string> = {
-  titolo: "Titoli",
-  saga: "Saghe e universi",
-  persona: "Attori e registi",
+  titolo: t("search.titoli"),
+  saga: t("search.saghe_e_universi"),
+  persona: t("search.attori_e_registi"),
 };
 
 export interface SearchHit {
@@ -180,8 +181,8 @@ function peopleIndex(items: Item[]): Map<string, { name: string; asDirector: num
 
 function personSublabel(entry: { asDirector: number; asActor: number }): string {
   const parts: string[] = [];
-  if (entry.asDirector) parts.push(`regia di ${entry.asDirector}`);
-  if (entry.asActor) parts.push(`nel cast di ${entry.asActor}`);
+  if (entry.asDirector) parts.push(t("search.regia_di", { v0: entry.asDirector }));
+  if (entry.asActor) parts.push(t("search.nel_cast_di", { v0: entry.asActor }));
   return parts.join(" · ");
 }
 
@@ -212,7 +213,7 @@ export function smartSearch(query: string, items: Item[], sagas: Record<string, 
       group: "saga" as const,
       id: `saga:${saga.id}`,
       label: saga.name,
-      sublabel: `${saga.parts.length} capitoli`,
+      sublabel: t("search.capitoli", { v0: saga.parts.length }),
       sagaKey: sagaKey(saga.id),
     }));
 
@@ -220,7 +221,7 @@ export function smartSearch(query: string, items: Item[], sagas: Record<string, 
     group: "saga" as const,
     id: `universe:${u.id}`,
     label: u.name,
-    sublabel: "Universo",
+    sublabel: t("search.universo"),
     sagaKey: universeKey(u.id),
   }));
 

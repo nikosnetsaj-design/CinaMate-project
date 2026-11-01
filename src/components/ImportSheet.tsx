@@ -9,7 +9,7 @@ import { matchAll, type Match } from "../lib/importMatch";
 import { findExisting, type Accepted } from "../lib/importApply";
 import { isZip, unzip } from "../lib/unzip";
 import { plural } from "../lib/format";
-import { intlLocale } from "../lib/i18n";
+import { intlLocale, statusLabel, t } from "../lib/i18n";
 
 /**
  * Portare dentro la storia tenuta altrove: Letterboxd, Trakt, IMDb, TV Time.
@@ -35,10 +35,10 @@ interface FileReport {
 }
 
 const HOW_TO: { source: ImportSource; text: string }[] = [
-  { source: "letterboxd", text: "Settings → Data → Export your data. Va bene lo ZIP così com'è." },
-  { source: "trakt", text: "Settings → Your data → Export. Lo ZIP con i JSON, o i singoli file." },
-  { source: "imdb", text: "La pagina dei tuoi voti o la watchlist → Export. Un CSV." },
-  { source: "tvtime", text: "La richiesta dei tuoi dati dall'app (GDPR): i CSV degli episodi visti." },
+  { source: "letterboxd", text: t("ImportSheet.settings_data_export_your") },
+  { source: "trakt", text: t("ImportSheet.settings_your_data_export") },
+  { source: "imdb", text: t("ImportSheet.la_pagina_dei_tuoi") },
+  { source: "tvtime", text: t("ImportSheet.la_richiesta_dei_tuoi") },
 ];
 
 const ACCEPT_IN_ZIP = (name: string) => /\.(csv|json)$/i.test(name) && !/(^|\/)(deleted|orphaned)\//i.test(name);
@@ -52,7 +52,7 @@ async function readFiles(files: File[]): Promise<{ entries: ImportedEntry[]; rep
       all.push(...entries);
       reports.push({ name, source, count: entries.length });
     } catch (e) {
-      reports.push({ name, source: null, count: 0, error: e instanceof ImportFormatError ? e.message : `${name}: non si legge.` });
+      reports.push({ name, source: null, count: 0, error: e instanceof ImportFormatError ? e.message : t("ImportSheet.non_si_legge", { v0: name }) });
     }
   };
   for (const file of files) {
@@ -61,7 +61,7 @@ async function readFiles(files: File[]): Promise<{ entries: ImportedEntry[]; rep
       try {
         for (const inner of await unzip(buffer, ACCEPT_IN_ZIP)) parse(inner.name, inner.text);
       } catch {
-        reports.push({ name: file.name, source: null, count: 0, error: `${file.name}: lo ZIP non si apre.` });
+        reports.push({ name: file.name, source: null, count: 0, error: t("ImportSheet.lo_zip_non_si", { v0: file.name }) });
       }
     } else parse(file.name, new TextDecoder("utf-8").decode(buffer));
   }
@@ -123,14 +123,14 @@ export default function ImportSheet({ onClose }: { onClose: () => void }) {
       <div className="flex flex-col gap-5 p-5 pt-8 sm:p-6">
         <div>
           <h2 id={titleId} className="t-title text-text">
-            Importa da un'altra app
+            {t("ImportSheet.importa_da_un_altra")}
           </h2>
           <p className="mt-1 text-sm text-text-muted">
-            {step.kind === "pick" && "Letterboxd, Trakt, IMDb, TV Time. I file si leggono qui, nel browser."}
-            {step.kind === "summary" && "Ecco cosa c'è nei file."}
-            {step.kind === "matching" && "Cerco ogni titolo sul catalogo."}
-            {step.kind === "review" && "Controlla i casi in cui il catalogo non è sicuro."}
-            {step.kind === "done" && "Ecco com'è andata."}
+            {step.kind === "pick" && t("ImportSheet.letterboxd_trakt_imdb_tv")}
+            {step.kind === "summary" && t("ImportSheet.ecco_cosa_c_e")}
+            {step.kind === "matching" && t("ImportSheet.cerco_ogni_titolo_sul")}
+            {step.kind === "review" && t("ImportSheet.controlla_i_casi_in")}
+            {step.kind === "done" && t("ImportSheet.ecco_com_e_andata")}
           </p>
         </div>
 
@@ -150,14 +150,13 @@ export default function ImportSheet({ onClose }: { onClose: () => void }) {
                   <WarningIcon size={16} />
                 </span>
                 <span>
-                  Senza la chiave TMDB i titoli entrano con il nome scritto nel file, senza copertina né abbinamento:
-                  se puoi, aggiungila prima in Impostazioni → Chiavi e modello.
+                  {t("ImportSheet.senza_la_chiave_tmdb")}
                 </span>
               </p>
             )}
             <button type="button" className="btn btn-primary self-start" disabled={reading} onClick={() => input.current?.click()}>
               <UploadIcon size={16} />
-              {reading ? "Leggo i file…" : "Scegli i file"}
+              {reading ? t("ImportSheet.leggo_i_file") : t("ImportSheet.scegli_i_file")}
             </button>
             <input
               ref={input}
@@ -165,7 +164,7 @@ export default function ImportSheet({ onClose }: { onClose: () => void }) {
               multiple
               accept=".csv,.json,.zip,text/csv,application/json,application/zip"
               className="sr-only"
-              aria-label="Scegli i file esportati"
+              aria-label={t("ImportSheet.scegli_i_file_esportati")}
               onChange={(e) => {
                 void onFiles(e.target.files);
                 e.target.value = "";
@@ -188,15 +187,15 @@ export default function ImportSheet({ onClose }: { onClose: () => void }) {
         {step.kind === "matching" && (
           <div>
             <div className="flex items-baseline justify-between text-sm">
-              <span className="text-text">Abbinamento</span>
+              <span className="text-text">{t("ImportSheet.abbinamento")}</span>
               <span className="tabular text-text-muted" aria-live="polite">
-                {step.done.toLocaleString(intlLocale())} di {step.total.toLocaleString(intlLocale())}
+                {step.done.toLocaleString(intlLocale())} {t("ImportSheet.di")} {step.total.toLocaleString(intlLocale())}
               </span>
             </div>
             <div
               className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-hover"
               role="progressbar"
-              aria-label="Titoli cercati sul catalogo"
+              aria-label={t("ImportSheet.titoli_cercati_sul_catalogo")}
               aria-valuemin={0}
               aria-valuemax={step.total}
               aria-valuenow={step.done}
@@ -207,7 +206,7 @@ export default function ImportSheet({ onClose }: { onClose: () => void }) {
               />
             </div>
             <button type="button" className="btn btn-plain btn-sm -ml-3 mt-3" onClick={cancelMatching}>
-              Annulla
+              {t("ImportSheet.annulla")}
             </button>
           </div>
         )}
@@ -248,11 +247,11 @@ function Summary({
       {entries.length > 0 ? (
         <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {[
-            ["Film", films],
-            ["Serie", series],
-            ["Da vedere", toWatch],
-            ["Con il voto", voted],
-            ["Episodi", episodes],
+            [t("ImportSheet.film_2"), films],
+            [t("ImportSheet.serie_2"), series],
+            [statusLabel("Da vedere"), toWatch],
+            [t("ImportSheet.con_il_voto"), voted],
+            [t("ImportSheet.episodi"), episodes],
           ].map(([label, value]) => (
             <div key={label} className="rounded-md bg-surface-2 px-3 py-2.5">
               <dt className="text-xs text-text-muted">{label}</dt>
@@ -261,17 +260,17 @@ function Summary({
           ))}
         </dl>
       ) : (
-        <p className="text-sm text-text">In questi file non ho trovato titoli da importare.</p>
+        <p className="text-sm text-text">{t("ImportSheet.in_questi_file_non")}</p>
       )}
 
       {read.length > 0 && (
         <p className="text-xs text-text-muted">
-          Letti: {read.map((f) => `${f.name} (${f.source ? SOURCE_LABEL[f.source] : ""}, ${f.count})`).join(" · ")}
+          {t("ImportSheet.letti")} {read.map((f) => `${f.name} (${f.source ? SOURCE_LABEL[f.source] : ""}, ${f.count})`).join(" · ")}
         </p>
       )}
       {skipped.length > 0 && (
         <details className="text-xs text-text-muted">
-          <summary className="cursor-pointer">{plural(skipped.length, "file lasciato fuori", "file lasciati fuori")}</summary>
+          <summary className="cursor-pointer">{plural(skipped.length, t("ImportSheet.file_lasciato_fuori"), t("ImportSheet.file_lasciati_fuori"))}</summary>
           <ul className="mt-1.5 flex flex-col gap-1">
             {skipped.map((f) => (
               <li key={f.name}>{f.error}</li>
@@ -284,15 +283,15 @@ function Summary({
         {entries.length > 0 &&
           (hasKey ? (
             <button type="button" className="btn btn-primary" onClick={onMatch}>
-              Cerca {plural(entries.length, "titolo", "titoli")} sul catalogo
+              {t("ImportSheet.cerca")} {plural(entries.length, t("ImportSheet.titolo"), t("ImportSheet.titoli"))} {t("ImportSheet.sul_catalogo")}
             </button>
           ) : (
             <button type="button" className="btn btn-primary" onClick={onPlain}>
-              Importa senza abbinare
+              {t("ImportSheet.importa_senza_abbinare")}
             </button>
           ))}
         <button type="button" className="btn btn-plain" onClick={onBack}>
-          Altri file
+          {t("ImportSheet.altri_file")}
         </button>
       </div>
     </>
@@ -341,8 +340,8 @@ function Review({ matches, onCommit }: { matches: Match[]; onCommit: (accepted: 
       <dl className="grid grid-cols-3 gap-3">
         {[
           ["Sicuri", sure],
-          ["Da verificare", doubts.length],
-          ["Non trovati", missing.length],
+          [t("ImportSheet.da_verificare"), doubts.length],
+          [t("ImportSheet.non_trovati"), missing.length],
         ].map(([label, value]) => (
           <div key={label} className="rounded-md bg-surface-2 px-3 py-2.5">
             <dt className="text-xs text-text-muted">{label}</dt>
@@ -352,20 +351,19 @@ function Review({ matches, onCommit }: { matches: Match[]; onCommit: (accepted: 
       </dl>
       {present > 0 && (
         <p className="text-xs text-text-muted">
-          {plural(present, "titolo è già", "titoli sono già")} in libreria: non entrano due volte, ricevono solo quello che manca — il
-          voto, gli episodi, le date di visione.
+          {plural(present, t("ImportSheet.titolo_e_gia"), t("ImportSheet.titoli_sono_gia"))} {t("ImportSheet.in_libreria_non_entrano")}
         </p>
       )}
 
       {doubts.length > 0 && (
         <section className="flex flex-col gap-3">
-          <h3 className="text-sm font-medium text-text">Da verificare</h3>
+          <h3 className="text-sm font-medium text-text">{t("ImportSheet.da_verificare")}</h3>
           {doubts.slice(0, shown).map((m) => (
             <fieldset key={m.entry.key} className="rounded-md bg-surface-2 p-3">
               <legend className="sr-only">{m.entry.title}</legend>
               <p className="text-sm font-medium text-text">{m.entry.title}</p>
-              <p className="text-xs text-text-muted">Nel file: {entryLine(m.entry)}</p>
-              <div className="mt-2 flex flex-col gap-1" role="radiogroup" aria-label={`Quale è «${m.entry.title}»`}>
+              <p className="text-xs text-text-muted">{t("ImportSheet.nel_file")} {entryLine(m.entry)}</p>
+              <div className="mt-2 flex flex-col gap-1" role="radiogroup" aria-label={t("ImportSheet.quale_e", { v0: m.entry.title })}>
                 {m.candidates.map((c) => (
                   <Candidate
                     key={`${c.mediaType}:${c.tmdbId}`}
@@ -382,7 +380,7 @@ function Review({ matches, onCommit }: { matches: Match[]; onCommit: (accepted: 
                   className="flex min-h-11 items-center gap-3 rounded-sm px-2 text-left text-sm text-text-muted hover:bg-surface-hover"
                 >
                   <Radio on={choice.get(m.entry.key) === null} />
-                  Nessuno di questi: lascialo fuori
+                  {t("ImportSheet.nessuno_di_questi_lascialo")}
                 </button>
               </div>
             </fieldset>
@@ -390,7 +388,7 @@ function Review({ matches, onCommit }: { matches: Match[]; onCommit: (accepted: 
           {doubts.length > shown && (
             <button type="button" className="btn btn-plain btn-sm -ml-3 self-start" onClick={() => setShown(shown + PAGE)}>
               <ChevronDownIcon size={16} />
-              Altri {Math.min(PAGE, doubts.length - shown)}
+              {t("ImportSheet.altri")} {Math.min(PAGE, doubts.length - shown)}
             </button>
           )}
         </section>
@@ -398,14 +396,14 @@ function Review({ matches, onCommit }: { matches: Match[]; onCommit: (accepted: 
 
       {missing.length > 0 && (
         <section className="flex flex-col gap-2">
-          <h3 className="text-sm font-medium text-text">Non trovati</h3>
+          <h3 className="text-sm font-medium text-text">{t("ImportSheet.non_trovati")}</h3>
           <p className="text-xs text-text-muted">
-            {missing.some((m) => m.failed) && "Per alcuni la ricerca non ha risposto (rete o limite di TMDB): si può ripetere l'import più tardi, i titoli già entrati non si doppiano. "}
+            {missing.some((m) => m.failed) && t("ImportSheet.per_alcuni_la_ricerca")}
             {missing
               .slice(0, 12)
               .map((m) => m.entry.title)
               .join(", ")}
-            {missing.length > 12 && ` e altri ${missing.length - 12}`}.
+            {missing.length > 12 && t("ImportSheet.e_altri", { v0: missing.length - 12 })}.
           </p>
           <button
             type="button"
@@ -414,14 +412,14 @@ function Review({ matches, onCommit }: { matches: Match[]; onCommit: (accepted: 
             onClick={() => setAddMissing(!addMissing)}
             className="flex min-h-11 items-center justify-between gap-3 text-left text-sm text-text"
           >
-            Aggiungili comunque, con il nome del file
+            {t("ImportSheet.aggiungili_comunque_con_il")}
             <span aria-hidden="true" className="switch shrink-0" data-on={addMissing} />
           </button>
         </section>
       )}
 
       <button type="button" className="btn btn-primary self-start" disabled={total === 0} onClick={confirm}>
-        Importa {plural(total, "titolo", "titoli")}
+        {t("ImportSheet.importa")} {plural(total, t("ImportSheet.titolo"), t("ImportSheet.titoli"))}
       </button>
     </>
   );
@@ -457,7 +455,7 @@ function Candidate({ candidate, selected, onSelect }: { candidate: TmdbSearchRes
       <span className="min-w-0">
         <span className="block truncate text-sm text-text">{candidate.title}</span>
         <span className="block truncate text-xs text-text-muted">
-          {[candidate.year, candidate.mediaType === "tv" ? "serie" : "film", original].filter(Boolean).join(" · ")}
+          {[candidate.year, candidate.mediaType === "tv" ? t("ImportSheet.serie") : t("ImportSheet.film"), original].filter(Boolean).join(" · ")}
         </span>
       </span>
     </button>
@@ -481,10 +479,10 @@ function Report({
 }) {
   const hasKey = useSettings((s) => !!s.tmdbApiKey);
   const rows: [string, number, string?][] = [
-    ["Aggiunti alla libreria", added, chosen > 0 ? `di cui ${chosen} ${chosen === 1 ? "scelto" : "scelti"} da te` : undefined],
-    ["Già presenti, completati", updated],
-    ["Già presenti, niente da aggiungere", unchanged],
-    ["Lasciati fuori", left.length, "non trovati o scartati"],
+    [t("ImportSheet.aggiunti_alla_libreria"), added, chosen > 0 ? t("ImportSheet.di_cui_da_te", { v0: chosen, v1: chosen === 1 ? t("ImportSheet.scelto") : t("ImportSheet.scelti") }) : undefined],
+    [t("ImportSheet.gia_presenti_completati"), updated],
+    [t("ImportSheet.gia_presenti_niente_da"), unchanged],
+    [t("ImportSheet.lasciati_fuori"), left.length, t("ImportSheet.non_trovati_o_scartati")],
   ];
   // Le righe a zero non dicono niente, tranne la prima: «0 aggiunti» è una risposta.
   const shown = rows.filter(([, value], i) => i === 0 || value > 0);
@@ -503,18 +501,18 @@ function Report({
       </ul>
       {left.length > 0 && (
         <details className="text-xs text-text-muted">
-          <summary className="cursor-pointer">Quali sono rimasti fuori</summary>
+          <summary className="cursor-pointer">{t("ImportSheet.quali_sono_rimasti_fuori")}</summary>
           <p className="mt-1.5">{left.map((e) => (e.year ? `${e.title} (${e.year})` : e.title)).join(", ")}.</p>
         </details>
       )}
       {added > 0 && hasKey && (
         <p className="text-xs text-text-muted">
-          Copertine, trame e durate arrivano da sole nei prossimi minuti, un titolo alla volta.
+          {t("ImportSheet.copertine_trame_e_durate")}
         </p>
       )}
       <button type="button" className="btn btn-primary self-start" onClick={onClose}>
         <CheckIcon size={16} />
-        Fatto
+        {t("ImportSheet.fatto")}
       </button>
     </>
   );

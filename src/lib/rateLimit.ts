@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 /**
  * Un secchio a gettoni (Token Bucket) per contingentare le richieste uscenti.
  *
@@ -54,7 +55,7 @@ export class TokenBucket {
    * indietro rispetto a una passata di fondo.
    */
   take(signal?: AbortSignal, onAbort?: () => unknown): Promise<void> {
-    if (signal?.aborted) return Promise.reject(onAbort?.() ?? new Error("Richiesta annullata"));
+    if (signal?.aborted) return Promise.reject(onAbort?.() ?? new Error(t("rateLimit.richiesta_annullata")));
     this.refill();
     if (this.queue.length === 0 && this.tokens >= 1) {
       this.tokens -= 1;
@@ -72,7 +73,7 @@ export class TokenBucket {
         // quasi tutte le richieste vengono abbandonate prima di partire.
         const i = this.queue.indexOf(entry);
         if (i >= 0) this.queue.splice(i, 1);
-        reject(onAbort?.() ?? new Error("Richiesta annullata"));
+        reject(onAbort?.() ?? new Error(t("rateLimit.richiesta_annullata")));
       };
       signal?.addEventListener("abort", abort, { once: true });
       this.queue.push(entry);

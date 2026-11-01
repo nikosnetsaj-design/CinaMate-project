@@ -5,6 +5,7 @@ import { useSelectedSaga } from "../store/useSelectedSaga";
 import { buildEntries, orderParts, sagaProgress } from "../lib/sagas";
 import { PosterArt } from "./PosterArt";
 import { RowHeader } from "./RowHeader";
+import { t } from "../lib/i18n";
 
 const MAX_SHOWN = 6;
 
@@ -40,7 +41,7 @@ export function ContinueSagaRow() {
   return (
     <section className="flex flex-col gap-4">
       {/* Every row says why it is here — a suggestion without a reason is an advert. */}
-      <RowHeader title="Continua la saga" note="Storie che hai iniziato e non ancora finito" to="/saghe" action="Vedi tutte" />
+      <RowHeader title={t("ContinueSagaRow.continua_la_saga")} note={t("ContinueSagaRow.storie_che_hai_iniziato")} to="/saghe" action={t("ContinueSagaRow.vedi_tutte")} />
 
       <div className="shelf">
         {started.map(({ saga, key, progress }) => {
@@ -50,7 +51,7 @@ export function ContinueSagaRow() {
               key={saga.id}
               type="button"
               onClick={() => openSaga(key)}
-              aria-label={`Continua ${saga.name}: prossimo capitolo ${next.part.title}`}
+              aria-label={t("ContinueSagaRow.continua_prossimo_capitolo", { v0: saga.name, v1: next.part.title })}
               className="group w-32 text-left sm:w-36"
             >
               <div className="relative">

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSettings } from "../store/useSettings";
 import { useSettingsSheet } from "../store/useSettingsSheet";
+import { t } from "../lib/i18n";
 
 /**
  * Quando manca la chiave del catalogo, lo dice un posto solo.
@@ -20,7 +21,7 @@ import { useSettingsSheet } from "../store/useSettingsSheet";
  */
 
 /** Cosa resta spento senza catalogo, detto per quello che si vede. */
-const WHAT = "Copertine, trame, cast e date arrivano da TMDB.";
+const WHAT = t("NeedsCatalog.copertine_trame_cast_e");
 
 function useTurnOn() {
   const openSettings = useSettingsSheet((s) => s.open);
@@ -45,7 +46,7 @@ export function CatalogNote({ what = WHAT }: { what?: string }) {
         className="font-medium underline underline-offset-2"
         style={{ color: "var(--accent-text)" }}
       >
-        Accendi il catalogo
+        {t("NeedsCatalog.accendi_il_catalogo")}
       </button>
     </p>
   );
@@ -61,10 +62,9 @@ export function CatalogBlock() {
   return (
     <div className="flex flex-col items-center gap-3.5 rounded-lg px-6 py-10 text-center bg-surface-2">
       <div className="flex flex-col gap-1.5">
-        <h2 className="t-section text-text">Il catalogo è spento.</h2>
+        <h2 className="t-section text-text">{t("NeedsCatalog.il_catalogo_e_spento")}</h2>
         <p className="mx-auto max-w-sm t-body text-text-muted">
-          {WHAT} Serve una chiave tua: è gratis, ci vogliono due minuti, e resta su questo
-          dispositivo.
+          {WHAT} {t("NeedsCatalog.serve_una_chiave_tua")}
         </p>
       </div>
       <button
@@ -72,7 +72,7 @@ export function CatalogBlock() {
         onClick={turnOn}
         className="btn btn-primary"
       >
-        Accendi il catalogo
+        {t("NeedsCatalog.accendi_il_catalogo")}
       </button>
     </div>
   );
@@ -115,7 +115,7 @@ export function CatalogStrip() {
   return (
     <div className="flex flex-col gap-3 rounded-lg bg-surface px-4 py-3.5 shadow-[var(--shadow-sm)] sm:flex-row sm:items-center">
       <p className="min-w-0 flex-1 t-caption text-text-muted">
-        <strong className="font-semibold text-text">Le copertine mancano.</strong> {WHAT}
+        <strong className="font-semibold text-text">{t("NeedsCatalog.le_copertine_mancano")}</strong> {WHAT}
       </p>
       <div className="flex shrink-0 items-center gap-1.5">
         <button
@@ -123,15 +123,15 @@ export function CatalogStrip() {
           onClick={turnOn}
           className="btn btn-primary btn-sm"
         >
-          Accendilo
+          {t("NeedsCatalog.accendilo")}
         </button>
         <button
           type="button"
           onClick={dismiss}
-          aria-label="Non ora: nascondi l'avviso sul catalogo"
+          aria-label={t("NeedsCatalog.non_ora_nascondi_l")}
           className="btn btn-plain btn-sm font-medium text-text-muted"
         >
-          Non ora
+          {t("NeedsCatalog.non_ora")}
         </button>
       </div>
     </div>

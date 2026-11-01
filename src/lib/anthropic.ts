@@ -4,12 +4,13 @@ import type { TmdbSagaPart, DiscoverQuery } from "./tmdb";
 import { MOVIE_GENRES, TV_GENRES } from "./tmdb";
 import { logError } from "./errorLog";
 import { recapPrompt, type RecapRequest } from "./recap";
+import { lang, replyLanguage, t } from "./i18n";
 
 const ENDPOINT = "https://api.anthropic.com/v1/messages";
 
 export class MissingApiKeyError extends Error {
   constructor() {
-    super("Nessuna chiave API Anthropic configurata.");
+    super(t("anthropic.nessuna_chiave_api_anthropic"));
     this.name = "MissingApiKeyError";
   }
 }
@@ -58,16 +59,16 @@ async function callClaude(opts: {
       }),
     });
   } catch {
-    logError("claude", "Connessione ad Anthropic non riuscita");
-    throw new ClaudeApiError("Connessione ad Anthropic non riuscita. Controlla la rete e riprova.");
+    logError("claude", t("anthropic.connessione_ad_anthropic_non"));
+    throw new ClaudeApiError(t("anthropic.connessione_ad_anthropic_non_2"));
   }
 
   if (!response.ok) {
-    let message = `Richiesta rifiutata (HTTP ${response.status}).`;
+    let message = t("anthropic.richiesta_rifiutata_http", { v0: response.status });
     try {
       const body = (await response.json()) as { error?: { message?: string; type?: string } };
-      if (response.status === 401) message = "Chiave API non valida o scaduta.";
-      else if (response.status === 429) message = "Limite di richieste raggiunto. Riprova tra poco.";
+      if (response.status === 401) message = t("anthropic.chiave_api_non_valida");
+      else if (response.status === 429) message = t("anthropic.limite_di_richieste_raggiunto");
       else if (body?.error?.message) message = body.error.message;
     } catch {
       /* keep the generic message */
@@ -78,13 +79,13 @@ async function callClaude(opts: {
 
   const data = (await response.json()) as { content?: ContentBlock[]; stop_reason?: string };
   if (data.stop_reason === "refusal") {
-    throw new ClaudeApiError("Claude non ha potuto rispondere a questa richiesta.");
+    throw new ClaudeApiError(t("anthropic.claude_non_ha_potuto"));
   }
   const text = (data.content ?? [])
     .filter((b) => b.type === "text" && typeof b.text === "string")
     .map((b) => b.text)
     .join("");
-  if (!text.trim()) throw new ClaudeApiError("Risposta vuota da Claude.");
+  if (!text.trim()) throw new ClaudeApiError(t("anthropic.risposta_vuota_da_claude"));
   return text;
 }
 
@@ -118,7 +119,7 @@ ${context}
 
 Domanda: "${question}"
 
-Rispondi in italiano, max 200 parole, concreto e con opinioni vere. Consiglia titoli specifici collegandoli ai suoi gusti, e indica dove vederli in Italia se lo sai. Se la domanda riguarda "cosa guardo dopo" e c'è una saga iniziata a metà, di' esattamente qual è il capitolo successivo. Niente elenchi generici da wikipedia.`;
+Rispondi in ${replyLanguage()}, max 200 parole, concreto e con opinioni vere. Consiglia titoli specifici collegandoli ai suoi gusti, e indica dove vederli${lang === "en" ? "" : " in Italia"} se lo sai. Se la domanda riguarda "cosa guardo dopo" e c'è una saga iniziata a metà, di' esattamente qual è il capitolo successivo. Niente elenchi generici da wikipedia.`;
 
   return callClaude({ apiKey, model, prompt, maxTokens: 1200, effort: "high" });
 }
@@ -131,11 +132,11 @@ Rispondi in italiano, max 200 parole, concreto e con opinioni vere. Consiglia ti
 function extractJson(text: string): unknown {
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
-  if (start === -1 || end <= start) throw new ClaudeApiError("Risposta non interpretabile.");
+  if (start === -1 || end <= start) throw new ClaudeApiError(t("anthropic.risposta_non_interpretabile"));
   try {
     return JSON.parse(text.slice(start, end + 1));
   } catch {
-    throw new ClaudeApiError("Risposta non interpretabile.");
+    throw new ClaudeApiError(t("anthropic.risposta_non_interpretabile"));
   }
 }
 
@@ -193,7 +194,7 @@ Regole:
 - "person" solo se è nominata una persona (attore o regista). Non metterci un titolo o un genere.
 - "keywords" solo per un concetto che non è un genere (es. "viaggi nel tempo", "supereroi").
 - "voteMin" solo se si chiede qualità ("belli", "i migliori"): usa 7.
-- "explanation": una frase in italiano, max 20 parole, che dica cosa hai capito.`;
+- "explanation": una frase in ${replyLanguage()}, max 20 parole, che dica cosa hai capito.`;
 
   const raw = await callClaude({ apiKey, model, prompt, maxTokens: 700, effort: "low" });
   const parsed = extractJson(raw) as Record<string, unknown>;
@@ -261,7 +262,7 @@ export async function translateOverview(
   apiKey: string,
   model: string,
 ): Promise<string> {
-  const prompt = `Traduci in italiano la sinossi di "${title}". Restituisci solo la traduzione, senza introduzioni, virgolette o note.
+  const prompt = `Traduci in ${replyLanguage()} la sinossi di "${title}". Restituisci solo la traduzione, senza introduzioni, virgolette o note.
 
 ${overview}`;
 
@@ -289,7 +290,7 @@ Restituisci SOLO un oggetto JSON, senza testo intorno, con questa forma esatta:
 
 - "chronological": tutti gli id, ordinati secondo quando gli eventi accadono nella storia (prequel e flashback al loro posto reale).
 - "recommended": tutti gli id, nell'ordine migliore per chi guarda la saga per la prima volta.
-- "note": una sola frase in italiano, max 20 parole, che dica cosa cambia fra i due ordini. Se coincidono con l'ordine di uscita, dillo.
+- "note": una sola frase in ${replyLanguage()}, max 20 parole, che dica cosa cambia fra i due ordini. Se coincidono con l'ordine di uscita, dillo.
 
 Usa esclusivamente gli id elencati sopra e includili tutti in entrambe le liste.`;
 
@@ -300,7 +301,7 @@ Usa esclusivamente gli id elencati sopra e includili tutti in entrambe le liste.
   const chronological = idsFrom(parsed.chronological, allowed);
   const recommended = idsFrom(parsed.recommended, allowed);
   if (chronological.length === 0 && recommended.length === 0) {
-    throw new ClaudeApiError("Claude non è riuscito a ordinare questa saga.");
+    throw new ClaudeApiError(t("anthropic.claude_non_e_riuscito"));
   }
 
   return {

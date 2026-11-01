@@ -1,6 +1,7 @@
 import type { HistoryEntry, Item, WatchedEpisode } from "../types";
 import type { SagaOrders, WatchOrder } from "./sagas";
 import { isRecord } from "./localStore";
+import { t } from "./i18n";
 
 /**
  * Everything a saga knows that cannot be derived again from TMDB: the viewing
@@ -209,12 +210,12 @@ export function parseBackup(raw: string): Backup {
   try {
     parsed = JSON.parse(raw);
   } catch {
-    throw new BackupParseError("Il file non è un JSON valido.");
+    throw new BackupParseError(t("backup.il_file_non_e"));
   }
 
   if (Array.isArray(parsed)) {
     const items = parsed.filter(looksLikeItem);
-    if (items.length === 0) throw new BackupParseError("Nessun titolo valido trovato nel file.");
+    if (items.length === 0) throw new BackupParseError(t("backup.nessun_titolo_valido_trovato"));
     return { items, history: [] };
   }
 
@@ -229,7 +230,7 @@ export function parseBackup(raw: string): Backup {
       duels?: unknown;
     };
     const items = record.items.filter(looksLikeItem).map(sanitizeRegistry);
-    if (items.length === 0) throw new BackupParseError("Nessun titolo valido trovato nel file.");
+    if (items.length === 0) throw new BackupParseError(t("backup.nessun_titolo_valido_trovato"));
     const history = Array.isArray(record.history) ? record.history.filter(looksLikeHistoryEntry) : [];
     // Drop history pointing at titles the backup doesn't contain.
     const ids = new Set(items.map((i) => i.id));
@@ -245,5 +246,5 @@ export function parseBackup(raw: string): Backup {
     };
   }
 
-  throw new BackupParseError("Il file non sembra un backup di CineMate.");
+  throw new BackupParseError(t("backup.il_file_non_sembra"));
 }

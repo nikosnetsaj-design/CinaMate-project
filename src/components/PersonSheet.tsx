@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { PosterArt } from "./PosterArt";
 import { BackIcon, CheckIcon, ClockIcon, PersonIcon } from "./icons";
 import type { Item } from "../types";
+import { t } from "../lib/i18n";
 
 /** Long filmographies are the norm; the tail is noise until it is asked for. */
 const VISIBLE_CREDITS = 12;
@@ -30,7 +31,7 @@ function CreditCard({ credit, owned, onOpen, onAdd, adding }: {
       type="button"
       onClick={() => (owned ? onOpen(owned) : onAdd(credit))}
       disabled={adding}
-      aria-label={owned ? `Apri dettagli di ${credit.title}` : `Aggiungi ${credit.title} alla libreria`}
+      aria-label={owned ? t("PersonSheet.apri_dettagli_di", { v0: credit.title }) : t("PersonSheet.aggiungi_alla_libreria", { v0: credit.title })}
       className="w-24 shrink-0 text-left disabled:opacity-60"
     >
       <div className="relative">
@@ -96,7 +97,7 @@ function CreditRow({ title, credits, hint }: { title: string; credits: TmdbPerso
             onClick={() => setExpanded((e) => !e)}
             className="shrink-0 text-sm font-medium text-accent-text"
           >
-            {expanded ? "meno" : "tutti"}
+            {expanded ? t("PersonSheet.meno") : t("PersonSheet.tutti")}
           </button>
         )}
       </div>
@@ -146,7 +147,7 @@ function PersonDetail({ name }: { name: string }) {
         const found = await getPerson(id, tmdbApiKey);
         if (!cancelled) setPerson(found);
       } catch {
-        if (!cancelled) setError(`Nessuna scheda TMDB trovata per "${name}".`);
+        if (!cancelled) setError(t("PersonSheet.nessuna_scheda_tmdb_trovata", { v0: name }));
       }
     })();
 
@@ -182,7 +183,7 @@ function PersonDetail({ name }: { name: string }) {
       <button
         type="button"
         onClick={close}
-        aria-label="Torna indietro"
+        aria-label={t("PersonSheet.torna_indietro")}
         className="icon-btn fixed left-3 top-3 z-20 bg-black/45 text-white backdrop-blur-md hover:bg-black/65 hover:text-white"
       >
         <BackIcon />
@@ -194,7 +195,7 @@ function PersonDetail({ name }: { name: string }) {
         <div className="flex items-end gap-4">
           <div className="h-24 w-24 shrink-0 overflow-hidden rounded-full border-2 border-bg bg-surface-2 shadow-[var(--shadow-lg)]">
             {photo ? (
-              <img src={photo} alt={`Foto di ${name}`} loading="lazy" className="h-full w-full object-cover" />
+              <img src={photo} alt={t("PersonSheet.foto_di", { v0: name })} loading="lazy" className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-text-faint">
                 <PersonIcon size={32} />
@@ -202,7 +203,7 @@ function PersonDetail({ name }: { name: string }) {
             )}
           </div>
           <div className="min-w-0 flex-1 pb-1">
-            <p className="text-xs text-text-faint">{person?.knownFor || "Persona"}</p>
+            <p className="text-xs text-text-faint">{person?.knownFor || t("PersonSheet.persona")}</p>
             <h1 id={titleId} className="mt-0.5 font-display text-2xl font-semibold leading-tight text-text">
               {person?.name ?? name}
             </h1>
@@ -213,15 +214,15 @@ function PersonDetail({ name }: { name: string }) {
             it needs no key, no network, and it is the reason you tapped a name. */}
         {inLibrary.length > 0 && (
           <div className="mt-4 rounded-lg bg-surface-2 p-3.5">
-            <span className="text-xs font-medium text-text-faint">Nella tua libreria</span>
+            <span className="text-xs font-medium text-text-faint">{t("PersonSheet.nella_tua_libreria")}</span>
             <p className="mt-1 text-sm text-text">
               <span className="font-mono tabular font-semibold" style={{ color: "var(--accent-text)" }}>
                 {inLibrary.length}
               </span>{" "}
-              {inLibrary.length === 1 ? "titolo" : "titoli"}
+              {inLibrary.length === 1 ? t("PersonSheet.titolo") : t("PersonSheet.titoli")}
               {avgVote != null && (
                 <>
-                  {" · voto medio "}
+                  {t("PersonSheet.voto_medio")}
                   <span className="font-mono tabular font-semibold" style={{ color: "var(--accent-text)" }}>
                     {avgVote.toFixed(1)}
                   </span>
@@ -237,7 +238,7 @@ function PersonDetail({ name }: { name: string }) {
                     close();
                     openItem(owned);
                   }}
-                  aria-label={`Apri dettagli di ${owned.title}, ${owned.year}`}
+                  aria-label={t("PersonSheet.apri_dettagli_di_2", { v0: owned.title, v1: owned.year })}
                   className="w-20 shrink-0 text-left"
                 >
                   <PosterArt item={owned} size="sm" showTitle={!owned.posterPath} className="w-20" />
@@ -251,14 +252,14 @@ function PersonDetail({ name }: { name: string }) {
         {!tmdbApiKey ? (
           <div className="mt-4 rounded-lg bg-surface-2 p-4">
             <p className="text-sm text-text-muted">
-              La filmografia completa arriva da TMDB. La chiave è gratuita e resta su questo dispositivo.
+              {t("PersonSheet.la_filmografia_completa_arriva")}
             </p>
             <button
               type="button"
               onClick={() => openSettings()}
               className="btn btn-primary mt-3"
             >
-              Aggiungi la chiave
+              {t("PersonSheet.aggiungi_la_chiave")}
             </button>
           </div>
         ) : error ? (
@@ -281,7 +282,7 @@ function PersonDetail({ name }: { name: string }) {
                   onClick={() => setBioOpen((o) => !o)}
                   className="mt-1 text-xs font-medium text-accent-text"
                 >
-                  {bioOpen ? "riduci" : "leggi tutto"}
+                  {bioOpen ? t("PersonSheet.riduci") : t("PersonSheet.leggi_tutto")}
                 </button>
               </div>
             )}
@@ -292,19 +293,19 @@ function PersonDetail({ name }: { name: string }) {
               </p>
             )}
 
-            <CreditRow title="Regia" credits={person.directingCredits} />
-            <CreditRow title="Interpretazioni" credits={person.actingCredits} />
+            <CreditRow title={t("PersonSheet.regia")} credits={person.directingCredits} />
+            <CreditRow title={t("PersonSheet.interpretazioni")} credits={person.actingCredits} />
 
             <button
               type="button"
               onClick={() => {
-                setCriticQuestion(`Da dove comincio con ${person.name}? Consigliami in che ordine guardare i suoi film.`);
+                setCriticQuestion(t("PersonSheet.da_dove_comincio_con", { v0: person.name }));
                 close();
                 navigate("/critico");
               }}
               className="btn btn-secondary mt-6 w-full"
             >
-              Chiedi al critico da dove cominciare
+              {t("PersonSheet.chiedi_al_critico_da")}
             </button>
           </>
         )}

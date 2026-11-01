@@ -12,6 +12,7 @@ import { useWebViewer } from "../store/useWebViewer";
 import { buildQuery, effectiveUrl, hostLabel, searchUrlsFor } from "../lib/linkHost";
 import type { Item } from "../types";
 import { ChevronRightIcon, ExternalIcon, LinkIcon, PlayIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 function linkLabel(url: string): string {
   try {
@@ -50,13 +51,13 @@ function ProviderTile({ provider, title, onOpen }: { provider: TmdbWatchProvider
       onClick={onOpen}
       target="_blank"
       rel="noopener noreferrer"
-      title={`Apri ${title} su ${link.service}`}
+      title={t("WatchAndLinks.apri_su", { v0: title, v1: link.service })}
       className={`${shell} hover:scale-105`}
     >
       {face}
     </a>
   ) : (
-    <span className={shell} title={`${provider.name} — cercalo dal servizio`}>
+    <span className={shell} title={t("WatchAndLinks.cercalo_dal_servizio", { v0: provider.name })}>
       {face}
     </span>
   );
@@ -163,28 +164,28 @@ function WatchProviders({ item }: { item: Item }) {
       {/* Titolo pieno e non maiuscoletto grigio: è una domanda che si fa a voce
           alta — «dove lo guardo?» — e merita lo stesso peso di «Regia e
           troupe» o «Dati finanziari», che le stanno sotto. */}
-      <h2 className="mb-2.5 font-display text-lg font-semibold text-text">Dove guardarlo</h2>
-      {linked && !tmdbApiKey && <CatalogNote what="Dove danno un titolo lo sa TMDB." />}
+      <h2 className="mb-2.5 font-display text-lg font-semibold text-text">{t("WatchAndLinks.dove_guardarlo")}</h2>
+      {linked && !tmdbApiKey && <CatalogNote what={t("WatchAndLinks.dove_danno_un_titolo")} />}
       {linked && tmdbApiKey && state === "busy" && (
         <div className="flex items-center gap-2 text-xs text-text-faint">
           <span className="spinner h-3.5 w-3.5 rounded-full border-2" style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }} />
-          Verifico su TMDB…
+          {t("WatchAndLinks.verifico_su_tmdb")}
         </div>
       )}
       {/* «Non disponibile» sembrava dire che il film non c'è. La cosa che
           manca è la nostra informazione, non il titolo. */}
       {linked && tmdbApiKey && state === "error" && (
-        <ErrorState compact title="Non so dove danno questo titolo" description="TMDB non ha risposto." onRetry={() => setAttempt((n) => n + 1)} />
+        <ErrorState compact title={t("WatchAndLinks.non_so_dove_danno")} description={t("WatchAndLinks.tmdb_non_ha_risposto")} onRetry={() => setAttempt((n) => n + 1)} />
       )}
       {linked && tmdbApiKey && state === "done" && providers.length === 0 && (
-        <p className="text-xs text-text-faint">Non risulta disponibile in {countryLabel(region)} al momento.</p>
+        <p className="text-xs text-text-faint">{t("WatchAndLinks.non_risulta_disponibile_in")} {countryLabel(region)} {t("WatchAndLinks.al_momento")}</p>
       )}
       {linked && tmdbApiKey && state === "done" && providers.length > 0 && (
         <div className="flex flex-col gap-3">
-          <ProviderGroup label="Streaming" providers={watch.streaming} title={item.title} onOpen={() => startWatching(item.id)} />
-          <ProviderGroup label="Gratis" providers={watch.free} title={item.title} onOpen={() => startWatching(item.id)} />
-          <ProviderGroup label="Noleggia" providers={watch.rent} title={item.title} onOpen={() => startWatching(item.id)} />
-          <ProviderGroup label="Acquista" providers={watch.buy} title={item.title} onOpen={() => startWatching(item.id)} />
+          <ProviderGroup label={t("WatchAndLinks.streaming")} providers={watch.streaming} title={item.title} onOpen={() => startWatching(item.id)} />
+          <ProviderGroup label={t("WatchAndLinks.gratis")} providers={watch.free} title={item.title} onOpen={() => startWatching(item.id)} />
+          <ProviderGroup label={t("WatchAndLinks.noleggia")} providers={watch.rent} title={item.title} onOpen={() => startWatching(item.id)} />
+          <ProviderGroup label={t("WatchAndLinks.acquista")} providers={watch.buy} title={item.title} onOpen={() => startWatching(item.id)} />
         </div>
       )}
 
@@ -194,10 +195,10 @@ function WatchProviders({ item }: { item: Item }) {
           onClick={() => startWatching(item.id)}
           target="_blank"
           rel="noopener noreferrer"
-          title={`Apri ${item.title} su ${own.service}`}
+          title={t("WatchAndLinks.apri_su", { v0: item.title, v1: own.service })}
           className="chip mt-1.5 text-accent-text"
         >
-          Apri su {own.service}
+          {t("WatchAndLinks.apri_su_2")} {own.service}
           <ExternalIcon size={12} />
         </a>
       )}
@@ -209,7 +210,7 @@ function WatchProviders({ item }: { item: Item }) {
         che non c'è è peggio che spiegare quello che si fa davvero.
       */}
       {(showOwn || openable.some((p) => p.link)) && (
-        <p className="mt-1.5 text-xs text-text-faint">Si apre la ricerca del servizio, già scritta. Su telefono apre l'app, se ce l'hai.</p>
+        <p className="mt-1.5 text-xs text-text-faint">{t("WatchAndLinks.si_apre_la_ricerca")}</p>
       )}
 
       {linked && tmdbApiKey && state === "done" && providers.length > 0 && link && (
@@ -221,7 +222,7 @@ function WatchProviders({ item }: { item: Item }) {
           className="mt-1.5 inline-flex items-center gap-0.5 text-xs underline-offset-2 hover:underline"
           style={{ color: "var(--accent-text)" }}
         >
-          Vedi tutte le opzioni su JustWatch
+          {t("WatchAndLinks.vedi_tutte_le_opzioni")}
           <ChevronRightIcon size={14} />
         </a>
       )}
@@ -248,7 +249,7 @@ function LinkHostSearch({ item }: { item: Item }) {
   return (
     <div>
       <span className="mb-2 block text-xs font-medium text-text-faint">
-        Cerca sui tuoi siti
+        {t("WatchAndLinks.cerca_sui_tuoi_siti")}
       </span>
       <div className="flex flex-wrap gap-1.5">
         {enabled.map((host) => {
@@ -271,9 +272,8 @@ function LinkHostSearch({ item }: { item: Item }) {
         })}
       </div>
       <p className="mt-1.5 text-xs text-text-faint">
-        Si apre il Web Viewer con la ricerca già scritta:{" "}
-        <span className="font-mono">{buildQuery(item, enabled[0].recipe)}</span>. Script, pop-up e
-        cambi di pagina restano bloccati.
+        {t("WatchAndLinks.si_apre_il_web")}{" "}
+        <span className="font-mono">{buildQuery(item, enabled[0].recipe)}</span>{t("WatchAndLinks.script_pop_up_e")}
       </p>
     </div>
   );
@@ -300,7 +300,7 @@ export function WatchAndLinks({ item }: { item: Item }) {
               className="chip gap-1.5"
             >
               <PlayIcon size={12} />
-              Trailer
+              {t("WatchAndLinks.trailer")}
             </a>
           )}
           {item.links.map((l) => (

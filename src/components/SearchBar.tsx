@@ -1,9 +1,10 @@
 import { CloseIcon, SearchIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 export function SearchBar({
   value,
   onChange,
-  placeholder = "Cerca per titolo o regista…",
+  placeholder = t("SearchBar.cerca_per_titolo_o"),
   autoFocus = false,
   id,
 }: {
@@ -25,14 +26,14 @@ export function SearchBar({
         autoFocus={autoFocus}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        aria-label="Cerca nella libreria"
+        aria-label={t("SearchBar.cerca_nella_libreria")}
         className="field h-11 w-full rounded-full pl-11 pr-12"
       />
       {value && (
         <button
           type="button"
           onClick={() => onChange("")}
-          aria-label="Cancella ricerca"
+          aria-label={t("SearchBar.cancella_ricerca")}
           className="icon-btn icon-btn-sm absolute right-1.5"
         >
           <CloseIcon size={16} />

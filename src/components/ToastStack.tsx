@@ -3,6 +3,7 @@ import { AnimatePresence, m } from "framer-motion";
 import { useLibrary } from "../store/useLibrary";
 import type { ToastKind } from "../types";
 import { CloseIcon, ErrorIcon, InfoIcon, SuccessIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /*
  * L'avviso è vetro, non un blocco di colore: il testo resta nel colore del
@@ -47,7 +48,7 @@ export function ToastStack() {
               <button
                 type="button"
                 onClick={() => dismissToast(toast.id)}
-                aria-label="Chiudi notifica"
+                aria-label={t("ToastStack.chiudi_notifica")}
                 className="icon-btn icon-btn-sm"
               >
                 <CloseIcon size={14} />

@@ -58,7 +58,7 @@ function SuggestionRow({ item, reason }: { item: Item; reason?: string }) {
         type="button"
         {...prefetchHandlers("/player")}
         onClick={() => navigate(`/player?titolo=${encodeURIComponent(item.id)}`)}
-        aria-label={`Riproduci ${item.title}`}
+        aria-label={t("Search.riproduci", { v0: item.title })}
         className="icon-btn icon-btn-filled shrink-0"
       >
         <PlayIcon size={18} />
@@ -82,7 +82,7 @@ function PersonResults({ query }: { query: string }) {
     return () => controller.abort();
   }, [query, tmdbApiKey]);
 
-  if (!query) return <p className="text-sm text-text-faint">Scrivi il nome di un attore o di un regista.</p>;
+  if (!query) return <p className="text-sm text-text-faint">{t("Search.scrivi_il_nome_di")}</p>;
   if (people === null) {
     return (
       <div className="grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-5 lg:grid-cols-7">
@@ -92,7 +92,7 @@ function PersonResults({ query }: { query: string }) {
       </div>
     );
   }
-  if (people.length === 0) return <p className="text-sm text-text-faint">Nessuna persona con questo nome.</p>;
+  if (people.length === 0) return <p className="text-sm text-text-faint">{t("Search.nessuna_persona_con_questo")}</p>;
 
   return (
     <div className="grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-5 lg:grid-cols-7">
@@ -223,14 +223,14 @@ function TitleResults({ query }: { query: string }) {
         {query.length < MIN_REMOTE_QUERY
           ? ""
           : remote === null
-            ? "Cerco…"
-            : `${mine.length + remote.length} risultat${mine.length + remote.length === 1 ? "o" : "i"} per ${query}`}
+            ? t("Search.cerco")
+            : t(mine.length + remote.length === 1 ? "Search.risultato_per" : "Search.risultati_per", { v0: mine.length + remote.length, v1: query })}
       </p>
 
       {mine.length > 0 && (
         <section>
           <h2 className="mb-2.5 text-xs font-medium text-text-faint">
-            Nella tua libreria · {mine.length}
+            {t("Search.nella_tua_libreria")} {mine.length}
           </h2>
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
             {mine.map((item) => (
@@ -245,22 +245,21 @@ function TitleResults({ query }: { query: string }) {
 
       {suggestion && (
         <p className="text-sm text-text-muted">
-          Nessun titolo tuo per «{query}». Forse cercavi <strong className="text-text">{suggestion}</strong>?
+          {t("Search.nessun_titolo_tuo_per")}{query}{t("Search.forse_cercavi")} <strong className="text-text">{suggestion}</strong>?
         </p>
       )}
 
       {tmdbApiKey ? (
         <section>
-          <h2 className="mb-2.5 text-xs font-medium text-text-faint">Su TMDB</h2>
+          <h2 className="mb-2.5 text-xs font-medium text-text-faint">{t("Search.su_tmdb")}</h2>
           {corrected && (
             <p className="mb-2 text-xs text-text-faint">
-              Niente per «{query}»: questi sono i risultati per «{corrected}».
+              {t("Search.niente_per")}{query}{t("Search.questi_sono_i_risultati")}{corrected}».
             </p>
           )}
           {query.length < MIN_REMOTE_QUERY ? (
             <p className="text-sm text-text-faint">
-              Scrivi almeno {MIN_REMOTE_QUERY} lettere: con due, TMDB risponde con tutto quello che le contiene da
-              qualche parte — e non è quasi mai il titolo che cerchi.
+              {t("Search.scrivi_almeno")} {MIN_REMOTE_QUERY} {t("Search.lettere_con_due_tmdb")}
             </p>
           ) : remote === null ? (
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
@@ -269,9 +268,9 @@ function TitleResults({ query }: { query: string }) {
               ))}
             </div>
           ) : remoteFailed ? (
-            <ErrorState compact title="La ricerca su TMDB non è arrivata" description="I titoli della tua libreria qui sopra ci sono lo stesso." onRetry={() => setAttempt((n) => n + 1)} />
+            <ErrorState compact title={t("Search.la_ricerca_su_tmdb")} description={t("Search.i_titoli_della_tua")} onRetry={() => setAttempt((n) => n + 1)} />
           ) : remote.length === 0 ? (
-            <p className="text-sm text-text-faint">Nessun risultato.</p>
+            <p className="text-sm text-text-faint">{t("Search.nessun_risultato")}</p>
           ) : (
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
               {remote.map((result) => {
@@ -281,7 +280,7 @@ function TitleResults({ query }: { query: string }) {
                     key={result.tmdbId}
                     type="button"
                     onClick={() => openResult(result)}
-                    aria-label={owned ? `${result.title} — già in libreria, apri la scheda` : `Apri la scheda di ${result.title}`}
+                    aria-label={owned ? t("Search.gia_in_libreria_apri", { v0: result.title }) : t("Search.apri_la_scheda_di", { v0: result.title })}
                     className="text-left"
                   >
                     <div className="relative">
@@ -310,7 +309,7 @@ function TitleResults({ query }: { query: string }) {
         </section>
       ) : (
         <p className="text-sm text-text-faint">
-          Con la chiave TMDB questa ricerca copre anche i titoli che non hai ancora.
+          {t("Search.con_la_chiave_tmdb")}
         </p>
       )}
     </div>
@@ -334,7 +333,7 @@ export function Search() {
     const seen = new Set(resuming.map((r) => r.item.id));
     const picks = forYou(items, 6).filter((s) => !seen.has(s.item.id));
     return [
-      ...resuming.map((r) => ({ item: r.item, reason: `${r.label} · ${r.pct}% visto` })),
+      ...resuming.map((r) => ({ item: r.item, reason: t("Search.visto", { v0: r.label, v1: r.pct }) })),
       ...picks.map((s) => ({ item: s.item, reason: s.reason })),
     ].slice(0, 8);
   }, [items, progress, history]);
@@ -366,8 +365,8 @@ export function Search() {
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Cerca serie, film e persone…"
-            aria-label="Cerca"
+            placeholder={t("Search.cerca_serie_film_e")}
+            aria-label={t("Search.cerca")}
             // `search` porta il tasto «cerca» sulla tastiera del telefono al
             // posto di «invio», e spegne le maiuscole automatiche: nessun
             // titolo si scrive meglio con la prima lettera imposta.
@@ -393,7 +392,7 @@ export function Search() {
                 setQuery("");
                 inputRef.current?.focus();
               }}
-              aria-label="Cancella la ricerca"
+              aria-label={t("Search.cancella_la_ricerca")}
               className="icon-btn icon-btn-sm"
             >
               <CloseIcon size={16} />
@@ -401,7 +400,7 @@ export function Search() {
           )}
         </label>
 
-        <div className="mt-3 flex gap-2" role="tablist" aria-label="Cosa cercare">
+        <div className="mt-3 flex gap-2" role="tablist" aria-label={t("Search.cosa_cercare")}>
           {([
             { id: "titoli", label: t("tabs.search.titles") },
             { id: "persone", label: t("tabs.search.people") },
@@ -423,7 +422,7 @@ export function Search() {
       {!query && tab === "titoli" ? (
         suggestions.length > 0 ? (
           <section>
-            <h2 className="t-title mb-4 text-text">Da riprendere e da provare</h2>
+            <h2 className="t-title mb-4 text-text">{t("Search.da_riprendere_e_da")}</h2>
             <ul className="flex flex-col gap-3">
               {suggestions.map(({ item, reason }) => (
                 <SuggestionRow key={item.id} item={item} reason={reason} />
@@ -432,12 +431,12 @@ export function Search() {
           </section>
         ) : (
           <div className="flex flex-col items-start gap-1">
-            <p className="text-sm text-text-faint">Scrivi un titolo.</p>
+            <p className="text-sm text-text-faint">{t("Search.scrivi_un_titolo")}</p>
             {/* Un pulsante vero, alto 44 px, e non un collegamento nel testo:
                 sul telefono si tocca col pollice. */}
             {!tmdbApiKey && (
               <button type="button" onClick={() => openSettings("chiavi")} className="btn btn-plain btn-sm -ml-3 min-h-11 text-left">
-                Con la chiave TMDB cerchi anche fuori dalla tua libreria
+                {t("Search.con_la_chiave_tmdb_2")}
               </button>
             )}
           </div>

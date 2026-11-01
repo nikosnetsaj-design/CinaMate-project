@@ -3,6 +3,7 @@ import { useLibrary } from "./useLibrary";
 import { isRecord, readJson, writeJson } from "../lib/localStore";
 import { isSort, type ShelfQuery } from "../lib/listing";
 import type { Filters } from "../lib/filters";
+import { t } from "../lib/i18n";
 
 const KEY = "cinemate:lists:v1";
 
@@ -110,14 +111,14 @@ export const useLists = create<ListsState>((set, get) => {
 
     createManual: (name, itemIds = []) => {
       const id = newId();
-      const list: ManualList = { id, kind: "manual", name: freeName(get().lists, name || "Nuova lista"), itemIds, createdAt: today() };
+      const list: ManualList = { id, kind: "manual", name: freeName(get().lists, name || t("useLists.nuova_lista")), itemIds, createdAt: today() };
       save([...get().lists, list]);
       return id;
     },
 
     createSmart: (name, query) => {
       const id = newId();
-      const list: SmartList = { id, kind: "smart", name: freeName(get().lists, name || "Lista intelligente"), query, createdAt: today() };
+      const list: SmartList = { id, kind: "smart", name: freeName(get().lists, name || t("useLists.lista_intelligente")), query, createdAt: today() };
       save([...get().lists, list]);
       return id;
     },

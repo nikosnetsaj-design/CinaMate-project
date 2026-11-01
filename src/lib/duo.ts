@@ -1,5 +1,6 @@
 import type { Item } from "../types";
 import { rankShelf } from "./recommend";
+import { t } from "./i18n";
 
 /**
  * «Stasera in due»: due liste «Da vedere» che si incontrano.
@@ -98,8 +99,8 @@ export function intersect(mine: Item[], theirs: DuoEntry[], reasons: Map<string,
     const compat = Math.round(((a + b) / 2) * 100);
     const reason =
       a >= 0.75 && b >= 0.75
-        ? "In cima a tutte e due le liste"
-        : reasons.get(item.id) || (b > a ? "Più in alto nella sua lista che nella tua" : "Su tutte e due le liste");
+        ? t("duo.in_cima_a_tutte")
+        : reasons.get(item.id) || (b > a ? t("duo.piu_in_alto_nella") : t("duo.su_tutte_e_due"));
     out.push({ item, compat, reason, best: Math.max(a, b) });
   });
   return out.sort((x, y) => y.compat - x.compat || y.best - x.best).map(({ item, compat, reason }) => ({ item, compat, reason }));

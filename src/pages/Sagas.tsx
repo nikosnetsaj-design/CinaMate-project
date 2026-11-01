@@ -87,7 +87,7 @@ export function Sagas() {
       <div>
         <h1 className="t-display text-text">{t("page.sagas")}</h1>
         <p className="mt-1 text-sm text-text-muted">
-          I film che hai in libreria, rimessi nell'ordine della loro storia.
+          {t("Sagas.i_film_che_hai")}
         </p>
       </div>
 
@@ -97,15 +97,15 @@ export function Sagas() {
           the key is what discovers new ones, not what reads the shelf. */}
       {!tmdbApiKey && mine.length === 0 ? (
         <EmptyState
-          title="Serve la tua chiave TMDB"
-          description="Le saghe si costruiscono da sole a partire dalle collezioni di TMDB: senza chiave non c'è modo di sapere che due film appartengono alla stessa storia."
+          title={t("Sagas.serve_la_tua_chiave")}
+          description={t("Sagas.le_saghe_si_costruiscono")}
           action={
             <button
               type="button"
               onClick={() => openSettings()}
               className="btn btn-primary"
             >
-              Aggiungi la chiave
+              {t("Sagas.aggiungi_la_chiave")}
             </button>
           }
         />
@@ -113,7 +113,7 @@ export function Sagas() {
         <>
           <section className="flex flex-col gap-3">
             <h2 className="t-title text-text">
-              Le tue saghe
+              {t("Sagas.le_tue_saghe")}
               {mine.length > 0 && <span className="ml-2 font-sans text-sm font-normal text-text-faint tabular">{mine.length}</span>}
             </h2>
             {!ready || pendingSagas ? (
@@ -130,8 +130,8 @@ export function Sagas() {
               </div>
             ) : mine.length === 0 ? (
               <EmptyState
-                title="Ancora nessuna saga"
-                description="Appena in libreria entra un film che fa parte di una collezione — un capitolo di Alien, un Rocky, un Fast & Furious — la saga completa compare qui da sola."
+                title={t("Sagas.ancora_nessuna_saga")}
+                description={t("Sagas.appena_in_libreria_entra")}
               />
             ) : (
               <div className="list-group">
@@ -151,9 +151,9 @@ export function Sagas() {
           {visibleUniverses.length > 0 && (
             <section className="flex flex-col gap-3">
               <div>
-                <h2 className="t-title text-text">Universi</h2>
+                <h2 className="t-title text-text">{t("Sagas.universi")}</h2>
                 <p className="mt-1 text-sm text-text-muted">
-                  Storie che attraversano più saghe. Aprine uno per vederne la linea temporale.
+                  {t("Sagas.storie_che_attraversano_piu")}
                 </p>
               </div>
               <div className="list-group">
@@ -174,11 +174,11 @@ export function Sagas() {
 
           {!tmdbApiKey && (
             <p className="text-sm text-text-faint">
-              Senza chiave TMDB vedi solo le saghe già scaricate.{" "}
+              {t("Sagas.senza_chiave_tmdb_vedi")}{" "}
               <button type="button" onClick={() => openSettings()} className="font-medium text-accent-text underline-offset-2 hover:underline">
-                Aggiungi la chiave
+                {t("Sagas.aggiungi_la_chiave")}
               </button>{" "}
-              per scoprirne di nuove.
+              {t("Sagas.per_scoprirne_di_nuove")}
             </p>
           )}
         </>

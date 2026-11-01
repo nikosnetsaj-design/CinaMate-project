@@ -9,8 +9,7 @@ import { clearErrorLog, getErrorLog, subscribeErrorLog, type LoggedError, type E
 import { runSelfTests, type TestResult, type TestStatus } from "../lib/selfTest";
 import { getHosts, computeHostStats, getSwitchLog } from "../player/services/hostStore";
 import { CONFIRM_AFTER_DAYS, CONFIRM_AFTER_LAUNCHES, durable, type Backend, type StorageStatus } from "../lib/durable";
-import { intlLocale } from "../lib/i18n";
-import { t } from "../lib/i18n";
+import { intlLocale, t } from "../lib/i18n";
 
 const STATUS_COLOUR: Record<TestStatus, string> = {
   pass: "var(--success)",
@@ -21,9 +20,9 @@ const STATUS_COLOUR: Record<TestStatus, string> = {
 
 const STATUS_LABEL: Record<TestStatus, string> = {
   pass: "OK",
-  warn: "Attenzione",
-  fail: "Errore",
-  skip: "Non attivo",
+  warn: t("Diagnostics.attenzione"),
+  fail: t("Diagnostics.errore"),
+  skip: t("Diagnostics.non_attivo"),
 };
 
 const SCOPE_LABEL: Record<ErrorScope, string> = {
@@ -31,8 +30,8 @@ const SCOPE_LABEL: Record<ErrorScope, string> = {
   tmdb: "TMDB",
   claude: "Claude",
   player: "Player",
-  storage: "Memoria",
-  rete: "Rete",
+  storage: t("Diagnostics.memoria"),
+  rete: t("Diagnostics.rete"),
 };
 
 function when(ts: number): string {
@@ -73,7 +72,7 @@ function TestRow({ result }: { result: TestResult }) {
 function HostSummary() {
   const hosts = getHosts();
   const switches = getSwitchLog(5);
-  if (hosts.length === 0) return <p className="text-sm text-text-muted">Nessun host configurato.</p>;
+  if (hosts.length === 0) return <p className="text-sm text-text-muted">{t("Diagnostics.nessun_host_configurato")}</p>;
 
   return (
     <div className="flex flex-col gap-3">
@@ -91,7 +90,7 @@ function HostSummary() {
               <div className="shrink-0 text-right">
                 <p className="tabular text-sm font-semibold text-text">{stats.score}/100</p>
                 <p className="tabular text-xs text-text-muted">
-                  {stats.reliability30d}% · {stats.avgPingMs ?? "—"} ms
+                  {stats.reliability30d}% · {stats.avgPingMs ?? "—"} {t("Diagnostics.ms")}
                 </p>
               </div>
             </li>
@@ -100,7 +99,7 @@ function HostSummary() {
       </ul>
       {switches.length > 0 && (
         <p className="text-xs text-text-muted">
-          Ultimo cambio host: {when(switches[0].at)} ({switches.length} negli ultimi giorni).
+          {t("Diagnostics.ultimo_cambio_host")} {when(switches[0].at)} ({switches.length} {t("Diagnostics.negli_ultimi_giorni")}
         </p>
       )}
     </div>
@@ -110,7 +109,7 @@ function HostSummary() {
 const BACKEND_LABEL: Record<Backend, string> = {
   idb: "IndexedDB",
   local: "localStorage",
-  unavailable: "Non raggiungibile",
+  unavailable: t("Diagnostics.non_raggiungibile"),
 };
 
 const DAY_MS = 86_400_000;
@@ -150,24 +149,24 @@ function StorageSection() {
   }
 
   return (
-    <Section title="Archivio">
+    <Section title={t("Diagnostics.archivio")}>
       <ul className="list-group" style={{ "--row-inset": "16px" } as React.CSSProperties}>
         <li className="list-row justify-between">
-          <span className="text-sm text-text">Dove stanno libreria e diario</span>
+          <span className="text-sm text-text">{t("Diagnostics.dove_stanno_libreria_e")}</span>
           <span className="text-sm font-medium text-text">{BACKEND_LABEL[status.backend]}</span>
         </li>
         {meta?.migratedAt && (
           <li className="list-row justify-between">
-            <span className="text-sm text-text">Spostati da localStorage</span>
+            <span className="text-sm text-text">{t("Diagnostics.spostati_da_localstorage")}</span>
             <span className="tabular text-sm text-text-muted">{when(Date.parse(meta.migratedAt))}</span>
           </li>
         )}
         {status.backups.length > 0 && (
           <li className="list-row flex-col items-stretch gap-1">
-            <span className="text-sm text-text">Copia di prima della migrazione</span>
+            <span className="text-sm text-text">{t("Diagnostics.copia_di_prima_della")}</span>
             <span className="text-xs text-text-muted">
-              Si cancella da sola tra {launchesLeft} {launchesLeft === 1 ? "avvio" : "avvii"}
-              {daysLeft > 0 ? ` e almeno ${daysLeft} ${daysLeft === 1 ? "giorno" : "giorni"}` : ""}, se tutto va bene.
+              {t("Diagnostics.si_cancella_da_sola")} {launchesLeft} {launchesLeft === 1 ? t("Diagnostics.avvio") : t("Diagnostics.avvii")}
+              {daysLeft > 0 ? t("Diagnostics.e_almeno", { v0: daysLeft, v1: daysLeft === 1 ? t("Diagnostics.giorno") : t("Diagnostics.giorni") }) : ""}{t("Diagnostics.se_tutto_va_bene")}
             </span>
           </li>
         )}
@@ -178,24 +177,24 @@ function StorageSection() {
         (confirming === "restore" ? (
           <div role="alert" aria-labelledby="restore-confirm" className="rounded-md bg-surface p-4 shadow-[var(--shadow-sm)]">
             <p id="restore-confirm" className="text-sm text-text">
-              Torno ai dati com'erano il giorno della migrazione. Quello che hai aggiunto o segnato dopo si perde.
+              {t("Diagnostics.torno_ai_dati_com")}
             </p>
             <div className="mt-3 flex justify-end gap-2">
               <button type="button" onClick={() => setConfirming(null)} className="btn btn-secondary btn-sm">
-                Annulla
+                {t("Diagnostics.annulla")}
               </button>
               <button type="button" disabled={busy} onClick={() => void restore()} className="btn btn-danger-fill btn-sm">
-                Ripristina la copia
+                {t("Diagnostics.ripristina_la_copia")}
               </button>
             </div>
           </div>
         ) : (
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => setConfirming("restore")} className="btn btn-secondary btn-sm">
-              Ripristina la copia
+              {t("Diagnostics.ripristina_la_copia")}
             </button>
             <button type="button" disabled={busy} onClick={() => void confirmNow()} className="btn btn-plain btn-sm">
-              Va tutto bene, eliminala ora
+              {t("Diagnostics.va_tutto_bene_eliminala")}
             </button>
           </div>
         ))}
@@ -233,25 +232,24 @@ export function Diagnostics() {
       <div>
         <h1 className="t-display text-text">{t("page.diagnostics")}</h1>
         <p className="mt-1 text-sm text-text-muted">
-          Cosa c'è sul dispositivo e cosa sta funzionando. Nessuno di questi dati esce di qui:
-          non c'è nessun server a cui mandarli.
+          {t("Diagnostics.cosa_c_e_sul")}
         </p>
       </div>
 
       <FigureBand
-        label="Riepilogo"
+        label={t("Diagnostics.riepilogo")}
         cols={2}
         smCols={4}
         figures={[
-          { value: items.length, label: "titoli" },
-          { value: history.length, label: "voci di diario" },
-          { value: withSources, label: "con sorgente" },
-          { value: errors.length, label: "errori registrati" },
+          { value: items.length, label: t("Diagnostics.titoli") },
+          { value: history.length, label: t("Diagnostics.voci_di_diario") },
+          { value: withSources, label: t("Diagnostics.con_sorgente") },
+          { value: errors.length, label: t("Diagnostics.errori_registrati") },
         ]}
       />
 
       <Section
-        title="Test automatici"
+        title={t("Diagnostics.test_automatici")}
         action={
           <button
             type="button"
@@ -259,23 +257,22 @@ export function Diagnostics() {
             disabled={running}
             className="btn btn-primary shrink-0"
           >
-            {running ? "Eseguo…" : tests ? "Riesegui" : "Esegui i test"}
+            {running ? t("Diagnostics.eseguo") : tests ? t("Diagnostics.riesegui") : t("Diagnostics.esegui_i_test")}
           </button>
         }
       >
         {tests === null ? (
           <p className="text-sm text-text-muted">
-            Controlla memoria, chiavi API, host e notifiche. Alcuni test fanno una richiesta di rete
-            vera, quindi partono solo quando li chiedi tu.
+            {t("Diagnostics.controlla_memoria_chiavi_api")}
           </p>
         ) : (
           <>
             <p className="text-sm text-text-muted">
               {failures > 0
-                ? `${failures} ${failures === 1 ? "problema" : "problemi"} da sistemare.`
+                ? t("Diagnostics.da_sistemare", { v0: failures, v1: failures === 1 ? t("Diagnostics.problema") : t("Diagnostics.problemi") })
                 : warnings > 0
-                  ? `Tutto funziona, con ${warnings} ${warnings === 1 ? "avviso" : "avvisi"}.`
-                  : "Tutto a posto."}
+                  ? t("Diagnostics.tutto_funziona_con", { v0: warnings, v1: warnings === 1 ? t("Diagnostics.avviso") : t("Diagnostics.avvisi") })
+                  : t("Diagnostics.tutto_a_posto")}
             </p>
             <ul className="list-group" style={{ "--row-inset": "36px" } as React.CSSProperties}>
               {tests.map((t) => (
@@ -286,12 +283,12 @@ export function Diagnostics() {
         )}
       </Section>
 
-      <Section title="Host">
+      <Section title={t("Diagnostics.host")}>
         <HostSummary />
       </Section>
 
       <Section
-        title="Log errori"
+        title={t("Diagnostics.log_errori")}
         action={
           errors.length > 0 ? (
             <button
@@ -299,15 +296,15 @@ export function Diagnostics() {
               onClick={clearErrorLog}
               className="btn btn-secondary btn-sm shrink-0"
             >
-              Svuota
+              {t("Diagnostics.svuota")}
             </button>
           ) : undefined
         }
       >
         {errors.length === 0 ? (
           <EmptyState
-            title="Nessun errore registrato"
-            description="Quando qualcosa va storto — una chiamata a TMDB rifiutata, un host che non risponde — finisce qui invece di sparire con il messaggio a schermo."
+            title={t("Diagnostics.nessun_errore_registrato")}
+            description={t("Diagnostics.quando_qualcosa_va_storto")}
           />
         ) : (
           <ul className="list-group" style={{ "--row-inset": "16px" } as React.CSSProperties}>
@@ -329,17 +326,16 @@ export function Diagnostics() {
 
       <StorageSection />
 
-      <Section title="Backup">
+      <Section title={t("Diagnostics.backup")}>
         <p className="text-sm text-text-muted">
-          Esporta e importa vivono in Impostazioni, dove stanno accanto al resto dei dati locali.
-          Il file comprende libreria, diario, saghe, obiettivi, sorgenti del player e host.
+          {t("Diagnostics.esporta_e_importa_vivono")}
         </p>
         <button
           type="button"
           onClick={() => openSettings("dati")}
           className="btn btn-secondary self-start"
         >
-          Apri Dati e backup
+          {t("Diagnostics.apri_dati_e_backup")}
         </button>
       </Section>
     </div>

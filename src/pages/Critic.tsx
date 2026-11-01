@@ -10,13 +10,13 @@ import { ArrowRightIcon, BackIcon } from "../components/icons";
 import { t } from "../lib/i18n";
 
 const PROMPTS = [
-  "Cosa guardo stasera?",
-  "Qual è il prossimo capitolo che dovrei vedere?",
-  "Consigliami qualcosa di corto",
-  "Che saga dovrei iniziare?",
-  "Anime da provare",
-  "Descrivi il mio gusto cinematografico",
-  "Cosa manca alla mia lista?",
+  t("Critic.cosa_guardo_stasera"),
+  t("Critic.qual_e_il_prossimo"),
+  t("Critic.consigliami_qualcosa_di_corto"),
+  t("Critic.che_saga_dovrei_iniziare"),
+  t("Critic.anime_da_provare"),
+  t("Critic.descrivi_il_mio_gusto"),
+  t("Critic.cosa_manca_alla_mia"),
 ];
 
 /**
@@ -27,7 +27,7 @@ function similarPrompt(items: Item[]): string | null {
   const best = items
     .filter((i) => i.vote != null && i.status === "Visto")
     .sort((a, b) => (b.vote ?? 0) - (a.vote ?? 0))[0];
-  return best ? `Voglio un film simile a "${best.title}"` : null;
+  return best ? t("Critic.voglio_un_film_simile", { v0: best.title }) : null;
 }
 
 export function Critic() {
@@ -70,7 +70,7 @@ export function Critic() {
     } catch (e) {
       if (e instanceof MissingApiKeyError) setMissingKey(true);
       else if (e instanceof ClaudeApiError) setErr(e.message);
-      else setErr("Connessione non riuscita. Riprova.");
+      else setErr(t("Critic.connessione_non_riuscita_riprova"));
     }
     setBusy(false);
   }
@@ -80,7 +80,7 @@ export function Critic() {
       <div>
         <h1 className="t-display text-text">{t("page.critic")}</h1>
         <p className="mt-1 text-sm text-text-muted">
-          Conosce i tuoi {done.length} titoli visti e i voti che hai dato — usa la tua chiave API Anthropic personale.
+          {t("Critic.conosce_i_tuoi")} {done.length} {t("Critic.titoli_visti_e_i")}
         </p>
       </div>
 
@@ -102,15 +102,15 @@ export function Critic() {
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && ask()}
-          placeholder="Chiedi qualsiasi cosa…"
-          aria-label="Chiedi al critico"
+          placeholder={t("Critic.chiedi_qualsiasi_cosa")}
+          aria-label={t("Critic.chiedi_al_critico")}
           className="field flex-1"
         />
         <button
           type="button"
           onClick={() => ask()}
           disabled={busy || !question.trim()}
-          aria-label="Chiedi"
+          aria-label={t("Critic.chiedi")}
           className="btn btn-primary min-w-12 px-3.5"
         >
           {busy ? "…" : <ArrowRightIcon />}
@@ -121,28 +121,28 @@ export function Critic() {
           non una rotella. */}
       {busy && (
         <div className="rounded-lg bg-surface p-5 shadow-[var(--shadow-sm)]" role="status">
-          <span className="sr-only">Sto pensando…</span>
+          <span className="sr-only">{t("Critic.sto_pensando")}</span>
           <div aria-hidden="true" className="flex flex-col gap-2.5">
             <div className="skeleton h-4 w-11/12 rounded-xs" />
             <div className="skeleton h-4 w-full rounded-xs" />
             <div className="skeleton h-4 w-4/5 rounded-xs" />
             <div className="skeleton h-4 w-2/3 rounded-xs" />
           </div>
-          <p className="mt-4 text-xs text-text-faint" aria-hidden="true">Sto pensando…</p>
+          <p className="mt-4 text-xs text-text-faint" aria-hidden="true">{t("Critic.sto_pensando")}</p>
         </div>
       )}
 
       {missingKey && !busy && (
         <div className="flex flex-col items-center gap-4 rounded-lg bg-surface px-5 py-8 text-center shadow-[var(--shadow-sm)]">
           <p className="text-sm text-text-muted">
-            Per parlare con il critico serve una chiave API Anthropic personale, salvata solo su questo dispositivo.
+            {t("Critic.per_parlare_con_il")}
           </p>
           <button
             type="button"
             onClick={() => openSettingsSheet()}
             className="btn btn-secondary"
           >
-            Aggiungi la tua chiave nelle Impostazioni
+            {t("Critic.aggiungi_la_tua_chiave")}
           </button>
         </div>
       )}
@@ -155,7 +155,7 @@ export function Critic() {
             onClick={() => ask()}
             className="btn btn-secondary"
           >
-            Riprova
+            {t("Critic.riprova")}
           </button>
         </div>
       )}
@@ -167,9 +167,9 @@ export function Critic() {
       )}
 
       <section>
-        <h2 className="mb-3 text-sm font-medium text-text-muted">Su cosa si basa</h2>
+        <h2 className="mb-3 text-sm font-medium text-text-muted">{t("Critic.su_cosa_si_basa")}</h2>
         {done.length === 0 ? (
-          <p className="text-sm text-text-faint">Segna qualche titolo come "Visto" per consigli su misura.</p>
+          <p className="text-sm text-text-faint">{t("Critic.segna_qualche_titolo_come")}</p>
         ) : (
           // Testo, non pastiglie: le pastiglie qui sopra si toccano, questi
           // titoli no. La stessa forma prometteva un'azione che non c'era.
@@ -190,7 +190,7 @@ export function Critic() {
 
       <button type="button" onClick={() => navigate("/libreria")} className="btn btn-plain btn-sm -ml-3 self-start text-text-muted">
         <BackIcon size={16} />
-        Torna alla libreria
+        {t("Critic.torna_alla_libreria")}
       </button>
     </div>
   );

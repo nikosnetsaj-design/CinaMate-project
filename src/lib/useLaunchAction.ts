@@ -5,6 +5,7 @@ import { useLibrary } from "../store/useLibrary";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useWatchProgress } from "../store/useWatchProgress";
 import { continueWatching, lastSeenDates } from "./continueWatching";
+import { t } from "./i18n";
 
 /**
  * Le scorciatoie dell'icona (manifest → `shortcuts`): una pressione lunga
@@ -28,7 +29,7 @@ export function useLaunchAction() {
       const { items, history } = useLibrary.getState();
       const entry = continueWatching(items, useWatchProgress.getState().progress, lastSeenDates(history))[0];
       if (entry) useSelectedItem.getState().open(entry.item);
-      else useLibrary.getState().pushToast("info", "Niente da riprendere: non c'è niente a metà.");
+      else useLibrary.getState().pushToast("info", t("useLaunchAction.niente_da_riprendere_non"));
     }
   }, [action, params, setParams]);
 }

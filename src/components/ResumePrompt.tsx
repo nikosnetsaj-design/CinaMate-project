@@ -7,6 +7,7 @@ import { useFocusTrap } from "../lib/useFocusTrap";
 import { PosterArt } from "./PosterArt";
 import { MinusIcon, PlusIcon } from "./icons";
 import type { Item } from "../types";
+import { t } from "../lib/i18n";
 
 // Ask only once enough time has passed to plausibly have watched something.
 const MIN_FRACTION = 0.6;
@@ -54,12 +55,12 @@ function Prompt({ item, minutes }: { item: Item; minutes: number }) {
           <PosterArt item={item} size="sm" showTitle={false} className="w-12 shrink-0" />
           <div className="min-w-0 flex-1">
             <h2 id={titleId} className="font-display text-base font-semibold text-text">
-              Stavi guardando {item.title}
+              {t("ResumePrompt.stavi_guardando")} {item.title}
             </h2>
             <p className="mt-0.5 text-xs text-text-faint">
               {isSeries
-                ? `Sono passate ${Math.round(minutes)} minuti. Quanti episodi hai visto?`
-                : `Sono passate ${Math.round(minutes)} minuti. L'hai finito?`}
+                ? t("ResumePrompt.sono_passate_minuti_quanti", { v0: Math.round(minutes) })
+                : t("ResumePrompt.sono_passate_minuti_l", { v0: Math.round(minutes) })}
             </p>
           </div>
         </div>
@@ -69,7 +70,7 @@ function Prompt({ item, minutes }: { item: Item; minutes: number }) {
             <button
               type="button"
               onClick={() => setCount((c) => Math.max(1, c - 1))}
-              aria-label="Un episodio in meno"
+              aria-label={t("ResumePrompt.un_episodio_in_meno")}
               className="icon-btn icon-btn-filled"
             >
               <MinusIcon size={18} />
@@ -80,7 +81,7 @@ function Prompt({ item, minutes }: { item: Item; minutes: number }) {
             <button
               type="button"
               onClick={() => setCount((c) => Math.min((item.episodes ?? c) - (item.seen || 0), c + 1))}
-              aria-label="Un episodio in più"
+              aria-label={t("ResumePrompt.un_episodio_in_piu")}
               className="icon-btn icon-btn-filled"
             >
               <PlusIcon size={18} />
@@ -94,14 +95,14 @@ function Prompt({ item, minutes }: { item: Item; minutes: number }) {
             onClick={clear}
             className="btn btn-secondary flex-1"
           >
-            Non ancora
+            {t("ResumePrompt.non_ancora")}
           </button>
           <button
             type="button"
             onClick={confirm}
             className="btn btn-primary flex-[2]"
           >
-            {isSeries ? `Segna ${count} episod${count === 1 ? "io" : "i"}` : "Sì, visto"}
+            {isSeries ? t(count === 1 ? "ResumePrompt.segna_episodio" : "ResumePrompt.segna_episodi", { v0: count }) : t("ResumePrompt.si_visto")}
           </button>
         </div>
       </m.div>

@@ -1,5 +1,6 @@
 import { RESOLVERS } from "./dnsGuide";
 import { withProtocol } from "./linkHost";
+import { t } from "./i18n";
 
 /**
  * Risolvere un nome via DNS-over-HTTPS, dal browser.
@@ -197,9 +198,9 @@ export async function resolveEverywhere(input: string, signal?: AbortSignal): Pr
 }
 
 export const DOH_LABEL: Record<DohVerdict, string> = {
-  risolto: "Il nome si risolve",
-  inesistente: "Il nome non esiste",
-  "senza-indirizzo": "Il nome esiste ma non ha indirizzo",
-  "errore-resolver": "Il resolver ha risposto con un errore",
-  irraggiungibile: "Non ho potuto chiedere",
+  risolto: t("doh.il_nome_si_risolve"),
+  inesistente: t("doh.il_nome_non_esiste"),
+  "senza-indirizzo": t("doh.il_nome_esiste_ma"),
+  "errore-resolver": t("doh.il_resolver_ha_risposto"),
+  irraggiungibile: t("doh.non_ho_potuto_chiedere"),
 };

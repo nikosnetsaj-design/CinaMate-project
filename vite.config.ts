@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { inlineMessages } from './scripts/vite-i18n.ts'
 
 /**
  * `main.tsx` importa l'app solo dopo aver caricato i dati da IndexedDB, quindi
@@ -58,5 +59,5 @@ const base = process.env.GITHUB_PAGES === 'true' ? (repo ? `/${repo}/` : REPO_PA
 // https://vite.dev/config/
 export default defineConfig({
   base,
-  plugins: [react(), tailwindcss(), preloadApp()],
+  plugins: [inlineMessages(), react(), tailwindcss(), preloadApp()],
 })

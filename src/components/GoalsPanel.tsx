@@ -6,6 +6,7 @@ import { EmptyState } from "./EmptyState";
 import type { Item } from "../types";
 import { CloseIcon, PlusIcon } from "./icons";
 import { RowHeader } from "./RowHeader";
+import { t } from "../lib/i18n";
 
 function GoalCard({
   progress,
@@ -27,13 +28,13 @@ function GoalCard({
             {goal.genre && <span className="font-normal text-text-muted"> · {goal.genre}</span>}
           </p>
           <p className="mt-0.5 text-xs text-text-muted">
-            {windowLabel} · {daysLeft === 0 ? "ultimo giorno" : `${daysLeft} giorni rimasti`}
+            {windowLabel} · {daysLeft === 0 ? t("GoalsPanel.ultimo_giorno") : t("GoalsPanel.giorni_rimasti", { v0: daysLeft })}
           </p>
         </div>
         <button
           type="button"
           onClick={onRemove}
-          aria-label="Elimina obiettivo"
+          aria-label={t("GoalsPanel.elimina_obiettivo")}
           className="icon-btn icon-btn-sm -mr-1 -mt-1 shrink-0 text-text-faint"
         >
           <CloseIcon size={16} />
@@ -56,10 +57,10 @@ function GoalCard({
 
       <p className="mt-2 text-xs text-text-muted">
         {done
-          ? "Obiettivo raggiunto. Il resto è guadagnato."
+          ? t("GoalsPanel.obiettivo_raggiunto_il_resto")
           : projected !== null
-            ? `Di questo passo arrivi a ${projected}.`
-            : "Ancora presto per dire come andrà."}
+            ? t("GoalsPanel.di_questo_passo_arrivi", { v0: projected })
+            : t("GoalsPanel.ancora_presto_per_dire")}
       </p>
     </div>
   );
@@ -85,7 +86,7 @@ function NewGoalForm({ genres, onDone }: { genres: string[]; onDone: () => void 
     >
       <div className="grid grid-cols-2 gap-3">
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-text-muted">Cosa</span>
+          <span className="text-sm font-medium text-text-muted">{t("GoalsPanel.cosa")}</span>
           <select value={metric} onChange={(e) => setMetric(e.target.value as GoalMetric)} className={selectCls}>
             {GOAL_METRICS.map((m) => (
               <option key={m.value} value={m.value}>
@@ -95,7 +96,7 @@ function NewGoalForm({ genres, onDone }: { genres: string[]; onDone: () => void 
           </select>
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-text-muted">Ogni</span>
+          <span className="text-sm font-medium text-text-muted">{t("GoalsPanel.ogni")}</span>
           <select value={period} onChange={(e) => setPeriod(e.target.value as GoalPeriod)} className={selectCls}>
             {GOAL_PERIODS.map((p) => (
               <option key={p.value} value={p.value}>
@@ -105,19 +106,19 @@ function NewGoalForm({ genres, onDone }: { genres: string[]; onDone: () => void 
           </select>
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-text-muted">Quanti</span>
+          <span className="text-sm font-medium text-text-muted">{t("GoalsPanel.quanti")}</span>
           <input
             type="number"
             min={1}
             value={target}
             onChange={(e) => setTarget(Number(e.target.value))}
-            className={`${selectCls} tabular`}
+            className={t("GoalsPanel.tabular", { v0: selectCls })}
           />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-text-muted">Solo genere</span>
+          <span className="text-sm font-medium text-text-muted">{t("GoalsPanel.solo_genere")}</span>
           <select value={genre} onChange={(e) => setGenre(e.target.value)} className={selectCls}>
-            <option value="">Tutti</option>
+            <option value="">{t("GoalsPanel.tutti")}</option>
             {genres.map((g) => (
               <option key={g} value={g}>
                 {g}
@@ -133,13 +134,13 @@ function NewGoalForm({ genres, onDone }: { genres: string[]; onDone: () => void 
           onClick={onDone}
           className="btn btn-secondary flex-1"
         >
-          Annulla
+          {t("GoalsPanel.annulla")}
         </button>
         <button
           type="submit"
           className="btn btn-primary flex-1"
         >
-          Crea obiettivo
+          {t("GoalsPanel.crea_obiettivo")}
         </button>
       </div>
     </form>
@@ -170,8 +171,8 @@ export function GoalsPanel({ items }: { items: Item[] }) {
       {/* I traguardi li decide l'app; questi li scegli tu. Il titolo lo dice
           senza bisogno del paragrafo che lo spiegava. */}
       <RowHeader
-        title="Obiettivi"
-        note="Si misurano sul diario: contano cosa guardi nel periodo, non cosa c’è sullo scaffale."
+        title={t("GoalsPanel.obiettivi")}
+        note={t("GoalsPanel.si_misurano_sul_diario")}
       />
 
       {progresses.map((progress) => (
@@ -180,15 +181,15 @@ export function GoalsPanel({ items }: { items: Item[] }) {
 
       {goals.length === 0 && !adding && (
         <EmptyState
-          title="Nessun obiettivo"
-          description="Due film a settimana, cinquanta titoli all’anno, dieci horror a ottobre: quello che vuoi tu."
+          title={t("GoalsPanel.nessun_obiettivo")}
+          description={t("GoalsPanel.due_film_a_settimana")}
           action={
             <button
               type="button"
               onClick={() => setAdding(true)}
               className="btn btn-primary"
             >
-              Crea il primo obiettivo
+              {t("GoalsPanel.crea_il_primo_obiettivo")}
             </button>
           }
         />
@@ -204,7 +205,7 @@ export function GoalsPanel({ items }: { items: Item[] }) {
             className="btn btn-secondary self-start"
           >
             <PlusIcon size={16} />
-            Aggiungi obiettivo
+            {t("GoalsPanel.aggiungi_obiettivo")}
           </button>
         )
       )}

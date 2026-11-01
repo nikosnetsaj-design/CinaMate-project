@@ -3,6 +3,7 @@ import { useFocusTrap } from "../lib/useFocusTrap";
 import { backdropUrl, posterUrl, youtubeThumb, type TmdbVideo } from "../lib/tmdb";
 import { CloseIcon, ExternalIcon, PlayIcon } from "./icons";
 import { TrailerPlayer } from "./TrailerPlayer";
+import { t } from "../lib/i18n";
 
 /**
  * Il materiale del titolo: video, locandine, sfondi.
@@ -45,13 +46,13 @@ function ImageLightbox({ url, label, title, onClose }: { url: string; label: str
   const trapRef = useFocusTrap(onClose);
   const content = { url, label };
   return (
-    <div ref={trapRef} className="fixed inset-0 z-80 flex items-center justify-center bg-black/92 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={`${label} di ${title}`}>
-      <button type="button" aria-label="Chiudi" tabIndex={-1} className="absolute inset-0 cursor-default" onClick={onClose} />
+    <div ref={trapRef} className="fixed inset-0 z-80 flex items-center justify-center bg-black/92 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={t("MediaGallery.di", { v0: label, v1: title })}>
+      <button type="button" aria-label={t("MediaGallery.chiudi")} tabIndex={-1} className="absolute inset-0 cursor-default" onClick={onClose} />
 
       <button
         type="button"
         onClick={onClose}
-        aria-label="Chiudi"
+        aria-label={t("MediaGallery.chiudi")}
         className="icon-btn icon-btn-media absolute right-4 top-4 z-10"
       >
         <CloseIcon size={18} />
@@ -60,7 +61,7 @@ function ImageLightbox({ url, label, title, onClose }: { url: string; label: str
       <div className="relative z-10 flex max-h-full flex-col items-center gap-2.5">
         <img
           src={content.url}
-          alt={`${content.label} di ${title}`}
+          alt={t("MediaGallery.di", { v0: content.label, v1: title })}
           className="max-h-[80vh] w-auto max-w-full rounded-md object-contain shadow-[var(--shadow-lg)]"
         />
         <a
@@ -69,7 +70,7 @@ function ImageLightbox({ url, label, title, onClose }: { url: string; label: str
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 text-xs text-white/60 underline-offset-2 hover:underline"
         >
-          Apri l'immagine intera
+          {t("MediaGallery.apri_l_immagine_intera")}
           <ExternalIcon size={12} />
         </a>
       </div>
@@ -92,7 +93,7 @@ export function MediaGallery({
     [
       { id: "video", label: "Video", count: videos.length },
       { id: "poster", label: "Poster", count: posters.length },
-      { id: "sfondi", label: "Sfondi", count: backdrops.length },
+      { id: "sfondi", label: t("MediaGallery.sfondi"), count: backdrops.length },
     ] satisfies { id: Tab; label: string; count: number }[]
   ).filter((t) => t.count > 0);
 
@@ -106,9 +107,9 @@ export function MediaGallery({
 
   return (
     <section className="mt-5">
-      <h2 className="font-display text-lg font-semibold text-text">Media</h2>
+      <h2 className="font-display text-lg font-semibold text-text">{t("MediaGallery.media")}</h2>
 
-      <div className="mt-2.5 flex gap-1.5" role="tablist" aria-label="Materiale del titolo">
+      <div className="mt-2.5 flex gap-1.5" role="tablist" aria-label={t("MediaGallery.materiale_del_titolo")}>
         {tabs.map((t) => {
           const on = t.id === active;
           return (
@@ -139,7 +140,7 @@ export function MediaGallery({
                 key={v.key}
                 type="button"
                 onClick={() => setOpen({ kind: "video", key: v.key, name: v.name })}
-                aria-label={`Guarda ${v.name}`}
+                aria-label={t("MediaGallery.guarda", { v0: v.name })}
                 className="w-52 shrink-0 text-left sm:w-60"
               >
                 <span className="relative block aspect-video overflow-hidden rounded-sm bg-surface-2">
@@ -153,7 +154,7 @@ export function MediaGallery({
                 <span className="mt-1.5 block line-clamp-2 text-xs font-medium leading-snug text-text">{v.name}</span>
                 <span className="mt-0.5 block text-xs text-text-faint">
                   {v.kind}
-                  {v.language === "it" && " · in italiano"}
+                  {v.language === "it" && t("MediaGallery.in_italiano")}
                 </span>
               </button>
             ))}
@@ -166,8 +167,8 @@ export function MediaGallery({
               <button
                 key={path}
                 type="button"
-                onClick={() => setOpen({ kind: "image", url: posterUrl(path, "w780") ?? "", label: "Locandina" })}
-                aria-label={`Ingrandisci una locandina di ${title}`}
+                onClick={() => setOpen({ kind: "image", url: posterUrl(path, "w780") ?? "", label: t("MediaGallery.locandina") })}
+                aria-label={t("MediaGallery.ingrandisci_una_locandina_di", { v0: title })}
                 className="w-24 shrink-0 overflow-hidden rounded-sm bg-surface-2 sm:w-28"
               >
                 <img
@@ -188,8 +189,8 @@ export function MediaGallery({
               <button
                 key={path}
                 type="button"
-                onClick={() => setOpen({ kind: "image", url: backdropUrl(path, "w1280") ?? "", label: "Sfondo" })}
-                aria-label={`Ingrandisci uno sfondo di ${title}`}
+                onClick={() => setOpen({ kind: "image", url: backdropUrl(path, "w1280") ?? "", label: t("MediaGallery.sfondo") })}
+                aria-label={t("MediaGallery.ingrandisci_uno_sfondo_di", { v0: title })}
                 className="w-52 shrink-0 overflow-hidden rounded-sm bg-surface-2 sm:w-64"
               >
                 <img

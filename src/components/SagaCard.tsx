@@ -4,6 +4,7 @@ import { useLibrary } from "../store/useLibrary";
 import { useSelectedSaga } from "../store/useSelectedSaga";
 import type { SagaKey } from "../store/useSagas";
 import { PosterArt } from "./PosterArt";
+import { t } from "../lib/i18n";
 
 export function SagaCard({
   sagaKey,
@@ -28,7 +29,7 @@ export function SagaCard({
     <button
       type="button"
       onClick={() => open(sagaKey)}
-      aria-label={`Apri ${name}, ${progress.watched} di ${progress.total} capitoli visti`}
+      aria-label={t("SagaCard.apri_di_capitoli_visti", { v0: name, v1: progress.watched, v2: progress.total })}
       className="list-row gap-4"
     >
       <PosterArt
@@ -40,7 +41,7 @@ export function SagaCard({
       <div className="min-w-0 flex-1">
         <p className="truncate text-base font-medium text-text">{name}</p>
         <p className="mt-0.5 truncate text-sm text-text-muted">
-          {subtitle ?? `${progress.owned} in libreria su ${progress.total} capitoli`}
+          {subtitle ?? t("SagaCard.in_libreria_su_capitoli", { v0: progress.owned, v1: progress.total })}
         </p>
         <div className="mt-2 flex items-center gap-2">
           <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-surface-hover">

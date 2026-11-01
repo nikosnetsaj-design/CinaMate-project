@@ -1,5 +1,6 @@
 import type { YearInReview } from "./stats";
 import { posterUrl } from "./tmdb";
+import { t } from "./i18n";
 
 /**
  * L'anno in rassegna come immagine da condividere: 9:16 per le storie, 1:1
@@ -137,7 +138,7 @@ export function drawYearCard(canvas: HTMLCanvasElement, format: CardFormat, data
   ctx.fillStyle = theme.text;
   const story = format === "story";
   ctx.font = `500 ${story ? 112 : 92}px ${theme.display}`;
-  ctx.fillText(`Il mio ${review.year}`, pad, pad + (story ? 150 : 128));
+  ctx.fillText(t("yearCard.il_mio", { v0: review.year }), pad, pad + (story ? 150 : 128));
 
   // La cifra grande.
   const bigY = story ? 560 : 490;
@@ -146,14 +147,14 @@ export function drawYearCard(canvas: HTMLCanvasElement, format: CardFormat, data
   ctx.fillText(String(review.watchedCount), pad - 8, bigY);
   ctx.fillStyle = theme.text;
   ctx.font = `500 44px ${theme.sans}`;
-  ctx.fillText(review.watchedCount === 1 ? "titolo completato" : "titoli completati", pad, bigY + 70);
+  ctx.fillText(review.watchedCount === 1 ? t("yearCard.titolo_completato") : t("yearCard.titoli_completati"), pad, bigY + 70);
 
   // Le altre cifre, in colonna o in riga.
   const facts: [string, string][] = [
-    [`${review.hours}`, review.hours === 1 ? "ora" : "ore"],
-    [`${review.episodes}`, review.episodes === 1 ? "episodio" : "episodi"],
+    [`${review.hours}`, review.hours === 1 ? t("yearCard.ora") : t("yearCard.ore")],
+    [`${review.episodes}`, review.episodes === 1 ? t("yearCard.episodio") : t("yearCard.episodi")],
   ];
-  if (review.busiestMonth) facts.push([review.busiestMonth, "il mese più pieno"]);
+  if (review.busiestMonth) facts.push([review.busiestMonth, t("yearCard.il_mese_piu_pieno")]);
   const factY = bigY + (story ? 200 : 170);
   const colW = (w - pad * 2) / facts.length;
   facts.forEach(([value, label], i) => {
@@ -170,7 +171,7 @@ export function drawYearCard(canvas: HTMLCanvasElement, format: CardFormat, data
     ctx.fillStyle = theme.muted;
     ctx.font = `500 34px ${theme.sans}`;
     const gy = factY + (story ? 150 : 118);
-    ctx.fillText("Il genere dell'anno", pad, gy);
+    ctx.fillText(t("yearCard.il_genere_dell_anno"), pad, gy);
     ctx.fillStyle = theme.text;
     ctx.font = `500 ${story ? 64 : 52}px ${theme.display}`;
     ctx.fillText(fit(ctx, review.topGenre, w - pad * 2), pad, gy + (story ? 76 : 62));
@@ -185,7 +186,7 @@ export function drawYearCard(canvas: HTMLCanvasElement, format: CardFormat, data
     const py = h - pad - 140 - ph;
     ctx.fillStyle = theme.muted;
     ctx.font = `500 34px ${theme.sans}`;
-    ctx.fillText("I miei tre dell'anno", pad, py - 34);
+    ctx.fillText(t("yearCard.i_miei_tre_dell"), pad, py - 34);
     review.top.forEach((item, i) => {
       const x = pad + i * (pw + gap);
       poster(ctx, theme, data.posters[i] ?? null, item.title, x, py, pw, ph);
@@ -197,7 +198,7 @@ export function drawYearCard(canvas: HTMLCanvasElement, format: CardFormat, data
 
   ctx.fillStyle = theme.muted;
   ctx.font = `500 26px ${theme.sans}`;
-  ctx.fillText("Fatto con CineMate · i dati restano sul mio telefono", pad, h - pad + 20);
+  ctx.fillText(t("yearCard.fatto_con_cinemate_i"), pad, h - pad + 20);
 }
 
 export function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {

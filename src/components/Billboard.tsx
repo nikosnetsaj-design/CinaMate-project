@@ -12,6 +12,7 @@ import { paletteFor } from "../lib/palette";
 import { useTitleLogo } from "../lib/useTitleLogo";
 import { CheckIcon, InfoIcon, PlayIcon, PlusIcon } from "./icons";
 import type { Item } from "../types";
+import { t } from "../lib/i18n";
 
 /**
  * La vetrina: un titolo solo, grande, con la ragione per cui è lì e due modi
@@ -65,8 +66,8 @@ export function Billboard() {
 
   return (
     <section
-      aria-label="In vetrina"
-      aria-roledescription="carosello"
+      aria-label={t("Billboard.in_vetrina")}
+      aria-roledescription={t("Billboard.carosello")}
       className="relative overflow-hidden rounded-lg bg-black"
       onTouchStart={(e) => {
         touchX.current = e.touches[0]?.clientX ?? null;
@@ -138,7 +139,7 @@ export function Billboard() {
               className="btn flex-1 whitespace-nowrap bg-white px-3 text-sm text-black hover:bg-white/90 sm:text-base"
             >
               <PlayIcon size={17} />
-              Riproduci
+              {t("Billboard.riproduci")}
             </button>
 
             {/* Un titolo qui dentro è già in libreria: "La mia lista" può
@@ -152,26 +153,26 @@ export function Billboard() {
                 className="btn flex-1 whitespace-nowrap bg-white/20 px-3 text-sm text-white backdrop-blur-md hover:bg-white/30 sm:text-base"
               >
                 <CheckIcon size={17} />
-                Nella tua lista
+                {t("Billboard.nella_tua_lista")}
               </button>
             ) : (
               <button
                 type="button"
                 onClick={() => {
                   setStatus(item.id, "Da vedere");
-                  pushToast("success", `«${item.title}» è nella tua lista`);
+                  pushToast("success", t("Billboard.e_nella_tua_lista", { v0: item.title }));
                 }}
                 className="btn flex-1 whitespace-nowrap bg-white/20 px-3 text-sm text-white backdrop-blur-md hover:bg-white/30 sm:text-base"
               >
                 <PlusIcon size={17} />
-                La mia lista
+                {t("Billboard.la_mia_lista")}
               </button>
             )}
 
             <button
               type="button"
               onClick={() => openItem(item)}
-              aria-label={`Altre info su ${item.title}`}
+              aria-label={t("Billboard.altre_info_su", { v0: item.title })}
               className="icon-btn icon-btn-media"
             >
               <InfoIcon size={19} />
@@ -182,14 +183,14 @@ export function Billboard() {
             <div className="mt-2 flex items-center justify-center gap-3 sm:justify-start">
               {/* Il punto si vede da 8 px, si tocca da 24: il bersaglio è il
                   bottone, il punto è solo il suo disegno. */}
-              <div className="-mx-2 flex items-center" role="tablist" aria-label="Proposte in vetrina">
+              <div className="-mx-2 flex items-center" role="tablist" aria-label={t("Billboard.proposte_in_vetrina")}>
                 {featured.map((entry, i) => (
                   <button
                     key={entry.item.id}
                     type="button"
                     role="tab"
                     aria-selected={i === index}
-                    aria-label={`Vetrina ${i + 1} di ${featured.length}: ${entry.item.title}`}
+                    aria-label={t("Billboard.vetrina_di", { v0: i + 1, v1: featured.length, v2: entry.item.title })}
                     onClick={() => setIndex(i)}
                     className="flex h-6 min-w-6 items-center justify-center rounded-full px-1"
                   >
@@ -225,7 +226,7 @@ export function Billboard() {
                 onClick={() => setIndex((i) => (i + 1) % featured.length)}
                 className="chip h-8 bg-white/20 px-3 text-xs font-semibold text-white backdrop-blur-md hover:bg-white/30"
               >
-                Un'altra
+                {t("Billboard.un_altra")}
               </button>
             </div>
           )}

@@ -1,6 +1,7 @@
 import type { Item } from "../types";
 import { computeMinutes } from "./stats";
 import { buildPalate, names, palateKeys, palateReason, type Dimension } from "./palate";
+import { t } from "./i18n";
 
 /**
  * Every row on the Home page that is not a plain list obeys product rule 2:
@@ -54,11 +55,11 @@ export function rankShelf(items: Item[], candidates: Item[]): { item: Item; tota
 
     for (const name of item.cast) {
       const score = weights.actor.get(name) ?? 0;
-      if (score > 0) parts.push({ score: score * 1.2, reason: `Con ${name}, che guardi spesso` });
+      if (score > 0) parts.push({ score: score * 1.2, reason: t("recommend.con_che_guardi_spesso", { v0: name }) });
     }
 
     const studio = item.studio ? weights.studio.get(item.studio) ?? 0 : 0;
-    if (studio > 0) parts.push({ score: studio, reason: `Perché segui i film ${item.studio}` });
+    if (studio > 0) parts.push({ score: studio, reason: t("recommend.perche_segui_i_film", { v0: item.studio ?? "" }) });
 
     // A saga you have already started outranks everything: the answer to "what
     // next" is usually sitting inside one, and it needs no taste model at all.
@@ -66,7 +67,7 @@ export function rankShelf(items: Item[], candidates: Item[]): { item: Item; tota
       item.collectionId != null &&
       items.some((other) => other.collectionId === item.collectionId && other.status === "Visto");
     if (sagaStarted) {
-      parts.push({ score: 12, reason: `Il prossimo capitolo di ${item.collectionName ?? "una saga che hai iniziato"}` });
+      parts.push({ score: 12, reason: t("recommend.il_prossimo_capitolo_di", { v0: item.collectionName ?? t("recommend.una_saga_che_hai") }) });
     }
 
     const total = parts.reduce((sum, p) => sum + p.score, 0);
@@ -92,21 +93,21 @@ export function similarInLibrary(item: Item, items: Item[], limit = 6): Suggesti
       const parts: { score: number; reason: string }[] = [];
 
       if (item.collectionId != null && other.collectionId === item.collectionId) {
-        parts.push({ score: 10, reason: `Stessa saga: ${item.collectionName ?? "collezione"}` });
+        parts.push({ score: 10, reason: t("recommend.stessa_saga", { v0: item.collectionName ?? t("recommend.collezione") }) });
       }
 
       const sharedDirector = names(other.director).find((n) => directors.has(n));
-      if (sharedDirector) parts.push({ score: 6, reason: `Anche questo è di ${sharedDirector}` });
+      if (sharedDirector) parts.push({ score: 6, reason: t("recommend.anche_questo_e_di", { v0: sharedDirector }) });
 
       const sharedActor = other.cast.find((n) => cast.has(n));
-      if (sharedActor) parts.push({ score: 4, reason: `Anche con ${sharedActor}` });
+      if (sharedActor) parts.push({ score: 4, reason: t("recommend.anche_con", { v0: sharedActor }) });
 
       if (item.genre && other.genre === item.genre) {
-        parts.push({ score: 2, reason: `Stesso genere: ${item.genre.toLowerCase()}` });
+        parts.push({ score: 2, reason: t("recommend.stesso_genere", { v0: item.genre.toLowerCase() }) });
       }
 
       if (item.studio && other.studio === item.studio) {
-        parts.push({ score: 2, reason: `Stesso studio: ${item.studio}` });
+        parts.push({ score: 2, reason: t("recommend.stesso_studio", { v0: item.studio }) });
       }
 
       // Contemporaries only count once something else already connects them —

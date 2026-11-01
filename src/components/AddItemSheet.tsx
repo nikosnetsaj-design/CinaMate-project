@@ -16,6 +16,7 @@ import { matchQuality } from "../lib/search";
 import { PLATFORMS } from "../types";
 import type { Item } from "../types";
 import type { ItemDraft } from "../lib/draft";
+import { statusLabel, t } from "../lib/i18n";
 
 /** Long enough that a word isn't searched letter by letter, short enough to feel live. */
 const DEBOUNCE_MS = 350;
@@ -82,14 +83,14 @@ function AddItemForm() {
         if (controller.signal.aborted) return;
         setResults(found.results);
         setCorrected(found.corrected);
-        setErr(found.results.length === 0 ? "Nessun titolo trovato, nemmeno cercando qualcosa di simile." : "");
+        setErr(found.results.length === 0 ? t("AddItemSheet.nessun_titolo_trovato_nemmeno") : "");
         setMissingKey(false);
       } catch (e) {
         if (controller.signal.aborted || e instanceof TmdbAbortError) return;
         setResults([]);
         if (e instanceof MissingTmdbKeyError) setMissingKey(true);
         else if (e instanceof TmdbApiError) setErr(e.message);
-        else setErr("Ricerca non riuscita. Riprova o inserisci a mano.");
+        else setErr(t("AddItemSheet.ricerca_non_riuscita_riprova"));
       } finally {
         if (!controller.signal.aborted) setBusy(false);
       }
@@ -140,7 +141,7 @@ function AddItemForm() {
         {preview ? (
           <>
             <h2 id={titleId} className="sr-only">
-              Dettagli di {preview.title}
+              {t("AddItemSheet.dettagli_di")} {preview.title}
             </h2>
             <TitlePreview
               result={preview}
@@ -155,11 +156,10 @@ function AddItemForm() {
           <>
             <div>
               <h2 id={titleId} className="t-title text-text">
-                Aggiungi un titolo
+                {t("AddItemSheet.aggiungi_un_titolo")}
               </h2>
               <p className="mt-1 text-sm text-text-muted">
-                I risultati arrivano mentre scrivi, anche con una lettera sbagliata. Tocca un titolo per
-                vederne trama e cast prima di aggiungerlo.
+                {t("AddItemSheet.i_risultati_arrivano_mentre")}
               </p>
             </div>
 
@@ -167,8 +167,8 @@ function AddItemForm() {
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Es. Interstellar, The Bear, Naruto…"
-              aria-label="Cerca un titolo"
+              placeholder={t("AddItemSheet.es_interstellar_the_bear")}
+              aria-label={t("AddItemSheet.cerca_un_titolo")}
               aria-busy={busy}
               className="field w-full"
             />
@@ -177,7 +177,7 @@ function AddItemForm() {
                 "do I have this?", and it needs neither key nor network. */}
             {owned.length > 0 && (
               <section className="flex flex-col gap-2">
-                <h3 className="px-4 text-sm font-medium text-text-muted">Già nella tua libreria</h3>
+                <h3 className="px-4 text-sm font-medium text-text-muted">{t("AddItemSheet.gia_nella_tua_libreria")}</h3>
                 <ul className="list-group bg-surface-2 shadow-none" style={{ "--row-inset": "68px" } as React.CSSProperties}>
                 {owned.map((item) => (
                   <li key={item.id}>
@@ -198,7 +198,7 @@ function AddItemForm() {
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-medium text-text">{item.title}</div>
                       <div className="truncate text-xs text-text-muted">
-                        {item.year} · {item.status}
+                        {item.year} · {statusLabel(item.status)}
                       </div>
                     </div>
                     <span aria-hidden="true" className="shrink-0 text-text-faint"><ChevronRightIcon size={16} /></span>
@@ -215,7 +215,7 @@ function AddItemForm() {
                 from the one that was asked. */}
             {corrected && results.length > 0 && (
               <p className="text-xs text-text-muted">
-                Nessun risultato esatto per «{query.trim()}». Forse cercavi:
+                {t("AddItemSheet.nessun_risultato_esatto_per")}{query.trim()}{t("AddItemSheet.forse_cercavi")}
               </p>
             )}
 
@@ -254,7 +254,7 @@ function AddItemForm() {
                     <div className="truncate text-sm font-medium text-text">{r.title}</div>
                     <div className="mt-0.5 flex items-center gap-1.5 text-xs text-text-muted">
                       <span className="tabular">{r.year ?? "—"}</span>
-                      {ownedTmdbIds.has(r.tmdbId) && <span className="text-text">· già in libreria</span>}
+                      {ownedTmdbIds.has(r.tmdbId) && <span className="text-text">{t("AddItemSheet.gia_in_libreria")}</span>}
                     </div>
                     {r.overview && <div className="mt-1 line-clamp-2 text-xs text-text-muted">{r.overview}</div>}
                   </div>
@@ -274,7 +274,7 @@ function AddItemForm() {
               onClick={manual}
               className="btn btn-secondary mt-1"
             >
-              Inserisci a mano
+              {t("AddItemSheet.inserisci_a_mano")}
             </button>
           </>
         )}

@@ -17,11 +17,11 @@ import { CheckIcon } from "../components/icons";
 import { t } from "../lib/i18n";
 
 const FEEDS: { id: DiscoverFeed; title: string; why: string }[] = [
-  { id: "trending", title: "Di cosa si parla", why: "I film più visti questa settimana nel mondo" },
-  { id: "cinema", title: "Ora al cinema", why: "In sala in Italia in questo momento" },
-  { id: "trendingTv", title: "Serie del momento", why: "Le serie più seguite questa settimana" },
-  { id: "top", title: "I più amati di sempre", why: "Voto più alto su TMDB" },
-  { id: "upcoming", title: "In arrivo in sala", why: "Uscite italiane dei prossimi mesi" },
+  { id: "trending", title: t("Discover.di_cosa_si_parla"), why: t("Discover.i_film_piu_visti") },
+  { id: "cinema", title: t("Discover.ora_al_cinema"), why: t("Discover.in_sala_in_italia") },
+  { id: "trendingTv", title: t("Discover.serie_del_momento"), why: t("Discover.le_serie_piu_seguite") },
+  { id: "top", title: t("Discover.i_piu_amati_di"), why: t("Discover.voto_piu_alto_su") },
+  { id: "upcoming", title: t("Discover.in_arrivo_in_sala"), why: t("Discover.uscite_italiane_dei_prossimi") },
 ];
 
 function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: string }) {
@@ -63,7 +63,7 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
         }),
       );
     } catch {
-      useLibrary.getState().pushToast("error", `Non sono riuscito a leggere «${r.title}» dal catalogo. Riprova.`);
+      useLibrary.getState().pushToast("error", t("Discover.non_sono_riuscito_a", { v0: r.title }));
     }
     setPicking(null);
   }
@@ -73,7 +73,7 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
       {/* Every row says why it is here — a suggestion without a reason is an advert. */}
       <RowHeader title={title} note={why} />
       {failed ? (
-        <ErrorState compact title="Questa riga non è arrivata" description="TMDB non ha risposto." onRetry={() => setAttempt((n) => n + 1)} />
+        <ErrorState compact title={t("Discover.questa_riga_non_e")} description={t("Discover.tmdb_non_ha_risposto")} onRetry={() => setAttempt((n) => n + 1)} />
       ) : (
       <div className="shelf">
         {rows === null
@@ -88,7 +88,7 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
                   type="button"
                   onClick={() => choose(r)}
                   disabled={picking !== null}
-                  aria-label={owned ? `${r.title} — già in libreria, apri` : `Aggiungi ${r.title} alla libreria`}
+                  aria-label={owned ? t("Discover.gia_in_libreria_apri", { v0: r.title }) : t("Discover.aggiungi_alla_libreria", { v0: r.title })}
                   className="group w-32 shrink-0 text-left disabled:opacity-60 sm:w-36"
                 >
                   <div className="relative">
@@ -132,10 +132,10 @@ export function Discover() {
         <h1 className="t-display text-text">{t("page.discover")}</h1>
         <p className="mt-1 text-sm text-text-muted">
           {tab === "sfoglia"
-            ? "Tocca una copertina per aggiungerla alla tua libreria."
+            ? t("Discover.tocca_una_copertina_per")
             : tab === "chiedi"
-              ? "Scrivi cosa cerchi come lo diresti a voce. Claude traduce la frase in filtri, il catalogo TMDB risponde."
-              : "Le date che ti riguardano: nuovi episodi delle serie che segui e film che aspetti."}
+              ? t("Discover.scrivi_cosa_cerchi_come")
+              : t("Discover.le_date_che_ti")}
         </p>
       </div>
 
@@ -150,22 +150,22 @@ export function Discover() {
 
       {!tmdbApiKey ? (
         <EmptyState
-          title="Serve la tua chiave TMDB"
-          description="Scopri usa il catalogo di TMDB per mostrarti cosa sta uscendo e cosa guardano gli altri. La chiave è gratuita e resta su questo dispositivo."
+          title={t("Discover.serve_la_tua_chiave")}
+          description={t("Discover.scopri_usa_il_catalogo")}
           action={
             <button
               type="button"
               onClick={() => openSettings()}
               className="btn btn-primary"
             >
-              Aggiungi la chiave
+              {t("Discover.aggiungi_la_chiave")}
             </button>
           }
         />
       ) : (
         <>
           {/* Gli stessi segmenti di Cerca: un modo solo di dire «sei qui». */}
-          <div className="shelf gap-2" role="tablist" aria-label="Sezioni di Scopri">
+          <div className="shelf gap-2" role="tablist" aria-label={t("Discover.sezioni_di_scopri")}>
             {TABS.map((t) => (
               <button
                 key={t.id}

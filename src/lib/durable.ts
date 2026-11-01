@@ -1,3 +1,4 @@
+import { t as tr } from "./i18n";
 /**
  * Dove vivono i dati che crescono con l'uso: la libreria, il diario, i punti
  * di ripresa del lettore e i minuti guardati giorno per giorno.
@@ -126,10 +127,10 @@ function openDb(factory: IDBFactory): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
     };
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error("apertura di IndexedDB non riuscita"));
+    request.onerror = () => reject(request.error ?? new Error(tr("durable.apertura_di_indexeddb_non")));
     // Un'altra scheda con una versione vecchia aperta: meglio ripiegare che
     // restare appesi per sempre.
-    request.onblocked = () => reject(new Error("IndexedDB bloccato da un'altra scheda"));
+    request.onblocked = () => reject(new Error(tr("durable.indexeddb_bloccato_da_un")));
   });
 }
 
@@ -146,7 +147,7 @@ function tx<T>(db: IDBDatabase, mode: IDBTransactionMode, run: (store: IDBObject
     const req = run(t.objectStore(STORE));
     if (req) req.onsuccess = () => (result = req.result);
     t.oncomplete = () => resolve(result);
-    t.onerror = () => reject(t.error ?? new Error("transazione non riuscita"));
+    t.onerror = () => reject(t.error ?? new Error(tr("durable.transazione_non_riuscita")));
     t.onabort = () => reject(t.error ?? new Error("transazione interrotta"));
   });
 }
@@ -318,7 +319,7 @@ export function createDurable(env: DurableEnv = {}) {
     const back = await readAllFromDb(database);
     for (const key of keys) {
       if (!sameJson(back.values[key], legacy[key]!.value)) {
-        throw new Error(`la copia di «${key}» su IndexedDB non coincide con l'originale`);
+        throw new Error(tr("durable.la_copia_di_su", { v0: key }));
       }
     }
 
@@ -358,9 +359,9 @@ export function createDurable(env: DurableEnv = {}) {
 
     if (!factory) {
       if (marker === "idb") {
-        fallBackToLocal("Questo browser non apre più il database in cui stanno i tuoi dati.", "unavailable");
+        fallBackToLocal(tr("durable.questo_browser_non_apre"), "unavailable");
       } else {
-        fallBackToLocal("IndexedDB non c'è in questo browser: i dati restano in localStorage.");
+        fallBackToLocal(tr("durable.indexeddb_non_c_e"));
         for (const key of DURABLE_KEYS) {
           const r = readLegacy(key);
           if (r && !r.corrupt) memory.set(key, r.value);
@@ -377,9 +378,9 @@ export function createDurable(env: DurableEnv = {}) {
       if (marker === "idb") {
         // I dati stanno lì dentro e oggi non si apre: meglio non mostrare
         // niente che mostrare una libreria vuota e poi scriverci sopra.
-        fallBackToLocal(`Il database dei tuoi dati non si apre (${why}).`, "unavailable");
+        fallBackToLocal(tr("durable.il_database_dei_tuoi", { v0: why }), "unavailable");
       } else {
-        fallBackToLocal(`IndexedDB non si apre (${why}): i dati restano in localStorage.`);
+        fallBackToLocal(tr("durable.indexeddb_non_si_apre", { v0: why }));
         for (const key of DURABLE_KEYS) {
           const r = readLegacy(key);
           if (r && !r.corrupt) memory.set(key, r.value);
@@ -395,7 +396,7 @@ export function createDurable(env: DurableEnv = {}) {
         const migrated = await migrate(database);
         if (!migrated) {
           database.close();
-          fallBackToLocal("Un dato salvato è illeggibile: la migrazione aspetta che venga sistemato.");
+          fallBackToLocal(tr("durable.un_dato_salvato_e"));
           for (const key of DURABLE_KEYS) {
             const r = readLegacy(key);
             if (r && !r.corrupt) memory.set(key, r.value);
@@ -442,9 +443,9 @@ export function createDurable(env: DurableEnv = {}) {
       database.close();
       const why = e instanceof Error ? e.message : String(e);
       if (marker === "idb") {
-        fallBackToLocal(`Il database dei tuoi dati non si legge (${why}).`, "unavailable");
+        fallBackToLocal(tr("durable.il_database_dei_tuoi_2", { v0: why }), "unavailable");
       } else {
-        fallBackToLocal(`Migrazione non riuscita (${why}): i dati restano in localStorage, intatti.`);
+        fallBackToLocal(tr("durable.migrazione_non_riuscita_i", { v0: why }));
         for (const key of DURABLE_KEYS) {
           const r = readLegacy(key);
           if (r && !r.corrupt) memory.set(key, r.value);

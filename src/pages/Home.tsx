@@ -79,14 +79,14 @@ export function Home() {
 
     statistiche: (
       <FigureBand
-        label="Le tue statistiche"
+        label={t("Home.le_tue_statistiche")}
         cols={2}
         smCols={4}
         figures={[
-          { value: stats.total, label: "in libreria" },
-          { value: stats.avgVote != null ? stats.avgVote.toFixed(1) : "—", label: "voto medio" },
-          { value: `${stats.hours} h`, label: `${stats.days} giorni` },
-          { value: stats.favs, label: "preferiti" },
+          { value: stats.total, label: t("Home.in_libreria") },
+          { value: stats.avgVote != null ? stats.avgVote.toFixed(1) : "—", label: t("Home.voto_medio") },
+          { value: `${stats.hours} h`, label: t("Home.giorni", { v0: stats.days }) },
+          { value: stats.favs, label: t("Home.preferiti") },
         ]}
       />
     ),
@@ -102,9 +102,9 @@ export function Home() {
 
     perTe: (
       <PosterRow
-        title="Per te"
+        title={t("Home.per_te")}
         entries={suggestions}
-        note="Dai voti che hai già dato: ogni titolo dice perché è qui."
+        note={t("Home.dai_voti_che_hai")}
         badges={badges}
       />
     ),
@@ -113,7 +113,7 @@ export function Home() {
     // ripetono la loro motivazione: sarebbe la stessa frase otto volte.
     perche: because ? (
       <PosterRow
-        title={`Perché hai guardato ${because.seed.title}`}
+        title={t("Home.perche_hai_guardato", { v0: because.seed.title })}
         entries={because.entries}
         badges={badges}
       />
@@ -121,19 +121,19 @@ export function Home() {
 
     preferiti:
       favs.length > 0 ? (
-        <PosterRow title="I tuoi preferiti" entries={favs.map((item) => ({ item }))} count={favs.length} badges={badges} />
+        <PosterRow title={t("Home.i_tuoi_preferiti")} entries={favs.map((item) => ({ item }))} count={favs.length} badges={badges} />
       ) : null,
 
-    piuVisti: <PosterRow title="Più visti" entries={watchedMost} badges={badges} />,
+    piuVisti: <PosterRow title={t("Home.piu_visti")} entries={watchedMost} badges={badges} />,
 
     ultimiAggiunti: (
-      <PosterRow title="Ultimi aggiunti" entries={latest.map((item) => ({ item }))} moreHref="/libreria" badges={badges} />
+      <PosterRow title={t("Home.ultimi_aggiunti")} entries={latest.map((item) => ({ item }))} moreHref="/libreria" badges={badges} />
     ),
 
     watchlist:
       planned.length > 0 ? (
         <section className="flex flex-col gap-4">
-          <RowHeader title="Da vedere" count={items.filter((i) => i.status === "Da vedere").length} to="/libreria" />
+          <RowHeader title={t("Home.da_vedere")} count={items.filter((i) => i.status === "Da vedere").length} to="/libreria" />
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {planned.map((item) => (
               <PosterCard key={item.id} item={item} onOpen={openItem} badge={badges[item.id]} />
@@ -177,15 +177,15 @@ export function Home() {
         /* Chi arriva qui ha attraversato o saltato il primo avvio: la scatola
            vuota non è più il primo schermo dell'app, è una scelta fatta. */
         <EmptyState
-          title="Lo scaffale è tuo da riempire."
-          description="Cerca un film o una serie che hai visto: copertina, trama, cast e durata arrivano da soli."
+          title={t("Home.lo_scaffale_e_tuo")}
+          description={t("Home.cerca_un_film_o")}
           action={
             <button
               type="button"
               onClick={() => openAddSheet()}
               className="btn btn-primary"
             >
-              Aggiungi il primo titolo
+              {t("Home.aggiungi_il_primo_titolo")}
             </button>
           }
         />

@@ -9,6 +9,7 @@ import { TASTE_PICKS, seedDraft, type SeedPick } from "../lib/seedShelf";
 import { searchTitles } from "../lib/tmdb";
 import { PosterArt } from "./PosterArt";
 import { CheckIcon, ExternalIcon, ReelMark } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * Il primo minuto.
@@ -103,17 +104,16 @@ function Welcome({ onNext, onSkip }: { onNext: () => void; onSkip: () => void })
         <div className="flex flex-col gap-2.5">
           <span className="flex items-center gap-2 text-text-muted">
             <ReelMark size={20} />
-            <span className="text-sm font-medium text-text-muted">CineMate</span>
+            <span className="text-sm font-medium text-text-muted">{t("Onboarding.cinemate")}</span>
           </span>
-          <h2 className="t-title text-text">Questa è CineMate con la libreria di qualcun altro.</h2>
+          <h2 className="t-title text-text">{t("Onboarding.questa_e_cinemate_con")}</h2>
           <p className="t-body text-text-muted">
-            Tiene il diario di cosa hai visto, decide cosa guardare stasera e sa in che ordine.
-            Resta su questo dispositivo. Rendila tua: un minuto.
+            {t("Onboarding.tiene_il_diario_di")}
           </p>
         </div>
         <div className="flex flex-col gap-1">
-          <Primary onClick={onNext}>Comincia</Primary>
-          <Quiet onClick={onSkip}>Guardo da solo</Quiet>
+          <Primary onClick={onNext}>{t("Onboarding.comincia")}</Primary>
+          <Quiet onClick={onSkip}>{t("Onboarding.guardo_da_solo")}</Quiet>
         </div>
       </div>
     </>
@@ -141,9 +141,9 @@ function Taste({ onNext, onSkip }: { onNext: (picked: SeedPick[]) => void; onSki
   return (
     <>
       <div className="flex flex-col gap-1.5 p-6 pb-4">
-        <h2 className="t-title text-text">Tocca quelli che hai già visto.</h2>
+        <h2 className="t-title text-text">{t("Onboarding.tocca_quelli_che_hai")}</h2>
         <p className="t-body text-text-muted">
-          Bastano tre. Da qui capisco cosa proporti — e il tuo scaffale comincia da questi.
+          {t("Onboarding.bastano_tre_da_qui")}
         </p>
       </div>
 
@@ -188,16 +188,16 @@ function Taste({ onNext, onSkip }: { onNext: (picked: SeedPick[]) => void; onSki
             sparisce quando non manca più niente. */}
         <p aria-live="polite" className="mb-2 text-center t-caption text-text-muted">
           {enough
-            ? `${chosen.size} scelt${chosen.size === 1 ? "o" : "i"} — vanno bene`
-            : `Ancora ${MIN_PICKS - chosen.size} per continuare`}
+            ? t(chosen.size === 1 ? "Onboarding.scelto_vanno_bene" : "Onboarding.scelti_vanno_bene", { v0: chosen.size })
+            : t("Onboarding.ancora_per_continuare", { v0: MIN_PICKS - chosen.size })}
         </p>
         <Primary
           disabled={!enough}
           onClick={() => onNext(TASTE_PICKS.filter((p) => chosen.has(p.title)))}
         >
-          Continua
+          {t("Onboarding.continua")}
         </Primary>
-        <Quiet onClick={onSkip}>Riempio da solo</Quiet>
+        <Quiet onClick={onSkip}>{t("Onboarding.riempio_da_solo")}</Quiet>
       </div>
     </>
   );
@@ -247,11 +247,9 @@ function Catalogue({ onDone, onSkip }: { onDone: () => void; onSkip: () => void 
   return (
     <div className="flex flex-col gap-5 p-6">
       <div className="flex flex-col gap-2.5">
-        <h2 className="t-title text-text">Il catalogo.</h2>
+        <h2 className="t-title text-text">{t("Onboarding.il_catalogo")}</h2>
         <p className="t-body text-text-muted">
-          Copertine, trame, cast e date d'uscita arrivano da <strong className="text-text">TMDB</strong>,
-          un archivio aperto e gratuito. Serve una chiave tua: è gratis, ci vogliono due minuti,
-          e resta su questo dispositivo.
+          {t("Onboarding.copertine_trame_cast_e")} <strong className="text-text">{t("Onboarding.tmdb")}</strong>{t("Onboarding.un_archivio_aperto_e")}
         </p>
       </div>
 
@@ -261,13 +259,13 @@ function Catalogue({ onDone, onSkip }: { onDone: () => void; onSkip: () => void 
         rel="noreferrer"
         className="btn btn-secondary"
       >
-        Apri TMDB per prenderla
+        {t("Onboarding.apri_tmdb_per_prenderla")}
         <ExternalIcon />
       </a>
 
       <div className="flex flex-col gap-2">
         <label htmlFor="onb-key" className="text-sm font-medium text-text-muted">
-          Incolla qui la chiave
+          {t("Onboarding.incolla_qui_la_chiave")}
         </label>
         <input
           id="onb-key"
@@ -275,20 +273,20 @@ function Catalogue({ onDone, onSkip }: { onDone: () => void; onSkip: () => void 
           onChange={(e) => setKey(e.target.value)}
           spellCheck={false}
           autoComplete="off"
-          placeholder="es. 8f2c…"
+          placeholder={t("Onboarding.es_8f2c")}
           className="field w-full font-mono"
         />
         <p aria-live="polite" className="min-h-[1.25rem] t-caption">
-          {state === "checking" && <span className="text-text-muted">Controllo…</span>}
+          {state === "checking" && <span className="text-text-muted">{t("Onboarding.controllo")}</span>}
           {state === "good" && (
             <span className="inline-flex items-center gap-1.5" style={{ color: "var(--success)" }}>
               <CheckIcon size={16} />
-              Funziona. Il catalogo è acceso.
+              {t("Onboarding.funziona_il_catalogo_e")}
             </span>
           )}
           {state === "bad" && (
             <span style={{ color: "var(--danger)" }}>
-              TMDB non l'ha accettata. Controlla di aver copiato la chiave per intero.
+              {t("Onboarding.tmdb_non_l_ha")}
             </span>
           )}
         </p>
@@ -296,9 +294,9 @@ function Catalogue({ onDone, onSkip }: { onDone: () => void; onSkip: () => void 
 
       <div className="flex flex-col gap-1">
         <Primary disabled={state !== "good"} onClick={onDone}>
-          {state === "good" ? "Fatto" : "Continua"}
+          {state === "good" ? t("Onboarding.fatto") : t("Onboarding.continua")}
         </Primary>
-        <Quiet onClick={onSkip}>Lo faccio dopo</Quiet>
+        <Quiet onClick={onSkip}>{t("Onboarding.lo_faccio_dopo")}</Quiet>
       </div>
     </div>
   );
@@ -317,17 +315,17 @@ function Done({ added, onClose }: { added: number; onClose: () => void }) {
         <CheckIcon size={22} />
       </span>
       <div className="flex flex-col gap-2">
-        <h2 className="t-title text-text">Il tuo scaffale.</h2>
+        <h2 className="t-title text-text">{t("Onboarding.il_tuo_scaffale")}</h2>
         <p className="t-body text-text-muted">
           {added > 0
-            ? `${added} titol${added === 1 ? "o" : "i"} in libreria.`
-            : "La libreria è ancora vuota, e va bene così."}{" "}
+            ? t(added === 1 ? "Onboarding.titolo_in_libreria" : "Onboarding.titoli_in_libreria", { v0: added })
+            : t("Onboarding.la_libreria_e_ancora")}{" "}
           {tmdbApiKey
-            ? "Copertine e trame stanno arrivando da sole: da qui in poi basta cercare."
-            : "Senza la chiave del catalogo restano le copertine disegnate: puoi accenderlo quando vuoi dalle Impostazioni."}
+            ? t("Onboarding.copertine_e_trame_stanno")
+            : t("Onboarding.senza_la_chiave_del")}
         </p>
       </div>
-      <Primary onClick={onClose}>Entra</Primary>
+      <Primary onClick={onClose}>{t("Onboarding.entra")}</Primary>
     </div>
   );
 }
@@ -394,7 +392,7 @@ function OnboardingFlow() {
         ref={containerRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Primo avvio"
+        aria-label={t("Onboarding.primo_avvio")}
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}

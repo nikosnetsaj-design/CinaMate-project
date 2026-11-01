@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { t } from "../../lib/i18n";
 
 /** Minutes, or the marker for "stop when this episode ends". */
 export type SleepChoice = number | 'end-of-episode';
@@ -6,8 +7,8 @@ export type SleepChoice = number | 'end-of-episode';
 export const SLEEP_PRESETS: { value: SleepChoice; label: string }[] = [
   { value: 15, label: '15 min' },
   { value: 30, label: '30 min' },
-  { value: 60, label: '1 ora' },
-  { value: 'end-of-episode', label: 'Fine episodio' },
+  { value: 60, label: t("player_useSleepTimer.1_ora") },
+  { value: 'end-of-episode', label: t("player_useSleepTimer.fine_episodio") },
 ];
 
 /**

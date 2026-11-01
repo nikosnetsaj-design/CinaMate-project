@@ -5,7 +5,7 @@ import { useLibrary } from "../store/useLibrary";
 import { dayCounts, heatLevel, noteSuggestions, yearWeeks, type DiaryEntry, type YearAgo } from "../lib/diary";
 import { yearsWithActivity } from "../lib/stats";
 import type { Item } from "../types";
-import { intlLocale } from "../lib/i18n";
+import { intlLocale, t } from "../lib/i18n";
 
 const LEVEL_BG = [
   "var(--surface-2)",
@@ -24,7 +24,7 @@ function utc(date: string) {
 }
 
 function visits(n: number) {
-  return `${n} ${n === 1 ? "visione" : "visioni"}`;
+  return t(n === 1 ? "DiaryExtras.visione" : "DiaryExtras.visioni", { v0: n });
 }
 
 /**
@@ -54,8 +54,8 @@ export function DiaryHeatmap({ onPickDay }: { onPickDay: (date: string) => void 
   const peak = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
   const summary =
     active === 0
-      ? `Nessuna visione nel ${year}.`
-      : `Nel ${year}: ${visits(total)} in ${active} ${active === 1 ? "giorno" : "giorni"}; il più pieno ${shortDay.format(utc(peak[0]))}, con ${visits(peak[1])}.`;
+      ? t("DiaryExtras.nessuna_visione_nel", { v0: year })
+      : t("DiaryExtras.nel_in_il_piu", { v0: year, v1: visits(total), v2: active, v3: active === 1 ? t("DiaryExtras.giorno") : t("DiaryExtras.giorni"), v4: shortDay.format(utc(peak[0])), v5: visits(peak[1]) });
 
   const months = weeks.map((week, i) => {
     const first = week.find(Boolean);
@@ -67,9 +67,9 @@ export function DiaryHeatmap({ onPickDay }: { onPickDay: (date: string) => void 
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="t-title text-text">L'anno a quadretti</h2>
+        <h2 className="t-title text-text">{t("DiaryExtras.l_anno_a_quadretti")}</h2>
         {years.length > 1 && (
-          <select value={year} onChange={(e) => setYear(Number(e.target.value))} aria-label="Anno della mappa" className="field field-sm w-auto tabular">
+          <select value={year} onChange={(e) => setYear(Number(e.target.value))} aria-label={t("DiaryExtras.anno_della_mappa")} className="field field-sm w-auto tabular">
             {years.map((y) => (
               <option key={y} value={y}>
                 {y}
@@ -109,7 +109,7 @@ export function DiaryHeatmap({ onPickDay }: { onPickDay: (date: string) => void 
                   <span
                     key={date}
                     data-date={date}
-                    title={`${longDay.format(utc(date))}: ${n === 0 ? "niente" : visits(n)}`}
+                    title={`${longDay.format(utc(date))}: ${n === 0 ? t("DiaryExtras.niente") : visits(n)}`}
                     className={`rounded-[2px] ${n > 0 ? "cursor-pointer" : ""}`}
                     style={{ gridColumn: w + 2, gridRow: d + 2, background: LEVEL_BG[heatLevel(n)] }}
                   />
@@ -121,11 +121,11 @@ export function DiaryHeatmap({ onPickDay }: { onPickDay: (date: string) => void 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
           <p className="text-xs text-text-muted">{summary}</p>
           <span className="flex items-center gap-1 text-[10px] text-text-faint" aria-hidden="true">
-            meno
+            {t("DiaryExtras.meno")}
             {LEVEL_BG.map((bg, i) => (
               <span key={i} className="h-[11px] w-[11px] rounded-[2px]" style={{ background: bg }} />
             ))}
-            più
+            {t("DiaryExtras.piu")}
           </span>
         </div>
       </div>
@@ -137,21 +137,21 @@ export function DiaryHeatmap({ onPickDay }: { onPickDay: (date: string) => void 
 export function YearAgoCard({ memory, openItem }: { memory: YearAgo; openItem: (item: Item) => void }) {
   const what = memory.entries.slice(0, 3);
   return (
-    <section className="flex items-center gap-4 rounded-lg bg-surface p-4 shadow-[var(--shadow-sm)]" aria-label="Un anno fa">
+    <section className="flex items-center gap-4 rounded-lg bg-surface p-4 shadow-[var(--shadow-sm)]" aria-label={t("DiaryExtras.un_anno_fa")}>
       <div className="flex shrink-0 -space-x-4">
         {what.map((e) => (
-          <button key={e.item.id} type="button" onClick={() => openItem(e.item)} aria-label={`Apri dettagli di ${e.item.title}`}>
+          <button key={e.item.id} type="button" onClick={() => openItem(e.item)} aria-label={t("DiaryExtras.apri_dettagli_di", { v0: e.item.title })}>
             <PosterArt item={e.item} size="sm" showTitle={false} className="w-12 ring-2 ring-[var(--surface)]" />
           </button>
         ))}
       </div>
       <div className="min-w-0">
         <p className="text-xs text-text-muted">
-          {memory.exact ? "Un anno fa, oggi" : `Più o meno un anno fa, ${shortDay.format(utc(memory.date))}`}
+          {memory.exact ? t("DiaryExtras.un_anno_fa_oggi") : t("DiaryExtras.piu_o_meno_un", { v0: shortDay.format(utc(memory.date)) })}
         </p>
         <p className="text-sm text-text">
-          guardavi {what.map((e) => `«${e.item.title}»`).join(", ")}
-          {memory.entries.length > 3 ? ` e altri ${memory.entries.length - 3}` : ""}.
+          {t("DiaryExtras.guardavi")} {what.map((e) => `«${e.item.title}»`).join(", ")}
+          {memory.entries.length > 3 ? t("DiaryExtras.e_altri", { v0: memory.entries.length - 3 }) : ""}.
         </p>
       </div>
     </section>
@@ -202,21 +202,21 @@ export function DiaryNoteSheet({ entry, date, onClose }: { entry: DiaryEntry; da
           <p className="mt-1 text-sm text-text-muted first-letter:uppercase">{longDay.format(utc(date))}</p>
         </div>
         <label className="flex flex-col gap-2 text-sm text-text">
-          Con chi
-          <input value={who} onChange={(e) => setWho(e.target.value)} maxLength={80} placeholder="Da solo, con Marta, in famiglia…" className="field" />
+          {t("DiaryExtras.con_chi")}
+          <input value={who} onChange={(e) => setWho(e.target.value)} maxLength={80} placeholder={t("DiaryExtras.da_solo_con_marta")} className="field" />
         </label>
         <Suggestions values={withSuggestions} onPick={setWho} />
         <label className="flex flex-col gap-2 text-sm text-text">
-          Dove
-          <input value={where} onChange={(e) => setWhere(e.target.value)} maxLength={80} placeholder="A casa, al cinema, in treno…" className="field" />
+          {t("DiaryExtras.dove")}
+          <input value={where} onChange={(e) => setWhere(e.target.value)} maxLength={80} placeholder={t("DiaryExtras.a_casa_al_cinema")} className="field" />
         </label>
         <Suggestions values={whereSuggestions} onPick={setWhere} />
         <div className="flex justify-end gap-2">
           <button type="button" className="btn btn-plain" onClick={onClose}>
-            Annulla
+            {t("DiaryExtras.annulla")}
           </button>
           <button type="submit" className="btn btn-primary">
-            Salva
+            {t("DiaryExtras.salva")}
           </button>
         </div>
       </form>

@@ -1,4 +1,4 @@
-import { intlLocale } from "./i18n";
+import { intlLocale, t } from "./i18n";
 
 export function formatRuntime(minutes: number): string {
   const h = Math.floor(minutes / 60);
@@ -18,12 +18,12 @@ export function daysBetweenToday(dateStr: string): number {
 
 export function countdown(dateStr: string): string {
   const diff = daysBetweenToday(dateStr);
-  if (diff < 0) return "uscito";
-  if (diff === 0) return "oggi";
-  if (diff === 1) return "domani";
-  if (diff < 30) return `tra ${diff} giorni`;
+  if (diff < 0) return t("format.uscito");
+  if (diff === 0) return t("format.oggi");
+  if (diff === 1) return t("format.domani");
+  if (diff < 30) return t("format.tra_giorni", { v0: diff });
   const months = Math.round(diff / 30);
-  return months === 1 ? "tra un mese" : `tra ${months} mesi`;
+  return months === 1 ? t("format.tra_un_mese") : t("format.tra_mesi", { v0: months });
 }
 
 export function monthLabel(dateStr: string): string {
@@ -45,9 +45,9 @@ export function formatUsd(amount: number): string {
 export function formatUsdShort(amount: number): string {
   const abs = Math.abs(amount);
   const round = (n: number) => new Intl.NumberFormat(intlLocale(), { maximumFractionDigits: 1 }).format(n);
-  if (abs >= 1_000_000_000) return `$${round(amount / 1_000_000_000)} mld`;
-  if (abs >= 1_000_000) return `$${round(amount / 1_000_000)} mln`;
-  if (abs >= 1_000) return `$${round(amount / 1_000)} mila`;
+  if (abs >= 1_000_000_000) return t("format.mld", { v0: round(amount / 1_000_000_000) });
+  if (abs >= 1_000_000) return t("format.mln", { v0: round(amount / 1_000_000) });
+  if (abs >= 1_000) return t("format.mila", { v0: round(amount / 1_000) });
   return formatUsd(amount);
 }
 

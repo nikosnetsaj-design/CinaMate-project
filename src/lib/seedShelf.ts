@@ -1,6 +1,7 @@
 import type { ItemDraft } from "./draft";
 import { blankDraft } from "./draft";
 import type { Kind } from "../types";
+import { lang } from "./i18n";
 
 /**
  * I titoli impacchettati nell'app, per il primo minuto.
@@ -47,7 +48,7 @@ export interface SeedPick {
  * guarda solo serie, e quella persona è esattamente quella che stiamo
  * cercando di non perdere al primo schermo.
  */
-export const TASTE_PICKS: SeedPick[] = [
+const PICKS: SeedPick[] = [
   { title: "Il Padrino", kind: "film", year: 1972, genre: "Drammatico", runtime: 175, director: "Francis Ford Coppola" },
   { title: "Pulp Fiction", kind: "film", year: 1994, genre: "Crime", runtime: 154, director: "Quentin Tarantino" },
   { title: "Interstellar", kind: "film", year: 2014, genre: "Fantascienza", runtime: 169, director: "Christopher Nolan" },
@@ -76,6 +77,43 @@ export const TASTE_PICKS: SeedPick[] = [
 
   { title: "Planet Earth II", kind: "doc", year: 2016, genre: "Natura", runtime: 50, seasons: 1, episodes: 6 },
 ];
+
+/*
+ * In inglese gli stessi titoli con il nome con cui sono usciti in inglese, e i
+ * generi come li scrive TMDB in `en-US`: il collegamento automatico li trova
+ * lo stesso, e la libreria non mescola le due lingue.
+ */
+const EN_TITLE: Record<string, string> = {
+  "Il Padrino": "The Godfather",
+  "Il Signore degli Anelli: La Compagnia dell'Anello": "The Lord of the Rings: The Fellowship of the Ring",
+  "La vita è bella": "Life Is Beautiful",
+  Matrix: "The Matrix",
+  "Il buono, il brutto, il cattivo": "The Good, the Bad and the Ugly",
+  "Spider-Man: Un nuovo universo": "Spider-Man: Into the Spider-Verse",
+  "Il Trono di Spade": "Game of Thrones",
+  Gomorra: "Gomorrah",
+  "L'attacco dei giganti": "Attack on Titan",
+  "La città incantata": "Spirited Away",
+};
+const EN_GENRE: Record<string, string> = {
+  Drammatico: "Drama",
+  Fantascienza: "Science Fiction",
+  Animazione: "Animation",
+  Storico: "History",
+  Commedia: "Comedy",
+  Azione: "Action",
+  Natura: "Nature",
+};
+
+export const TASTE_PICKS: SeedPick[] =
+  lang === "en"
+    ? PICKS.map((p) => ({
+        ...p,
+        title: EN_TITLE[p.title] ?? p.title,
+        genre: EN_GENRE[p.genre] ?? p.genre,
+        director: p.director?.replace(" e ", " and "),
+      }))
+    : PICKS;
 
 /**
  * Da scelta a record di libreria.

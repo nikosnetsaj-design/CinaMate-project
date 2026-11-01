@@ -42,7 +42,7 @@ const STROKE = 2;
    triangolo di Play, e la barra di «prossimo episodio» è una linea, che senza
    tratto sparirebbe. */
 function Glyph({ icon: Icon, filled = false }: { icon: LucideIcon; filled?: boolean }) {
-  return <Icon size={18} strokeWidth={STROKE} fill={filled ? 'currentColor' : 'none'} aria-hidden="true" />;
+  return <Icon size={18} strokeWidth={STROKE} fill={filled ? 'currentColor' : "none"} aria-hidden="true" />;
 }
 
 export function PlayIcon() {

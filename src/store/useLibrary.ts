@@ -17,6 +17,7 @@ import {
   withoutEpisode,
   type EpisodeRef,
 } from "../lib/episodes";
+import { t } from "../lib/i18n";
 
 /*
  * La libreria e il diario stanno su IndexedDB (lib/durable), con una copia in
@@ -184,7 +185,7 @@ function persistOrToast(
   const ok = saveItems(next);
   set({ items: next, storageError: !ok });
   if (!ok) {
-    get().pushToast("error", "Impossibile salvare: memoria del browser piena o non disponibile.");
+    get().pushToast("error", t("useLibrary.impossibile_salvare_memoria_del"));
   } else if (successText) {
     get().pushToast("success", successText);
   }
@@ -263,7 +264,7 @@ export const useLibrary = create<LibraryState>((set, get) => ({
 
   addItem: (data) => {
     const item: Item = withInitialRegistry({ ...data, id: newId(), added: today() });
-    persistOrToast(get, set, [item, ...get().items], `"${item.title}" aggiunto alla libreria.`);
+    persistOrToast(get, set, [item, ...get().items], t("useLibrary.aggiunto_alla_libreria", { v0: item.title }));
     if (item.status === "Visto") logHistory(get, set, [makeHistoryEntry(item, item.added, "watched")]);
   },
 
@@ -284,8 +285,8 @@ export const useLibrary = create<LibraryState>((set, get) => ({
       set,
       [...items, ...get().items],
       list.length === 1
-        ? `"${items[0].title}" aggiunto alla libreria.`
-        : `${items.length} titoli aggiunti alla libreria.`,
+        ? t("useLibrary.aggiunto_alla_libreria", { v0: items[0].title })
+        : t("useLibrary.titoli_aggiunti_alla_libreria", { v0: items.length }),
     );
     logHistory(
       get,
@@ -332,7 +333,7 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   removeItem: (id) => {
     const item = get().items.find((i) => i.id === id);
     const next = get().items.filter((i) => i.id !== id);
-    persistOrToast(get, set, next, item ? `"${item.title}" rimosso dalla libreria.` : undefined);
+    persistOrToast(get, set, next, item ? t("useLibrary.rimosso_dalla_libreria", { v0: item.title }) : undefined);
     if (get().justCompleted?.itemId === id) set({ justCompleted: null });
     // Drop the item's history too, so deleted titles stop counting towards
     // achievements and the log doesn't grow with unreachable entries.
@@ -423,9 +424,9 @@ export const useLibrary = create<LibraryState>((set, get) => ({
     saveHistory(history);
     set({ items, history, storageError: !okItems });
     if (!okItems) {
-      get().pushToast("error", "Impossibile salvare: memoria del browser piena o non disponibile.");
+      get().pushToast("error", t("useLibrary.impossibile_salvare_memoria_del"));
     } else {
-      get().pushToast("success", `Libreria importata: ${items.length} titoli.`);
+      get().pushToast("success", t("useLibrary.libreria_importata_titoli", { v0: items.length }));
     }
   },
 
@@ -454,14 +455,14 @@ export const useLibrary = create<LibraryState>((set, get) => ({
     saveItems([]);
     saveHistory([]);
     set({ items: [], history: [], storageError: false, justCompleted: null });
-    get().pushToast("info", "Libreria svuotata.");
+    get().pushToast("info", t("useLibrary.libreria_svuotata"));
   },
 
   resetCorruptedData: () => {
     saveItems([]);
     saveHistory([]);
     set({ items: [], history: [], storageError: false, justCompleted: null });
-    get().pushToast("info", "Dati locali ripristinati.");
+    get().pushToast("info", t("useLibrary.dati_locali_ripristinati"));
   },
 }));
 
@@ -473,7 +474,7 @@ export const useLibrary = create<LibraryState>((set, get) => ({
  */
 durable.onError(() => {
   useLibrary.setState({ storageError: true });
-  useLibrary.getState().pushToast("error", "Impossibile salvare: memoria del browser piena o non disponibile.");
+  useLibrary.getState().pushToast("error", t("useLibrary.impossibile_salvare_memoria_del"));
 });
 durable.subscribe((key) => {
   if (key === "library") {

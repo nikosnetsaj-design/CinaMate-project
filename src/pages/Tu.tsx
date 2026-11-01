@@ -66,13 +66,13 @@ export function Tu() {
 
       {!ready ? null : items.length === 0 ? (
         <EmptyState
-          title="Il diario comincia col primo voto."
-          description="Aggiungi un titolo e segnalo come visto: ore, generi e traguardi si riempiono da soli."
+          title={t("Tu.il_diario_comincia_col")}
+          description={t("Tu.aggiungi_un_titolo_e")}
         />
       ) : (
         <>
           {/* Gli stessi segmenti di Cerca e Scopri. */}
-          <div className="shelf gap-2" role="tablist" aria-label="Sezioni del profilo">
+          <div className="shelf gap-2" role="tablist" aria-label={t("Tu.sezioni_del_profilo")}>
             {TABS.map((t) => (
               <button
                 key={t.id}

@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 const KEY = "cinemate:error-log:v1";
 const MAX_ENTRIES = 60;
 
@@ -95,13 +96,13 @@ export function clearErrorLog() {
  */
 export function installGlobalErrorCapture() {
   window.addEventListener("error", (event) => {
-    logError("app", event.message || "Errore sconosciuto", event.filename ? `${event.filename}:${event.lineno}` : undefined);
+    logError("app", event.message || t("errorLog.errore_sconosciuto"), event.filename ? `${event.filename}:${event.lineno}` : undefined);
   });
 
   window.addEventListener("unhandledrejection", (event) => {
     const reason = event.reason;
     const message =
-      reason instanceof Error ? `${reason.name}: ${reason.message}` : String(reason ?? "Promise rifiutata");
+      reason instanceof Error ? `${reason.name}: ${reason.message}` : String(reason ?? t("errorLog.promise_rifiutata"));
     logError("app", message);
   });
 }

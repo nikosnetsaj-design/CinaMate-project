@@ -1,4 +1,5 @@
 import type { HistoryEntry, Item, Kind, Status } from "../types";
+import { t } from "./i18n";
 
 export function computeMinutes(item: Item): number {
   if (!item.runtime) return 0;
@@ -183,8 +184,8 @@ export function yearsWithActivity(history: HistoryEntry[]): number[] {
 
 export function greeting(): string {
   const hour = new Date().getHours();
-  if (hour < 6) return "Ancora sveglio";
-  if (hour < 13) return "Buongiorno";
-  if (hour < 18) return "Buon pomeriggio";
-  return "Buonasera";
+  if (hour < 6) return t("stats.ancora_sveglio");
+  if (hour < 13) return t("stats.buongiorno");
+  if (hour < 18) return t("stats.buon_pomeriggio");
+  return t("stats.buonasera");
 }

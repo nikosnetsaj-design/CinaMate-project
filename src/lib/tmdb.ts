@@ -2,14 +2,14 @@ import type { Kind } from "../types";
 import { logError } from "./errorLog";
 import { TokenBucket } from "./rateLimit";
 import { TieredCache, TTL } from "./persistentCache";
-import { tmdbLanguage } from "./i18n";
+import { lang, tmdbLanguage, t } from "./i18n";
 
 const BASE = "https://api.themoviedb.org/3";
 const IMG_BASE = "https://image.tmdb.org/t/p";
 
 export class MissingTmdbKeyError extends Error {
   constructor() {
-    super("Nessuna chiave API TMDB configurata.");
+    super(t("tmdb.nessuna_chiave_api_tmdb"));
     this.name = "MissingTmdbKeyError";
   }
 }
@@ -88,7 +88,7 @@ export interface TmdbDetails {
 /** Thrown when a request was deliberately cancelled — never worth reporting. */
 export class TmdbAbortError extends Error {
   constructor() {
-    super("Richiesta annullata");
+    super(t("tmdb.richiesta_annullata"));
     this.name = "TmdbAbortError";
   }
 }
@@ -205,8 +205,8 @@ async function tmdbGet<T>(
       // Logged as well as thrown: much of this runs in the background linker,
       // where the throw is swallowed on purpose so one unmatchable title doesn't
       // stop the pass — and the failure would otherwise leave no trace anywhere.
-      logError("tmdb", "Connessione a TMDB non riuscita", path);
-      throw new TmdbApiError("Connessione a TMDB non riuscita. Controlla la rete e riprova.");
+      logError("tmdb", t("tmdb.connessione_a_tmdb_non"), path);
+      throw new TmdbApiError(t("tmdb.connessione_a_tmdb_non_2"));
     }
 
     if (response.ok) return (await response.json()) as T;
@@ -223,13 +223,13 @@ async function tmdbGet<T>(
     // than a fault, so it stays out of the log — filling the page with those
     // would bury the failures worth reading.
     if (response.status !== 404) logError("tmdb", `HTTP ${response.status}`, path);
-    if (response.status === 401) throw new TmdbApiError("Chiave API TMDB non valida.", 401);
-    if (response.status === 404) throw new TmdbApiError("Titolo non trovato su TMDB.", 404);
+    if (response.status === 401) throw new TmdbApiError(t("tmdb.chiave_api_tmdb_non"), 401);
+    if (response.status === 404) throw new TmdbApiError(t("tmdb.titolo_non_trovato_su"), 404);
     // Il 429 sopravvissuto ai tentativi merita di dirlo con parole sue: chi
     // legge deve capire che non c'è niente di rotto e che basta aspettare.
     if (response.status === 429)
-      throw new TmdbApiError("TMDB sta limitando le richieste. Riprova fra qualche istante.", 429);
-    throw new TmdbApiError(`Richiesta TMDB rifiutata (HTTP ${response.status}).`, response.status);
+      throw new TmdbApiError(t("tmdb.tmdb_sta_limitando_le"), 429);
+    throw new TmdbApiError(t("tmdb.richiesta_tmdb_rifiutata_http", { v0: response.status }), response.status);
   }
 }
 
@@ -738,7 +738,7 @@ export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiK
 // promise is answering a typed sentence quickly.
 // ---------------------------------------------------------------------------
 
-export const MOVIE_GENRES: Record<number, string> = {
+const MOVIE_GENRES_IT: Record<number, string> = {
   28: "Azione",
   12: "Avventura",
   16: "Animazione",
@@ -760,7 +760,7 @@ export const MOVIE_GENRES: Record<number, string> = {
   37: "Western",
 };
 
-export const TV_GENRES: Record<number, string> = {
+const TV_GENRES_IT: Record<number, string> = {
   10759: "Action & Adventure",
   16: "Animazione",
   35: "Commedia",
@@ -778,6 +778,43 @@ export const TV_GENRES: Record<number, string> = {
   10768: "War & Politics",
   37: "Western",
 };
+
+// Gli stessi elenchi come TMDB li scrive in inglese (`en-US`).
+const MOVIE_GENRES_EN: Record<number, string> = {
+  28: "Action",
+  12: "Adventure",
+  16: "Animation",
+  35: "Comedy",
+  80: "Crime",
+  99: "Documentary",
+  18: "Drama",
+  10751: "Family",
+  14: "Fantasy",
+  36: "History",
+  27: "Horror",
+  10402: "Music",
+  9648: "Mystery",
+  10749: "Romance",
+  878: "Science Fiction",
+  10770: "TV Movie",
+  53: "Thriller",
+  10752: "War",
+  37: "Western",
+};
+
+const TV_GENRES_EN: Record<number, string> = {
+  ...TV_GENRES_IT,
+  16: "Animation",
+  35: "Comedy",
+  99: "Documentary",
+  18: "Drama",
+  10751: "Family",
+  9648: "Mystery",
+};
+
+/** I generi nella lingua dell'app: sono quelli che l'utente legge e che finiscono nei filtri. */
+export const MOVIE_GENRES: Record<number, string> = lang === "en" ? MOVIE_GENRES_EN : MOVIE_GENRES_IT;
+export const TV_GENRES: Record<number, string> = lang === "en" ? TV_GENRES_EN : TV_GENRES_IT;
 
 export interface DiscoverQuery {
   mediaType: "movie" | "tv";
@@ -973,14 +1010,18 @@ interface RawPersonHit {
   known_for?: { title?: string; name?: string }[];
 }
 
-const DEPARTMENTS: Record<string, string> = {
-  Acting: "Recitazione",
-  Directing: "Regia",
-  Writing: "Sceneggiatura",
-  Production: "Produzione",
-  Sound: "Musica e suono",
-  Camera: "Fotografia",
-};
+// In inglese i nomi di TMDB vanno già bene: la tabella traduce solo verso l'italiano.
+const DEPARTMENTS: Record<string, string> =
+  lang === "en"
+    ? { Acting: "Acting", Directing: "Directing", Writing: "Writing", Production: "Production", Sound: "Sound", Camera: "Camera" }
+    : {
+        Acting: "Recitazione",
+        Directing: "Regia",
+        Writing: "Sceneggiatura",
+        Production: "Produzione",
+        Sound: "Musica e suono",
+        Camera: "Fotografia",
+      };
 
 /** Le persone che corrispondono a un nome, per la scheda Persone della ricerca. */
 export async function searchPeople(
@@ -1176,7 +1217,7 @@ export async function getSeason(
   const episodes = (data.episodes ?? []).map((e, i) => ({
     seasonNumber: e.season_number ?? seasonNumber,
     episodeNumber: e.episode_number ?? i + 1,
-    title: e.name?.trim() || `Episodio ${e.episode_number ?? i + 1}`,
+    title: e.name?.trim() || t("tmdb.episodio", { v0: e.episode_number ?? i + 1 }),
     overview: e.overview?.trim() ?? "",
     stillPath: e.still_path ?? null,
     runtime: e.runtime && e.runtime > 0 ? e.runtime : null,
@@ -1332,14 +1373,17 @@ interface RawPerson {
   combined_credits?: { cast?: RawPersonCredit[]; crew?: RawPersonCredit[] };
 }
 
-const DEPARTMENT_LABELS: Record<string, string> = {
-  Acting: "Interpretazione",
-  Directing: "Regia",
-  Writing: "Sceneggiatura",
-  Production: "Produzione",
-  Sound: "Musiche e suono",
-  Camera: "Fotografia",
-};
+const DEPARTMENT_LABELS: Record<string, string> =
+  lang === "en"
+    ? { Acting: "Acting", Directing: "Directing", Writing: "Writing", Production: "Production", Sound: "Music and sound", Camera: "Cinematography" }
+    : {
+        Acting: "Interpretazione",
+        Directing: "Regia",
+        Writing: "Sceneggiatura",
+        Production: "Produzione",
+        Sound: "Musiche e suono",
+        Camera: "Fotografia",
+      };
 
 function toPersonCredit(raw: RawPersonCredit, role: string): TmdbPersonCredit | null {
   const mediaType = raw.media_type === "tv" ? "tv" : raw.media_type === "movie" ? "movie" : null;
@@ -1401,7 +1445,7 @@ export async function getPerson(personId: number, apiKey: string): Promise<TmdbP
 
   const directing = (raw.combined_credits?.crew ?? [])
     .filter((c) => c.job === "Director")
-    .map((c) => toPersonCredit(c, "Regia"))
+    .map((c) => toPersonCredit(c, lang === "en" ? "Director" : "Regia"))
     .filter((c): c is TmdbPersonCredit => c !== null)
     .sort(byRecency);
 
@@ -1557,26 +1601,41 @@ interface RawExtras extends RawDetails {
  * al catering: mostrarle tutte non è generosità, è nascondere le quattro che
  * uno cerca davvero. Le altre restano su TMDB, che è il posto giusto per loro.
  */
-const KEY_JOBS: Record<string, string> = {
-  Director: "Regia",
-  Screenplay: "Sceneggiatura",
-  Writer: "Sceneggiatura",
-  Story: "Soggetto",
-  "Original Music Composer": "Musiche",
-  "Director of Photography": "Fotografia",
-  Producer: "Produzione",
-  "Executive Producer": "Produzione esecutiva",
-};
+const KEY_JOBS: Record<string, string> =
+  lang === "en"
+    ? {
+        Director: "Director",
+        Screenplay: "Screenplay",
+        Writer: "Writer",
+        Story: "Story",
+        "Original Music Composer": "Music",
+        "Director of Photography": "Cinematography",
+        Producer: "Producer",
+        "Executive Producer": "Executive producer",
+      }
+    : {
+        Director: "Regia",
+        Screenplay: "Sceneggiatura",
+        Writer: "Sceneggiatura",
+        Story: "Soggetto",
+        "Original Music Composer": "Musiche",
+        "Director of Photography": "Fotografia",
+        Producer: "Produzione",
+        "Executive Producer": "Produzione esecutiva",
+      };
 const JOB_ORDER = Object.keys(KEY_JOBS);
 
-const VIDEO_KINDS: Record<string, string> = {
-  Trailer: "Trailer",
-  Teaser: "Teaser",
-  Clip: "Scena",
-  Featurette: "Speciale",
-  "Behind the Scenes": "Dietro le quinte",
-  Bloopers: "Papere",
-};
+const VIDEO_KINDS: Record<string, string> =
+  lang === "en"
+    ? { Trailer: "Trailer", Teaser: "Teaser", Clip: "Clip", Featurette: "Featurette", "Behind the Scenes": "Behind the scenes", Bloopers: "Bloopers" }
+    : {
+        Trailer: "Trailer",
+        Teaser: "Teaser",
+        Clip: "Scena",
+        Featurette: "Speciale",
+        "Behind the Scenes": "Dietro le quinte",
+        Bloopers: "Papere",
+      };
 
 /** L'anteprima di un video YouTube, senza chiamare YouTube. */
 export function youtubeThumb(key: string): string {
@@ -1639,7 +1698,7 @@ export function getTitleExtras(tmdbId: number, mediaType: "movie" | "tv", apiKey
     const creators: TmdbCrewCredit[] = (raw.created_by ?? []).map((c, i) => ({
       id: c.id ?? -1 - i,
       name: c.name,
-      job: "Ideata da",
+      job: t("tmdb.ideata_da"),
       profilePath: c.profile_path ?? null,
     }));
 

@@ -4,6 +4,7 @@ import { useEditSheet } from "../store/useEditSheet";
 import { useLibrary } from "../store/useLibrary";
 import { draftFromTmdb } from "./addFromTmdb";
 import type { Kind } from "../types";
+import { t } from "./i18n";
 
 export interface CatalogTitle {
   tmdbId: number;
@@ -33,7 +34,7 @@ export function useAddFromCatalog(onOpened?: () => void) {
 
   async function add(title: CatalogTitle) {
     if (!tmdbApiKey) {
-      pushToast("error", "Serve la chiave TMDB nelle Impostazioni per aggiungere dal catalogo.");
+      pushToast("error", t("useAddFromCatalog.serve_la_chiave_tmdb"));
       return;
     }
     setAdding(title.tmdbId);
@@ -47,7 +48,7 @@ export function useAddFromCatalog(onOpened?: () => void) {
       );
       onOpened?.();
     } catch {
-      pushToast("error", "Non è stato possibile leggere questo titolo da TMDB.");
+      pushToast("error", t("useAddFromCatalog.non_e_stato_possibile"));
     }
     setAdding(null);
   }

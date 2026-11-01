@@ -103,9 +103,9 @@ export function Duo() {
   }
 
   async function send() {
-    const outcome = await shareOrCopy({ title: "Stasera in due", text: "La mia lista «Da vedere», per scegliere insieme.", url });
-    if (outcome === "copied") pushToast("success", "Link copiato negli appunti.");
-    if (outcome === "failed") pushToast("error", "Non è stato possibile condividere: copia il link a mano.");
+    const outcome = await shareOrCopy({ title: t("Duo.stasera_in_due"), text: t("Duo.la_mia_lista_da"), url });
+    if (outcome === "copied") pushToast("success", t("Duo.link_copiato_negli_appunti"));
+    if (outcome === "failed") pushToast("error", t("Duo.non_e_stato_possibile"));
   }
 
   return (
@@ -113,34 +113,32 @@ export function Duo() {
       <div>
         <h1 className="t-display text-text">{t("page.duo")}</h1>
         <p className="mt-1 max-w-prose text-sm text-text-muted">
-          Scambiatevi le liste «Da vedere» e guardate cosa avete in comune. Il codice porta solo gli identificativi del
-          catalogo, nell'ordine dei tuoi gusti: niente nomi, voti o diario.
+          {t("Duo.scambiatevi_le_liste_da")}
         </p>
       </div>
 
       <div className="grid gap-10 md:grid-cols-2 md:gap-6">
         {/* --- La tua lista ------------------------------------------- */}
         <section className="flex flex-col gap-4">
-          <RowHeader title="La tua lista" />
+          <RowHeader title={t("Duo.la_tua_lista")} />
           {mine.length === 0 ? (
             <p className="text-sm text-text-muted">
-              Nella tua lista «Da vedere» non ci sono titoli collegati al catalogo
-              {unlinked > 0 ? ` (${unlinked} senza collegamento: si collegano da soli con la chiave TMDB)` : ""}. Aggiungine
-              qualcuno e torna qui.
+              {t("Duo.nella_tua_lista_da")}
+              {unlinked > 0 ? t("Duo.senza_collegamento_si_collegano", { v0: unlinked }) : ""}{t("Duo.aggiungine_qualcuno_e_torna")}
             </p>
           ) : (
             <div className="flex flex-col items-center gap-4 rounded-lg bg-surface p-5 shadow-[var(--shadow-sm)]">
               <div className="rounded-md bg-white p-3">
                 <Suspense fallback={<div className="h-[200px] w-[200px]" />}>
-                  <QrCode value={url} size={200} label="Codice QR della tua lista Da vedere" />
+                  <QrCode value={url} size={200} label={t("Duo.codice_qr_della_tua")} />
                 </Suspense>
               </div>
               <p className="text-center text-sm text-text-muted">
-                {mine.length} {mine.length === 1 ? "titolo" : "titoli"}. Fai inquadrare il codice, o manda il link.
+                {mine.length} {mine.length === 1 ? t("Duo.titolo") : t("Duo.titoli")}{t("Duo.fai_inquadrare_il_codice")}
               </p>
               <button type="button" className="btn btn-secondary" onClick={() => void send()}>
                 <ShareIcon size={16} />
-                Manda il link
+                {t("Duo.manda_il_link")}
               </button>
             </div>
           )}
@@ -148,15 +146,15 @@ export function Duo() {
 
         {/* --- La sua lista ------------------------------------------ */}
         <section className="flex flex-col gap-4">
-          <RowHeader title="La sua lista" />
+          <RowHeader title={t("Duo.la_sua_lista")} />
           {theirs ? (
             <div className="flex items-center justify-between gap-3 rounded-lg bg-surface p-4 shadow-[var(--shadow-sm)]">
               <p className="text-sm text-text">
-                Ricevuta: {theirs.length} {theirs.length === 1 ? "titolo" : "titoli"}.
+                {t("Duo.ricevuta")} {theirs.length} {theirs.length === 1 ? t("Duo.titolo") : t("Duo.titoli")}.
               </p>
               <button type="button" className="btn btn-plain btn-sm" onClick={forget}>
                 <CloseIcon size={14} />
-                Dimentica
+                {t("Duo.dimentica")}
               </button>
             </div>
           ) : (
@@ -168,8 +166,7 @@ export function Duo() {
               }}
             >
               <p className="text-sm text-text-muted">
-                Inquadra il suo codice con la fotocamera: il link apre questa pagina. Oppure incolla qui il link che ti ha
-                mandato.
+                {t("Duo.inquadra_il_suo_codice")}
               </p>
               <div className="flex gap-2">
                 <input
@@ -179,18 +176,18 @@ export function Duo() {
                     setPasteError(false);
                   }}
                   placeholder="https://…/stasera-in-due#due=…"
-                  aria-label="Link o codice dell'altra lista"
+                  aria-label={t("Duo.link_o_codice_dell")}
                   aria-invalid={pasteError}
                   aria-describedby={pasteError ? "duo-paste-error" : undefined}
                   className="field min-w-0 flex-1"
                 />
                 <button type="submit" className="btn btn-primary shrink-0" disabled={!pasted.trim()}>
-                  Confronta
+                  {t("Duo.confronta")}
                 </button>
               </div>
               {pasteError && (
                 <p id="duo-paste-error" role="alert" className="text-xs" style={{ color: "var(--danger)" }}>
-                  Questo non è un link di «Stasera in due», o è arrivato tagliato.
+                  {t("Duo.questo_non_e_un")}
                 </p>
               )}
             </form>
@@ -203,18 +200,18 @@ export function Duo() {
         (matches.length === 0 ? (
           <EmptyState
             icon={<PeopleIcon size={22} />}
-            title="Nessun titolo in comune."
-            description="Le due liste non si toccano. Scegliete uno dei suoi da aggiungere alla tua, o fate il contrario."
+            title={t("Duo.nessun_titolo_in_comune")}
+            description={t("Duo.le_due_liste_non")}
           />
         ) : (
           <section className="flex flex-col gap-4">
             <RowHeader
-              title="In comune"
+              title={t("Duo.in_comune")}
               count={matches.length}
               trailing={
                 <button type="button" className="btn btn-primary btn-sm" onClick={roll}>
                   <DiceIcon size={14} />
-                  {pick ? "Un altro" : "Gira la ruota"}
+                  {pick ? t("Duo.un_altro") : t("Duo.gira_la_ruota")}
                 </button>
               }
             />
@@ -232,13 +229,13 @@ export function Duo() {
                 >
                   <PosterArt item={pick.item} size="md" showTitle={false} className="w-20 shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-text-muted">Stasera</p>
+                    <p className="text-xs text-text-muted">{t("Duo.stasera")}</p>
                     <p className="t-title truncate text-text">{pick.item.title}</p>
                     <p className="mt-0.5 text-sm text-text-muted">
-                      Compatibilità {pick.compat}% · {pick.reason}
+                      {t("Duo.compatibilita")} {pick.compat}% · {pick.reason}
                     </p>
                     <button type="button" className="btn btn-secondary btn-sm mt-2.5" onClick={() => openItem(pick.item)}>
-                      Apri la scheda
+                      {t("Duo.apri_la_scheda")}
                     </button>
                   </div>
                 </m.div>
@@ -248,7 +245,7 @@ export function Duo() {
             <ol className="list-group" style={{ "--row-inset": "72px" } as React.CSSProperties}>
               {matches.map((m) => (
                 <li key={m.item.id}>
-                  <button type="button" onClick={() => openItem(m.item)} className="list-row gap-3 py-2.5" aria-label={`Apri dettagli di ${m.item.title}, compatibilità ${m.compat}%`}>
+                  <button type="button" onClick={() => openItem(m.item)} className="list-row gap-3 py-2.5" aria-label={t("Duo.apri_dettagli_di_compatibilita", { v0: m.item.title, v1: m.compat })}>
                     <PosterArt item={m.item} size="sm" showTitle={false} className="w-10 shrink-0" />
                     <span className="min-w-0 flex-1 text-left">
                       <span className="block truncate text-sm font-medium text-text">{m.item.title}</span>
@@ -260,9 +257,9 @@ export function Duo() {
               ))}
             </ol>
             <p className="text-xs text-text-faint">
-              La compatibilità è quanto il titolo sta in alto in tutte e due le liste.
-              {theirs.length - matches.length === 1 && " Nella sua lista c'è un altro titolo che tu non hai."}
-              {theirs.length - matches.length > 1 && ` Nella sua lista ce ne sono altri ${theirs.length - matches.length} che tu non hai.`}
+              {t("Duo.la_compatibilita_e_quanto")}
+              {theirs.length - matches.length === 1 && t("Duo.nella_sua_lista_c")}
+              {theirs.length - matches.length > 1 && t("Duo.nella_sua_lista_ce", { v0: theirs.length - matches.length })}
             </p>
           </section>
         ))}

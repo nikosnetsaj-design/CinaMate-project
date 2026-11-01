@@ -25,6 +25,7 @@ import { useLaunchAction } from "./lib/useLaunchAction";
 import { useSpatialNav } from "./lib/useSpatialNav";
 import { Home } from "./pages/Home";
 import { useWatchProgressSync } from "./store/useWatchProgress";
+import { t } from "./lib/i18n";
 
 
 /**
@@ -92,7 +93,7 @@ function OfflineBanner() {
       {/* Erano 28 parole, e due delle tre cose che nominavano — «TMDB», «il
           critico» — non dicono niente a chi legge nel momento in cui legge.
           Quello che serve sapere è che la libreria non si è rotta. */}
-      Sei offline. La libreria funziona tutta; copertine e ricerca tornano con la rete.
+      {t("App.sei_offline_la_libreria")}
     </div>
   );
 }
@@ -123,11 +124,10 @@ function ErrorBanner() {
           <span className="mt-0.5 shrink-0" style={{ color: "var(--warning)" }}>
             <ErrorIcon />
           </span>
-          I tuoi dati sono al sicuro, ma questo avvio non riesce ad aprirli. Finché non si riaprono non salvo
-          niente. Ricarica la pagina; se succede ancora, chiudi le altre schede di CineMate.
+          {t("App.i_tuoi_dati_sono")}
         </span>
         <button type="button" onClick={() => location.reload()} className="btn btn-secondary btn-sm">
-          Ricarica
+          {t("App.ricarica")}
         </button>
       </div>
     );
@@ -144,21 +144,21 @@ function ErrorBanner() {
           <ErrorIcon />
         </span>
         {confirming
-          ? "Libreria e diario di questo dispositivo verranno svuotati. Non si torna indietro."
-          : "Non riesco a leggere i dati salvati su questo dispositivo."}
+          ? t("App.libreria_e_diario_di")
+          : t("App.non_riesco_a_leggere")}
       </span>
       {confirming ? (
         <span className="flex gap-2">
           <button type="button" onClick={() => setConfirming(false)} className="btn btn-secondary btn-sm">
-            Annulla
+            {t("App.annulla")}
           </button>
           <button type="button" onClick={resetCorruptedData} className="btn btn-danger-fill btn-sm">
-            Svuota e ricomincia
+            {t("App.svuota_e_ricomincia")}
           </button>
         </span>
       ) : (
         <button type="button" onClick={() => setConfirming(true)} className="btn btn-secondary btn-sm">
-          Ricomincia da capo
+          {t("App.ricomincia_da_capo")}
         </button>
       )}
     </div>
@@ -211,7 +211,7 @@ export default function App() {
         href="#main-content"
         className="skip-link rounded-sm bg-accent px-4 py-2 text-sm font-medium text-accent-contrast"
       >
-        Vai al contenuto
+        {t("App.vai_al_contenuto")}
       </a>
       <Nav />
       <div className="min-h-screen pb-[calc(var(--tabbar-h)+env(safe-area-inset-bottom))] pt-14 lg:pb-0 lg:pl-60 lg:pt-0">

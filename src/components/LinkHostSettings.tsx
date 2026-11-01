@@ -19,6 +19,7 @@ import {
 import { REDIRECT_HINT, REDIRECT_LABEL, findMirrors, probeRedirect } from "../lib/hostRedirect";
 import type { MirrorCandidate, RedirectStatus } from "../lib/hostRedirect";
 import { ChevronDownIcon, ChevronUpIcon, InfoIcon, WarningIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * Il pannello dei Link Host in Impostazioni.
@@ -46,18 +47,18 @@ export function LinkHostSettings() {
     if (!url.trim()) return;
     const created = add({ name, url });
     if (!created) {
-      pushToast("error", "Non ci stanno altri Link Host.");
+      pushToast("error", t("LinkHostSettings.non_ci_stanno_altri"));
       return;
     }
     setName("");
     setUrl("");
-    pushToast("success", `«${created.name}» aggiunto.`);
+    pushToast("success", t("LinkHostSettings.aggiunto", { v0: created.name }));
   }
 
   return (
     <div>
       <span className="mb-3 block text-base font-semibold text-text">
-        {hosts.length > 0 ? "I tuoi siti" : "Nessun sito configurato"}
+        {hosts.length > 0 ? t("LinkHostSettings.i_tuoi_siti") : t("LinkHostSettings.nessun_sito_configurato")}
       </span>
 
       <form onSubmit={submit} className="mb-3 flex flex-col gap-2">
@@ -68,7 +69,7 @@ export function LinkHostSettings() {
           autoComplete="off"
           autoCapitalize="off"
           spellCheck={false}
-          aria-label="Indirizzo del sito"
+          aria-label={t("LinkHostSettings.indirizzo_del_sito")}
           placeholder="https://sito.tld"
           className={INPUT}
         />
@@ -76,8 +77,8 @@ export function LinkHostSettings() {
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            aria-label="Nome"
-            placeholder="Come lo chiami (facoltativo)"
+            aria-label={t("LinkHostSettings.nome")}
+            placeholder={t("LinkHostSettings.come_lo_chiami_facoltativo")}
             className={`${INPUT} font-sans`}
           />
           <button
@@ -85,15 +86,14 @@ export function LinkHostSettings() {
             disabled={!url.trim()}
             className="btn btn-primary btn-sm shrink-0"
           >
-            Aggiungi
+            {t("LinkHostSettings.aggiungi")}
           </button>
         </div>
       </form>
 
       {hosts.length === 0 ? (
         <p className="rounded-md bg-surface-2 px-4 py-3 text-sm text-text-muted">
-          Nessun Link Host. Basta l'indirizzo nudo del sito: i percorsi di ricerca soliti li prova
-          lui, uno dopo l'altro, finché uno risponde.
+          {t("LinkHostSettings.nessun_link_host_basta")}
         </p>
       ) : (
         <ul className="flex flex-col gap-2">
@@ -109,7 +109,7 @@ export function LinkHostSettings() {
         aria-expanded={showHelp}
         className="btn btn-plain btn-sm -ml-3 mt-2"
       >
-        {showHelp ? "Nascondi i segnaposto" : "Come si scrive un percorso di ricerca"}
+        {showHelp ? t("LinkHostSettings.nascondi_i_segnaposto") : t("LinkHostSettings.come_si_scrive_un")}
       </button>
       {showHelp && <PatternHelp />}
 
@@ -136,21 +136,16 @@ function HowItWorks() {
           <span aria-hidden="true" className="text-text-muted">
             <InfoIcon />
           </span>
-          Come funziona?
+          {t("LinkHostSettings.come_funziona")}
         </h4>
         <p className="text-sm text-text-muted">
-          CineMate non ospita né fornisce alcun contenuto. Un Link Host è l'indirizzo di un{" "}
-          <strong className="font-medium text-text-muted">sito</strong> che indichi tu, usato come
-          punto di partenza tecnico per la ricerca: quando premi{" "}
-          <strong className="font-medium text-text-muted">Guarda</strong> su un titolo, l'app
-          concatena i suoi metadati — titolo, anno, stagione ed episodio — li trasforma nella
-          ricerca di quel sito, legge la pagina che risponde e, se ci trova un{" "}
-          <span className="font-mono">.m3u8</span>, lo manda al lettore. Se non ci arriva, resta il
-          Web Viewer per cercare a mano.
+          {t("LinkHostSettings.cinemate_non_ospita_ne")}{" "}
+          <strong className="font-medium text-text-muted">{t("LinkHostSettings.sito")}</strong> {t("LinkHostSettings.che_indichi_tu_usato")}{" "}
+          <strong className="font-medium text-text-muted">{t("LinkHostSettings.guarda")}</strong> {t("LinkHostSettings.su_un_titolo_l")}{" "}
+          <span className="font-mono">.m3u8</span>{t("LinkHostSettings.lo_manda_al_lettore")}
         </p>
         <p className="mt-2 text-sm text-text-muted">
-          L'app non conosce nessun sito e non ne propone: la lista è vuota finché non ci scrivi
-          qualcosa tu, e quello che ci scrivi resta su questo dispositivo.
+          {t("LinkHostSettings.l_app_non_conosce")}
         </p>
       </div>
 
@@ -161,13 +156,10 @@ function HowItWorks() {
           <span aria-hidden="true" style={{ color: "var(--warning)" }}>
             <WarningIcon />
           </span>
-          Attenzione
+          {t("LinkHostSettings.attenzione")}
         </h4>
         <p className="text-sm text-text-muted">
-          Accedere a materiale protetto da copyright senza autorizzazione viola i termini di
-          servizio dei siti e le leggi vigenti. CineMate non è affiliata a nessun Link Host e non
-          verifica cosa ci sia dietro l'indirizzo che scrivi: quello che ci metti, e cosa ne fai, è
-          una tua responsabilità.
+          {t("LinkHostSettings.accedere_a_materiale_protetto")}
         </p>
       </div>
     </div>
@@ -178,14 +170,12 @@ function PatternHelp() {
   return (
     <div className="mt-3 rounded-md bg-surface-2 p-4">
       <p className="mb-3 text-sm text-text-muted">
-        Se sai già com'è fatta la ricerca del sito, scrivila e sarà l'unica provata. Altrimenti si
-        provano queste, in ordine — prima la ricerca, che perdona uno slug approssimativo, poi i
-        percorsi diretti, più veloci quando indovinano e muti quando no:
+        {t("LinkHostSettings.se_sai_gia_com")}
       </p>
       {[
-        { label: "Ricerca", list: SEARCH_LAYOUTS },
-        { label: "Percorso diretto — film", list: FILM_PATH_LAYOUTS },
-        { label: "Percorso diretto — episodi", list: EPISODE_PATH_LAYOUTS },
+        { label: t("LinkHostSettings.ricerca"), list: SEARCH_LAYOUTS },
+        { label: t("LinkHostSettings.percorso_diretto_film"), list: FILM_PATH_LAYOUTS },
+        { label: t("LinkHostSettings.percorso_diretto_episodi"), list: EPISODE_PATH_LAYOUTS },
       ].map((group) => (
         <div key={group.label} className="mb-2">
           <span className="mb-1.5 block text-xs font-medium text-text-muted">
@@ -204,10 +194,8 @@ function PatternHelp() {
         </div>
       ))}
       <p className="mb-3 mt-2 text-sm text-text-muted">
-        La stagione vale 1 se non la scrivi: la libreria conta gli episodi visti come un totale, non
-        per stagione, e da «visti: 27» non si ricava se sia S02E03. Il pannello{" "}
-        <strong className="font-medium text-text-muted">Siti</strong> del player ha due caselle per
-        dirlo, ed è quello che rende raggiungibili i percorsi annidati per stagione.
+        {t("LinkHostSettings.la_stagione_vale_1")}{" "}
+        <strong className="font-medium text-text-muted">{t("LinkHostSettings.siti")}</strong> {t("LinkHostSettings.del_player_ha_due")}
       </p>
       <dl className="flex flex-col gap-1.5">
         {LINK_HOST_TOKENS.map((t) => (
@@ -254,7 +242,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
     update(host.id, { lastCheckedAt: probe.checkedAt });
     if (probe.status === "traslocato" && probe.finalUrl) {
       update(host.id, { movedTo: probe.finalUrl });
-      pushToast("info", `«${host.name}» risponde da ${hostLabel(probe.finalUrl)}.`);
+      pushToast("info", t("LinkHostSettings.risponde_da", { v0: host.name, v1: hostLabel(probe.finalUrl) }));
     }
   }
 
@@ -264,7 +252,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
     const found = await findMirrors(effectiveUrl(host));
     setHunting(false);
     setMirrors(found);
-    if (!found.length) pushToast("info", "Nessun nome alternativo risolve.");
+    if (!found.length) pushToast("info", t("LinkHostSettings.nessun_nome_alternativo_risolve"));
   }
 
   return (
@@ -275,7 +263,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
             type="button"
             onClick={() => move(host.id, -1)}
             disabled={index === 0}
-            aria-label={`Sposta ${host.name} in alto`}
+            aria-label={t("LinkHostSettings.sposta_in_alto", { v0: host.name })}
             className="flex h-7 w-9 items-center justify-center rounded-xs text-text-muted transition-colors hover:text-text disabled:opacity-25"
           >
             <ChevronUpIcon size={16} />
@@ -284,7 +272,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
             type="button"
             onClick={() => move(host.id, 1)}
             disabled={index === total - 1}
-            aria-label={`Sposta ${host.name} in basso`}
+            aria-label={t("LinkHostSettings.sposta_in_basso", { v0: host.name })}
             className="flex h-7 w-9 items-center justify-center rounded-xs text-text-muted transition-colors hover:text-text disabled:opacity-25"
           >
             <ChevronDownIcon size={16} />
@@ -302,7 +290,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
           type="button"
           role="switch"
           aria-checked={host.enabled}
-          aria-label={`${host.name} attivo`}
+          aria-label={t("LinkHostSettings.attivo", { v0: host.name })}
           onClick={() => toggle(host.id)}
           className="switch mt-0.5"
         />
@@ -311,7 +299,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
       {host.movedTo && (
         <div className="mt-3 rounded-sm bg-surface p-3">
           <p className="text-xs leading-relaxed text-text-muted">
-            Ha traslocato: <span className="font-mono">{hostLabel(host.url)}</span> ora rimanda a{" "}
+            {t("LinkHostSettings.ha_traslocato")} <span className="font-mono">{hostLabel(host.url)}</span> {t("LinkHostSettings.ora_rimanda_a")}{" "}
             <span className="font-mono">{hostLabel(host.movedTo)}</span>.
           </p>
           <div className="mt-2 flex gap-2">
@@ -320,14 +308,14 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
               onClick={() => acceptMove(host.id)}
               className="btn btn-primary btn-sm"
             >
-              Aggiorna l'indirizzo
+              {t("LinkHostSettings.aggiorna_l_indirizzo")}
             </button>
             <button
               type="button"
               onClick={() => dismissMove(host.id)}
               className="btn btn-secondary btn-sm bg-surface-hover"
             >
-              Lascia com'è
+              {t("LinkHostSettings.lascia_com_e")}
             </button>
           </div>
         </div>
@@ -335,8 +323,8 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
 
       {preview && (
         <p className="mt-2 break-all font-mono text-xs leading-relaxed text-text-muted">
-          Cerca {preview}
-          {others > 0 && <span className="font-sans"> e altri {others} percorsi, finché uno risponde</span>}
+          {t("LinkHostSettings.cerca")} {preview}
+          {others > 0 && <span className="font-sans"> {t("LinkHostSettings.e_altri")} {others} {t("LinkHostSettings.percorsi_finche_uno_risponde")}</span>}
         </p>
       )}
 
@@ -344,7 +332,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
         <p className="mt-1.5 text-xs text-text-muted">
           <span className="text-text">{REDIRECT_LABEL[status]}.</span> {REDIRECT_HINT[status]}
           {addresses.length > 0 && (
-            <span className="font-mono"> Risolve in {addresses.join(", ")}.</span>
+            <span className="font-mono"> {t("LinkHostSettings.risolve_in")} {addresses.join(", ")}.</span>
           )}
         </p>
       )}
@@ -352,32 +340,31 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
       {mirrors && mirrors.length > 0 && (
         <div className="mt-3 rounded-sm bg-surface p-3">
           <p className="mb-2 text-xs text-text-muted">
-            Lo stesso nome risolve anche sotto queste estensioni. Che un dominio esista non dice
-            chi ci sia dietro: guardalo prima di adottarlo.
+            {t("LinkHostSettings.lo_stesso_nome_risolve")}
           </p>
           <div className="flex flex-col gap-1">
             {mirrors.map((m) => (
               <div key={m.url} className="flex flex-wrap items-center gap-1.5">
                 <span className="min-w-0 flex-1 truncate font-mono text-xs text-text-muted">
-                  {hostLabel(m.url)} {m.answers ? "· risponde" : "· non risponde"}
+                  {hostLabel(m.url)} {m.answers ? t("LinkHostSettings.risponde") : t("LinkHostSettings.non_risponde")}
                 </span>
                 <button
                   type="button"
                   onClick={() => openViewer(m.url)}
                   className="btn btn-secondary btn-sm bg-surface-hover"
                 >
-                  Guarda
+                  {t("LinkHostSettings.guarda")}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
                     update(host.id, { url: m.url, movedTo: undefined });
                     setMirrors(null);
-                    pushToast("success", `Indirizzo aggiornato a ${hostLabel(m.url)}.`);
+                    pushToast("success", t("LinkHostSettings.indirizzo_aggiornato_a", { v0: hostLabel(m.url) }));
                   }}
                   className="btn btn-secondary btn-sm bg-surface-hover"
                 >
-                  Usa questo
+                  {t("LinkHostSettings.usa_questo")}
                 </button>
               </div>
             ))}
@@ -392,7 +379,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
           aria-expanded={open}
           className="btn btn-secondary btn-sm bg-surface-hover"
         >
-          {open ? "Chiudi" : "Modifica"}
+          {open ? t("LinkHostSettings.chiudi") : t("LinkHostSettings.modifica")}
         </button>
         <button
           type="button"
@@ -400,37 +387,37 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
           disabled={checking}
           className="btn btn-secondary btn-sm bg-surface-hover disabled:opacity-50"
         >
-          {checking ? "Controllo…" : "Controlla l'indirizzo"}
+          {checking ? t("LinkHostSettings.controllo") : t("LinkHostSettings.controlla_l_indirizzo")}
         </button>
         <button
           type="button"
           onClick={hunt}
           disabled={hunting}
-          title="Cerca lo stesso nome sotto altre estensioni di dominio"
+          title={t("LinkHostSettings.cerca_lo_stesso_nome")}
           className="btn btn-secondary btn-sm bg-surface-hover disabled:opacity-50"
         >
-          {hunting ? "Cerco…" : "Cerca un nome alternativo"}
+          {hunting ? t("LinkHostSettings.cerco") : t("LinkHostSettings.cerca_un_nome_alternativo")}
         </button>
         <button
           type="button"
           onClick={() => openViewer(effectiveUrl(host))}
           className="btn btn-secondary btn-sm bg-surface-hover"
         >
-          Apri nel Web Viewer
+          {t("LinkHostSettings.apri_nel_web_viewer")}
         </button>
         <button
           type="button"
           onClick={() => remove(host.id)}
           className="btn btn-secondary btn-sm bg-surface-hover"
         >
-          Rimuovi
+          {t("LinkHostSettings.rimuovi")}
         </button>
       </div>
 
       {open && (
         <div className="mt-3 flex flex-col gap-3 pt-3 shadow-[inset_0_1px_0_var(--separator)]">
           <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
-            Nome
+            {t("LinkHostSettings.nome")}
             <input
               value={host.name}
               onChange={(e) => update(host.id, { name: e.target.value })}
@@ -438,7 +425,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
             />
           </label>
           <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
-            Indirizzo
+            {t("LinkHostSettings.indirizzo")}
             <input
               value={host.url}
               onChange={(e) => update(host.id, { url: e.target.value })}
@@ -450,7 +437,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
             />
           </label>
           <label className="flex flex-col gap-1.5 text-xs font-medium text-text-muted">
-            Percorso di ricerca — vuoto significa «provali tu»
+            {t("LinkHostSettings.percorso_di_ricerca_vuoto")}
             <input
               value={host.searchPattern}
               onChange={(e) => update(host.id, { searchPattern: e.target.value })}
@@ -462,7 +449,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
             />
           </label>
           <fieldset className="flex flex-col gap-1">
-            <legend className="mb-1.5 text-xs font-medium text-text-muted">Com'è fatto il sito</legend>
+            <legend className="mb-1.5 text-xs font-medium text-text-muted">{t("LinkHostSettings.com_e_fatto_il")}</legend>
             <div className="flex flex-wrap gap-2">
               {LAYOUT_FAMILIES.map((l) => (
                 <button
@@ -482,7 +469,7 @@ function HostRow({ host, index, total }: { host: LinkHost; index: number; total:
             </p>
           </fieldset>
           <fieldset className="flex flex-col gap-1">
-            <legend className="mb-1.5 text-xs font-medium text-text-muted">Cosa finisce nella domanda</legend>
+            <legend className="mb-1.5 text-xs font-medium text-text-muted">{t("LinkHostSettings.cosa_finisce_nella_domanda")}</legend>
             <div className="flex flex-wrap gap-2">
               {QUERY_RECIPES.map((r) => (
                 <button

@@ -1,6 +1,7 @@
 import { PART_STATE_META, type SagaEntry } from "../lib/sagas";
 import { PosterArt } from "./PosterArt";
 import { CheckIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * The same chapters as the list, drawn as one thread instead of rows. It exists
@@ -44,7 +45,7 @@ export function SagaTimeline({
             <button
               type="button"
               onClick={() => onSelect(entry)}
-              aria-label={entry.item ? `Apri dettagli di ${entry.part.title}` : `Aggiungi ${entry.part.title} alla libreria`}
+              aria-label={entry.item ? t("SagaTimeline.apri_dettagli_di", { v0: entry.part.title }) : t("SagaTimeline.aggiungi_alla_libreria", { v0: entry.part.title })}
               className="flex min-w-0 flex-1 items-center gap-3 rounded-md bg-surface-2 p-2.5 text-left transition-colors hover:bg-surface-hover"
             >
               <PosterArt
@@ -56,7 +57,7 @@ export function SagaTimeline({
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-text">{entry.part.title}</p>
                 <p className="mt-0.5 tabular text-xs text-text-muted">
-                  {entry.part.year ?? "in arrivo"} · {meta.label}
+                  {entry.part.year ?? t("SagaTimeline.in_arrivo")} · {meta.label}
                 </p>
               </div>
             </button>

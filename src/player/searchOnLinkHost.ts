@@ -5,6 +5,7 @@ import { bestStreamConfirmed, bestStreamIn, readPage, titleLinksIn } from "../li
 import type { FoundLink } from "../lib/streamExtract";
 import { hasPageReader } from "../lib/pageReader";
 import { parseMaster } from "./services/hlsManifest";
+import { t } from "../lib/i18n";
 
 /**
  * La ricerca automatica: da «Guarda» al flusso, passando per il sito che hai
@@ -244,16 +245,16 @@ function rank(outcome: SearchOutcome): number {
 export function outcomeMessage(outcome: SearchOutcome): string {
   switch (outcome.kind) {
     case "flusso":
-      return "Flusso trovato.";
+      return t("player_searchOnLinkHost.flusso_trovato");
     case "solo-pagina":
-      return "Ho trovato la pagina del titolo ma non il flusso: quasi sempre vuol dire che il player del sito lo carica da JavaScript, che qui non gira. Aprila nel Web Viewer.";
+      return t("player_searchOnLinkHost.ho_trovato_la_pagina");
     case "bloccato":
       return hasPageReader()
-        ? "Il sito risponde ma non lascia che questa pagina ne legga il contenuto (CORS), e nemmeno il lettore di pagine che hai configurato ce l'ha fatta. Controlla in Impostazioni che il suo indirizzo risponda, o apri il sito nel Web Viewer e cerca a mano."
-        : "Il sito risponde ma non lascia che questa pagina ne legga il contenuto (CORS). È il limite di un'app che gira nel browser, e si supera in un modo solo: un lettore di pagine tuo, in Impostazioni → Indirizzi delle tue sorgenti. Senza, resta il Web Viewer per cercare a mano.";
+        ? t("player_searchOnLinkHost.il_sito_risponde_ma")
+        : t("player_searchOnLinkHost.il_sito_risponde_ma_2");
     case "nessun-risultato":
-      return "La ricerca è andata a buon fine ma non ha restituito questo titolo. Prova a cambiare la ricetta della domanda o a scrivere il percorso di ricerca del sito.";
+      return t("player_searchOnLinkHost.la_ricerca_e_andata");
     case "niente-host":
-      return "Nessun Link Host abilitato. Aggiungine uno in Impostazioni → Link Host.";
+      return t("player_searchOnLinkHost.nessun_link_host_abilitato");
   }
 }

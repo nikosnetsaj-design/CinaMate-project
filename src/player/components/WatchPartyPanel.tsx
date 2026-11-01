@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { useWatchParty } from '../hooks/useWatchParty';
 import { CloseIcon } from './Icons';
 import { CrownIcon } from '../../components/icons';
+import { t } from "../../lib/i18n";
 
 type Props = { watchParty: ReturnType<typeof useWatchParty> };
 
@@ -18,11 +19,11 @@ export default function WatchPartyPanel({ watchParty }: Props) {
   if (!roomId) {
     return (
       <div className="pv-panel pv-watchparty">
-        <h3>Watch Party</h3>
-        <button onClick={() => createRoom()}>Crea stanza</button>
+        <h3>{t("player_WatchPartyPanel.watch_party")}</h3>
+        <button onClick={() => createRoom()}>{t("player_WatchPartyPanel.crea_stanza")}</button>
         <div className="pv-join-row">
-          <input placeholder="Codice stanza" value={joinCode} onChange={e => setJoinCode(e.target.value)} />
-          <button className="pv-btn-secondary" onClick={() => joinCode && joinRoom(joinCode)}>Entra</button>
+          <input placeholder={t("player_WatchPartyPanel.codice_stanza")} value={joinCode} onChange={e => setJoinCode(e.target.value)} />
+          <button className="pv-btn-secondary" onClick={() => joinCode && joinRoom(joinCode)}>{t("player_WatchPartyPanel.entra")}</button>
         </div>
       </div>
     );
@@ -31,13 +32,13 @@ export default function WatchPartyPanel({ watchParty }: Props) {
   return (
     <div className="pv-panel pv-watchparty">
       <div className="pv-panel-header">
-        <h3>Watch Party · {participants.length} {participants.length === 1 ? 'partecipante' : 'partecipanti'}</h3>
-        <button className="pv-icon-btn" aria-label="Esci dalla stanza" onClick={leaveRoom}><CloseIcon /></button>
+        <h3>{t("player_WatchPartyPanel.watch_party_2")} {participants.length} {participants.length === 1 ? t("player_WatchPartyPanel.partecipante") : t("player_WatchPartyPanel.partecipanti")}</h3>
+        <button className="pv-icon-btn" aria-label={t("player_WatchPartyPanel.esci_dalla_stanza")} onClick={leaveRoom}><CloseIcon /></button>
       </div>
 
       <div className="pv-invite-row">
         <input readOnly value={inviteLink ?? ''} onFocus={e => e.target.select()} />
-        <button onClick={() => inviteLink && navigator.clipboard?.writeText(inviteLink)}>Copia link</button>
+        <button onClick={() => inviteLink && navigator.clipboard?.writeText(inviteLink)}>{t("player_WatchPartyPanel.copia_link")}</button>
       </div>
 
       <ul className="pv-participants">
@@ -48,14 +49,14 @@ export default function WatchPartyPanel({ watchParty }: Props) {
               {p.name}
             </span>
             {role === 'host' && p.role !== 'host' && (
-              <button className="pv-btn-tiny" onClick={() => kickParticipant(p.id)}>Rimuovi</button>
+              <button className="pv-btn-tiny" onClick={() => kickParticipant(p.id)}>{t("player_WatchPartyPanel.rimuovi")}</button>
             )}
           </li>
         ))}
       </ul>
 
       {role === 'host' && (
-        <button className="pv-btn-secondary" onClick={forceSyncAll}>Forza sincronizzazione</button>
+        <button className="pv-btn-secondary" onClick={forceSyncAll}>{t("player_WatchPartyPanel.forza_sincronizzazione")}</button>
       )}
 
       <div className="pv-reactions-bar">
@@ -78,8 +79,8 @@ export default function WatchPartyPanel({ watchParty }: Props) {
         <form
           onSubmit={e => { e.preventDefault(); if (chatText.trim()) { sendChat(chatText); setChatText(''); } }}
         >
-          <input value={chatText} onChange={e => setChatText(e.target.value)} placeholder="Scrivi un messaggio..." />
-          <button type="submit">Invia</button>
+          <input value={chatText} onChange={e => setChatText(e.target.value)} placeholder={t("player_WatchPartyPanel.scrivi_un_messaggio")} />
+          <button type="submit">{t("player_WatchPartyPanel.invia")}</button>
         </form>
       </div>
     </div>

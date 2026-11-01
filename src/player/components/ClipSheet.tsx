@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useFocusTrap } from '../../lib/useFocusTrap';
 import { CloseIcon } from './Icons';
+import { t } from "../../lib/i18n";
 
 /**
  * "Ritaglia": segna un momento e mandalo a qualcuno.
@@ -23,9 +24,9 @@ type Props = {
 };
 
 const LENGTHS: { sec: number; label: string }[] = [
-  { sec: 15, label: '15 secondi' },
-  { sec: 30, label: '30 secondi' },
-  { sec: 60, label: '1 minuto' },
+  { sec: 15, label: t("player_ClipSheet.15_secondi") },
+  { sec: 30, label: t("player_ClipSheet.30_secondi") },
+  { sec: 60, label: t("player_ClipSheet.1_minuto") },
 ];
 
 function clock(sec: number): string {
@@ -38,9 +39,9 @@ function clock(sec: number): string {
 }
 
 const MESSAGES: Record<ClipResult, string> = {
-  shared: 'Momento condiviso.',
-  copied: 'Collegamento copiato: incollalo dove vuoi.',
-  failed: 'Non sono riuscito a condividerlo. Riprova.',
+  shared: t("player_ClipSheet.momento_condiviso"),
+  copied: t("player_ClipSheet.collegamento_copiato_incollalo_dove"),
+  failed: t("player_ClipSheet.non_sono_riuscito_a"),
 };
 
 export default function ClipSheet({ startSec, title, onShare, onClose }: Props) {
@@ -64,13 +65,13 @@ export default function ClipSheet({ startSec, title, onShare, onClose }: Props) 
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Ritaglia un momento"
+        aria-label={t("player_ClipSheet.ritaglia_un_momento")}
         className="pv-clip-panel"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="pv-side-header">
-          <h3>Ritaglia</h3>
-          <button className="pv-icon-btn" aria-label="Chiudi" onClick={onClose}>
+          <h3>{t("player_ClipSheet.ritaglia")}</h3>
+          <button className="pv-icon-btn" aria-label={t("player_ClipSheet.chiudi")} onClick={onClose}>
             <CloseIcon />
           </button>
         </div>
@@ -79,16 +80,15 @@ export default function ClipSheet({ startSec, title, onShare, onClose }: Props) 
           {clock(startSec)} → {clock(startSec + length)}
         </p>
         <p className="pv-dim pv-clip-note">
-          Da «{title}». Il collegamento apre il player in questo punto: il video resta dov'è, non
-          viene copiato né caricato da nessuna parte.
+          {t("player_ClipSheet.da")}{title}{t("player_ClipSheet.il_collegamento_apre_il")}
         </p>
 
-        <div className="pv-field-options" role="group" aria-label="Durata del momento">
+        <div className="pv-field-options" role="group" aria-label={t("player_ClipSheet.durata_del_momento")}>
           {LENGTHS.map((l) => (
             <button
               key={l.sec}
               type="button"
-              className={length === l.sec ? 'active' : ''}
+              className={length === l.sec ? "active" : ''}
               aria-pressed={length === l.sec}
               onClick={() => setLength(l.sec)}
             >
@@ -98,7 +98,7 @@ export default function ClipSheet({ startSec, title, onShare, onClose }: Props) 
         </div>
 
         <button type="button" className="pv-clip-share" disabled={busy} onClick={share}>
-          {busy ? 'Preparo il collegamento…' : 'Condividi il momento'}
+          {busy ? t("player_ClipSheet.preparo_il_collegamento") : t("player_ClipSheet.condividi_il_momento")}
         </button>
 
         {result && (

@@ -7,6 +7,7 @@ import { useLibrary } from "../store/useLibrary";
 import { findByExternalId } from "../lib/tmdb";
 import { parseShared } from "../lib/shareTarget";
 import { PageSkeleton } from "../components/Skeletons";
+import { t } from "../lib/i18n";
 
 /**
  * La pagina su cui atterra un link condiviso da un'altra app (`share_target`).
@@ -32,7 +33,7 @@ export function ShareTarget() {
 
     if (!shared) {
       navigate("/", { replace: true });
-      useLibrary.getState().pushToast("info", "Dalla condivisione non è arrivato niente da cercare.");
+      useLibrary.getState().pushToast("info", t("ShareTarget.dalla_condivisione_non_e"));
       return;
     }
     if (shared.kind === "app") {

@@ -5,6 +5,7 @@ import { useReminders } from "../store/useReminders";
 import { loadUpcoming, trackedKey } from "./upcoming";
 import { daysBetweenToday } from "./format";
 import { showNotification } from "./notify";
+import { t } from "./i18n";
 
 /** Anything landing today or tomorrow is worth interrupting for; nothing else is. */
 const ALERT_WINDOW_DAYS = 1;
@@ -65,13 +66,13 @@ export function useReleaseAlerts() {
         if (daysBetweenToday(entry.date) > ALERT_WINDOW_DAYS) continue;
         if (reminders.wasNotified(entry.item.id, entry.date)) continue;
 
-        const when = daysBetweenToday(entry.date) === 0 ? "oggi" : "domani";
+        const when = daysBetweenToday(entry.date) === 0 ? t("useReleaseAlerts.oggi") : t("useReleaseAlerts.domani");
         const what =
           entry.type === "episodio"
             ? entry.season != null && entry.episode != null
-              ? `Nuovo episodio S${entry.season}E${entry.episode} ${when}.`
-              : `Nuovo episodio ${when}.`
-            : `Esce ${when}.`;
+              ? t("useReleaseAlerts.nuovo_episodio_s_e", { v0: entry.season, v1: entry.episode, v2: when })
+              : t("useReleaseAlerts.nuovo_episodio", { v0: when })
+            : t("useReleaseAlerts.esce", { v0: when });
 
         reminders.markNotified(entry.item.id, entry.date);
         if (!showNotification(entry.item.title, what, `cinemate-${entry.item.id}-${entry.date}`)) {

@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { useDownloadManager } from '../hooks/useDownloadManager';
 import { getWatchStatus, getWatchUpdatedAt } from '../services/statsAndHistory';
 import type { MediaContent, DownloadQuality } from '../types';
+import { t } from "../../lib/i18n";
 
 const QUALITIES: { id: DownloadQuality; label: string }[] = [
   { id: 'sd', label: 'SD' }, { id: 'hd', label: 'HD' }, { id: 'fullhd', label: 'Full HD' }, { id: '4k', label: '4K' },
 ];
 
 const STATUS_LABELS: Record<string, string> = {
-  queued: 'In coda', downloading: 'In corso', paused: 'In pausa', completed: 'Completato', error: 'Errore',
+  queued: t("player_DownloadManagerUI.in_coda"), downloading: t("player_DownloadManagerUI.in_corso"), paused: 'In pausa', completed: t("player_DownloadManagerUI.completato"), error: t("player_DownloadManagerUI.errore"),
 };
 
 type Props = {
@@ -46,10 +47,10 @@ export default function DownloadManagerUI({ library, onPlayOffline, offlineConte
   return (
     <div className="pv-panel pv-downloads">
       <div className="pv-panel-header">
-        <h3>Download</h3>
+        <h3>{t("player_DownloadManagerUI.download")}</h3>
         <label className="pv-toggle">
           <input type="checkbox" checked={autoDelete} onChange={e => setAutoDelete(e.target.checked)} />
-          Elimina automaticamente dopo la visione
+          {t("player_DownloadManagerUI.elimina_automaticamente_dopo_la")}
         </label>
       </div>
 
@@ -65,14 +66,14 @@ export default function DownloadManagerUI({ library, onPlayOffline, offlineConte
           <div key={item.id} className="pv-download-row">
             {item.posterUrl && <img src={item.posterUrl} alt="" />}
             <span>{item.title}</span>
-            <button className="pv-btn-secondary" onClick={() => setPickerFor(item)}>Scarica</button>
+            <button className="pv-btn-secondary" onClick={() => setPickerFor(item)}>{t("player_DownloadManagerUI.scarica")}</button>
           </div>
         ))}
         {library.length > 1 && (
           // In CineMate `library` is every title that has a source, not a
           // season, so the label says what the button actually does.
           <button className="pv-btn-secondary" onClick={() => downloadSeason(library, 'hd')}>
-            Scarica tutti i {library.length} titoli (HD)
+            {t("player_DownloadManagerUI.scarica_tutti_i")} {library.length} {t("player_DownloadManagerUI.titoli_hd")}
           </button>
         )}
       </div>
@@ -80,7 +81,7 @@ export default function DownloadManagerUI({ library, onPlayOffline, offlineConte
       {pickerFor && (
         <div className="pv-modal-backdrop" onClick={() => setPickerFor(null)}>
           <div className="pv-modal" onClick={e => e.stopPropagation()}>
-            <h4>Qualità per "{pickerFor.title}"</h4>
+            <h4>{t("player_DownloadManagerUI.qualita_per")}{pickerFor.title}"</h4>
             <div className="pv-field-options">
               {QUALITIES.map(q => (
                 <button key={q.id} onClick={() => { download(pickerFor, q.id); setPickerFor(null); }}>
@@ -88,7 +89,7 @@ export default function DownloadManagerUI({ library, onPlayOffline, offlineConte
                 </button>
               ))}
             </div>
-            <button className="pv-btn-secondary" onClick={() => setPickerFor(null)}>Annulla</button>
+            <button className="pv-btn-secondary" onClick={() => setPickerFor(null)}>{t("player_DownloadManagerUI.annulla")}</button>
           </div>
         </div>
       )}
@@ -109,13 +110,13 @@ export default function DownloadManagerUI({ library, onPlayOffline, offlineConte
             </div>
             {d.status === 'completed' && onPlayOffline && (
               <button
-                className={`pv-btn-tiny ${offlineContentId === d.contentId ? 'active' : ''}`}
+                className={`pv-btn-tiny ${offlineContentId === d.contentId ? "active" : ''}`}
                 onClick={() => onPlayOffline(d.contentId, d.id)}
               >
-                {offlineContentId === d.contentId ? 'In riproduzione' : 'Guarda offline'}
+                {offlineContentId === d.contentId ? t("player_DownloadManagerUI.in_riproduzione") : t("player_DownloadManagerUI.guarda_offline")}
               </button>
             )}
-            {d.status === 'downloading' && <button className="pv-btn-tiny" onClick={() => pause(d.id)}>Pausa</button>}
+            {d.status === 'downloading' && <button className="pv-btn-tiny" onClick={() => pause(d.id)}>{t("player_DownloadManagerUI.pausa")}</button>}
             {d.status === 'paused' && (
               <button
                 className="pv-btn-tiny"
@@ -124,13 +125,13 @@ export default function DownloadManagerUI({ library, onPlayOffline, offlineConte
                   if (source) resume(source, d.quality);
                 }}
               >
-                Riprendi
+                {t("player_DownloadManagerUI.riprendi")}
               </button>
             )}
-            <button className="pv-btn-tiny" onClick={() => remove(d.id)}>Elimina</button>
+            <button className="pv-btn-tiny" onClick={() => remove(d.id)}>{t("player_DownloadManagerUI.elimina")}</button>
           </li>
         ))}
-        {downloads.length === 0 && <li className="pv-dim">Nessun download in corso.</li>}
+        {downloads.length === 0 && <li className="pv-dim">{t("player_DownloadManagerUI.nessun_download_in_corso")}</li>}
       </ul>
     </div>
   );

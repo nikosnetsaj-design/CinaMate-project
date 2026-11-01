@@ -1,5 +1,6 @@
 import type { UpcomingEntry } from "./upcoming";
 import { downloadFile } from "./format";
+import { t } from "./i18n";
 
 /**
  * Le uscite di «Prossimamente» come file .ics, il formato che ogni calendario
@@ -66,10 +67,10 @@ export function eventUid(entry: UpcomingEntry): string {
 }
 
 export function eventSummary(entry: UpcomingEntry): string {
-  if (entry.type === "film") return `${entry.item.title} — esce`;
+  if (entry.type === "film") return t("ics.esce", { v0: entry.item.title });
   return entry.season != null && entry.episode != null
     ? `${entry.item.title} · S${entry.season}E${entry.episode}`
-    : `${entry.item.title} · nuovo episodio`;
+    : t("ics.nuovo_episodio", { v0: entry.item.title });
 }
 
 export function buildIcs(entries: UpcomingEntry[], reminders: Set<string>, now: Date = new Date()): string {
@@ -79,13 +80,13 @@ export function buildIcs(entries: UpcomingEntry[], reminders: Set<string>, now: 
     "PRODID:-//CineMate//Prossimamente//IT",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
-    "X-WR-CALNAME:CineMate · Prossimamente",
+    `X-WR-CALNAME:${t("ics.cinemate_prossimamente")}`,
   ];
   for (const entry of entries) {
     const description =
       entry.type === "film"
-        ? `Uscita di «${entry.item.title}», dalla tua lista «Da vedere» su CineMate.`
-        : `Nuovo episodio di «${entry.item.title}», una serie che segui su CineMate.`;
+        ? t("ics.uscita_di_dalla_tua", { v0: entry.item.title })
+        : t("ics.nuovo_episodio_di_una", { v0: entry.item.title });
     lines.push(
       "BEGIN:VEVENT",
       `UID:${eventUid(entry)}`,
@@ -115,7 +116,7 @@ export async function deliverIcs(text: string, fileName = "cinemate-prossimament
   const coarse = typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
   if (coarse && navigator.canShare?.({ files: [file] })) {
     try {
-      await navigator.share({ files: [file], title: "CineMate · Prossimamente" });
+      await navigator.share({ files: [file], title: t("ics.cinemate_prossimamente") });
       return "shared";
     } catch (e) {
       if (e instanceof DOMException && e.name === "AbortError") return "cancelled";

@@ -8,12 +8,13 @@ import { useSelectedItem } from "../store/useSelectedItem";
 import { STATUSES } from "../lib/status";
 import { PLATFORMS, QUALITIES } from "../types";
 import type { Kind } from "../types";
+import { platformLabel, statusLabel, t } from "../lib/i18n";
 
 const KIND_LABELS: Record<Kind, string> = {
-  film: "Film",
-  serie: "Serie TV",
+  film: t("EditItemSheet.film"),
+  serie: t("EditItemSheet.serie_tv"),
   anime: "Anime",
-  doc: "Documentario",
+  doc: t("EditItemSheet.documentario"),
 };
 
 const inputCls = "field";
@@ -56,23 +57,23 @@ function EditItemForm() {
     <Sheet onClose={close} titleId={titleId}>
       <div className="flex flex-col gap-5 p-5 pt-8 sm:p-6">
         <h2 id={titleId} className="t-title text-text">
-          {editingId ? "Modifica titolo" : "Aggiungi alla libreria"}
+          {editingId ? t("EditItemSheet.modifica_titolo") : t("EditItemSheet.aggiungi_alla_libreria")}
         </h2>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-text-muted">Titolo</span>
+          <span className="text-sm font-medium text-text-muted">{t("EditItemSheet.titolo")}</span>
           <input
             autoFocus
             value={draft.title}
             onChange={(e) => patch({ title: e.target.value })}
-            placeholder="Titolo"
+            placeholder={t("EditItemSheet.titolo")}
             className={inputCls}
           />
         </label>
 
         <div className="grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-text-muted">Tipo</span>
+            <span className="text-sm font-medium text-text-muted">{t("EditItemSheet.tipo")}</span>
             <select
               value={draft.kind}
               onChange={(e) => patch({ kind: e.target.value as Kind })}
@@ -86,7 +87,7 @@ function EditItemForm() {
             </select>
           </label>
           <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-text-muted">Anno</span>
+            <span className="text-sm font-medium text-text-muted">{t("EditItemSheet.anno")}</span>
             <input
               type="number"
               value={draft.year}
@@ -98,17 +99,17 @@ function EditItemForm() {
 
         <div className="grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-text-muted">Genere</span>
+            <span className="text-sm font-medium text-text-muted">{t("EditItemSheet.genere")}</span>
             <input
               value={draft.genre}
               onChange={(e) => patch({ genre: e.target.value })}
-              placeholder="Drammatico"
+              placeholder={t("EditItemSheet.drammatico")}
               className={inputCls}
             />
           </label>
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-text-muted">
-              {draft.kind === "film" ? "Durata (min)" : "Min / episodio"}
+              {draft.kind === "film" ? t("EditItemSheet.durata_min") : t("EditItemSheet.min_episodio")}
             </span>
             <input
               type="number"
@@ -121,29 +122,29 @@ function EditItemForm() {
         </div>
 
         <div>
-          <span className="mb-2 block text-sm font-medium text-text-muted">Stato</span>
+          <span className="mb-2 block text-sm font-medium text-text-muted">{t("EditItemSheet.stato")}</span>
           <div className="flex flex-wrap gap-2">
             {STATUSES.map((s) => (
               <Pill key={s} active={draft.status === s} onClick={() => patch({ status: s })}>
-                {s}
+                {statusLabel(s)}
               </Pill>
             ))}
           </div>
         </div>
 
         <div>
-          <span className="mb-2 block text-sm font-medium text-text-muted">Dove</span>
+          <span className="mb-2 block text-sm font-medium text-text-muted">{t("EditItemSheet.dove")}</span>
           <div className="flex flex-wrap gap-2">
             {PLATFORMS.map((p) => (
               <Pill key={p} active={draft.platform === p} onClick={() => patch({ platform: p })}>
-                {p}
+                {platformLabel(p)}
               </Pill>
             ))}
           </div>
         </div>
 
         <div>
-          <span className="mb-2 block text-sm font-medium text-text-muted">Qualità</span>
+          <span className="mb-2 block text-sm font-medium text-text-muted">{t("EditItemSheet.qualita")}</span>
           <div className="flex flex-wrap gap-2">
             {QUALITIES.map((quality) => (
               <Pill
@@ -158,15 +159,14 @@ function EditItemForm() {
             ))}
           </div>
           <p className="mt-2 text-xs text-text-muted">
-            La qualità della copia che hai tu. Nessun catalogo la conosce, e un manifest la rivela
-            solo quando parte: per questo si dice a mano.
+            {t("EditItemSheet.la_qualita_della_copia")}
           </p>
         </div>
 
         {draft.kind !== "film" && (
           <div className="grid grid-cols-3 gap-3">
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-text-muted">Ep. visti</span>
+              <span className="text-sm font-medium text-text-muted">{t("EditItemSheet.ep_visti")}</span>
               <input
                 type="number"
                 value={draft.seen || 0}
@@ -175,7 +175,7 @@ function EditItemForm() {
               />
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-text-muted">Ep. totali</span>
+              <span className="text-sm font-medium text-text-muted">{t("EditItemSheet.ep_totali")}</span>
               <input
                 type="number"
                 value={draft.episodes ?? ""}
@@ -185,7 +185,7 @@ function EditItemForm() {
               />
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-text-muted">Stagioni</span>
+              <span className="text-sm font-medium text-text-muted">{t("EditItemSheet.stagioni")}</span>
               <input
                 type="number"
                 value={draft.seasons ?? ""}
@@ -198,16 +198,16 @@ function EditItemForm() {
         )}
 
         <div>
-          <span className="mb-2 block text-sm font-medium text-text-muted">Il tuo voto</span>
+          <span className="mb-2 block text-sm font-medium text-text-muted">{t("EditItemSheet.il_tuo_voto")}</span>
           <VotePicker value={draft.vote} onChange={(vote) => patch({ vote })} />
         </div>
 
         <div>
           <span className="mb-2 block text-sm font-medium text-text-muted">
-            Link personalizzati
+            {t("EditItemSheet.link_personalizzati")}
           </span>
           <p className="mb-2 text-xs text-text-muted">
-            Aggiungi fino a 2 link tuoi — un trailer, una pagina di uno streaming legale, qualsiasi cosa.
+            {t("EditItemSheet.aggiungi_fino_a_2")}
           </p>
           <div className="flex flex-col gap-2">
             {[0, 1].map((i) => (
@@ -231,25 +231,25 @@ function EditItemForm() {
             sigla della classificazione. A mano perché nessun catalogo pubblico
             le espone in modo affidabile: meglio vuoto che inventato. */}
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-text-muted">Avvertenze</span>
+          <span className="text-sm font-medium text-text-muted">{t("EditItemSheet.avvertenze")}</span>
           <input
             value={draft.contentWarnings ?? ""}
             onChange={(e) => patch({ contentWarnings: e.target.value })}
-            placeholder="linguaggio forte, consumo di tabacco"
+            placeholder={t("EditItemSheet.linguaggio_forte_consumo_di")}
             className={inputCls}
           />
           <span className="text-xs text-text-muted">
-            Separate da virgola. Compaiono all'avvio del player accanto alla classificazione
+            {t("EditItemSheet.separate_da_virgola_compaiono")}
             {draft.certification ? ` (${draft.certification})` : ""}.
           </span>
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-text-muted">Note personali</span>
+          <span className="text-sm font-medium text-text-muted">{t("EditItemSheet.note_personali")}</span>
           <textarea
             value={draft.notes}
             onChange={(e) => patch({ notes: e.target.value })}
-            placeholder="Cosa ne pensi? Spoiler liberi."
+            placeholder={t("EditItemSheet.cosa_ne_pensi_spoiler")}
             rows={3}
             className={`${inputCls} h-auto resize-none py-3`}
           />
@@ -267,7 +267,7 @@ function EditItemForm() {
           <span className={draft.fav ? "text-accent-text" : "text-text-muted"}>
             <HeartIcon size={18} filled={draft.fav} />
           </span>
-          <span className="flex-1">Tra i preferiti</span>
+          <span className="flex-1">{t("EditItemSheet.tra_i_preferiti")}</span>
           <span aria-hidden="true" className="switch" data-on={draft.fav} />
         </button>
 
@@ -277,7 +277,7 @@ function EditItemForm() {
           disabled={!draft.title.trim()}
           className="btn btn-primary btn-lg"
         >
-          {editingId ? "Salva modifiche" : "Aggiungi alla libreria"}
+          {editingId ? t("EditItemSheet.salva_modifiche") : t("EditItemSheet.aggiungi_alla_libreria")}
         </button>
       </div>
     </Sheet>

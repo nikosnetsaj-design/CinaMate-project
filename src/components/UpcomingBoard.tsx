@@ -9,7 +9,7 @@ import { requestNotificationPermission } from "../lib/notify";
 import { PosterArt } from "./PosterArt";
 import { EmptyState } from "./EmptyState";
 import { BellIcon, CalendarIcon } from "./icons";
-import { intlLocale } from "../lib/i18n";
+import { intlLocale, t } from "../lib/i18n";
 
 function ReminderToggle({ itemId, title }: { itemId: string; title: string }) {
   const enabled = useReminders((s) => s.enabled.includes(itemId));
@@ -19,15 +19,15 @@ function ReminderToggle({ itemId, title }: { itemId: string; title: string }) {
   async function onClick() {
     const on = toggle(itemId);
     if (!on) {
-      pushToast("info", `Promemoria tolto per "${title}".`);
+      pushToast("info", t("UpcomingBoard.promemoria_tolto_per", { v0: title }));
       return;
     }
     const granted = await requestNotificationPermission();
     pushToast(
       granted ? "success" : "info",
       granted
-        ? `Ti avviso quando esce "${title}".`
-        : `Promemoria salvato. Senza il permesso di notifica lo vedrai qui dentro, aprendo CineMate.`,
+        ? t("UpcomingBoard.ti_avviso_quando_esce", { v0: title })
+        : t("UpcomingBoard.promemoria_salvato_senza_il"),
     );
   }
 
@@ -36,7 +36,7 @@ function ReminderToggle({ itemId, title }: { itemId: string; title: string }) {
       type="button"
       onClick={onClick}
       aria-pressed={enabled}
-      aria-label={enabled ? `Togli il promemoria per ${title}` : `Avvisami quando esce ${title}`}
+      aria-label={enabled ? t("UpcomingBoard.togli_il_promemoria_per", { v0: title }) : t("UpcomingBoard.avvisami_quando_esce", { v0: title })}
       className="icon-btn icon-btn-sm shrink-0"
       style={{
         background: enabled ? "color-mix(in srgb, var(--accent) 16%, transparent)" : "var(--surface-2)",
@@ -59,7 +59,7 @@ function EntryRow({ entry }: { entry: UpcomingEntry }) {
       <button
         type="button"
         onClick={() => openItem(item)}
-        aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
+        aria-label={t("UpcomingBoard.apri_dettagli_di", { v0: item.title, v1: item.year })}
         className="flex min-w-0 flex-1 items-center gap-3 text-left"
       >
         <PosterArt item={item} size="sm" showTitle={false} className="w-11 shrink-0" />
@@ -68,9 +68,9 @@ function EntryRow({ entry }: { entry: UpcomingEntry }) {
           <p className="mt-0.5 truncate text-xs text-text-muted">
             {type === "episodio"
               ? season != null && episode != null
-                ? `Nuovo episodio · S${season}E${episode}`
-                : "Nuovo episodio"
-              : "Uscita del film"}
+                ? t("UpcomingBoard.nuovo_episodio_s_e", { v0: season, v1: episode })
+                : t("UpcomingBoard.nuovo_episodio")
+              : t("UpcomingBoard.uscita_del_film")}
           </p>
           <p className="mt-0.5 font-mono tabular text-xs" style={{ color: imminent ? "var(--accent-text)" : "var(--text-faint)" }}>
             {dayLabel(date)} · {countdown(date)}
@@ -95,18 +95,18 @@ function CalendarExport({ entries }: { entries: UpcomingEntry[] }) {
   async function onClick() {
     const { buildIcs, deliverIcs } = await import("../lib/ics");
     const outcome = await deliverIcs(buildIcs(entries, new Set(reminders)));
-    if (outcome === "downloaded") pushToast("success", "File del calendario scaricato: aprilo per aggiungere le uscite.");
+    if (outcome === "downloaded") pushToast("success", t("UpcomingBoard.file_del_calendario_scaricato"));
   }
 
   return (
     <div className="flex flex-col items-start gap-3 rounded-lg bg-surface p-4 shadow-[var(--shadow-sm)] sm:flex-row sm:items-center sm:justify-between">
       <p className="min-w-0 text-sm text-text-muted sm:flex-1">
-        {entries.length} {entries.length === 1 ? "uscita" : "uscite"} nel calendario del telefono
-        {withAlarm > 0 ? `, ${withAlarm} con l'avviso della campanella` : ""}.
+        {entries.length} {entries.length === 1 ? t("UpcomingBoard.uscita") : t("UpcomingBoard.uscite")} {t("UpcomingBoard.nel_calendario_del_telefono")}
+        {withAlarm > 0 ? t("UpcomingBoard.con_l_avviso_della", { v0: withAlarm }) : ""}.
       </p>
       <button type="button" className="btn btn-secondary btn-sm shrink-0" onClick={() => void onClick()}>
         <CalendarIcon size={15} />
-        Aggiungi al calendario
+        {t("UpcomingBoard.aggiungi_al_calendario")}
       </button>
     </div>
   );
@@ -142,8 +142,8 @@ export function UpcomingBoard() {
   if (entries.length === 0) {
     return (
       <EmptyState
-        title="Niente in arrivo"
-        description="Qui compaiono i nuovi episodi delle serie che stai seguendo e i film ancora da uscire che hai messo in watchlist."
+        title={t("UpcomingBoard.niente_in_arrivo")}
+        description={t("UpcomingBoard.qui_compaiono_i_nuovi")}
       />
     );
   }

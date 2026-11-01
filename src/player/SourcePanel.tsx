@@ -5,6 +5,7 @@ import type { MarkerType, PlayerSprite } from "../store/usePlayerSources";
 import { isHlsUrl } from "./fromLibrary";
 import { formatClock, parseClock } from "./clock";
 import { CloseIcon } from "./components/Icons";
+import { t } from "../lib/i18n";
 
 /**
  * Per-title configuration for everything the library cannot know: the stream
@@ -20,7 +21,7 @@ import { CloseIcon } from "./components/Icons";
 const MARKERS: { type: MarkerType; label: string }[] = [
   { type: "intro", label: "Intro" },
   { type: "recap", label: "Recap" },
-  { type: "credits", label: "Crediti" },
+  { type: "credits", label: t("player_SourcePanel.crediti") },
 ];
 
 function ClockField({
@@ -48,7 +49,7 @@ function ClockField({
           setDraft(null);
         }}
       />
-      <button type="button" className="pv-btn-tiny" title="Usa il punto in cui sei ora" onClick={onUseCurrent}>
+      <button type="button" className="pv-btn-tiny" title={t("player_SourcePanel.usa_il_punto_in")} onClick={onUseCurrent}>
         ⌖
       </button>
     </span>
@@ -74,27 +75,26 @@ function SpriteFields({
     count: 100,
   };
   const numeric: { key: keyof PlayerSprite; label: string }[] = [
-    { key: "interval", label: "Secondi per riquadro" },
+    { key: "interval", label: t("player_SourcePanel.secondi_per_riquadro") },
     { key: "columns", label: "Colonne" },
-    { key: "rows", label: "Righe" },
-    { key: "tileWidth", label: "Larghezza riquadro" },
-    { key: "tileHeight", label: "Altezza riquadro" },
-    { key: "count", label: "Riquadri totali" },
+    { key: "rows", label: t("player_SourcePanel.righe") },
+    { key: "tileWidth", label: t("player_SourcePanel.larghezza_riquadro") },
+    { key: "tileHeight", label: t("player_SourcePanel.altezza_riquadro") },
+    { key: "count", label: t("player_SourcePanel.riquadri_totali") },
   ];
 
   return (
     <div className="pv-source-block">
       <div className="pv-source-block-head">
-        <h5>Anteprime timeline</h5>
+        <h5>{t("player_SourcePanel.anteprime_timeline")}</h5>
         {sprite && (
           <button type="button" className="pv-btn-tiny" onClick={onClear}>
-            Rimuovi
+            {t("player_SourcePanel.rimuovi")}
           </button>
         )}
       </div>
       <p className="pv-empty">
-        Un'unica immagine con i fotogrammi affiancati a griglia: passando sulla barra vedi il
-        fotogramma del punto invece del solo minutaggio.
+        {t("player_SourcePanel.un_unica_immagine_con")}
       </p>
       <input
         placeholder="https://…/sprite.jpg"
@@ -169,12 +169,12 @@ export function SourcePanel({
   return (
     <div className="pv-panel pv-source-panel">
       <div className="pv-panel-header">
-        <h3>Sorgenti · {title}</h3>
+        <h3>{t("player_SourcePanel.sorgenti")} {title}</h3>
       </div>
 
       <div className="pv-source-block">
         <div className="pv-source-block-head">
-          <h5>Stream</h5>
+          <h5>{t("player_SourcePanel.stream")}</h5>
         </div>
         <input
           placeholder="https://…/master.m3u8"
@@ -184,22 +184,21 @@ export function SourcePanel({
         />
         {manifestInvalid && (
           <p className="pv-download-error">
-            Non sembra un manifest HLS: l'indirizzo deve finire in <code>.m3u8</code>.
+            {t("player_SourcePanel.non_sembra_un_manifest")} <code>.m3u8</code>.
           </p>
         )}
         {!source.manifestUrl && linkManifest && (
-          <p className="pv-empty">In uso il link personale del titolo: {linkManifest}</p>
+          <p className="pv-empty">{t("player_SourcePanel.in_uso_il_link")} {linkManifest}</p>
         )}
       </div>
 
       <div className="pv-source-block">
         <div className="pv-source-block-head">
-          <h5>Sottotitoli</h5>
+          <h5>{t("player_SourcePanel.sottotitoli")}</h5>
         </div>
         {source.subtitles.length === 0 && (
           <p className="pv-empty">
-            Nessuna traccia. Aggiungi un file <code>.vtt</code> e nelle impostazioni del player
-            potrai cambiarne dimensione, colore, sfondo, posizione e sincronizzazione.
+            {t("player_SourcePanel.nessuna_traccia_aggiungi_un")} <code>{t("player_SourcePanel.vtt")}</code> {t("player_SourcePanel.e_nelle_impostazioni_del")}
           </p>
         )}
         {source.subtitles.map((s) => (
@@ -211,7 +210,7 @@ export function SourcePanel({
             <button
               type="button"
               className="pv-icon-btn"
-              aria-label={`Rimuovi ${s.label}`}
+              aria-label={t("player_SourcePanel.rimuovi_2", { v0: s.label })}
               onClick={() => removeSubtitle(itemId, s.id)}
             >
               <CloseIcon />
@@ -219,24 +218,24 @@ export function SourcePanel({
           </div>
         ))}
         <form className="pv-source-add" onSubmit={submitSubtitle}>
-          <input placeholder="Etichetta (Italiano)" value={subLabel} onChange={(e) => setSubLabel(e.target.value)} />
+          <input placeholder={t("player_SourcePanel.etichetta_italiano")} value={subLabel} onChange={(e) => setSubLabel(e.target.value)} />
           <input
-            placeholder="it"
+            placeholder={t("player_SourcePanel.it")}
             className="pv-source-lang"
             value={subLang}
             onChange={(e) => setSubLang(e.target.value)}
           />
           <input placeholder="https://…/sottotitoli.vtt" value={subUrl} onChange={(e) => setSubUrl(e.target.value)} />
-          <button type="submit">Aggiungi</button>
+          <button type="submit">{t("player_SourcePanel.aggiungi")}</button>
         </form>
       </div>
 
       <div className="pv-source-block">
         <div className="pv-source-block-head">
-          <h5>Salta intro, recap e crediti</h5>
+          <h5>{t("player_SourcePanel.salta_intro_recap_e")}</h5>
         </div>
         <p className="pv-empty">
-          Metti in pausa nel punto giusto e premi ⌖ per prendere il minutaggio dal player.
+          {t("player_SourcePanel.metti_in_pausa_nel")}
         </p>
         {MARKERS.map(({ type, label }) => {
           const marker = source.markers.find((m) => m.type === type);
@@ -244,7 +243,7 @@ export function SourcePanel({
             <div key={type} className="pv-source-row pv-source-marker">
               <span className="pv-source-row-name">{label}</span>
               <ClockField
-                label={`Inizio ${label}`}
+                label={t("player_SourcePanel.inizio", { v0: label })}
                 value={marker?.startSec ?? 0}
                 onCommit={(sec) => setMarker(itemId, { type, startSec: sec, endSec: marker?.endSec ?? sec + 30 })}
                 onUseCurrent={() => {
@@ -254,7 +253,7 @@ export function SourcePanel({
               />
               <span className="pv-dim">→</span>
               <ClockField
-                label={`Fine ${label}`}
+                label={t("player_SourcePanel.fine", { v0: label })}
                 value={marker?.endSec ?? 0}
                 onCommit={(sec) => setMarker(itemId, { type, startSec: marker?.startSec ?? 0, endSec: sec })}
                 onUseCurrent={() => {
@@ -266,7 +265,7 @@ export function SourcePanel({
                 <button
                   type="button"
                   className="pv-icon-btn"
-                  aria-label={`Rimuovi marker ${label}`}
+                  aria-label={t("player_SourcePanel.rimuovi_marker", { v0: label })}
                   onClick={() => removeMarker(itemId, type)}
                 >
                   <CloseIcon />

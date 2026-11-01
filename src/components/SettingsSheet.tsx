@@ -138,8 +138,7 @@ function AppearanceSettings() {
           })}
         </div>
         <p className="mt-3 text-sm text-text-muted">
-          Sette tinte, ognuna con la sua variante chiara e scura: sono scelte perché restino leggibili
-          su entrambi i temi, cosa che un colore qualsiasi preso da una ruota non garantisce.
+          {t("SettingsSheet.sette_tinte_ognuna_con")}
         </p>
       </div>
     </div>
@@ -161,15 +160,15 @@ function TvSettings() {
   const active = useTvMode((s) => s.active);
 
   const options: { id: TvPreference; label: string }[] = [
-    { id: "auto", label: "Automatica" },
-    { id: "on", label: "Sempre" },
-    { id: "off", label: "Mai" },
+    { id: "auto", label: t("SettingsSheet.automatica") },
+    { id: "on", label: t("SettingsSheet.sempre") },
+    { id: "off", label: t("SettingsSheet.mai") },
   ];
 
   return (
     <div>
-      <span className="mb-3 block text-base font-semibold text-text">Modalità televisore</span>
-      <div className="segmented segmented-full mb-3" role="radiogroup" aria-label="Modalità televisore">
+      <span className="mb-3 block text-base font-semibold text-text">{t("SettingsSheet.modalita_televisore")}</span>
+      <div className="segmented segmented-full mb-3" role="radiogroup" aria-label={t("SettingsSheet.modalita_televisore")}>
         {options.map((option) => (
           <button
             key={option.id}
@@ -183,14 +182,11 @@ function TvSettings() {
         ))}
       </div>
       <p className="text-sm text-text-muted">
-        Con la modalità attiva le frecce spostano il fuoco fra le copertine invece di scorrere la
-        pagina, il bordo di selezione diventa spesso e tutto si ingrandisce per essere letto da
-        lontano — quello che serve per usare l'app col telecomando su una TV, un Fire TV o un
-        Chromecast. Nel player le frecce restano quelle di sempre: avanti, indietro e volume.{" "}
+        {t("SettingsSheet.con_la_modalita_attiva")}{" "}
         {detected
-          ? "Su questo apparecchio il riconoscimento dice: televisore."
-          : "Su questo apparecchio il riconoscimento non vede un televisore."}{" "}
-        {active ? "Ora è attiva." : "Ora è spenta."}
+          ? t("SettingsSheet.su_questo_apparecchio_il")
+          : t("SettingsSheet.su_questo_apparecchio_il_2")}{" "}
+        {active ? t("SettingsSheet.ora_e_attiva") : t("SettingsSheet.ora_e_spenta")}
       </p>
     </div>
   );
@@ -211,10 +207,9 @@ function HomeLayoutSettings() {
 
   return (
     <div>
-      <span className="mb-1 block text-base font-semibold text-text">Righe della Home</span>
+      <span className="mb-1 block text-base font-semibold text-text">{t("SettingsSheet.righe_della_home")}</span>
       <p className="mb-3 text-sm text-text-muted">
-        Cosa vedi appena apri l'app, e in che ordine. Una riga spenta non sparisce dai dati: resta
-        dove è sempre stata, semplicemente non occupa la prima schermata.
+        {t("SettingsSheet.cosa_vedi_appena_apri")}
       </p>
       {/*
        * Il tetto, detto invece che subìto.
@@ -228,10 +223,10 @@ function HomeLayoutSettings() {
        */}
       <p className="mb-3 text-sm" style={{ color: full ? "var(--accent-text)" : "var(--text-muted)" }}>
         <span className="t-numeral">
-          {shown} di {MAX_ROWS}
+          {shown} {t("SettingsSheet.di")} {MAX_ROWS}
         </span>{" "}
-        righe accese.{" "}
-        {full ? "È il massimo: per accenderne una, spegnine un'altra." : "Una Home corta è una Home che si legge."}
+        {t("SettingsSheet.righe_accese")}{" "}
+        {full ? t("SettingsSheet.e_il_massimo_per") : t("SettingsSheet.una_home_corta_e")}
       </p>
 
       {/* Un elenco raggruppato: le frecce a sinistra spostano, l'interruttore
@@ -250,7 +245,7 @@ function HomeLayoutSettings() {
                     type="button"
                     onClick={() => move(id, -1)}
                     disabled={index === 0}
-                    aria-label={`Sposta ${section.label} in alto`}
+                    aria-label={t("SettingsSheet.sposta_in_alto", { v0: section.label })}
                     className="flex h-6 w-10 items-center justify-center rounded-xs text-text-muted transition-colors hover:text-text disabled:opacity-25"
                   >
                     <ChevronUpIcon size={16} />
@@ -259,7 +254,7 @@ function HomeLayoutSettings() {
                     type="button"
                     onClick={() => move(id, 1)}
                     disabled={index === order.length - 1}
-                    aria-label={`Sposta ${section.label} in basso`}
+                    aria-label={t("SettingsSheet.sposta_in_basso", { v0: section.label })}
                     className="flex h-6 w-10 items-center justify-center rounded-xs text-text-muted transition-colors hover:text-text disabled:opacity-25"
                   >
                     <ChevronDownIcon size={16} />
@@ -276,7 +271,7 @@ function HomeLayoutSettings() {
                   aria-checked={visible}
                   // Spegnere è sempre possibile; accendere solo se c'è posto.
                   disabled={!visible && full}
-                  aria-label={`${section.label} in Home`}
+                  aria-label={t("SettingsSheet.in_home", { v0: section.label })}
                   className="switch"
                 />
               </div>
@@ -290,7 +285,7 @@ function HomeLayoutSettings() {
         onClick={reset}
         className="btn btn-plain btn-sm mt-3 -ml-3"
       >
-        Torna all'ordine predefinito
+        {t("SettingsSheet.torna_all_ordine_predefinito")}
       </button>
     </div>
   );
@@ -304,17 +299,11 @@ function SourceTemplates() {
   return (
     <div>
       <span className="mb-1 block text-base font-semibold text-text">
-        Indirizzi delle tue sorgenti
+        {t("SettingsSheet.indirizzi_delle_tue_sorgenti")}
       </span>
       <p className="mb-3 text-sm text-text-muted">
-        Se i tuoi video stanno tutti sullo stesso server, scrivilo qui una volta sola: da quel
-        momento ogni titolo della libreria ha il suo pulsante{" "}
-        <strong className="font-medium text-text-muted">Guarda</strong>, senza incollare più niente.
-        Basta l'indirizzo nudo — <span className="font-mono">https://mio-server.com</span> — e il
-        file lo cerca lui: prova i nomi soliti per quel titolo e, se non li trova, legge la cartella
-        e cerca il nome che gli somiglia. Se invece sai già com'è fatto l'indirizzo, scrivilo con un
-        segnaposto al posto del titolo ed è quello esatto. Le tre caselle si provano in ordine, e
-        con loro gli host del pannello Host nel player.
+        {t("SettingsSheet.se_i_tuoi_video")}{" "}
+        <strong className="font-medium text-text-muted">{t("SettingsSheet.guarda")}</strong>{t("SettingsSheet.senza_incollare_piu_niente")} <span className="font-mono">https://mio-server.com</span> {t("SettingsSheet.e_il_file_lo")}
       </p>
 
       <div className="flex flex-col gap-2">
@@ -334,15 +323,15 @@ function SourceTemplates() {
                 autoComplete="off"
                 autoCapitalize="off"
                 spellCheck={false}
-                aria-label={`Indirizzo ${i + 1}`}
-                placeholder={i === 0 ? "https://mio-server.com" : `Indirizzo ${i + 1} (facoltativo)`}
+                aria-label={t("SettingsSheet.indirizzo", { v0: i + 1 })}
+                placeholder={i === 0 ? "https://mio-server.com" : t("SettingsSheet.indirizzo_facoltativo", { v0: i + 1 })}
                 className="field w-full font-mono"
               />
               {preview && (
                 <p className="mt-1.5 break-all px-1 font-mono text-xs leading-relaxed text-text-muted">
-                  Per «Il Padrino» prova {preview}
+                  {t("SettingsSheet.per_il_padrino_prova")} {preview}
                   {others > 0 && (
-                    <span className="font-sans"> e altri {others} indirizzi, finché uno risponde</span>
+                    <span className="font-sans"> {t("SettingsSheet.e_altri")} {others} {t("SettingsSheet.indirizzi_finche_uno_risponde")}</span>
                   )}
                 </p>
               )}
@@ -357,7 +346,7 @@ function SourceTemplates() {
         aria-expanded={showHelp}
         className="btn btn-secondary btn-sm mt-2"
       >
-        {showHelp ? "Nascondi i segnaposto" : "Quali segnaposto posso usare?"}
+        {showHelp ? t("SettingsSheet.nascondi_i_segnaposto") : t("SettingsSheet.quali_segnaposto_posso_usare")}
       </button>
 
       {showHelp && (
@@ -371,8 +360,7 @@ function SourceTemplates() {
             </div>
           ))}
           <p className="mt-1 text-sm text-text-muted">
-            I segnaposto vengono riempiti con i dati del titolo, e il player chiede quell'indirizzo
-            sul server che hai indicato.
+            {t("SettingsSheet.i_segnaposto_vengono_riempiti")}
           </p>
         </dl>
       )}
@@ -471,9 +459,9 @@ function PageReaderSetting() {
   async function copyWorker() {
     try {
       await navigator.clipboard.writeText(snippet);
-      pushToast("success", "Codice copiato: incollalo nell'editor del Worker.");
+      pushToast("success", t("SettingsSheet.codice_copiato_incollalo_nell"));
     } catch {
-      pushToast("error", "Il browser non ha concesso gli appunti.");
+      pushToast("error", t("SettingsSheet.il_browser_non_ha"));
     }
   }
 
@@ -487,16 +475,11 @@ function PageReaderSetting() {
   return (
     <div>
       <span className="mb-1 block text-base font-semibold text-text">
-        Lettore di pagine
+        {t("SettingsSheet.lettore_di_pagine")}
       </span>
       <p className="mb-3 text-sm text-text-muted">
-        «Estrai il flusso» e la ricerca sui Siti devono leggere il sorgente di una pagina, e un
-        browser può leggere solo i siti che glielo permettono con un header (
-        <span className="font-mono">CORS</span>): i siti di streaming non lo mandano mai, e da lì non
-        si passa — non è un'opzione da accendere, è come è fatto il web. Ciò che può leggerli è
-        qualcosa che browser non è: un servizio tuo che scarica la pagina e te la ripassa. Venti
-        righe di Cloudflare Worker, o un <span className="font-mono">cors-anywhere</span> in casa.
-        Scrivi qui il suo indirizzo e i due pulsanti smettono di sbattere contro il muro.
+        {t("SettingsSheet.estrai_il_flusso_e")}
+        <span className="font-mono">{t("SettingsSheet.cors")}</span>{t("SettingsSheet.i_siti_di_streaming")} <span className="font-mono">cors-anywhere</span> {t("SettingsSheet.in_casa_scrivi_qui")}
       </p>
       <input
         value={pageReader}
@@ -505,13 +488,13 @@ function PageReaderSetting() {
         autoComplete="off"
         autoCapitalize="off"
         spellCheck={false}
-        aria-label="Indirizzo del lettore di pagine"
+        aria-label={t("SettingsSheet.indirizzo_del_lettore_di")}
         placeholder="https://mio-lettore.dev/?u={url}"
         className="field w-full font-mono"
       />
       {pageReader.trim() && (
         <p className="mt-1.5 break-all px-1 font-mono text-xs leading-relaxed text-text-muted">
-          {preview ? `Per una pagina chiederà ${preview}` : "Quell'indirizzo non è utilizzabile."}
+          {preview ? t("SettingsSheet.per_una_pagina_chiedera", { v0: preview }) : t("SettingsSheet.quell_indirizzo_non_e")}
         </p>
       )}
 
@@ -522,7 +505,7 @@ function PageReaderSetting() {
           aria-expanded={showHelp}
           className="btn btn-secondary btn-sm"
         >
-          {showHelp ? "Nascondi le forme accettate" : "Come si scrive l'indirizzo?"}
+          {showHelp ? t("SettingsSheet.nascondi_le_forme_accettate") : t("SettingsSheet.come_si_scrive_l")}
         </button>
         <button
           type="button"
@@ -530,21 +513,18 @@ function PageReaderSetting() {
           aria-expanded={showRecipe}
           className="btn btn-secondary btn-sm"
         >
-          {showRecipe ? "Nascondi la ricetta" : "Non ne ho uno: come me lo faccio?"}
+          {showRecipe ? t("SettingsSheet.nascondi_la_ricetta") : t("SettingsSheet.non_ne_ho_uno")}
         </button>
       </div>
 
       {showRecipe && (
         <div className="mt-2 flex flex-col gap-2 rounded-md bg-surface-2 p-4 text-sm text-text-muted">
           <p className="text-text-muted">
-            Due cose da incollare, niente da scrivere. Un Cloudflare Worker: piano gratuito,
-            nessuna carta, niente da tenere acceso.
+            {t("SettingsSheet.due_cose_da_incollare")}
           </p>
 
           <p className="font-medium text-text">
-            1. Su <span className="font-mono">dash.cloudflare.com</span> → Workers &amp; Pages →
-            Create → Start with Hello World → Deploy. Poi «Edit code», cancella tutto e incolla
-            questo:
+            {t("SettingsSheet.1_su")} <span className="font-mono">{t("SettingsSheet.dash_cloudflare_com")}</span> {t("SettingsSheet.workers_amp_pages_create")}
           </p>
           <pre className="max-h-52 overflow-auto rounded-sm bg-surface p-3 font-mono text-xs leading-relaxed text-text-muted">
             {snippet}
@@ -554,16 +534,14 @@ function PageReaderSetting() {
             onClick={copyWorker}
             className="btn btn-primary btn-sm self-start"
           >
-            Copia il codice
+            {t("SettingsSheet.copia_il_codice")}
           </button>
           <p>
-            La parola segreta è già dentro, diversa per ogni dispositivo: non c'è niente da
-            cambiare. Premi <span className="text-text-muted">Deploy</span>.
+            {t("SettingsSheet.la_parola_segreta_e")} <span className="text-text-muted">{t("SettingsSheet.deploy")}</span>.
           </p>
 
           <p className="mt-1 font-medium text-text">
-            2. Cloudflare ti dà un indirizzo. Incollalo qui e la casella qui sopra si compila da
-            sola:
+            {t("SettingsSheet.2_cloudflare_ti_da")}
           </p>
           <input
             value={workerAddress}
@@ -572,24 +550,20 @@ function PageReaderSetting() {
             autoComplete="off"
             autoCapitalize="off"
             spellCheck={false}
-            aria-label="L'indirizzo che ti ha dato Cloudflare"
-            placeholder="qualcosa.tuonome.workers.dev"
+            aria-label={t("SettingsSheet.l_indirizzo_che_ti")}
+            placeholder={t("SettingsSheet.qualcosa_tuonome_workers_dev")}
             className="field w-full font-mono"
           />
           {workerAddress.trim() && (
             <p className={readerTemplateFor(workerAddress, secret) ? "text-text-muted" : "text-text-faint"}>
               {readerTemplateFor(workerAddress, secret)
-                ? "Fatto: il lettore è configurato. Provalo con «Estrai il flusso» nel Web Viewer."
-                : "Quell'indirizzo non si capisce: dovrebbe somigliare a qualcosa.tuonome.workers.dev"}
+                ? t("SettingsSheet.fatto_il_lettore_e")
+                : t("SettingsSheet.quell_indirizzo_non_si")}
             </p>
           )}
 
           <p className="pt-3 shadow-[inset_0_1px_0_var(--separator)]">
-            La riga sullo <span className="font-mono">User-Agent</span> è il punto in cui «fingersi
-            un browser normale» funziona davvero: da una pagina web quell'header non si può
-            toccare, da un Worker sì — ed è ciò che molti siti guardano per decidere cosa servire.
-            La parola segreta non è decorativa: senza, chiunque trovi l'indirizzo ha un proxy
-            aperto a spese tue.
+            {t("SettingsSheet.la_riga_sullo")} <span className="font-mono">{t("SettingsSheet.user_agent")}</span> {t("SettingsSheet.e_il_punto_in")}
           </p>
         </div>
       )}
@@ -597,23 +571,19 @@ function PageReaderSetting() {
       {showHelp && (
         <div className="mt-2 flex flex-col gap-1.5 rounded-md bg-surface-2 p-4 text-sm text-text-muted">
           <p>
-            <span className="font-mono text-text">{"{url}"}</span> è l'indirizzo da leggere,
-            codificato: la forma giusta per chi lo mette in un parametro —{" "}
-            <span className="font-mono">https://mio-lettore.dev/?u={"{url}"}</span>.
+            <span className="font-mono text-text">{t("SettingsSheet.url")}</span> {t("SettingsSheet.e_l_indirizzo_da")}{" "}
+            <span className="font-mono">https://mio-lettore.dev/?u={t("SettingsSheet.url")}</span>.
           </p>
           <p>
-            <span className="font-mono text-text">{"{url-nudo}"}</span> è lo stesso indirizzo
-            lasciato intero, per chi lo vuole come coda del percorso.
+            <span className="font-mono text-text">{t("SettingsSheet.url_nudo")}</span> {t("SettingsSheet.e_lo_stesso_indirizzo")}
           </p>
           <p>
-            Senza segnaposto l'indirizzo si attacca in fondo così com'è —{" "}
-            <span className="font-mono">https://mio-lettore.casa/</span> — che è come funziona{" "}
-            <span className="font-mono">cors-anywhere</span> e quasi tutto ciò che gli somiglia.
+            {t("SettingsSheet.senza_segnaposto_l_indirizzo")}{" "}
+            <span className="font-mono">https://mio-lettore.casa/</span> {t("SettingsSheet.che_e_come_funziona")}{" "}
+            <span className="font-mono">cors-anywhere</span> {t("SettingsSheet.e_quasi_tutto_cio")}
           </p>
           <p className="pt-3 text-text-muted shadow-[inset_0_1px_0_var(--separator)]">
-            Da sapere prima di scriverlo: il lettore vede ogni indirizzo che gli passi. Uno tuo
-            resta una cosa fra te e il tuo server; uno pubblico di terzi è una persona in mezzo che
-            legge la tua navigazione. CineMate non ne propone nessuno apposta.
+            {t("SettingsSheet.da_sapere_prima_di")}
           </p>
         </div>
       )}
@@ -709,22 +679,18 @@ function SettingsGroup({ label, children }: { label: string; children: ReactNode
  */
 function AboutPanel() {
   const rows: { label: string; value: string }[] = [
-    { label: "Catalogo", value: "TMDB — copertine, trama, cast, episodi, date di uscita" },
-    { label: "Dove guardarlo", value: "Dati di disponibilità streaming forniti da JustWatch tramite TMDB" },
-    { label: "Critico", value: "API di Anthropic, chiamata dal tuo browser con la tua chiave" },
-    { label: "Player", value: "hls.js per lo streaming adattivo, riproduzione nel browser" },
+    { label: t("SettingsSheet.catalogo"), value: t("SettingsSheet.tmdb_copertine_trama_cast") },
+    { label: t("SettingsSheet.dove_guardarlo"), value: t("SettingsSheet.dati_di_disponibilita_streaming") },
+    { label: t("SettingsSheet.critico"), value: t("SettingsSheet.api_di_anthropic_chiamata") },
+    { label: "Player", value: t("SettingsSheet.hls_js_per_lo") },
   ];
 
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-lg bg-surface-2 p-4">
-        <h4 className="mb-2 text-base font-semibold text-text">I tuoi dati</h4>
+        <h4 className="mb-2 text-base font-semibold text-text">{t("SettingsSheet.i_tuoi_dati")}</h4>
         <p className="text-sm text-text-muted">
-          Libreria, diario, voti, sorgenti e chiavi vivono solo in questo browser: non c'è nessun
-          account e nessun server di CineMate a cui mandarli. Le uniche cose che escono dal
-          dispositivo sono le richieste a TMDB e ad Anthropic, fatte con le chiavi che hai scritto
-          tu, e le richieste ai server dei video che hai indicato tu. Il backup è un file leggibile
-          che resta in mano tua.
+          {t("SettingsSheet.libreria_diario_voti_sorgenti")}
         </p>
       </div>
 
@@ -738,8 +704,7 @@ function AboutPanel() {
       </dl>
 
       <p className="text-xs text-text-muted">
-        Questo prodotto usa l'API TMDB ma non è approvato né certificato da TMDB. CineMate non
-        ospita né fornisce contenuti: riproduce le sorgenti che indichi tu.
+        {t("SettingsSheet.questo_prodotto_usa_l")}
       </p>
     </div>
   );
@@ -812,7 +777,7 @@ function SettingsForm() {
       })(),
     );
     downloadFile(new Blob([backup], { type: "application/json" }), `cinemate-libreria-${new Date().toISOString().slice(0, 10)}.json`);
-    pushToast("success", "Libreria esportata.");
+    pushToast("success", t("SettingsSheet.libreria_esportata"));
   }
 
   /*
@@ -830,7 +795,7 @@ function SettingsForm() {
     try {
       backup = parseBackup(await file.text());
     } catch (e) {
-      pushToast("error", e instanceof BackupParseError ? e.message : "Impossibile leggere il file.");
+      pushToast("error", e instanceof BackupParseError ? e.message : t("SettingsSheet.impossibile_leggere_il_file"));
       return;
     }
     setConfirmingClear(false);
@@ -888,7 +853,7 @@ function SettingsForm() {
             </button>
           )}
           <h2 id={titleId} className="t-title text-text">
-            {panel ? PANEL_TITLES[panel] : "Impostazioni"}
+            {panel ? PANEL_TITLES[panel] : t("SettingsSheet.impostazioni")}
           </h2>
         </div>
 
@@ -988,29 +953,27 @@ function SettingsForm() {
           <>
         <div>
           <span className="mb-1 block text-base font-semibold text-text">
-            Chiave API Anthropic
+            {t("SettingsSheet.chiave_api_anthropic")}
           </span>
           <p className="mb-3 text-sm text-text-muted">
-            Usata solo dal tuo browser per parlare direttamente con l'API di Anthropic — non viene mai inviata altrove
-            e resta salvata solo su questo dispositivo. Ricordati che è una chiave personale: non condividere questo
-            dispositivo con dati sensibili collegati.
+            {t("SettingsSheet.usata_solo_dal_tuo")}
           </p>
           <div className="flex gap-2">
             <input
               type={reveal ? "text" : "password"}
               value={draftKey}
               onChange={(e) => setDraftKey(e.target.value)}
-              placeholder="sk-ant-…"
+              placeholder={t("SettingsSheet.sk_ant")}
               autoComplete="off"
               className="field flex-1 font-mono"
             />
             <button
               type="button"
               onClick={() => setReveal((r) => !r)}
-              aria-label={reveal ? "Nascondi chiave" : "Mostra chiave"}
+              aria-label={reveal ? t("SettingsSheet.nascondi_chiave") : t("SettingsSheet.mostra_chiave")}
               className="btn btn-secondary btn-sm"
             >
-              {reveal ? "Nascondi" : "Mostra"}
+              {reveal ? t("SettingsSheet.nascondi") : t("SettingsSheet.mostra")}
             </button>
           </div>
           <div className="mt-2.5 flex gap-2">
@@ -1018,11 +981,11 @@ function SettingsForm() {
               type="button"
               onClick={() => {
                 setApiKey(draftKey);
-                pushToast("success", "Chiave salvata.");
+                pushToast("success", t("SettingsSheet.chiave_salvata"));
               }}
               className="btn btn-primary btn-sm"
             >
-              Salva chiave
+              {t("SettingsSheet.salva_chiave")}
             </button>
             {apiKey && (
               <button
@@ -1030,39 +993,37 @@ function SettingsForm() {
                 onClick={() => {
                   clearApiKey();
                   setDraftKey("");
-                  pushToast("info", "Chiave rimossa.");
+                  pushToast("info", t("SettingsSheet.chiave_rimossa"));
                 }}
                 className="btn btn-secondary btn-sm"
               >
-                Rimuovi
+                {t("SettingsSheet.rimuovi")}
               </button>
             )}
           </div>
         </div>
 
         <div>
-          <span className="mb-1 block text-base font-semibold text-text">Chiave API TMDB</span>
+          <span className="mb-1 block text-base font-semibold text-text">{t("SettingsSheet.chiave_api_tmdb")}</span>
           <p className="mb-3 text-sm text-text-muted">
-            Per copertine reali, trama, cast, trailer e disponibilità streaming legale. Gratuita — la ottieni in
-            pochi minuti creando un account su themoviedb.org (Impostazioni → API). Resta anch'essa solo su questo
-            dispositivo.
+            {t("SettingsSheet.per_copertine_reali_trama")}
           </p>
           <div className="flex gap-2">
             <input
               type={revealTmdb ? "text" : "password"}
               value={draftTmdbKey}
               onChange={(e) => setDraftTmdbKey(e.target.value)}
-              placeholder="Chiave API TMDB (v3)"
+              placeholder={t("SettingsSheet.chiave_api_tmdb_v3")}
               autoComplete="off"
               className="field flex-1 font-mono"
             />
             <button
               type="button"
               onClick={() => setRevealTmdb((r) => !r)}
-              aria-label={revealTmdb ? "Nascondi chiave" : "Mostra chiave"}
+              aria-label={revealTmdb ? t("SettingsSheet.nascondi_chiave") : t("SettingsSheet.mostra_chiave")}
               className="btn btn-secondary btn-sm"
             >
-              {revealTmdb ? "Nascondi" : "Mostra"}
+              {revealTmdb ? t("SettingsSheet.nascondi") : t("SettingsSheet.mostra")}
             </button>
           </div>
           <div className="mt-2.5 flex gap-2">
@@ -1072,11 +1033,11 @@ function SettingsForm() {
                 setTmdbApiKey(draftTmdbKey);
                 // A new key deserves a fresh go at titles that failed before.
                 resetAutoLinkAttempts();
-                pushToast("success", "Chiave TMDB salvata.");
+                pushToast("success", t("SettingsSheet.chiave_tmdb_salvata"));
               }}
               className="btn btn-primary btn-sm"
             >
-              Salva chiave
+              {t("SettingsSheet.salva_chiave")}
             </button>
             {tmdbApiKey && (
               <button
@@ -1084,28 +1045,27 @@ function SettingsForm() {
                 onClick={() => {
                   clearTmdbApiKey();
                   setDraftTmdbKey("");
-                  pushToast("info", "Chiave TMDB rimossa.");
+                  pushToast("info", t("SettingsSheet.chiave_tmdb_rimossa"));
                 }}
                 className="btn btn-secondary btn-sm"
               >
-                Rimuovi
+                {t("SettingsSheet.rimuovi")}
               </button>
             )}
           </div>
           <p className="mt-3 text-xs text-text-muted">
-            Questo prodotto usa l'API TMDB ma non è approvato né certificato da TMDB. Dati streaming forniti da
-            JustWatch.
+            {t("SettingsSheet.questo_prodotto_usa_l_2")}
           </p>
         </div>
 
         <div>
-          <span className="mb-3 block text-base font-semibold text-text">Modello</span>
+          <span className="mb-3 block text-base font-semibold text-text">{t("SettingsSheet.modello")}</span>
           {/* Una scelta fra tre, come nelle impostazioni di sistema: la voce
               scelta ha il segno di spunta, le altre niente. */}
           <div
             className="list-group bg-surface-2 shadow-none"
             role="radiogroup"
-            aria-label="Modello Claude"
+            aria-label={t("SettingsSheet.modello_claude")}
             style={{ "--row-inset": "16px" } as React.CSSProperties}
           >
             {MODELS.map((m) => (
@@ -1140,12 +1100,10 @@ function SettingsForm() {
 
         <div>
           <span className="mb-1 block text-base font-semibold text-text">
-            Quando un indirizzo non si risolve
+            {t("SettingsSheet.quando_un_indirizzo_non")}
           </span>
           <p className="mb-3 text-sm text-text-muted">
-            Un host che «non risponde» a volte non è spento: è il nome che non viene tradotto in un
-            indirizzo. Il DNS è quel passaggio, viaggia in chiaro per impostazione predefinita, e il
-            resolver dell'operatore è solo uno dei tanti possibili.
+            {t("SettingsSheet.un_host_che_non")}
           </p>
           <DnsGuideButton />
         </div>
@@ -1162,8 +1120,7 @@ function SettingsForm() {
         {panel === "dati" && (
         <div>
           <p className="mb-4 text-sm text-text-muted">
-            Tutto vive solo in questo browser. Esporta ogni tanto un backup: è anche il modo per portare la libreria
-            su un altro dispositivo.
+            {t("SettingsSheet.tutto_vive_solo_in")}
           </p>
           <div className="list-group bg-surface-2 shadow-none">
             <button
@@ -1173,8 +1130,8 @@ function SettingsForm() {
               className="list-row hover:bg-surface-hover disabled:opacity-40"
             >
               <span className="flex h-5 w-5 shrink-0 items-center justify-center text-text-muted"><DownloadIcon size={18} /></span>
-              <span className="flex-1 text-sm font-medium text-text">Esporta la libreria</span>
-              <span className="text-xs text-text-muted">JSON</span>
+              <span className="flex-1 text-sm font-medium text-text">{t("SettingsSheet.esporta_la_libreria")}</span>
+              <span className="text-xs text-text-muted">{t("SettingsSheet.json")}</span>
             </button>
             <button
               type="button"
@@ -1182,13 +1139,13 @@ function SettingsForm() {
               className="list-row hover:bg-surface-hover"
             >
               <span className="flex h-5 w-5 shrink-0 items-center justify-center text-text-muted"><UploadIcon size={18} /></span>
-              <span className="flex-1 text-sm font-medium text-text">Importa da un backup…</span>
+              <span className="flex-1 text-sm font-medium text-text">{t("SettingsSheet.importa_da_un_backup")}</span>
             </button>
             <button type="button" onClick={() => setImportingOther(true)} className="list-row hover:bg-surface-hover">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center text-text-muted"><UploadIcon size={18} /></span>
               <span className="flex-1">
-                <span className="block text-sm font-medium text-text">Importa da un'altra app…</span>
-                <span className="block text-xs text-text-muted">Letterboxd, Trakt, IMDb, TV Time</span>
+                <span className="block text-sm font-medium text-text">{t("SettingsSheet.importa_da_un_altra")}</span>
+                <span className="block text-xs text-text-muted">{t("SettingsSheet.letterboxd_trakt_imdb_tv")}</span>
               </span>
             </button>
             <button
@@ -1202,7 +1159,7 @@ function SettingsForm() {
               style={{ color: "var(--danger)" }}
             >
               <span className="flex h-5 w-5 shrink-0 items-center justify-center"><TrashIcon size={18} /></span>
-              <span className="flex-1 text-sm font-medium">Svuota la libreria</span>
+              <span className="flex-1 text-sm font-medium">{t("SettingsSheet.svuota_la_libreria")}</span>
             </button>
           </div>
           <input
@@ -1210,7 +1167,7 @@ function SettingsForm() {
             type="file"
             accept="application/json,.json"
             className="sr-only"
-            aria-label="Scegli un file di backup JSON"
+            aria-label={t("SettingsSheet.scegli_un_file_di")}
             onChange={(e) => {
               const file = e.target.files?.[0];
               e.target.value = "";
@@ -1227,15 +1184,14 @@ function SettingsForm() {
           {pendingImport && (
             <div role="alert" aria-labelledby="import-confirm" className="mt-4 rounded-md bg-surface-2 p-4">
               <p id="import-confirm" className="text-sm text-text">
-                Importare {pendingImport.items.length} titoli? La libreria attuale ({items.length} titoli) verrà
-                sostituita{pendingImport.player ? ", insieme alle sorgenti del player e agli host" : ""}.
+                {t("SettingsSheet.importare")} {pendingImport.items.length} {t("SettingsSheet.titoli_la_libreria_attuale")}{items.length} {t("SettingsSheet.titoli_verra_sostituita")}{pendingImport.player ? t("SettingsSheet.insieme_alle_sorgenti_del") : ""}.
               </p>
               <div className="mt-3 flex justify-end gap-2">
                 <button type="button" onClick={() => setPendingImport(null)} className="btn btn-secondary btn-sm">
-                  Annulla
+                  {t("SettingsSheet.annulla")}
                 </button>
                 <button type="button" onClick={() => applyImport(pendingImport)} className="btn btn-primary btn-sm">
-                  Importa
+                  {t("SettingsSheet.importa")}
                 </button>
               </div>
             </div>
@@ -1244,12 +1200,11 @@ function SettingsForm() {
           {confirmingClear && (
             <div role="alert" aria-labelledby="clear-confirm" className="mt-4 rounded-md bg-surface-2 p-4">
               <p id="clear-confirm" className="text-sm text-text">
-                Svuotare la libreria? {items.length} titoli e tutto il diario verranno eliminati da questo dispositivo.
-                Non si torna indietro.
+                {t("SettingsSheet.svuotare_la_libreria")} {items.length} {t("SettingsSheet.titoli_e_tutto_il")}
               </p>
               <div className="mt-3 flex justify-end gap-2">
                 <button type="button" onClick={() => setConfirmingClear(false)} className="btn btn-secondary btn-sm">
-                  Annulla
+                  {t("SettingsSheet.annulla")}
                 </button>
                 <button
                   type="button"
@@ -1265,7 +1220,7 @@ function SettingsForm() {
                   }}
                   className="btn btn-danger-fill btn-sm"
                 >
-                  Svuota
+                  {t("SettingsSheet.svuota")}
                 </button>
               </div>
             </div>
