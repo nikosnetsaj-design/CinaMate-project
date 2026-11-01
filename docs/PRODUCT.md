@@ -403,21 +403,28 @@ non dice «nessun risultato», una riga di Scopri non sparisce, «Dove guardarlo
 non dice «non disponibile» quando è TMDB a non aver risposto — e un errore di
 rete non resta più in cache per ventiquattro ore come «da nessuna parte».
 
-### 3.9-ter Lingue — Utile ✅ (in parte)
+### 3.9-ter Lingue — Utile ✅
 
 Italiano predefinito, inglese a scelta in **Impostazioni → Aspetto → Lingua**.
-I testi stanno in `src/locales/it.ts` e `en.ts`; l'inglese è tipizzato sulle
-chiavi dell'italiano, quindi una frase dimenticata non compila (e un test
-controlla anche che i segnaposto coincidano). Cambiare lingua ricarica l'app e
-svuota la cache di TMDB, che da lì risponde in inglese (`en-US`); date, mesi e
-migliaia seguono la stessa scelta, e `<html lang>` è giusto dal primo pixel.
+Tutta l'app è tradotta: cornice, pagine, fogli, lettore, stati vuoti ed
+errori, motivi dei consigli, guide (DNS, Link Host), traguardi, file del
+calendario, immagine dell'anno. Le risposte dell'IA — critico, ricerca a
+parole, riassunti, ordini delle saghe — escono nella lingua scelta, e i
+riassunti in inglese hanno la loro memoria. In inglese i generi sono quelli di
+TMDB in `en-US` e la griglia del primo avvio usa i titoli inglesi.
 
-**Tradotto:** la cornice — navigazione, menu, campanella, titoli e schede
-delle pagine, controlli della Libreria, Impostazioni (gruppi, voci, pannelli,
-aspetto), stati dei titoli, stati d'errore. **Ancora in italiano:** i testi
-lunghi dentro i singoli fogli e pagine (spiegazioni, stati vuoti specifici,
-moduli), i resoconti dell'importazione e le risposte del critico IA. Il
-lavoro che resta è meccanico: spostare le frasi nei due file.
+Come è fatto: i testi stanno in `src/locales/` — la cornice in `it.ts`/`en.ts`,
+le frasi dei componenti in `it.ui.ts`/`en.ui.ts` (≈2000 chiavi «File.parole»),
+estratte dal codice con `scripts/i18n-extract.cjs`, che usa il parser di
+TypeScript e lascia stare i valori (stati salvati, chiavi, CSS). L'inglese è
+tipizzato sulle chiavi dell'italiano: una frase dimenticata non compila, e un
+test controlla che i segnaposto coincidano. I dizionari non entrano interi
+nel bundle: il plugin `scripts/vite-i18n.ts` fa registrare a ogni modulo solo
+le frasi che nomina, così il primo caricamento resta sotto i 200 KB e la
+pagina del lettore porta i testi del lettore. Cambiare lingua ricarica l'app e
+svuota la cache di TMDB; date, mesi e migliaia seguono la stessa scelta, e
+`<html lang>` è giusto dal primo pixel. Restano in italiano, per scelta, i
+valori salvati (gli stati «Da vedere», «Visto»… nei backup, mostrati tradotti).
 
 ### 3.10 Prestazioni e batteria — Utile ✅
 

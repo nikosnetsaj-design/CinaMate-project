@@ -417,9 +417,10 @@ rete che non è la tua.
 - **Ricerca a parole**: scrivi «film di fantascienza anni '90» e Claude la
   traduce in filtri per TMDB, che risponde. Il modello sceglie i filtri, non i
   titoli: così la lista è vera per costruzione.
-- **Italiano o inglese**: in *Impostazioni → Aspetto → Lingua*. Tradotta la
-  cornice dell'app (navigazione, menu, titoli delle pagine, impostazioni,
-  stati); alcuni testi lunghi dentro i fogli restano in italiano.
+- **Italiano o inglese**: in *Impostazioni → Aspetto → Lingua*. Tutta l'app è
+  tradotta — pagine, fogli, lettore, errori, guide, motivi dei consigli — e
+  le risposte dell'IA escono nella lingua scelta. I testi stanno in
+  `src/locales/`; ogni pagina scarica solo le sue frasi.
 - **Da app installata**: tenendo premuta l'icona ci sono *Continua a
   guardare*, *Aggiungi titolo* e *Cerca*; CineMate compare nel foglio
   *Condividi* del telefono (un link di TMDB o IMDb apre la scheda del titolo,
