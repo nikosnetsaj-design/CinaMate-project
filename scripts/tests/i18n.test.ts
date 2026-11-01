@@ -30,6 +30,14 @@ const pairs = loadMessages();
 check("plugin: tutte le chiavi, in due lingue", pairs.size === Object.keys(it).length && pairs.get("Duo.confronta")?.[1] === "Compare");
 check("plugin: nessun inglese uguale alla chiave", [...pairs].every(([k, [, e]]) => e !== k));
 
+// Il benvenuto statico di index.html dice le stesse frasi del componente vero.
+const { readFileSync } = await import("node:fs");
+const html = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
+const welcomeKeys = ["Onboarding.questa_e_cinemate_con", "Onboarding.tiene_il_diario_di", "Onboarding.comincia", "Onboarding.guardo_da_solo"] as const;
+const jsString = (s: string) => JSON.stringify(s).slice(1, -1);
+const missingInShell = welcomeKeys.filter((k) => !html.includes(it[k]) || !html.includes(jsString(en[k])));
+check("index.html: benvenuto statico allineato al dizionario", missingInShell.length === 0, missingInShell.join(", "));
+
 // Una frase che nessun modulo ha registrato si vede come chiave, non come testo sbagliato.
 registerMessages({ "prova.chiave": ["Ciao", "Hello"] });
 check("registrazione: la frase arriva", t("prova.chiave" as never) === "Ciao");

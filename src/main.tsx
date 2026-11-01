@@ -1,4 +1,4 @@
-import { StrictMode } from "react";
+import { StrictMode, startTransition } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import "@fontsource-variable/newsreader/opsz.css";
@@ -61,14 +61,21 @@ async function start() {
   // parte insieme a quello dell'app invece di aspettare che l'app disegni.
   if (isFirstRun()) void import("./components/Onboarding");
   const { default: App } = await import("./App.tsx");
-  createRoot(document.getElementById("root")!).render(
-    <StrictMode>
-      {/* Router paths must sit under the same base the assets are served from. */}
-      <BrowserRouter basename={import.meta.env.BASE_URL}>
-        <App />
-      </BrowserRouter>
-    </StrictMode>,
-  );
+  const root = createRoot(document.getElementById("root")!);
+  // Il primo render come transizione: React lo spezza in fette da pochi
+  // millisecondi e lascia respirare il browser fra l'una e l'altra, invece di
+  // tenere occupato il thread per tutto il tempo che serve a montare l'app.
+  // Sullo schermo c'è già l'ossatura (o il benvenuto) di index.html.
+  startTransition(() => {
+    root.render(
+      <StrictMode>
+        {/* Router paths must sit under the same base the assets are served from. */}
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
+          <App />
+        </BrowserRouter>
+      </StrictMode>,
+    );
+  });
 }
 
 void start();

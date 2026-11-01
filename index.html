@@ -59,6 +59,78 @@
       <div class="cm-block cm-hero"></div>
       <div class="cm-row"><span></span><span></span><span></span><span></span></div>
     </div>
+    <!--
+      Il benvenuto del primo avvio, già disegnato. Chi apre CineMate la prima
+      volta vede questo foglio prima di qualunque altra cosa: scritto qui, con
+      le classi dell'app (il foglio di stile è già arrivato quando si dipinge),
+      appare insieme alla prima pittura invece di aspettare il codice. Il
+      componente vero (components/Onboarding.tsx) lo sostituisce senza
+      animazione, così il passaggio non si vede; i testi sono gli stessi del
+      dizionario, e un test lo controlla. Non è interattivo: i pulsanti veri
+      arrivano con React, una frazione di secondo dopo.
+    -->
+    <div id="cm-welcome" hidden aria-hidden="true" class="fixed inset-0 z-70 flex items-end justify-center sm:items-center sm:p-6">
+      <div class="absolute inset-0 backdrop-blur-sm" style="background: var(--scrim)"></div>
+      <div class="relative z-10 flex max-h-[94vh] w-full max-w-md flex-col overflow-hidden rounded-t-lg rounded-b-none bg-surface pb-[env(safe-area-inset-bottom)] shadow-[var(--shadow-lg)] sm:rounded-lg sm:rounded-b-lg sm:pb-0">
+        <div class="flex gap-1 px-6 pt-5">
+          <span class="h-1 flex-1 rounded-full" style="background: var(--accent)"></span>
+          <span class="h-1 flex-1 rounded-full" style="background: var(--surface-2)"></span>
+          <span class="h-1 flex-1 rounded-full" style="background: var(--surface-2)"></span>
+          <span class="h-1 flex-1 rounded-full" style="background: var(--surface-2)"></span>
+        </div>
+        <div class="flex min-h-0 flex-col">
+          <div class="relative h-44 overflow-hidden sm:h-52">
+            <div class="flex -rotate-6 scale-125 gap-2 px-2 pt-2">
+              <div class="aspect-2/3 w-[68px] shrink-0 rounded-sm bg-surface-2 sm:w-[84px]"></div>
+              <div class="aspect-2/3 w-[68px] shrink-0 rounded-sm bg-surface-2 sm:w-[84px]"></div>
+              <div class="aspect-2/3 w-[68px] shrink-0 rounded-sm bg-surface-2 sm:w-[84px]"></div>
+              <div class="aspect-2/3 w-[68px] shrink-0 rounded-sm bg-surface-2 sm:w-[84px]"></div>
+              <div class="aspect-2/3 w-[68px] shrink-0 rounded-sm bg-surface-2 sm:w-[84px]"></div>
+              <div class="aspect-2/3 w-[68px] shrink-0 rounded-sm bg-surface-2 sm:w-[84px]"></div>
+            </div>
+            <div class="pointer-events-none absolute inset-0" style="background: linear-gradient(to top, var(--surface) 12%, transparent 78%)"></div>
+          </div>
+          <div class="flex flex-col gap-5 p-6 pt-1">
+            <div class="flex flex-col gap-2.5">
+              <span class="flex items-center gap-2 text-text-muted">
+                <svg width="20" height="20" viewBox="0 0 26 26" fill="none"><rect width="26" height="26" rx="6" fill="var(--accent)" /><circle cx="13" cy="13" r="7.2" fill="none" stroke="var(--accent-contrast)" stroke-width="1.4" /><circle cx="13" cy="13" r="2.2" fill="var(--accent-contrast)" /></svg>
+                <span class="text-sm font-medium text-text-muted">CineMate</span>
+              </span>
+              <h2 class="t-title text-text" data-cm="title">Questa è CineMate con la libreria di qualcun altro.</h2>
+              <p class="t-body text-text-muted" data-cm="body">Tiene il diario di cosa hai visto, decide cosa guardare stasera e sa in che ordine. Resta su questo dispositivo. Rendila tua: un minuto.</p>
+            </div>
+            <div class="flex flex-col gap-1">
+              <div class="btn btn-primary btn-lg w-full" data-cm="start">Comincia</div>
+              <div class="btn btn-plain w-full text-text-muted" data-cm="skip">Guardo da solo</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Solo a chi non ha mai aperto CineMate: nessuna traccia in memoria oltre
+      // al tema e alla lingua. Chi ha già dei dati vede l'ossatura e basta.
+      (function () {
+        try {
+          if (localStorage.getItem("cinemate:onboarded:v1")) return;
+          for (var i = 0; i < localStorage.length; i++) {
+            var k = localStorage.key(i) || "";
+            if (k.indexOf("cinemate:") === 0 && k !== "cinemate:theme" && k !== "cinemate:lang") return;
+          }
+          var w = document.getElementById("cm-welcome");
+          if (document.documentElement.lang === "en") {
+            var en = {
+              title: "This is CineMate with someone else's library.",
+              body: "It keeps a diary of what you've watched, decides what to watch tonight and knows in what order. It stays on this device. Make it yours: one minute.",
+              start: "Start",
+              skip: "I'll look around myself",
+            };
+            for (var key in en) w.querySelector('[data-cm="' + key + '"]').textContent = en[key];
+          }
+          w.hidden = false;
+        } catch (e) {}
+      })();
+    </script>
     <div id="root"></div>
     <noscript>
       <div style="padding:2rem;font-family:system-ui,sans-serif;color:#f3efe7;background:#131211">
@@ -82,6 +154,10 @@
           shown = true;
           var shell = document.getElementById("cm-shell");
           if (shell) shell.remove();
+          // Anche il benvenuto statico: non è interattivo, e coprirebbe il
+          // pulsante che serve.
+          var welcome = document.getElementById("cm-welcome");
+          if (welcome) welcome.remove();
           root.innerHTML =
             '<div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:1.5rem;' +
             'background:#131211;color:#f3efe7;font-family:system-ui,-apple-system,sans-serif;text-align:center">' +

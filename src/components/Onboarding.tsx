@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, m } from "framer-motion";
 import { useLibrary } from "../store/useLibrary";
@@ -367,6 +367,16 @@ export function Onboarding() {
 function OnboardingFlow() {
   const finish = useOnboarding((s) => s.finish);
   const addItems = useLibrary((s) => s.addItems);
+  // Il benvenuto disegnato da index.html, se c'era: questo foglio prende il
+  // suo posto nello stesso fotogramma e senza entrata animata, così chi lo
+  // stava già leggendo non vede niente muoversi.
+  const [fromShell] = useState(() => {
+    const shell = document.getElementById("cm-welcome");
+    return shell !== null && !shell.hidden;
+  });
+  useLayoutEffect(() => {
+    document.getElementById("cm-welcome")?.remove();
+  }, []);
 
   const [step, setStep] = useState<Step>("welcome");
   const [added, setAdded] = useState(0);
@@ -383,7 +393,7 @@ function OnboardingFlow() {
     <div className="fixed inset-0 z-70 flex items-end justify-center sm:items-center sm:p-6">
       <m.div
         aria-hidden="true"
-        initial={{ opacity: 0 }}
+        initial={fromShell ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         className="absolute inset-0 backdrop-blur-sm"
         style={{ background: "var(--scrim)" }}
@@ -393,7 +403,7 @@ function OnboardingFlow() {
         role="dialog"
         aria-modal="true"
         aria-label={t("Onboarding.primo_avvio")}
-        initial={{ opacity: 0, y: 18 }}
+        initial={fromShell ? false : { opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
         className={`${CARD} max-h-[94vh] max-w-md rounded-b-none sm:rounded-b-lg`}
@@ -414,7 +424,7 @@ function OnboardingFlow() {
           })}
         </div>
 
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={!fromShell}>
           <m.div
             key={step}
             initial={{ opacity: 0 }}
