@@ -80,7 +80,7 @@ function MoneyPanel({ budget, revenue }: { budget: number; revenue: number }) {
 
   return (
     <section className="mt-5">
-      <h3 className="font-display text-lg font-semibold text-text">Dati finanziari</h3>
+      <h2 className="font-display text-lg font-semibold text-text">Dati finanziari</h2>
       <div className="mt-2.5 rounded-lg bg-surface-2 p-4">
         <div className="flex flex-col gap-3">
           {[
@@ -135,7 +135,7 @@ function StudioRow({ companies }: { companies: TmdbCompany[] }) {
 
   return (
     <section className="mt-5">
-      <h3 className="font-display text-lg font-semibold text-text">Studi di produzione</h3>
+      <h2 className="font-display text-lg font-semibold text-text">Studi di produzione</h2>
       <div className="mt-2.5 flex flex-wrap gap-2">
         {withLogo.map((c) => (
           <span
@@ -236,7 +236,7 @@ export function TitleFacts({ item }: { item: Item }) {
       {crew.length > 0 && (
         <section className="mt-5">
           <div className="flex items-baseline justify-between gap-3">
-            <h3 className="font-display text-lg font-semibold text-text">Regia e troupe</h3>
+            <h2 className="font-display text-lg font-semibold text-text">Regia e troupe</h2>
             {extras.crew.length > VISIBLE_CREW && (
               <button
                 type="button"

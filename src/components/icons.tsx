@@ -4,7 +4,8 @@ import {
   ArrowRight,
   ArrowUpRight,
   Bell,
-  ChartNoAxesColumn,
+  Bookmark,
+  CalendarPlus,
   Check,
   ChevronDown,
   ChevronRight,
@@ -33,8 +34,10 @@ import {
   ListTree,
   MessageSquareQuote,
   Minus,
+  MonitorPlay,
   Moon,
   Music,
+  PictureInPicture2,
   Play,
   Plus,
   RefreshCw,
@@ -47,6 +50,7 @@ import {
   Trash2,
   Tv,
   Upload,
+  Users,
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -97,9 +101,6 @@ export function MoonIcon({ size = 18 }: IconProps) {
 }
 export function SearchIcon({ size = 18 }: IconProps) {
   return <Glyph icon={Search} size={size} />;
-}
-export function ChartIcon({ size = 18 }: IconProps) {
-  return <Glyph icon={ChartNoAxesColumn} size={size} />;
 }
 /** A heartbeat trace: the page you open when you want to know if it's alive. */
 export function PulseIcon({ size = 18 }: IconProps) {
@@ -199,6 +200,12 @@ export function MusicIcon({ size = 18 }: IconProps) {
 export function DownloadIcon({ size = 16 }: IconProps) {
   return <Glyph icon={Download} size={size} />;
 }
+export function PictureInPictureIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={PictureInPicture2} size={size} />;
+}
+export function BookmarkIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Bookmark} size={size} />;
+}
 export function UploadIcon({ size = 16 }: IconProps) {
   return <Glyph icon={Upload} size={size} />;
 }
@@ -229,6 +236,15 @@ export function PlayIcon({ size = 18 }: IconProps) {
   return <Play size={size} strokeWidth={stroke(size)} fill="currentColor" aria-hidden="true" />;
 }
 
+export function ServicesIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={MonitorPlay} size={size} />;
+}
+export function CalendarIcon({ size = 16 }: IconProps) {
+  return <Glyph icon={CalendarPlus} size={size} />;
+}
+export function PeopleIcon({ size = 18 }: IconProps) {
+  return <Glyph icon={Users} size={size} />;
+}
 export function HeartIcon({ size = 18, filled = false }: IconProps & { filled?: boolean }) {
   return <Heart size={size} strokeWidth={stroke(size)} fill={filled ? "currentColor" : "none"} aria-hidden="true" />;
 }

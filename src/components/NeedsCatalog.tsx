@@ -61,7 +61,7 @@ export function CatalogBlock() {
   return (
     <div className="flex flex-col items-center gap-3.5 rounded-lg px-6 py-10 text-center bg-surface-2">
       <div className="flex flex-col gap-1.5">
-        <h3 className="t-section text-text">Il catalogo è spento.</h3>
+        <h2 className="t-section text-text">Il catalogo è spento.</h2>
         <p className="mx-auto max-w-sm t-body text-text-muted">
           {WHAT} Serve una chiave tua: è gratis, ci vogliono due minuti, e resta su questo
           dispositivo.
@@ -128,7 +128,7 @@ export function CatalogStrip() {
         <button
           type="button"
           onClick={dismiss}
-          aria-label="Nascondi l'avviso sul catalogo"
+          aria-label="Non ora: nascondi l'avviso sul catalogo"
           className="btn btn-plain btn-sm font-medium text-text-muted"
         >
           Non ora

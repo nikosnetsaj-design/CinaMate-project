@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { createPortal } from "react-dom";
 import { useLibrary } from "../store/useLibrary";
 import { useWatchSession } from "../store/useWatchSession";
@@ -39,7 +39,7 @@ function Prompt({ item, minutes }: { item: Item; minutes: number }) {
 
   return createPortal(
     <div className="fixed inset-x-0 bottom-0 z-80 flex justify-center p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-      <motion.div
+      <m.div
         ref={containerRef}
         role="dialog"
         aria-modal="true"
@@ -104,7 +104,7 @@ function Prompt({ item, minutes }: { item: Item; minutes: number }) {
             {isSeries ? `Segna ${count} episod${count === 1 ? "io" : "i"}` : "Sì, visto"}
           </button>
         </div>
-      </motion.div>
+      </m.div>
     </div>,
     document.body,
   );

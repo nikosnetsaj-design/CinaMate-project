@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { m, useReducedMotion } from "framer-motion";
 import { useLibrary } from "../store/useLibrary";
 import { voteColor } from "../lib/vote";
 import type { HistoryEntry, Item } from "../types";
@@ -106,7 +106,7 @@ export function Nastro({
       {/* The one curated motion in the app: the ribbon unspools left to right,
           like film coming off a reel. It explains what the band is by showing
           it being made. Skipped entirely when reduced motion is requested. */}
-      <motion.div
+      <m.div
         role="img"
         aria-label={`Nastro: ${stripes.length} sessioni, ${hours} ore guardate.`}
         className="relative flex w-full overflow-hidden rounded-sm"
@@ -124,7 +124,7 @@ export function Nastro({
           />
         ))}
 
-      </motion.div>
+      </m.div>
       <figcaption className="flex items-baseline justify-between gap-3 text-xs text-text-faint">
         <span>{fellBack ? "Le tue ultime sessioni" : (caption ?? `Ultimi ${days} giorni`)}</span>
         <span className="tabular">

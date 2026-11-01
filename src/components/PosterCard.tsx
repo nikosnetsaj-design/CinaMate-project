@@ -1,5 +1,6 @@
-import { useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
+import { useLongPress } from "../lib/useLongPress";
+import { AnimatePresence, m } from "framer-motion";
 import { PosterArt } from "./PosterArt";
 import { VoteBadge } from "./VoteBadge";
 import { StatusChip } from "./StatusChip";
@@ -7,9 +8,6 @@ import { HeartIcon } from "./icons";
 import { useLibrary } from "../store/useLibrary";
 import type { Item } from "../types";
 import type { PosterBadge } from "../lib/homeBadges";
-
-/** Sotto questa distanza fra due tocchi, sono un doppio tocco e non due tocchi. */
-const DOUBLE_TAP_MS = 300;
 
 export function PosterCard({
   item,
@@ -26,59 +24,43 @@ export function PosterCard({
   const pct = item.kind !== "film" && item.episodes ? Math.round(((item.seen || 0) / item.episodes) * 100) : null;
   const toggleFav = useLibrary((s) => s.toggleFav);
 
-  const lastTap = useRef(0);
-  const pending = useRef<number | null>(null);
   const [burst, setBurst] = useState(false);
 
   /**
-   * Doppio tocco: preferito.
+   * Tocco: apre, subito. Pressione lunga: preferito.
    *
-   * Il cuore c'era già (`item.fav`), ma per arrivarci bisognava aprire la
-   * scheda, trovare l'azione tonda e tornare indietro: tre tocchi per un
-   * gesto che ne vale uno, su una cosa che si fa scorrendo una fila. È il
-   * gesto che tutti hanno già imparato altrove, e non aggiunge un pixel
-   * all'interfaccia — che è il motivo per cui vale la pena rubarlo.
-   *
-   * Il tocco singolo aspetta la finestra del doppio prima di aprire la
-   * scheda. Sono trecento millisecondi di ritardo su un'apertura, ed è il
-   * prezzo onesto: senza attesa, il primo tocco del doppio aprirebbe la
-   * scheda e il secondo cadrebbe su un'altra schermata.
+   * Il preferito era sul doppio tocco, e il prezzo era che *ogni* tocco
+   * singolo aspettava trecento millisecondi per vedere se ne arrivava un
+   * secondo: l'apertura di una scheda, cioè il gesto più frequente dell'app,
+   * sembrava sempre un po' lenta. Con la pressione lunga il tocco non aspetta
+   * niente. La pressione lunga ha anche le sue strade da tastiera e da mouse
+   * (Maiuscolo + clic, menu contestuale), che il doppio tocco non aveva.
    */
-  function onTap() {
-    const now = Date.now();
-    if (now - lastTap.current < DOUBLE_TAP_MS) {
-      if (pending.current) window.clearTimeout(pending.current);
-      pending.current = null;
-      lastTap.current = 0;
-      toggleFav(item.id);
-      // Il cuore pulsa solo quando il preferito si *accende*: togliere una
-      // cosa non merita una festa.
-      if (!item.fav) {
-        setBurst(true);
-        window.setTimeout(() => setBurst(false), 340);
-      }
-      return;
+  function favourite() {
+    toggleFav(item.id);
+    // Il cuore pulsa solo quando il preferito si *accende*: togliere una cosa
+    // non merita una festa.
+    if (!item.fav) {
+      setBurst(true);
+      window.setTimeout(() => setBurst(false), 340);
     }
-    lastTap.current = now;
-    pending.current = window.setTimeout(() => {
-      pending.current = null;
-      onOpen(item);
-    }, DOUBLE_TAP_MS);
   }
+  const press = useLongPress(() => onOpen(item), favourite);
 
   return (
     <div className="group flex flex-col gap-2">
-      <motion.div
+      <m.div
         role="button"
         tabIndex={0}
         aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
-        onClick={onTap}
+        aria-description={item.fav ? "Fra i preferiti. Maiuscolo + Invio lo toglie." : "Maiuscolo + Invio lo mette fra i preferiti."}
+        {...press}
         onKeyDown={(e) => {
-          // Da tastiera niente doppio tocco: Invio apre, e basta. Un doppio
-          // Invio a tempo sarebbe una scorciatoia che nessuno può scoprire.
+          // Invio apre; Maiuscolo + Invio è la pressione lunga della tastiera.
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            onOpen(item);
+            if (e.shiftKey) favourite();
+            else onOpen(item);
           }
         }}
         whileHover={{ y: -2 }}
@@ -90,7 +72,7 @@ export function PosterCard({
 
         <AnimatePresence>
           {burst && (
-            <motion.span
+            <m.span
               aria-hidden="true"
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1.15 }}
@@ -99,17 +81,17 @@ export function PosterCard({
               className="pointer-events-none absolute inset-0 flex items-center justify-center text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]"
             >
               <HeartIcon size={54} filled />
-            </motion.span>
+            </m.span>
           )}
         </AnimatePresence>
-      </motion.div>
+      </m.div>
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-1.5">
           <p className="truncate text-sm font-medium text-text" title={item.title}>
             {item.title}
           </p>
           {item.fav && (
-            <span className="shrink-0 text-accent-text" aria-label="Preferito">
+            <span className="shrink-0 text-accent-text" role="img" aria-label="Preferito">
               <HeartIcon size={12} filled />
             </span>
           )}

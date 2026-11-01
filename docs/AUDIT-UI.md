@@ -275,4 +275,6 @@ forma, una schermata alla volta, dalla più usata.
    selettore (proposta), oppure cifre colorate come oggi.
 5. **Doppio tocco sulle locandine** (§3.12). Tenerlo con i suoi 300 ms di attesa
    a ogni apertura, oppure aprire subito al tocco e lasciare il preferito nella
-   scheda.
+   scheda. *Deciso:* il tocco apre subito, il preferito è passato alla
+   pressione lunga (con Maiuscolo + clic / Invio da tastiera) e resta
+   nell'azione tonda della scheda.

@@ -19,12 +19,6 @@ export const REACTION_VOTE: Record<Reaction, number> = {
   love: 10,
 };
 
-export const REACTION_LABEL: Record<Reaction, string> = {
-  down: "Non fa per me",
-  up: "Mi piace",
-  love: "Adoro",
-};
-
 /** Il pollice che corrisponde a un voto già dato, o null se non c'è voto. */
 export function reactionOf(vote: number | null | undefined): Reaction | null {
   if (vote == null) return null;

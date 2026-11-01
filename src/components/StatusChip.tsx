@@ -1,5 +1,6 @@
 import { STATUS_META } from "../lib/status";
 import type { Status } from "../types";
+import { statusLabel } from "../lib/i18n";
 
 /**
  * Il segno dello stato: un punto, nella forma oltre che nel colore.
@@ -33,7 +34,7 @@ export function StatusChip({ status, size = "md" }: { status: Status; size?: "sm
   return (
     <span className={`inline-flex items-center whitespace-nowrap font-medium text-text-muted ${cls}`}>
       <StatusMark status={status} />
-      {status}
+      {statusLabel(status)}
     </span>
   );
 }

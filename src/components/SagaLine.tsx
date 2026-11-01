@@ -134,9 +134,9 @@ export function SagaLine({ item }: { item: Item }) {
 
   return (
     <section className="mt-1">
-      <h3 className="font-display text-lg font-semibold text-text">
+      <h2 className="font-display text-lg font-semibold text-text">
         Prequel &amp; Sequel <span className="text-sm font-normal text-text-faint">· {entries.length}</span>
-      </h3>
+      </h2>
 
       <div className="relative mt-3">
         {/* La linea del tempo passa dietro le locandine, all'altezza del loro

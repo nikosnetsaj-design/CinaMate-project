@@ -5,6 +5,7 @@ import { paletteFor } from "../lib/palette";
 import { draftFromTmdb } from "../lib/addFromTmdb";
 import { computeSagaOrders } from "../lib/anthropic";
 import { useSagaView } from "../lib/useSagaView";
+import { backdropSrcSet, backdropUrl } from "../lib/tmdb";
 import {
   PART_STATE_META,
   WATCH_ORDERS,
@@ -234,11 +235,25 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
       aria-modal="true"
       aria-labelledby={titleId}
     >
-      <div className="relative h-44 overflow-hidden">
+      {/* La copertina larga della collezione, come nella scheda di un titolo.
+          TMDB la manda già con la saga e prima non la usava nessuno; quando
+          manca — e per gli universi, che non ne hanno — resta la sfumatura. */}
+      <div className="relative aspect-video max-h-[42vh] min-h-44 w-full overflow-hidden">
         <div className="absolute inset-0" style={{ background: `linear-gradient(150deg, ${b}, ${a})` }} />
+        {view?.backdropPath && (
+          <img
+            src={backdropUrl(view.backdropPath, "w1280") ?? undefined}
+            srcSet={backdropSrcSet(view.backdropPath)}
+            sizes="100vw"
+            alt=""
+            aria-hidden="true"
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
         <div
           className="absolute inset-0"
-          style={{ background: "linear-gradient(to bottom, transparent 25%, var(--bg) 100%)" }}
+          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 35%, var(--bg) 100%)" }}
         />
       </div>
 
@@ -264,10 +279,10 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
             />
           )}
           <div className="min-w-0 flex-1 pb-1">
-            <p className="text-xs text-text-faint">
+            <p className="text-sm text-text-muted">
               {view?.isUniverse ? "Universo" : "Saga"}
             </p>
-            <h1 id={titleId} className="mt-0.5 font-display text-2xl font-semibold leading-tight text-text">
+            <h1 id={titleId} className="t-display mt-0.5 text-text">
               {view?.name ?? (
                 <span role="status" className="block">
                   <span className="sr-only">Caricamento…</span>

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { useLibrary } from "../store/useLibrary";
 import type { ToastKind } from "../types";
 import { CloseIcon, ErrorIcon, InfoIcon, SuccessIcon } from "./icons";
@@ -30,7 +30,7 @@ export function ToastStack() {
         {toasts.map((toast) => {
           const style = KIND_STYLES[toast.kind];
           return (
-            <motion.div
+            <m.div
               key={toast.id}
               layout
               initial={{ opacity: 0, y: 12, scale: 0.96 }}
@@ -52,7 +52,7 @@ export function ToastStack() {
               >
                 <CloseIcon size={14} />
               </button>
-            </motion.div>
+            </m.div>
           );
         })}
       </AnimatePresence>

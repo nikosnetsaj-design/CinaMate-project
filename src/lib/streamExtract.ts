@@ -1,4 +1,5 @@
 import type { Item } from "../types";
+import { nextEpisode } from "./episodes";
 import { readerFor } from "./pageReader";
 import { slugify } from "./sourceTemplate";
 
@@ -383,8 +384,10 @@ function scoreLink(href: string, text: string, item: Item): number {
   if (item.year && (label.includes(String(item.year)) || path.includes(String(item.year)))) score += 4;
 
   if (item.kind !== "film") {
-    const ep = String((item.seen || 0) + 1).padStart(2, "0");
-    if (new RegExp(`(s01e${ep}|1x${ep}|-e?${ep}(-|$))`).test(path)) score += 6;
+    const next = nextEpisode(item) ?? { season: 1, episode: (item.seen || 0) + 1 };
+    const ep = String(next.episode).padStart(2, "0");
+    const se = String(next.season).padStart(2, "0");
+    if (new RegExp(`(s${se}e${ep}|${next.season}x${ep}|-e?${ep}(-|$))`).test(path)) score += 6;
   }
 
   // Le pagine di servizio somigliano a tutto e non sono niente.

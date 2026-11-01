@@ -23,6 +23,8 @@ import { recommendFromLibrary } from "../player/recommendFromLibrary";
 import { resolvePlayable } from "../player/resolveSource";
 import type { SearchOutcome } from "../player/searchOnLinkHost";
 import { outcomeMessage } from "../player/searchOnLinkHost";
+import { defaultPosition } from "../lib/linkHost";
+import { isEpisodic, nextEpisode } from "../lib/episodes";
 import { useSourceAddresses } from "../player/sourceAddresses";
 import { useLinkHosts } from "../store/useLinkHosts";
 import { useWebViewer } from "../store/useWebViewer";
@@ -346,13 +348,33 @@ export function Player() {
   // history entry, the achievements and the "continua la storia" prompt all
   // fire exactly as they do from the library. Only ever an upgrade to "Visto" —
   // never a downgrade, and never a second entry for something already watched.
+  //
+  // For a series the event is narrower: one episode ended, not the show. It
+  // used to mark the whole series «Visto» at the end of its first episode.
+  // Now the episode that was playing — the one chosen in the Episodes panel,
+  // or else the next in the registry — goes into the registry, and a chosen
+  // episode moves on to the following one so the next play continues.
   const setStatus = useLibrary((s) => s.setStatus);
+  const markEpisodeWatched = useLibrary((s) => s.markEpisodeWatched);
   const markWatchedInLibrary = useCallback(
     (contentId: string) => {
       const item = useLibrary.getState().items.find((i) => i.id === contentId);
-      if (item && item.status !== "Visto") setStatus(contentId, "Visto");
+      if (!item) return;
+      if (isEpisodic(item)) {
+        const source = lookup(contentId);
+        const fallback = defaultPosition(item);
+        const played = { season: source.searchSeason ?? fallback.season, episode: source.searchEpisode ?? fallback.episode };
+        markEpisodeWatched(contentId, played);
+        if (source.searchSeason !== undefined || source.searchEpisode !== undefined) {
+          const updated = useLibrary.getState().items.find((i) => i.id === contentId);
+          const next = updated ? nextEpisode(updated) : null;
+          patchSource(contentId, next ? { searchSeason: next.season, searchEpisode: next.episode } : { searchSeason: undefined, searchEpisode: undefined });
+        }
+        return;
+      }
+      if (item.status !== "Visto") setStatus(contentId, "Visto");
     },
-    [setStatus],
+    [setStatus, markEpisodeWatched, lookup, patchSource],
   );
 
   const hasOwnSources = catalog.length > 0;
@@ -403,7 +425,7 @@ export function Player() {
   );
   const chosen = selectedItem ? lookup(selectedItem.id) : EMPTY_SOURCE;
   const [panelSeason, setPanelSeason] = useState<number | null>(null);
-  const season = panelSeason ?? chosen.searchSeason ?? 1;
+  const season = panelSeason ?? chosen.searchSeason ?? (selectedItem ? defaultPosition(selectedItem).season : 1);
   const [seasonEpisodes, setSeasonEpisodes] = useState<SeriesEpisode[] | null>(null);
 
   useEffect(() => {

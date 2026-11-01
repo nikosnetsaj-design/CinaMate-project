@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { useLibrary } from "../store/useLibrary";
 import { useMarathon } from "../store/useMarathon";
 import { useSagas, sagaKey } from "../store/useSagas";
@@ -53,7 +53,7 @@ function Prompt({ finishedTitle, entry, onDismiss }: {
   }
 
   return createPortal(
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 16 }}
@@ -100,7 +100,7 @@ function Prompt({ finishedTitle, entry, onDismiss }: {
         <PlayIcon size={14} />
         {entry.item ? "Continua con il prossimo capitolo" : "Aggiungi il prossimo capitolo"}
       </button>
-    </motion.div>,
+    </m.div>,
     document.body,
   );
 }

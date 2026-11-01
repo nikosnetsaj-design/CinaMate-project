@@ -10,6 +10,7 @@ import { useAppReady } from "../lib/useAppReady";
 import { SagaCard } from "../components/SagaCard";
 import { MarathonCard } from "../components/MarathonCard";
 import { EmptyState } from "../components/EmptyState";
+import { t } from "../lib/i18n";
 
 const FETCH_DELAY_MS = 350;
 
@@ -84,7 +85,7 @@ export function Sagas() {
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-10 px-[var(--gutter)] py-6 sm:py-10">
       <div>
-        <h1 className="t-display text-text">Saghe</h1>
+        <h1 className="t-display text-text">{t("page.sagas")}</h1>
         <p className="mt-1 text-sm text-text-muted">
           I film che hai in libreria, rimessi nell'ordine della loro storia.
         </p>

@@ -119,20 +119,6 @@ export function setPlaybackPrefs(patch: Partial<PlaybackPrefs>) {
   }
 }
 
-export function resetPlaybackPrefs() {
-  cache = { ...DEFAULTS };
-  try {
-    localStorage.removeItem(KEY);
-  } catch {
-    /* nothing to remove */
-  }
-  try {
-    window.dispatchEvent(new Event(PREFS_EVENT));
-  } catch {
-    /* no window */
-  }
-}
-
 /**
  * The language of a track, normalised to a bare ISO 639-1 code.
  *

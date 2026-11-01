@@ -1,3 +1,4 @@
+import { durable } from "./durable";
 import { searchTitles } from "./tmdb";
 import { getHosts } from "../player/services/hostStore";
 import { checkHost } from "../player/services/hostHealthService";
@@ -60,6 +61,29 @@ async function testLocalStorage(): Promise<TestResult> {
       kb > 3500
         ? `${kb} KB usati: vicino al limite del browser. Esporta un backup e valuta di svuotare la cronologia degli host.`
         : `${kb} KB usati.`,
+  };
+}
+
+/**
+ * Dove stanno libreria e diario, e se questo avvio li ha letti dal posto
+ * giusto. «localStorage» non è un errore — è la strada di prima, e funziona —
+ * ma ha un tetto di circa 5 MB che una libreria lunga raggiunge.
+ */
+function testLibraryStore(): TestResult {
+  const base = { id: "library-store", label: "Archivio della libreria" };
+  const s = durable.status();
+  if (s.backend === "unavailable") {
+    return { ...base, status: "fail", detail: s.reason ?? "Il database dei tuoi dati non si apre: ricarica la pagina." };
+  }
+  if (s.backend === "local") {
+    return { ...base, status: "warn", detail: s.reason ?? "In localStorage: funziona, ma con un tetto di circa 5 MB." };
+  }
+  return {
+    ...base,
+    status: "pass",
+    detail: s.backups.length
+      ? "Su IndexedDB. La copia di prima della migrazione è ancora qui, finché non si conferma da sola."
+      : "Su IndexedDB.",
   };
 }
 
@@ -198,6 +222,7 @@ export async function runSelfTests(keys: { tmdb: string; anthropic: string }): P
   ]);
   return [
     testOnline(),
+    testLibraryStore(),
     storage,
     indexeddb,
     tmdb,

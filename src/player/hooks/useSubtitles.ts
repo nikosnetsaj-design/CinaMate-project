@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { SubtitleTrack, SubtitleStyle } from '../types';
 import { getPlaybackPrefs, normaliseLang, setPlaybackPrefs } from '../services/playbackPrefs';
+import { getTitleTracks, rememberTitleTracks } from '../services/titleTracks';
 
 // A small custom subtitle renderer (rather than relying on native <track> +
 // ::cue) is used so that size/color/background/position are fully and
@@ -53,12 +54,17 @@ async function fetchAndParseVtt(url: string): Promise<ParsedCue[]> {
   return parseVtt(await res.text());
 }
 
-export function useSubtitles(tracks: SubtitleTrack[], currentTime: number) {
+export function useSubtitles(tracks: SubtitleTrack[], currentTime: number, titleId?: string) {
   const [activeSubtitleId, setActiveSubtitleId] = useState<string | null>(null);
   // Read once from storage rather than reset to a default: subtitle size and
   // sync are accessibility settings for some people, and an app that forgets
   // them at every episode is an app they have to configure to use.
-  const [style, setStyle] = useState<SubtitleStyle>(() => getPlaybackPrefs().subtitleStyle);
+  // Il ritardo, invece, è di quel titolo quando lo hai già regolato lì.
+  const [style, setStyle] = useState<SubtitleStyle>(() => {
+    const base = getPlaybackPrefs().subtitleStyle;
+    const own = getTitleTracks(titleId).syncOffsetMs;
+    return own === undefined ? base : { ...base, syncOffsetMs: own };
+  });
   const [cues, setCues] = useState<ParsedCue[]>([]);
 
   /**
@@ -75,7 +81,9 @@ export function useSubtitles(tracks: SubtitleTrack[], currentTime: number) {
   useEffect(() => {
     if (appliedForRef.current === trackSignature) return;
     appliedForRef.current = trackSignature;
-    const wanted = getPlaybackPrefs().subtitleLang;
+    // Prima la scelta fatta su questo titolo, poi quella generale.
+    const own = getTitleTracks(titleId).subtitleLang;
+    const wanted = own !== undefined ? own : getPlaybackPrefs().subtitleLang;
     if (wanted === undefined) return;
     if (wanted === null) {
       setActiveSubtitleId(null);
@@ -83,7 +91,7 @@ export function useSubtitles(tracks: SubtitleTrack[], currentTime: number) {
     }
     const match = tracks.find((t) => normaliseLang(t.language) === normaliseLang(wanted));
     setActiveSubtitleId(match?.id ?? null);
-  }, [trackSignature, tracks]);
+  }, [trackSignature, tracks, titleId]);
 
   useEffect(() => {
     const track = tracks.find(t => t.id === activeSubtitleId);
@@ -118,17 +126,20 @@ export function useSubtitles(tracks: SubtitleTrack[], currentTime: number) {
     (id: string | null) => {
       setActiveSubtitleId(id);
       const track = id ? tracks.find((t) => t.id === id) : null;
-      setPlaybackPrefs({ subtitleLang: track ? normaliseLang(track.language) : null });
+      const lang = track ? normaliseLang(track.language) : null;
+      setPlaybackPrefs({ subtitleLang: lang });
+      rememberTitleTracks(titleId, { subtitleLang: lang });
     },
-    [tracks],
+    [tracks, titleId],
   );
   const updateStyle = useCallback((patch: Partial<SubtitleStyle>) => {
+    if (patch.syncOffsetMs !== undefined) rememberTitleTracks(titleId, { syncOffsetMs: patch.syncOffsetMs });
     setStyle((prev) => {
       const next = { ...prev, ...patch };
       setPlaybackPrefs({ subtitleStyle: next });
       return next;
     });
-  }, []);
+  }, [titleId]);
 
   return { activeSubtitleId, style, activeCueText: activeCue?.text ?? null, selectSubtitle, updateStyle };
 }

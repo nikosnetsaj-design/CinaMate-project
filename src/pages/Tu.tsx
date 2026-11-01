@@ -7,6 +7,7 @@ import { EmptyState } from "../components/EmptyState";
 import { GoalsPanel } from "../components/GoalsPanel";
 import { ProfileHeader, ProfileSummary } from "./Profile";
 import { AchievementsTab, DiaryTab, TasteTab } from "./Stats";
+import { intlLocale, t } from "../lib/i18n";
 
 /**
  * Tu — una sola pagina per una sola domanda.
@@ -35,10 +36,10 @@ import { AchievementsTab, DiaryTab, TasteTab } from "./Stats";
 type Tab = "riepilogo" | "diario" | "gusti" | "traguardi";
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "riepilogo", label: "Riepilogo" },
-  { id: "diario", label: "Diario" },
-  { id: "gusti", label: "Gusti" },
-  { id: "traguardi", label: "Traguardi" },
+  { id: "riepilogo", label: t("tabs.you.summary") },
+  { id: "diario", label: t("tabs.you.diary") },
+  { id: "gusti", label: t("tabs.you.taste") },
+  { id: "traguardi", label: t("tabs.you.goals") },
 ];
 
 export function Tu() {
@@ -49,7 +50,7 @@ export function Tu() {
   const openItem = useSelectedItem((s) => s.open);
   const [tab, setTab] = useState<Tab>("riepilogo");
 
-  const today = new Intl.DateTimeFormat("it-IT", {
+  const today = new Intl.DateTimeFormat(intlLocale(), {
     weekday: "long",
     day: "numeric",
     month: "long",

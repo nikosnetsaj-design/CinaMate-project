@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { useSagas } from "../store/useSagas";
 import { useCommandPalette } from "../store/useCommandPalette";
 import { useSelectedItem } from "../store/useSelectedItem";
@@ -68,7 +68,7 @@ function PaletteDialog() {
 
   return createPortal(
     <div className="fixed inset-0 z-80 flex items-start justify-center px-4 pt-24 sm:pt-32">
-      <motion.div
+      <m.div
         aria-hidden="true"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -76,7 +76,7 @@ function PaletteDialog() {
         className="absolute inset-0 bg-black/55 backdrop-blur-[2px]"
         onClick={close}
       />
-      <motion.div
+      <m.div
         ref={containerRef}
         role="dialog"
         aria-modal="true"
@@ -155,26 +155,15 @@ function PaletteDialog() {
             </li>
           ))}
         </ul>
-      </motion.div>
+      </m.div>
     </div>,
     document.body,
   );
 }
 
+// La scorciatoia ⌘K sta in DeferredPortals: deve funzionare prima che questo
+// modulo sia mai stato scaricato.
 export function CommandPalette() {
   const isOpen = useCommandPalette((s) => s.isOpen);
-  const open = useCommandPalette((s) => s.open);
-
-  useEffect(() => {
-    function handleGlobalKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        open();
-      }
-    }
-    document.addEventListener("keydown", handleGlobalKeyDown);
-    return () => document.removeEventListener("keydown", handleGlobalKeyDown);
-  }, [open]);
-
   return <AnimatePresence>{isOpen && <PaletteDialog />}</AnimatePresence>;
 }

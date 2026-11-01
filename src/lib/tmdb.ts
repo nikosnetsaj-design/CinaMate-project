@@ -2,6 +2,7 @@ import type { Kind } from "../types";
 import { logError } from "./errorLog";
 import { TokenBucket } from "./rateLimit";
 import { TieredCache, TTL } from "./persistentCache";
+import { tmdbLanguage } from "./i18n";
 
 const BASE = "https://api.themoviedb.org/3";
 const IMG_BASE = "https://image.tmdb.org/t/p";
@@ -32,6 +33,11 @@ export interface TmdbSearchResult {
   kind: Kind;
   /** Quanto TMDB lo vede cercato in questo momento. Serve a ordinare, non a giudicare. */
   popularity: number;
+  /**
+   * Il titolo originale, dove la ricerca lo riporta: un'esportazione di
+   * Letterboxd scrive «The Godfather», TMDB in italiano risponde «Il padrino».
+   */
+  originalTitle?: string;
 }
 
 export interface TmdbWatchProvider {
@@ -49,6 +55,11 @@ export interface TmdbDetails {
   runtime: number;
   episodes: number | null;
   seasons: number | null;
+  /**
+   * Quante puntate ha ogni stagione, dalla 1 (le speciali escluse). `null` per
+   * i film. È ciò che dice al registro degli episodi dove finisce una stagione.
+   */
+  seasonEpisodes: number[] | null;
   overview: string;
   director: string;
   cast: string[];
@@ -160,7 +171,7 @@ async function tmdbGet<T>(
   if (!apiKey) throw new MissingTmdbKeyError();
   const url = new URL(`${BASE}${path}`);
   url.searchParams.set("api_key", apiKey);
-  url.searchParams.set("language", "it-IT");
+  url.searchParams.set("language", tmdbLanguage());
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
 
   /**
@@ -288,6 +299,8 @@ interface RawMultiSearchResult {
   media_type: "movie" | "tv" | "person";
   title?: string;
   name?: string;
+  original_title?: string;
+  original_name?: string;
   release_date?: string;
   first_air_date?: string;
   overview?: string;
@@ -383,6 +396,66 @@ export async function searchTitles(
     .map((entry) => entry.r);
 }
 
+/*
+ * L'abbinamento dell'importazione: due domande più strette di `/search/multi`.
+ */
+
+function mapResult(r: RawMultiSearchResult, mediaType: "movie" | "tv"): TmdbSearchResult {
+  const genreNames = (r.genre_ids ?? []).map((id) => GENRE_NAMES[id]).filter((n): n is string => !!n);
+  const dateStr = r.release_date || r.first_air_date;
+  return {
+    tmdbId: r.id,
+    mediaType,
+    title: r.title || r.name || "",
+    year: dateStr ? Number(dateStr.slice(0, 4)) : null,
+    overview: r.overview || "",
+    posterPath: r.poster_path ?? null,
+    kind: guessKind(mediaType, genreNames, r.origin_country),
+    popularity: r.popularity ?? 0,
+    originalTitle: r.original_title || r.original_name || undefined,
+  };
+}
+
+/**
+ * Un titolo da un identificativo di un altro catalogo — IMDb (`tt0816692`) o
+ * TheTVDB — con `/find`. È la risposta esatta: un file di IMDb o di TV Time
+ * porta l'identificativo, e cercare per nome quando c'è l'id sarebbe
+ * scegliere di sbagliare.
+ */
+export async function findByExternalId(
+  id: string,
+  source: "imdb_id" | "tvdb_id",
+  apiKey: string,
+): Promise<TmdbSearchResult | null> {
+  const data = await tmdbGet<{ movie_results?: RawMultiSearchResult[]; tv_results?: RawMultiSearchResult[] }>(
+    `/find/${encodeURIComponent(id)}`,
+    apiKey,
+    { external_source: source },
+  );
+  const movie = data.movie_results?.[0];
+  if (movie) return mapResult(movie, "movie");
+  const tv = data.tv_results?.[0];
+  if (tv) return mapResult(tv, "tv");
+  return null;
+}
+
+/**
+ * La ricerca per titolo con il tipo e l'anno noti: `/search/movie?year=` o
+ * `/search/tv?first_air_date_year=`. Un «Dune» del 2021 non deve trovare il
+ * «Dune» del 1984 prima di sé.
+ */
+export async function searchByKind(
+  query: string,
+  mediaType: "movie" | "tv",
+  year: number | null,
+  apiKey: string,
+): Promise<TmdbSearchResult[]> {
+  const params: Record<string, string> = { query, include_adult: "false" };
+  if (year) params[mediaType === "movie" ? "year" : "first_air_date_year"] = String(year);
+  const data = await tmdbGet<{ results: RawMultiSearchResult[] }>(`/search/${mediaType}`, apiKey, params);
+  return data.results.map((r) => mapResult(r, mediaType)).filter((r) => r.title);
+}
+
 interface RawVideo {
   type: string;
   site: string;
@@ -430,6 +503,7 @@ interface RawDetails {
   episode_run_time?: number[];
   number_of_episodes?: number;
   number_of_seasons?: number;
+  seasons?: { season_number: number; episode_count?: number }[];
   origin_country?: string[];
   created_by?: { id?: number; name: string; profile_path?: string | null }[];
   credits?: { cast?: RawCast[]; crew?: RawCrew[] };
@@ -490,6 +564,11 @@ export interface TmdbWatchInfo {
   buy: TmdbWatchProvider[];
   /** La pagina JustWatch del titolo, quando c'è. */
   link: string | null;
+  /**
+   * La risposta non è arrivata (rete, limite di TMDB): le liste vuote qui
+   * sopra vogliono dire «non lo so», non «da nessuna parte».
+   */
+  unavailable?: boolean;
 }
 
 /** L'icona quadrata del servizio, quella che si riconosce senza leggere. */
@@ -517,15 +596,39 @@ function toProviders(raw: RawProviderEntry[] | undefined): TmdbWatchProvider[] {
  * catalogo di streaming cambia, ma non nel giro di una sessione.
  */
 const watchCache = new TieredCache<TmdbWatchInfo>("dove", TTL.metadata);
-export async function getWatchProviders(tmdbId: number, mediaType: "movie" | "tv", apiKey: string): Promise<TmdbWatchInfo> {
-  const key = `${mediaType}:${tmdbId}`;
+
+/*
+ * Il paese in cui si guarda. La disponibilità cambia da un paese all'altro, e
+ * fino a qui era fissata all'Italia: chi vive in Svizzera o in Germania vedeva
+ * servizi che lì non trova. Lo imposta lo store degli abbonamenti, all'avvio e
+ * quando lo cambi; chi non lo tocca resta sull'Italia.
+ */
+let watchRegion = "IT";
+
+export function setWatchRegion(region: string): void {
+  if (/^[A-Z]{2}$/.test(region)) watchRegion = region;
+}
+
+export async function getWatchProviders(
+  tmdbId: number,
+  mediaType: "movie" | "tv",
+  apiKey: string,
+  region: string = watchRegion,
+): Promise<TmdbWatchInfo> {
+  // Il paese nella chiave: le voci salvate prima, senza paese, erano italiane.
+  const key = region === "IT" ? `${mediaType}:${tmdbId}` : `${region}:${mediaType}:${tmdbId}`;
   const hit = await watchCache.get(key);
   if (hit) return hit;
 
-  const providers = await tmdbGet<RawProvidersResponse>(`/${mediaType}/${tmdbId}/watch/providers`, apiKey).catch(
-    () => ({ results: {} }) as RawProvidersResponse,
-  );
-  const it = providers.results?.IT;
+  let providers: RawProvidersResponse;
+  try {
+    providers = await tmdbGet<RawProvidersResponse>(`/${mediaType}/${tmdbId}/watch/providers`, apiKey);
+  } catch {
+    // Un errore non si mette in cache: prima un attimo senza rete diventava
+    // «non si guarda da nessuna parte» per ventiquattro ore.
+    return { streaming: [], free: [], rent: [], buy: [], link: null, unavailable: true };
+  }
+  const it = providers.results?.[region];
   const info: TmdbWatchInfo = {
     streaming: toProviders(it?.flatrate),
     free: toProviders([...(it?.free ?? []), ...(it?.ads ?? [])]),
@@ -545,7 +648,10 @@ export async function getWatchProviders(tmdbId: number, mediaType: "movie" | "tv
  * alcuna cache: riaprire la stessa scheda due volte la riscaricava due volte,
  * e la passata di collegamento automatico la rifaceva da capo a ogni avvio.
  */
-const detailsCache = new TieredCache<TmdbDetails>("dettagli", TTL.metadata);
+// «v2»: dal registro degli episodi in poi la scheda porta anche la divisione
+// in stagioni. Le voci salvate prima non ce l'hanno, e senza cambiare nome
+// resterebbero buone per un giorno intero dicendo «non si sa».
+const detailsCache = new TieredCache<TmdbDetails>("dettagli-v2", TTL.metadata);
 
 export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiKey: string): Promise<TmdbDetails> {
   const cacheKey = `${mediaType}:${tmdbId}`;
@@ -579,6 +685,13 @@ export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiK
     runtime: mediaType === "movie" ? details.runtime ?? 0 : details.episode_run_time?.[0] ?? 0,
     episodes: mediaType === "tv" ? details.number_of_episodes ?? null : null,
     seasons: mediaType === "tv" ? details.number_of_seasons ?? null : null,
+    seasonEpisodes:
+      mediaType === "tv" && details.seasons
+        ? details.seasons
+            .filter((s) => s.season_number >= 1)
+            .sort((a, b) => a.season_number - b.season_number)
+            .map((s) => Math.max(0, s.episode_count ?? 0))
+        : null,
     overview: details.overview || "",
     director,
     cast: (details.credits?.cast ?? []).slice(0, 5).map((c) => c.name),

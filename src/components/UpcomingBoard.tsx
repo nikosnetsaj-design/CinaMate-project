@@ -8,7 +8,8 @@ import { countdown, dayLabel, daysBetweenToday } from "../lib/format";
 import { requestNotificationPermission } from "../lib/notify";
 import { PosterArt } from "./PosterArt";
 import { EmptyState } from "./EmptyState";
-import { BellIcon } from "./icons";
+import { BellIcon, CalendarIcon } from "./icons";
+import { intlLocale } from "../lib/i18n";
 
 function ReminderToggle({ itemId, title }: { itemId: string; title: string }) {
   const enabled = useReminders((s) => s.enabled.includes(itemId));
@@ -81,6 +82,36 @@ function EntryRow({ entry }: { entry: UpcomingEntry }) {
   );
 }
 
+/**
+ * Le uscite nel calendario del telefono: un file .ics, che si importa una
+ * volta e si reimporta quando cambia qualcosa (gli eventi si aggiornano, non
+ * si doppiano). Le uscite con la campanella portano anche l'avviso.
+ */
+function CalendarExport({ entries }: { entries: UpcomingEntry[] }) {
+  const reminders = useReminders((s) => s.enabled);
+  const pushToast = useLibrary((s) => s.pushToast);
+  const withAlarm = entries.filter((e) => reminders.includes(e.item.id)).length;
+
+  async function onClick() {
+    const { buildIcs, deliverIcs } = await import("../lib/ics");
+    const outcome = await deliverIcs(buildIcs(entries, new Set(reminders)));
+    if (outcome === "downloaded") pushToast("success", "File del calendario scaricato: aprilo per aggiungere le uscite.");
+  }
+
+  return (
+    <div className="flex flex-col items-start gap-3 rounded-lg bg-surface p-4 shadow-[var(--shadow-sm)] sm:flex-row sm:items-center sm:justify-between">
+      <p className="min-w-0 text-sm text-text-muted sm:flex-1">
+        {entries.length} {entries.length === 1 ? "uscita" : "uscite"} nel calendario del telefono
+        {withAlarm > 0 ? `, ${withAlarm} con l'avviso della campanella` : ""}.
+      </p>
+      <button type="button" className="btn btn-secondary btn-sm shrink-0" onClick={() => void onClick()}>
+        <CalendarIcon size={15} />
+        Aggiungi al calendario
+      </button>
+    </div>
+  );
+}
+
 export function UpcomingBoard() {
   const items = useLibrary((s) => s.items);
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
@@ -121,10 +152,11 @@ export function UpcomingBoard() {
 
   return (
     <div className="flex flex-col gap-6">
+      <CalendarExport entries={entries} />
       {months.map(({ month, entries: monthEntries }) => (
         <section key={month} className="flex flex-col gap-2.5">
           <h2 className="font-display text-lg font-semibold capitalize text-text">
-            {new Intl.DateTimeFormat("it-IT", { month: "long", year: "numeric" }).format(
+            {new Intl.DateTimeFormat(intlLocale(), { month: "long", year: "numeric" }).format(
               new Date(`${month}-01T00:00:00`),
             )}
           </h2>

@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
-import { backdropUrl, posterUrl, youtubeThumb, youtubeWatchUrl, type TmdbVideo } from "../lib/tmdb";
+import { useState } from "react";
+import { useFocusTrap } from "../lib/useFocusTrap";
+import { backdropUrl, posterUrl, youtubeThumb, type TmdbVideo } from "../lib/tmdb";
 import { CloseIcon, ExternalIcon, PlayIcon } from "./icons";
+import { TrailerPlayer } from "./TrailerPlayer";
 
 /**
  * Il materiale del titolo: video, locandine, sfondi.
@@ -28,79 +30,49 @@ function Lightbox({
   title: string;
   onClose: () => void;
 }) {
-  useEffect(() => {
-    /*
-     * Esc chiude *questo* pannello e basta. La scheda del titolo sotto ha il
-     * suo ascoltatore su `document`, quindi senza fermare l'evento in fase di
-     * cattura un solo tasto chiuderebbe tutte e due — e chi voleva uscire dal
-     * trailer si ritroverebbe fuori dalla scheda.
-     */
-    function onKey(e: KeyboardEvent) {
-      if (e.key !== "Escape") return;
-      e.stopPropagation();
-      onClose();
-    }
-    document.addEventListener("keydown", onKey, true);
-    return () => document.removeEventListener("keydown", onKey, true);
-  }, [onClose]);
+  // I video passano dal lettore dei trailer: stesso pannello, più il secondo
+  // in cui sei e l'immagine nell'immagine dove il browser la offre.
+  if (content.kind === "video") return <TrailerPlayer videoKey={content.key} title={content.name} onClose={onClose} />;
+  return <ImageLightbox url={content.url} label={content.label} title={title} onClose={onClose} />;
+}
 
+/**
+ * Un'immagine sola, a tutto schermo. Il fuoco resta qui e Esc chiude solo
+ * questo pannello, non la scheda del titolo sotto (useFocusTrap passa i tasti
+ * al foglio in cima).
+ */
+function ImageLightbox({ url, label, title, onClose }: { url: string; label: string; title: string; onClose: () => void }) {
+  const trapRef = useFocusTrap(onClose);
+  const content = { url, label };
   return (
-    <div className="fixed inset-0 z-80 flex items-center justify-center bg-black/92 p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
-      <button type="button" aria-label="Chiudi" className="absolute inset-0 cursor-default" onClick={onClose} />
+    <div ref={trapRef} className="fixed inset-0 z-80 flex items-center justify-center bg-black/92 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={`${label} di ${title}`}>
+      <button type="button" aria-label="Chiudi" tabIndex={-1} className="absolute inset-0 cursor-default" onClick={onClose} />
 
       <button
         type="button"
         onClick={onClose}
         aria-label="Chiudi"
-        className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/60 text-lg text-white"
+        className="icon-btn icon-btn-media absolute right-4 top-4 z-10"
       >
         <CloseIcon size={18} />
       </button>
 
-      {content.kind === "video" ? (
-        <div className="relative z-10 w-full max-w-4xl">
-          <div className="aspect-video w-full overflow-hidden rounded-md bg-black shadow-[var(--shadow-lg)]">
-            <iframe
-              // `youtube-nocookie` invece di `youtube`: stesso video, nessun
-              // cookie di profilazione finché non si preme play.
-              src={`https://www.youtube-nocookie.com/embed/${content.key}?autoplay=1&rel=0&modestbranding=1`}
-              title={content.name}
-              allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-              allowFullScreen
-              className="h-full w-full border-0"
-            />
-          </div>
-          <div className="mt-2.5 flex items-center justify-between gap-3">
-            <p className="min-w-0 flex-1 truncate text-sm text-white/85">{content.name}</p>
-            <a
-              href={youtubeWatchUrl(content.key)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex shrink-0 items-center gap-1 text-xs text-white/60 underline-offset-2 hover:underline"
-            >
-              Apri su YouTube
-              <ExternalIcon size={12} />
-            </a>
-          </div>
-        </div>
-      ) : (
-        <div className="relative z-10 flex max-h-full flex-col items-center gap-2.5">
-          <img
-            src={content.url}
-            alt={`${content.label} di ${title}`}
-            className="max-h-[80vh] w-auto max-w-full rounded-md object-contain shadow-[var(--shadow-lg)]"
-          />
-          <a
-            href={content.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-white/60 underline-offset-2 hover:underline"
-          >
-            Apri l'immagine intera
-            <ExternalIcon size={12} />
-          </a>
-        </div>
-      )}
+      <div className="relative z-10 flex max-h-full flex-col items-center gap-2.5">
+        <img
+          src={content.url}
+          alt={`${content.label} di ${title}`}
+          className="max-h-[80vh] w-auto max-w-full rounded-md object-contain shadow-[var(--shadow-lg)]"
+        />
+        <a
+          href={content.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-xs text-white/60 underline-offset-2 hover:underline"
+        >
+          Apri l'immagine intera
+          <ExternalIcon size={12} />
+        </a>
+      </div>
     </div>
   );
 }
@@ -134,7 +106,7 @@ export function MediaGallery({
 
   return (
     <section className="mt-5">
-      <h3 className="font-display text-lg font-semibold text-text">Media</h3>
+      <h2 className="font-display text-lg font-semibold text-text">Media</h2>
 
       <div className="mt-2.5 flex gap-1.5" role="tablist" aria-label="Materiale del titolo">
         {tabs.map((t) => {

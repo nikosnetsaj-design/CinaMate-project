@@ -55,6 +55,13 @@ const SIZE_LABELS: Record<SubtitleStyle['fontSize'], string> = {
 };
 const COLORS = ['#F5F1E8', '#F2C879', '#7FD8C6', '#E36F6F'];
 
+/** Il ritardo detto a parole: «anticipati di 0,3 s», non «+300ms». */
+function syncLabel(ms: number): string {
+  if (ms === 0) return 'in sincrono';
+  const sec = (Math.abs(ms) / 1000).toLocaleString('it-IT', { maximumFractionDigits: 1 });
+  return ms > 0 ? `anticipati di ${sec} s` : `ritardati di ${sec} s`;
+}
+
 export default function SettingsMenu(props: Props) {
   const [tab, setTab] = useState<SettingsTab>(props.initialTab ?? 'quality');
   const panelRef = useFocusTrap(props.onClose);
@@ -205,11 +212,21 @@ export default function SettingsMenu(props: Props) {
                     <button className={props.subtitleStyle.position === 'top' ? 'active' : ''} onClick={() => props.onUpdateSubtitleStyle({ position: 'top' })}>In alto</button>
                   </div>
                 </div>
+                {/* Avanti e indietro di un decimo alla volta: con il solo
+                    cursore, su un telefono, centrare 300 ms era fortuna. Il
+                    valore resta su questo titolo (per una serie, su tutta). */}
                 <div className="pv-field">
-                  <span>Sincronizzazione ({props.subtitleStyle.syncOffsetMs > 0 ? '+' : ''}{props.subtitleStyle.syncOffsetMs}ms)</span>
+                  <span>Sincronizzazione · {syncLabel(props.subtitleStyle.syncOffsetMs)}</span>
+                  <div className="pv-field-options">
+                    <button aria-label="Sottotitoli più tardi di un decimo di secondo" onClick={() => props.onUpdateSubtitleStyle({ syncOffsetMs: Math.max(-30000, props.subtitleStyle.syncOffsetMs - 100) })}>−0,1 s</button>
+                    <button aria-label="Sottotitoli in sincrono" className={props.subtitleStyle.syncOffsetMs === 0 ? 'active' : ''} onClick={() => props.onUpdateSubtitleStyle({ syncOffsetMs: 0 })}>0</button>
+                    <button aria-label="Sottotitoli prima di un decimo di secondo" onClick={() => props.onUpdateSubtitleStyle({ syncOffsetMs: Math.min(30000, props.subtitleStyle.syncOffsetMs + 100) })}>+0,1 s</button>
+                  </div>
                   <input
                     type="range" min={-5000} max={5000} step={100}
-                    value={props.subtitleStyle.syncOffsetMs}
+                    aria-label="Sincronizzazione dei sottotitoli"
+                    aria-valuetext={syncLabel(props.subtitleStyle.syncOffsetMs)}
+                    value={Math.max(-5000, Math.min(5000, props.subtitleStyle.syncOffsetMs))}
                     onChange={e => props.onUpdateSubtitleStyle({ syncOffsetMs: Number(e.target.value) })}
                   />
                 </div>
