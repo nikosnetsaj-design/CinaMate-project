@@ -434,7 +434,7 @@ valori salvati (gli stati «Da vedere», «Visto»… nei backup, mostrati trado
 - **Precaricamento all'intenzione.** Il chunk del player parte quando il
   puntatore arriva sul link, non quando l'app è ferma: scaricare 600 KB "per
   ogni evenienza" è precisamente ciò che svuota la batteria in mobilità.
-- **Primo caricamento sotto i 200 KB gzip** (era 285, oggi 183), controllato in
+- **Primo caricamento sotto i 200 KB gzip** (era 285, oggi 191,5 con tutta l'app in due lingue), controllato in
   CI da `npm run budget`: si scaricano all'avvio solo la Home e l'ossatura. Le
   altre pagine arrivano quando le apri; i fogli — scheda del titolo,
   impostazioni, aggiunta, Web Viewer, tavolozza — la prima volta che si aprono
@@ -443,10 +443,17 @@ valori salvati (gli stati «Da vedere», «Visto»… nei backup, mostrati trado
 - **Il primo pixel subito.** `index.html` imposta il tema prima che arrivi il
   CSS (niente più lampo scuro per chi usa il chiaro) e disegna un'ossatura
   statica nei colori dell'app mentre il codice si scarica; React la toglie al
-  primo render. Al primo avvio il pezzo del benvenuto parte insieme all'app.
-  Lighthouse sulla build di produzione: desktop 97 · 100 · 100 (Performance,
-  Accessibilità, Best Practices); telefono simulato (4G lento, CPU ×4) 80–86 ·
-  100 · 100.
+  primo render. Al **primo avvio** l'HTML disegna già il foglio di benvenuto,
+  con le classi e i testi dell'app (un test li tiene allineati al dizionario):
+  la prima schermata vera arriva con la prima pittura, e il componente React
+  la sostituisce nello stesso fotogramma, senza animazione. I precaricamenti
+  del pezzo dell'app partono dopo la prima pittura grande, non come sessanta
+  `<link>` davanti al CSS; il primo render di React è una transizione, a
+  fette, invece di un blocco unico del thread.
+  Lighthouse sulla build di produzione servita compressa e in HTTP/2 come da
+  GitHub Pages: telefono simulato (4G lento, CPU ×4) **95–98** · 100 · 100
+  (Performance, Accessibilità, Best Practices; prima 80–86), con prima pittura
+  1,4 s, LCP 2,3 s, TBT 80–190 ms, CLS 0; desktop 100.
 - **Sonno in secondo piano.** I controlli periodici si fermano a pagina nascosta
   e ripartono al ritorno. Su un telefono l'app è quasi sempre nascosta e quasi
   mai chiusa, quindi "nessuno sta guardando" è lo stato normale.
