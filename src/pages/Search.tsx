@@ -15,7 +15,9 @@ import { continueWatching, lastSeenDates } from "../lib/continueWatching";
 import { forYou } from "../lib/recommend";
 import { prefetchHandlers } from "../lib/prefetch";
 import { PosterArt } from "../components/PosterArt";
-import { CheckIcon, CloseIcon, PlayIcon, SearchIcon } from "../components/icons";
+import { CloseIcon, PlayIcon, SearchIcon } from "../components/icons";
+import { CatalogCard } from "../components/CatalogCard";
+import { useCatalogActions } from "../lib/useQuickAdd";
 import type { Item } from "../types";
 import { ErrorState } from "../components/ErrorState";
 import { t } from "../lib/i18n";
@@ -202,7 +204,7 @@ function TitleResults({ query }: { query: string }) {
     });
   }
 
-  const ownedIds = new Set(items.map((i) => i.tmdbId).filter((id): id is number => id != null));
+  const actions = useCatalogActions();
 
   return (
     <div className="flex flex-col gap-6">
@@ -273,37 +275,16 @@ function TitleResults({ query }: { query: string }) {
             <p className="text-sm text-text-faint">{t("Search.nessun_risultato")}</p>
           ) : (
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
-              {remote.map((result) => {
-                const owned = ownedIds.has(result.tmdbId);
-                return (
-                  <button
-                    key={result.tmdbId}
-                    type="button"
-                    onClick={() => openResult(result)}
-                    aria-label={owned ? t("Search.gia_in_libreria_apri", { v0: result.title }) : t("Search.apri_la_scheda_di", { v0: result.title })}
-                    className="text-left"
-                  >
-                    <div className="relative">
-                      <PosterArt
-                        item={{ title: result.title, kind: result.kind, posterPath: result.posterPath }}
-                        size="sm"
-                        showTitle={!result.posterPath}
-                      />
-                      {owned && (
-                        <span
-                          className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/65 text-white backdrop-blur-sm"
-                        >
-                          <CheckIcon size={11} />
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-2 line-clamp-2 text-sm font-medium leading-snug text-text">{result.title}</p>
-                    <p className="font-mono tabular text-xs text-text-faint">
-                      {result.year ?? ""}
-                    </p>
-                  </button>
-                );
-              })}
+              {remote.map((result) => (
+                <CatalogCard
+                  key={`${result.mediaType}-${result.tmdbId}`}
+                  title={result}
+                  owned={actions.owned(result)}
+                  pending={actions.isPending(result)}
+                  onOpen={() => openResult(result)}
+                  onQuickAdd={() => actions.quickAdd(result)}
+                />
+              ))}
             </div>
           )}
         </section>

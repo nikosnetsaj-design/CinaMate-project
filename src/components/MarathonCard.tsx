@@ -1,12 +1,10 @@
-import { useState } from "react";
 import { useLibrary } from "../store/useLibrary";
 import { useMarathon } from "../store/useMarathon";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useSelectedSaga } from "../store/useSelectedSaga";
 import { useSettings } from "../store/useSettings";
-import { useEditSheet } from "../store/useEditSheet";
 import { useSagaView } from "../lib/useSagaView";
-import { draftFromTmdb } from "../lib/addFromTmdb";
+import { useQuickAdd } from "../lib/useQuickAdd";
 import { findLibraryMatch, WATCH_ORDERS } from "../lib/sagas";
 import { PosterArt } from "./PosterArt";
 import { PlayIcon } from "./icons";
@@ -28,9 +26,9 @@ export function MarathonCard() {
   const pushToast = useLibrary((s) => s.pushToast);
   const openItem = useSelectedItem((s) => s.open);
   const openSaga = useSelectedSaga((s) => s.open);
-  const openNew = useEditSheet((s) => s.openNew);
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
-  const [adding, setAdding] = useState(false);
+  const { quickAdd, pending } = useQuickAdd();
+  const adding = pending.size > 0;
 
   const { view } = useSagaView(marathon?.key ?? null);
 
@@ -60,21 +58,11 @@ export function MarathonCard() {
     );
   }
 
+  // Il capitolo di turno entra in libreria con un tocco: poi la carta
+  // mostra «Dove guardarlo», come per quelli che c'erano già.
   async function addCurrent() {
-    if (!tmdbApiKey || !current) return;
-    setAdding(true);
-    try {
-      openNew(
-        await draftFromTmdb(current.tmdbId, "movie", "film", tmdbApiKey, {
-          title: current.title,
-          year: current.year,
-          posterPath: current.posterPath,
-        }),
-      );
-    } catch {
-      pushToast("error", t("MarathonCard.non_e_stato_possibile"));
-    }
-    setAdding(false);
+    if (!current) return;
+    await quickAdd({ tmdbId: current.tmdbId, mediaType: "movie", kind: "film", title: current.title, year: current.year, posterPath: current.posterPath });
   }
 
   return (

@@ -19,9 +19,9 @@ test("avvio, aggiunta di un titolo, una puntata segnata, esportazione", async ({
 
   // Aggiungere una serie a mano, senza catalogo.
   await page.getByRole("button", { name: "Aggiungi titolo" }).first().click();
-  await page.getByRole("button", { name: "Inserisci a mano" }).click();
+  await page.getByRole("button", { name: "Aggiungilo a mano" }).click();
   await page.getByPlaceholder("Titolo").fill("Serie di prova");
-  await page.getByLabel("Tipo").selectOption("serie");
+  await page.getByRole("radio", { name: "Serie TV" }).click();
   await page.getByLabel("Ep. totali").fill("10");
   await page.getByRole("button", { name: "Aggiungi alla libreria" }).click();
   await expect(page.getByText("«Serie di prova» aggiunto alla libreria.").or(page.getByText('"Serie di prova" aggiunto alla libreria.'))).toBeVisible();

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useFocusTrap } from "../lib/useFocusTrap";
 import { paletteFor } from "../lib/palette";
-import { draftFromTmdb } from "../lib/addFromTmdb";
+import { useQuickAdd } from "../lib/useQuickAdd";
 import { computeSagaOrders } from "../lib/anthropic";
 import { useSagaView } from "../lib/useSagaView";
 import { backdropSrcSet, backdropUrl } from "../lib/tmdb";
@@ -21,7 +21,7 @@ import { useSettings } from "../store/useSettings";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { useSelectedSaga } from "../store/useSelectedSaga";
 import { useSelectedItem } from "../store/useSelectedItem";
-import { useEditSheet } from "../store/useEditSheet";
+import { useCatalogPreview } from "../store/useCatalogPreview";
 import { useMarathon } from "../store/useMarathon";
 import { useSagas, type SagaKey } from "../store/useSagas";
 import { PosterArt } from "./PosterArt";
@@ -63,10 +63,11 @@ function ProgressRing({ pct, color }: { pct: number; color: string }) {
   );
 }
 
-function EntryRow({ entry, onOpen, onAdd, adding }: {
+function EntryRow({ entry, onOpen, onPreview, onQuickAdd, adding }: {
   entry: SagaEntry;
   onOpen: (entry: SagaEntry) => void;
-  onAdd: (entry: SagaEntry) => void;
+  onPreview: (entry: SagaEntry) => void;
+  onQuickAdd: (entry: SagaEntry) => void;
   adding: boolean;
 }) {
   const meta = PART_STATE_META[entry.state];
@@ -86,14 +87,9 @@ function EntryRow({ entry, onOpen, onAdd, adding }: {
         </span>
         <button
           type="button"
-          onClick={() => (entry.item ? onOpen(entry) : onAdd(entry))}
-          disabled={adding}
-          aria-label={
-            entry.item
-              ? t("SagaSheet.apri_dettagli_di", { v0: entry.part.title })
-              : t("SagaSheet.aggiungi_alla_libreria", { v0: entry.part.title })
-          }
-          className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:opacity-60"
+          onClick={() => (entry.item ? onOpen(entry) : onPreview(entry))}
+          aria-label={t("SagaSheet.apri_dettagli_di", { v0: entry.part.title })}
+          className="flex min-w-0 flex-1 items-center gap-3 text-left"
         >
           <PosterArt
             item={{ title: entry.part.title, kind: "film", posterPath: entry.part.posterPath }}
@@ -117,17 +113,27 @@ function EntryRow({ entry, onOpen, onAdd, adding }: {
             )}
           </div>
         </button>
-        <span
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
-          title={meta.label}
-          style={{
-            background: entry.item ? `color-mix(in srgb, ${meta.color} 18%, transparent)` : "transparent",
-            border: entry.item ? "none" : "1px dashed var(--border-strong)",
-            color: meta.color,
-          }}
-        >
-          {adding ? "…" : <PartStateIcon state={entry.state} />}
-        </span>
+        {entry.item ? (
+          <span
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
+            title={meta.label}
+            style={{ background: `color-mix(in srgb, ${meta.color} 18%, transparent)`, color: meta.color }}
+          >
+            <PartStateIcon state={entry.state} />
+          </span>
+        ) : (
+          // Il capitolo che manca: il «+» lo mette in Da vedere al volo.
+          <button
+            type="button"
+            onClick={() => onQuickAdd(entry)}
+            disabled={adding}
+            aria-label={t("SagaSheet.aggiungi_alla_libreria", { v0: entry.part.title })}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-transform active:scale-90"
+            style={{ border: "1px dashed var(--border-strong)", color: meta.color }}
+          >
+            {adding ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current/30 border-t-current" /> : <PartStateIcon state={entry.state} />}
+          </button>
+        )}
       </div>
     </li>
   );
@@ -139,10 +145,11 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
 
   const items = useLibrary((s) => s.items);
   const pushToast = useLibrary((s) => s.pushToast);
-  const { apiKey, model, tmdbApiKey } = useSettings();
+  const { apiKey, model } = useSettings();
   const openSettings = useSettingsSheet((s) => s.open);
   const openItem = useSelectedItem((s) => s.open);
-  const openNew = useEditSheet((s) => s.openNew);
+  const openPreview = useCatalogPreview((s) => s.open);
+  const { quickAdd, pending } = useQuickAdd();
   const startMarathon = useMarathon((s) => s.start);
   const marathon = useMarathon((s) => s.marathon);
 
@@ -154,7 +161,6 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
   const { view, loading, error } = useSagaView(sagaKey);
   const [mode, setMode] = useState<"lista" | "timeline">("lista");
   const [computing, setComputing] = useState(false);
-  const [adding, setAdding] = useState<number | null>(null);
 
   const order: WatchOrder = preferred ?? "uscita";
 
@@ -186,25 +192,23 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
     setComputing(false);
   }
 
-  async function addEntry(entry: SagaEntry) {
-    if (!tmdbApiKey) {
-      openSettings();
-      return;
-    }
-    setAdding(entry.part.tmdbId);
-    try {
-      openNew(
-        await draftFromTmdb(entry.part.tmdbId, "movie", "film", tmdbApiKey, {
-          title: entry.part.title,
-          year: entry.part.year,
-          posterPath: entry.part.posterPath,
-        }),
-      );
-      close();
-    } catch {
-      pushToast("error", t("SagaSheet.non_e_stato_possibile"));
-    }
-    setAdding(null);
+  // Un capitolo che non hai: prima si legge di cosa parla, sopra la saga —
+  // «indietro» riporta qui. Il «+» della riga è la scorciatoia.
+  function partTitle(entry: SagaEntry) {
+    return {
+      tmdbId: entry.part.tmdbId,
+      mediaType: "movie" as const,
+      kind: "film" as const,
+      title: entry.part.title,
+      year: entry.part.year,
+      posterPath: entry.part.posterPath,
+    };
+  }
+  function previewEntry(entry: SagaEntry) {
+    openPreview(partTitle(entry));
+  }
+  function quickAddEntry(entry: SagaEntry) {
+    void quickAdd(partTitle(entry));
   }
 
   function openEntry(entry: SagaEntry) {
@@ -420,13 +424,14 @@ function SagaDetail({ sagaKey }: { sagaKey: SagaKey }) {
                     key={entry.part.tmdbId}
                     entry={entry}
                     onOpen={openEntry}
-                    onAdd={addEntry}
-                    adding={adding === entry.part.tmdbId}
+                    onPreview={previewEntry}
+                    onQuickAdd={quickAddEntry}
+                    adding={pending.has(`movie-${entry.part.tmdbId}`)}
                   />
                 ))}
               </ul>
             ) : (
-              <SagaTimeline entries={entries} accent={accent} onSelect={(e) => (e.item ? openEntry(e) : addEntry(e))} />
+              <SagaTimeline entries={entries} accent={accent} onSelect={(e) => (e.item ? openEntry(e) : previewEntry(e))} />
             )}
           </>
         )}

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { AnimatePresence, m } from "framer-motion";
 import { useLibrary } from "../store/useLibrary";
+import { useAnySheetOpen } from "../lib/useFocusTrap";
 import type { ToastKind } from "../types";
 import { CloseIcon, ErrorIcon, InfoIcon, SuccessIcon } from "./icons";
 import { t } from "../lib/i18n";
@@ -20,12 +21,18 @@ const KIND_STYLES: Record<ToastKind, { tone: string; icon: ReactNode }> = {
 export function ToastStack() {
   const toasts = useLibrary((s) => s.toasts);
   const dismissToast = useLibrary((s) => s.dismissToast);
+  // Sul telefono i fogli salgono dal basso, dove stanno gli avvisi: con un
+  // foglio aperto l'avviso va in alto (sotto la freccia «indietro»), per non
+  // coprire proprio i pulsanti che servono. Sul computer resta nell'angolo.
+  const sheetOpen = useAnySheetOpen();
 
   return (
     <div
       aria-live="polite"
       aria-atomic="false"
-      className="pointer-events-none fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 flex flex-col items-center gap-2 px-4 lg:bottom-6 lg:items-end lg:px-6"
+      className={`pointer-events-none fixed inset-x-0 z-80 flex flex-col items-center gap-2 px-4 lg:top-auto lg:bottom-6 lg:items-end lg:px-6 ${
+        sheetOpen ? "top-[calc(env(safe-area-inset-top)+4rem)]" : "bottom-[calc(4.5rem+env(safe-area-inset-bottom))]"
+      }`}
     >
       <AnimatePresence initial={false}>
         {toasts.map((toast) => {
@@ -45,6 +52,18 @@ export function ToastStack() {
                 {style.icon}
               </span>
               <p className="flex-1 py-2 text-sm leading-snug">{toast.text}</p>
+              {toast.action && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    toast.action!.run();
+                    dismissToast(toast.id);
+                  }}
+                  className="btn btn-plain btn-sm shrink-0 font-semibold"
+                >
+                  {toast.action.label}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => dismissToast(toast.id)}

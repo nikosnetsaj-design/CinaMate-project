@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
@@ -10,6 +10,22 @@ const FOCUSABLE_SELECTOR =
  * quello sopra rimetteva lo scorrimento alla pagina sotto il foglio rimasto.
  */
 const open: symbol[] = [];
+const listeners = new Set<() => void>();
+const notify = () => listeners.forEach((l) => l());
+
+/**
+ * C'è un foglio aperto? Lo chiede chi deve spostarsi per non coprirlo — gli
+ * avvisi, che sul telefono stanno in basso proprio dove salgono i fogli.
+ */
+export function useAnySheetOpen(): boolean {
+  return useSyncExternalStore(
+    (cb) => {
+      listeners.add(cb);
+      return () => listeners.delete(cb);
+    },
+    () => open.length > 0,
+  );
+}
 
 export function useFocusTrap(onClose: () => void) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -18,12 +34,14 @@ export function useFocusTrap(onClose: () => void) {
 
   useEffect(() => {
     open.push(id);
+    notify();
     previouslyFocused.current = document.activeElement as HTMLElement;
     const first = containerRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
     first?.focus();
     document.body.style.overflow = "hidden";
     return () => {
       open.splice(open.indexOf(id), 1);
+      notify();
       if (open.length === 0) document.body.style.overflow = "";
       previouslyFocused.current?.focus();
     };

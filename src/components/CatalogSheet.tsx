@@ -5,6 +5,8 @@ import { paletteFor } from "../lib/palette";
 import { formatRuntime } from "../lib/format";
 import { useTitleLogo } from "../lib/useTitleLogo";
 import { useAddFromCatalog } from "../lib/useAddFromCatalog";
+import { ownedFor, useQuickAdd } from "../lib/useQuickAdd";
+import { useRateSheet } from "../store/useRateSheet";
 import { backdropSrcSet, backdropUrl, getDetails, TmdbApiError, type TmdbDetails } from "../lib/tmdb";
 import { useCatalogPreview, type CatalogTarget } from "../store/useCatalogPreview";
 import { useSelectedItem } from "../store/useSelectedItem";
@@ -16,9 +18,9 @@ import { CastRow } from "./CastRow";
 import { TitleFacts } from "./TitleFacts";
 import { RelatedRow } from "./RelatedRow";
 import { WatchProvidersBlock } from "./WatchAndLinks";
-import { BackIcon, ChevronRightIcon, PlayIcon, PlusIcon, StarIcon } from "./icons";
-import type { Item } from "../types";
-import { t } from "../lib/i18n";
+import { BackIcon, CheckIcon, ChevronRightIcon, EyeIcon, PlayIcon, PlusIcon, StarIcon } from "./icons";
+import type { Item, Status } from "../types";
+import { statusLabel, t } from "../lib/i18n";
 
 /**
  * La scheda di un titolo che non hai — la stessa di quelli che hai, meno le
@@ -81,7 +83,11 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
   const openItem = useSelectedItem((s) => s.open);
   const items = useLibrary((s) => s.items);
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
+  // «Con più dettagli» apre il modulo compilato, per chi vuole scegliere
+  // piattaforma, note e il resto prima di salvare.
   const { add, adding } = useAddFromCatalog(close);
+  const { quickAdd, pending } = useQuickAdd();
+  const openRate = useRateSheet((s) => s.open);
 
   const containerRef = useFocusTrap(close);
   const titleId = `catalog-${target.tmdbId}`;
@@ -108,7 +114,17 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
   const item = previewItem(target, details);
   const logo = useTitleLogo(item);
   const [a, b] = paletteFor(item.title);
-  const owned = items.find((i) => i.tmdbId === target.tmdbId && i.tmdbMediaType === target.mediaType);
+  const owned = ownedFor(items, target);
+  const busy = pending.size > 0;
+
+  async function addAs(status: Status) {
+    const added = await quickAdd(
+      { tmdbId: target.tmdbId, mediaType: target.mediaType, kind: target.kind, title: item.title, year: item.year || null, posterPath: item.posterPath },
+      status,
+    );
+    // Visto e senza voto: la domanda che viene subito dopo.
+    if (added && status === "Visto" && added.vote == null) openRate(added.id);
+  }
   const isSeries = item.kind !== "film" && item.kind !== "doc";
 
   return createPortal(
@@ -198,40 +214,71 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
             ))}
         </p>
 
-        {/* L'unica azione che questa scheda può offrire, e l'unica che serve:
-            portarlo dentro. Il foglio si apre compilato — resta una decisione,
-            non un tocco a caso. */}
+        {/* Le uniche azioni che questa scheda può offrire, ed è quello che
+            serve: portarlo dentro, dicendo a che punto sei. Niente modulo —
+            quello che il modulo chiedeva lo sa già TMDB. */}
         {owned ? (
-          <button
-            type="button"
-            onClick={() => {
-              close();
-              openItem(owned);
-            }}
-            className="btn btn-secondary btn-lg mt-4 w-full"
-          >
-            {t("CatalogSheet.ce_l_hai_gia")}
-            <ChevronRightIcon />
-          </button>
+          <div className="mt-4 flex items-center gap-3 rounded-lg bg-surface p-3 pl-4 shadow-[var(--shadow-sm)]">
+            <span
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+              style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+              aria-hidden="true"
+            >
+              <CheckIcon size={16} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-text">{t("CatalogSheet.nella_tua_libreria")}</p>
+              <p className="truncate text-xs text-text-muted">
+                {statusLabel(owned.status)}
+                {owned.vote != null ? ` · ${owned.vote}/10` : ""}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                close();
+                openItem(owned);
+              }}
+              className="btn btn-secondary btn-sm shrink-0"
+            >
+              {t("CatalogSheet.apri_la_scheda")}
+              <ChevronRightIcon size={16} />
+            </button>
+          </div>
         ) : (
-          <button
-            type="button"
-            disabled={adding !== null}
-            onClick={() =>
-              void add({
-                tmdbId: target.tmdbId,
-                mediaType: target.mediaType,
-                kind: target.kind,
-                title: item.title,
-                year: item.year || null,
-                posterPath: item.posterPath,
-              })
-            }
-            className="btn btn-primary btn-lg mt-4 w-full"
-          >
-            <PlusIcon size={18} />
-            {adding !== null ? t("CatalogSheet.preparo_la_scheda") : t("CatalogSheet.aggiungi_alla_libreria")}
-          </button>
+          <div className="mt-4 flex flex-col gap-2">
+            <button type="button" disabled={busy} onClick={() => void addAs("Da vedere")} className="btn btn-primary btn-lg w-full">
+              {busy ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-current/30 border-t-current" /> : <PlusIcon size={18} />}
+              {t("CatalogSheet.aggiungi_a_da_vedere")}
+            </button>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" disabled={busy} onClick={() => void addAs("Visto")} className="btn btn-secondary">
+                <EyeIcon size={16} />
+                {t("CatalogSheet.l_ho_visto")}
+              </button>
+              <button type="button" disabled={busy} onClick={() => void addAs("In visione")} className="btn btn-secondary">
+                <PlayIcon size={14} />
+                {t("CatalogSheet.sto_guardando")}
+              </button>
+            </div>
+            <button
+              type="button"
+              disabled={busy || adding !== null}
+              onClick={() =>
+                void add({
+                  tmdbId: target.tmdbId,
+                  mediaType: target.mediaType,
+                  kind: target.kind,
+                  title: item.title,
+                  year: item.year || null,
+                  posterPath: item.posterPath,
+                })
+              }
+              className="btn btn-plain btn-sm self-center text-text-muted"
+            >
+              {adding !== null ? t("CatalogSheet.preparo_la_scheda") : t("CatalogSheet.aggiungi_con_piu_dettagli")}
+            </button>
+          </div>
         )}
 
         {!tmdbApiKey && (
@@ -261,7 +308,7 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
               <StarIcon size={14} filled />
             </span>
             <span className="font-mono tabular font-semibold text-text">{item.tmdbRating.toFixed(1)}</span>
-            <span className="text-text-faint">/10 · media di TMDB</span>
+            <span className="text-text-faint">{t("CatalogSheet.media_di_tmdb")}</span>
           </p>
         )}
 

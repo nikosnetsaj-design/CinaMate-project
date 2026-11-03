@@ -31,6 +31,7 @@ import { useLists } from "../store/useLists";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useLibrary } from "../store/useLibrary";
 import { useEditSheet } from "../store/useEditSheet";
+import { useRateSheet } from "../store/useRateSheet";
 import { useAddSheet } from "../store/useAddSheet";
 import { useCriticDraft } from "../store/useCriticDraft";
 import { useTitleLogo } from "../lib/useTitleLogo";
@@ -90,6 +91,7 @@ function ItemDetail({ item }: { item: Item }) {
   const setRewatch = useLibrary((s) => s.setRewatch);
   const removeItem = useLibrary((s) => s.removeItem);
   const openEdit = useEditSheet((s) => s.openEdit);
+  const openRate = useRateSheet((s) => s.open);
   const openAddSheet = useAddSheet((s) => s.open);
   const setCriticQuestion = useCriticDraft((s) => s.setQuestion);
   const navigate = useNavigate();
@@ -159,10 +161,15 @@ function ItemDetail({ item }: { item: Item }) {
           <div className="mx-auto flex max-w-3xl items-end gap-3.5 px-4 sm:px-6">
             <PosterArt item={item} size="lg" showTitle={false} priority className="w-20 shrink-0 shadow-[var(--shadow-lg)] sm:w-24" />
             {item.vote != null && (
-              <div className="pb-1">
+              <button
+                type="button"
+                onClick={() => openRate(item.id)}
+                aria-label={t("ItemDetailSheet.cambia_il_voto", { v0: item.vote })}
+                className="pb-1 text-left transition-transform active:scale-95"
+              >
                 <span className="tabular text-4xl font-semibold leading-none text-white">{item.vote}</span>
                 <span className="text-sm text-white/70">/10</span>
-              </div>
+              </button>
             )}
             {/* Il trailer sta sull'immagine, dove lo cerca l'occhio, e si apre
                 qui dentro invece che su YouTube: uscire per novanta secondi
@@ -245,7 +252,7 @@ function ItemDetail({ item }: { item: Item }) {
           <RoundAction label={t("ItemDetailSheet.preferito")} active={item.fav} onClick={() => toggleFav(item.id)}>
             <HeartIcon size={17} filled={item.fav} />
           </RoundAction>
-          <RoundAction label={t("ItemDetailSheet.voto")} active={item.vote != null} onClick={() => openEdit(item)}>
+          <RoundAction label={t("ItemDetailSheet.voto")} active={item.vote != null} onClick={() => openRate(item.id)}>
             <StarIcon size={17} filled={item.vote != null} />
           </RoundAction>
           <RoundAction
@@ -253,7 +260,12 @@ function ItemDetail({ item }: { item: Item }) {
             active={item.status === "Visto"}
             // Coppia onesta: "l'ho visto" e "voglio vederlo" sono i due stati
             // fra cui questo pulsante può spostarti senza inventare nulla.
-            onClick={() => setStatus(item.id, item.status === "Visto" ? "Da vedere" : "Visto")}
+            onClick={() => {
+              const watched = item.status !== "Visto";
+              setStatus(item.id, watched ? "Visto" : "Da vedere");
+              // Appena visto e senza voto: la domanda giusta arriva da sola.
+              if (watched && item.vote == null) openRate(item.id);
+            }}
           >
             <EyeIcon size={17} />
           </RoundAction>
@@ -276,7 +288,7 @@ function ItemDetail({ item }: { item: Item }) {
               <StarIcon size={14} filled />
             </span>
             <span className="tabular font-semibold text-text">{item.tmdbRating.toFixed(1)}</span>
-            <span className="text-text-faint">/10 · media di TMDB</span>
+            <span className="text-text-faint">{t("CatalogSheet.media_di_tmdb")}</span>
           </p>
         )}
 
@@ -382,7 +394,10 @@ function ItemDetail({ item }: { item: Item }) {
                     <button
                       key={s}
                       type="button"
-                      onClick={() => setStatus(item.id, s)}
+                      onClick={() => {
+                        setStatus(item.id, s);
+                        if (s === "Visto" && item.status !== "Visto" && item.vote == null) openRate(item.id);
+                      }}
                       aria-pressed={item.status === s}
                       className="chip"
                     >
@@ -424,7 +439,7 @@ function ItemDetail({ item }: { item: Item }) {
                 {item.vote == null && (
                   <button
                     type="button"
-                    onClick={() => openEdit(item)}
+                    onClick={() => openRate(item.id)}
                     className="btn btn-secondary btn-sm flex-1"
                   >
                     <StarIcon size={14} />

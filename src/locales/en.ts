@@ -21,7 +21,7 @@ const frame = {
   "nav.themeDark": "Switch to dark theme",
 
   "menu.close": "Close menu",
-  "menu.add.hint": "By hand, without TMDB",
+  "menu.add.hint": "From the catalogue, or by hand",
   "menu.linkHost": "Manage Link Host",
   "menu.linkHost.none": "No site configured",
   "menu.viewer": "Open Web Viewer",
