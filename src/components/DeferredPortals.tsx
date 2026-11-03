@@ -10,6 +10,7 @@ import { useCommandPalette } from "../store/useCommandPalette";
 import { useWebViewer } from "../store/useWebViewer";
 import { useOnboarding } from "../store/useOnboarding";
 import { useLibrary } from "../store/useLibrary";
+import { useRateSheet } from "../store/useRateSheet";
 
 /*
  * I fogli che coprono l'app — la scheda di un titolo, le impostazioni, il
@@ -33,6 +34,7 @@ const settingsSheet: Loader = () => import("./SettingsSheet").then((m) => m.Sett
 const palette: Loader = () => import("./CommandPalette").then((m) => m.CommandPalette);
 const webViewer: Loader = () => import("./WebViewer").then((m) => m.WebViewer);
 const onboarding: Loader = () => import("./Onboarding").then((m) => m.Onboarding);
+const rateSheet: Loader = () => import("./RateSheet").then((m) => m.RateSheetPortal);
 
 /*
  * Non `React.lazy`: un componente lazy sospende al primo render anche quando
@@ -78,6 +80,7 @@ export function DeferredPortals() {
   const saga = useSelectedSaga((s) => s.key !== null);
   const person = useSelectedPerson((s) => s.name !== null);
   const add = useAddSheet((s) => s.isOpen);
+  const rate = useRateSheet((s) => s.itemId !== null);
   const edit = useEditSheet((s) => s.isOpen);
   const settings = useSettingsSheet((s) => s.isOpen);
   const paletteOpen = useCommandPalette((s) => s.isOpen);
@@ -127,12 +130,17 @@ export function DeferredPortals() {
   return (
     <>
       <Deferred open={paletteOpen} loader={palette} />
+      {/* L'ordine è quello in cui si impilano: chi viene dopo sta sopra. La
+          scheda del catalogo sta sopra al foglio di aggiunta (ci si apre un
+          risultato senza perdere la ricerca) e sotto a quella di una persona
+          (dal cast della scheda si apre la persona). */}
       <Deferred open={item} loader={itemSheet} />
-      <Deferred open={catalog} loader={catalogSheet} />
       <Deferred open={saga} loader={sagaSheet} />
-      <Deferred open={person} loader={personSheet} />
       <Deferred open={add} loader={addSheet} />
+      <Deferred open={catalog} loader={catalogSheet} />
+      <Deferred open={person} loader={personSheet} />
       <Deferred open={edit} loader={editSheet} />
+      <Deferred open={rate} loader={rateSheet} />
       <Deferred open={settings} loader={settingsSheet} />
       {/* Il primo minuto: copre tutto, e si mostra da sé solo a libreria
           vuota (o quando lo si rivede dalle Impostazioni). */}

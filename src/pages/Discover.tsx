@@ -1,19 +1,15 @@
 import { useEffect, useState } from "react";
-import { useLibrary } from "../store/useLibrary";
 import { useSettings } from "../store/useSettings";
 import { useSettingsSheet } from "../store/useSettingsSheet";
-import { useEditSheet } from "../store/useEditSheet";
-import { useSelectedItem } from "../store/useSelectedItem";
 import { getFeed, type DiscoverFeed, type TmdbSearchResult } from "../lib/tmdb";
-import { draftFromTmdb } from "../lib/addFromTmdb";
-import { PosterArt } from "../components/PosterArt";
+import { useCatalogActions } from "../lib/useQuickAdd";
+import { CatalogCard } from "../components/CatalogCard";
 import { EmptyState } from "../components/EmptyState";
 import { RowHeader } from "../components/RowHeader";
 import { ErrorState } from "../components/ErrorState";
 import { UpcomingBoard } from "../components/UpcomingBoard";
 import { NaturalSearch } from "../components/NaturalSearch";
 import { MoodPicker } from "../components/MoodPicker";
-import { CheckIcon } from "../components/icons";
 import { t } from "../lib/i18n";
 
 const FEEDS: { id: DiscoverFeed; title: string; why: string }[] = [
@@ -26,13 +22,10 @@ const FEEDS: { id: DiscoverFeed; title: string; why: string }[] = [
 
 function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: string }) {
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
-  const items = useLibrary((s) => s.items);
-  const openNew = useEditSheet((s) => s.openNew);
-  const openItem = useSelectedItem((s) => s.open);
+  const actions = useCatalogActions();
   const [rows, setRows] = useState<TmdbSearchResult[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  const [picking, setPicking] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -46,28 +39,6 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
     };
   }, [feed, tmdbApiKey, attempt]);
 
-  async function choose(r: TmdbSearchResult) {
-    // Already in the library: open what you have rather than adding a twin.
-    const owned = items.find((i) => i.tmdbId === r.tmdbId);
-    if (owned) {
-      openItem(owned);
-      return;
-    }
-    setPicking(r.tmdbId);
-    try {
-      openNew(
-        await draftFromTmdb(r.tmdbId, r.mediaType, r.kind, tmdbApiKey, {
-          title: r.title,
-          year: r.year,
-          posterPath: r.posterPath,
-        }),
-      );
-    } catch {
-      useLibrary.getState().pushToast("error", t("Discover.non_sono_riuscito_a", { v0: r.title }));
-    }
-    setPicking(null);
-  }
-
   return (
     <section className="flex flex-col gap-4">
       {/* Every row says why it is here — a suggestion without a reason is an advert. */}
@@ -80,34 +51,17 @@ function Row({ feed, title, why }: { feed: DiscoverFeed; title: string; why: str
           ? Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="skeleton aspect-2/3 w-32 shrink-0 rounded-sm sm:w-36" aria-hidden="true" />
             ))
-          : rows.map((r) => {
-              const owned = items.some((i) => i.tmdbId === r.tmdbId);
-              return (
-                <button
-                  key={r.tmdbId}
-                  type="button"
-                  onClick={() => choose(r)}
-                  disabled={picking !== null}
-                  aria-label={owned ? t("Discover.gia_in_libreria_apri", { v0: r.title }) : t("Discover.aggiungi_alla_libreria", { v0: r.title })}
-                  className="group w-32 shrink-0 text-left disabled:opacity-60 sm:w-36"
-                >
-                  <div className="relative">
-                    <PosterArt item={{ title: r.title, kind: r.kind, posterPath: r.posterPath }} size="sm" className="w-full transition-transform duration-200 group-active:scale-[0.98]" showTitle={!r.posterPath} />
-                    {owned && (
-                      <span
-                        className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/65 text-white backdrop-blur-sm"
-                      >
-                        <CheckIcon size={11} />
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-2 line-clamp-2 text-sm font-medium leading-snug text-text">{r.title}</p>
-                  <p className="tabular text-xs text-text-faint">
-                    {picking === r.tmdbId ? "…" : (r.year ?? "")}
-                  </p>
-                </button>
-              );
-            })}
+          : rows.map((r) => (
+              <CatalogCard
+                key={`${r.mediaType}-${r.tmdbId}`}
+                title={r}
+                owned={actions.owned(r)}
+                pending={actions.isPending(r)}
+                onOpen={() => actions.open(r)}
+                onQuickAdd={() => actions.quickAdd(r)}
+                className="w-32 shrink-0 sm:w-36"
+              />
+            ))}
       </div>
       )}
     </section>

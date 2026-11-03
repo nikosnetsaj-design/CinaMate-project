@@ -1,14 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, m } from "framer-motion";
 import { useLibrary } from "../store/useLibrary";
 import { useMarathon } from "../store/useMarathon";
 import { useSagas, sagaKey } from "../store/useSagas";
 import { useSelectedItem } from "../store/useSelectedItem";
-import { useSettings } from "../store/useSettings";
-import { useEditSheet } from "../store/useEditSheet";
 import { buildEntries, nextChapterAfter, orderParts, type SagaEntry } from "../lib/sagas";
-import { draftFromTmdb } from "../lib/addFromTmdb";
+import { useQuickAdd } from "../lib/useQuickAdd";
 import { PosterArt } from "./PosterArt";
 import { CloseIcon, PlayIcon } from "./icons";
 import { t } from "../lib/i18n";
@@ -25,32 +23,29 @@ function Prompt({ finishedTitle, entry, onDismiss }: {
   onDismiss: () => void;
 }) {
   const openItem = useSelectedItem((s) => s.open);
-  const openNew = useEditSheet((s) => s.openNew);
-  const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
-  const pushToast = useLibrary((s) => s.pushToast);
-  const [adding, setAdding] = useState(false);
+  const { quickAdd, pending } = useQuickAdd();
+  const adding = pending.size > 0;
 
+  // Il prossimo capitolo entra in libreria con un tocco, e si apre la sua
+  // scheda: niente modulo da riempire alla fine di un film.
   async function start() {
     if (entry.item) {
       openItem(entry.item);
       onDismiss();
       return;
     }
-    if (!tmdbApiKey) return;
-    setAdding(true);
-    try {
-      openNew(
-        await draftFromTmdb(entry.part.tmdbId, "movie", "film", tmdbApiKey, {
-          title: entry.part.title,
-          year: entry.part.year,
-          posterPath: entry.part.posterPath,
-        }),
-      );
+    const added = await quickAdd({
+      tmdbId: entry.part.tmdbId,
+      mediaType: "movie",
+      kind: "film",
+      title: entry.part.title,
+      year: entry.part.year,
+      posterPath: entry.part.posterPath,
+    });
+    if (added) {
+      openItem(added);
       onDismiss();
-    } catch {
-      pushToast("error", t("NextChapterPrompt.non_e_stato_possibile"));
     }
-    setAdding(false);
   }
 
   return createPortal(

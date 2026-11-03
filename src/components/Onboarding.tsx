@@ -382,7 +382,13 @@ function OnboardingFlow() {
   const [added, setAdded] = useState(0);
   const containerRef = useFocusTrap(finish);
 
+  // Il passo che esce resta a schermo per la sua dissolvenza, e un doppio
+  // tocco veloce su «Continua» arrivava due volte: titoli in libreria doppi.
+  const kept = useRef(false);
+
   function keep(picked: SeedPick[]) {
+    if (kept.current) return;
+    kept.current = true;
     // In blocco: tre titoli sono una scelta sola, e vanno confermati una volta.
     addItems(picked.map(seedDraft));
     setAdded(picked.length);

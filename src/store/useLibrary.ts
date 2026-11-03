@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { HistoryEntry, Item, Status, ToastKind, ToastMessage, WatchedEpisode } from "../types";
+import type { HistoryEntry, Item, Status, ToastAction, ToastKind, ToastMessage, WatchedEpisode } from "../types";
 import { durable } from "../lib/durable";
 import { applyImport, type Accepted, type ImportOutcome } from "../lib/importApply";
 import {
@@ -140,7 +140,11 @@ interface LibraryState {
   storageUnavailable: boolean;
   justCompleted: JustCompleted | null;
 
-  addItem: (data: Omit<Item, "id" | "added">) => void;
+  /**
+   * Aggiunge e restituisce il titolo creato. `silent` toglie l'avviso
+   * generico, per chi ne mostra uno suo (con «Annulla»).
+   */
+  addItem: (data: Omit<Item, "id" | "added">, options?: { silent?: boolean }) => Item;
   /** Un blocco di titoli come una sola azione: una scrittura, un messaggio. */
   addItems: (list: Omit<Item, "id" | "added">[]) => void;
   updateItem: (id: string, patch: Partial<Item>) => void;
@@ -158,7 +162,7 @@ interface LibraryState {
   markEpisodeWatched: (id: string, ref: EpisodeRef) => void;
   setRewatch: (id: string, rewatch: number) => void;
 
-  pushToast: (kind: ToastKind, text: string) => void;
+  pushToast: (kind: ToastKind, text: string, action?: ToastAction) => void;
   dismissToast: (id: string) => void;
   clearJustCompleted: () => void;
 
@@ -262,10 +266,11 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   storageUnavailable: durable.status().backend === "unavailable",
   justCompleted: null,
 
-  addItem: (data) => {
+  addItem: (data, options) => {
     const item: Item = withInitialRegistry({ ...data, id: newId(), added: today() });
-    persistOrToast(get, set, [item, ...get().items], t("useLibrary.aggiunto_alla_libreria", { v0: item.title }));
+    persistOrToast(get, set, [item, ...get().items], options?.silent ? undefined : t("useLibrary.aggiunto_alla_libreria", { v0: item.title }));
     if (item.status === "Visto") logHistory(get, set, [makeHistoryEntry(item, item.added, "watched")]);
+    return item;
   },
 
   /**
@@ -406,10 +411,11 @@ export const useLibrary = create<LibraryState>((set, get) => ({
     if (prev && clamped > prev.rewatch) logHistory(get, set, [makeHistoryEntry(prev, today(), "rewatch")]);
   },
 
-  pushToast: (kind, text) => {
+  pushToast: (kind, text, action) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    set({ toasts: [...get().toasts, { id, kind, text }] });
-    setTimeout(() => get().dismissToast(id), 4200);
+    set({ toasts: [...get().toasts, { id, kind, text, action }] });
+    // Un avviso con un'azione resta un po' di più: va letto *e* deciso.
+    setTimeout(() => get().dismissToast(id), action ? 6500 : 4200);
   },
   dismissToast: (id) => {
     set({ toasts: get().toasts.filter((t) => t.id !== id) });

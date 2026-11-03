@@ -137,10 +137,17 @@ export type Quality = (typeof QUALITIES)[number];
 
 export type ToastKind = "success" | "error" | "info";
 
+/** Un'azione dentro un avviso: «Annulla», «Apri». */
+export interface ToastAction {
+  label: string;
+  run: () => void;
+}
+
 export interface ToastMessage {
   id: string;
   kind: ToastKind;
   text: string;
+  action?: ToastAction;
 }
 
 export type HistoryAction = "watched" | "episode" | "rewatch";

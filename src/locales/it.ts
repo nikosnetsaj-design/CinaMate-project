@@ -30,7 +30,7 @@ const frame = {
 
   // Menu «Altro» e campanella
   "menu.close": "Chiudi il menu",
-  "menu.add.hint": "A mano, senza passare da TMDB",
+  "menu.add.hint": "Dal catalogo, o a mano",
   "menu.linkHost": "Gestisci Link Host",
   "menu.linkHost.none": "Nessun sito configurato",
   "menu.viewer": "Apri Web Viewer",

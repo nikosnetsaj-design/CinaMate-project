@@ -1,15 +1,11 @@
 import { useState } from "react";
 import { useSettings } from "../store/useSettings";
 import { useSettingsSheet } from "../store/useSettingsSheet";
-import { useLibrary } from "../store/useLibrary";
-import { useEditSheet } from "../store/useEditSheet";
-import { useSelectedItem } from "../store/useSelectedItem";
-import { PosterArt } from "../components/PosterArt";
+import { CatalogCard } from "./CatalogCard";
 import { EmptyState } from "../components/EmptyState";
 import { parseNaturalQuery, MissingApiKeyError, ClaudeApiError, type ParsedQuery } from "../lib/anthropic";
 import { discoverTitles, MOVIE_GENRES, TV_GENRES, type TmdbSearchResult } from "../lib/tmdb";
-import { draftFromTmdb } from "../lib/addFromTmdb";
-import { CheckIcon } from "./icons";
+import { useCatalogActions } from "../lib/useQuickAdd";
 import { t } from "../lib/i18n";
 
 const EXAMPLES = [
@@ -54,16 +50,13 @@ export function NaturalSearch() {
   const model = useSettings((s) => s.model);
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
   const openSettings = useSettingsSheet((s) => s.open);
-  const items = useLibrary((s) => s.items);
-  const openNew = useEditSheet((s) => s.openNew);
-  const openItem = useSelectedItem((s) => s.open);
+  const actions = useCatalogActions();
 
   const [question, setQuestion] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState<ParsedQuery | null>(null);
   const [results, setResults] = useState<TmdbSearchResult[] | null>(null);
-  const [picking, setPicking] = useState<number | null>(null);
 
   const run = async (text: string) => {
     const trimmed = text.trim();
@@ -86,27 +79,6 @@ export function NaturalSearch() {
     } finally {
       setBusy(false);
     }
-  };
-
-  const choose = async (r: TmdbSearchResult) => {
-    const owned = items.find((i) => i.tmdbId === r.tmdbId);
-    if (owned) {
-      openItem(owned);
-      return;
-    }
-    setPicking(r.tmdbId);
-    try {
-      openNew(
-        await draftFromTmdb(r.tmdbId, r.mediaType, r.kind, tmdbApiKey, {
-          title: r.title,
-          year: r.year,
-          posterPath: r.posterPath,
-        }),
-      );
-    } catch {
-      setError(t("NaturalSearch.non_sono_riuscito_a"));
-    }
-    setPicking(null);
   };
 
   if (!apiKey) {
@@ -191,38 +163,16 @@ export function NaturalSearch() {
 
       {results && results.length > 0 && (
         <div className="grid grid-cols-3 gap-3.5 sm:grid-cols-4 md:grid-cols-6">
-          {results.map((r) => {
-            const owned = items.some((i) => i.tmdbId === r.tmdbId);
-            return (
-              <button
-                key={r.tmdbId}
-                type="button"
-                onClick={() => choose(r)}
-                disabled={picking !== null}
-                aria-label={owned ? t("NaturalSearch.gia_in_libreria_apri", { v0: r.title }) : t("NaturalSearch.aggiungi_alla_libreria", { v0: r.title })}
-                className="text-left disabled:opacity-60"
-              >
-                <div className="relative">
-                  <PosterArt
-                    item={{ title: r.title, kind: r.kind, posterPath: r.posterPath }}
-                    size="sm"
-                    showTitle={!r.posterPath}
-                  />
-                  {owned && (
-                    <span
-                      className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/65 text-white backdrop-blur-sm"
-                    >
-                      <CheckIcon size={11} />
-                    </span>
-                  )}
-                </div>
-                <p className="mt-1.5 line-clamp-2 text-xs font-medium text-text">{r.title}</p>
-                <p className="font-mono tabular text-xs text-text-faint">
-                  {picking === r.tmdbId ? "…" : (r.year ?? "")}
-                </p>
-              </button>
-            );
-          })}
+          {results.map((r) => (
+            <CatalogCard
+              key={`${r.mediaType}-${r.tmdbId}`}
+              title={r}
+              owned={actions.owned(r)}
+              pending={actions.isPending(r)}
+              onOpen={() => actions.open(r)}
+              onQuickAdd={() => actions.quickAdd(r)}
+            />
+          ))}
         </div>
       )}
     </div>
