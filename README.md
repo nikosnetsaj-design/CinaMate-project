@@ -417,6 +417,13 @@ rete che non è la tua.
 - **Ricerca a parole**: scrivi «film di fantascienza anni '90» e Claude la
   traduce in filtri per TMDB, che risponde. Il modello sceglie i filtri, non i
   titoli: così la lista è vera per costruzione.
+- **Voto con un tocco**: la stella della scheda apre una scala da 1 a 10 da
+  toccare o trascinare col dito; alzando il dito il voto è salvato. Segnando
+  un titolo come visto, la domanda arriva da sola.
+- **Guarda prima, aggiungi dopo**: ogni locandina del catalogo apre la scheda
+  completa senza salvarla. Si aggiunge con un tocco — «Da vedere», «L'ho
+  visto», «Sto guardando» — o con il «+» nell'angolo della locandina, con
+  «Annulla» nell'avviso. Niente moduli da compilare.
 - **Italiano o inglese**: in *Impostazioni → Aspetto → Lingua*. Tutta l'app è
   tradotta — pagine, fogli, lettore, errori, guide, motivi dei consigli — e
   le risposte dell'IA escono nella lingua scelta. I testi stanno in
