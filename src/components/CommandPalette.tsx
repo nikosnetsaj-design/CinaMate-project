@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { useSagas } from "../store/useSagas";
 import { useCommandPalette } from "../store/useCommandPalette";
 import { useSelectedItem } from "../store/useSelectedItem";
@@ -10,6 +10,7 @@ import { useFocusTrap } from "../lib/useFocusTrap";
 import { GROUP_LABELS, smartSearch, type SearchGroup, type SearchHit } from "../lib/search";
 import { PersonIcon, SearchIcon, StackIcon } from "./icons";
 import { useVisibleItems } from "../lib/useVisibleItems";
+import { t } from "../lib/i18n";
 
 const GROUP_ORDER: SearchGroup[] = ["titolo", "saga", "persona"];
 
@@ -68,7 +69,7 @@ function PaletteDialog() {
 
   return createPortal(
     <div className="fixed inset-0 z-80 flex items-start justify-center px-4 pt-24 sm:pt-32">
-      <motion.div
+      <m.div
         aria-hidden="true"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -76,16 +77,16 @@ function PaletteDialog() {
         className="absolute inset-0 bg-black/55 backdrop-blur-[2px]"
         onClick={close}
       />
-      <motion.div
+      <m.div
         ref={containerRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Cerca nella libreria"
+        aria-label={t("CommandPalette.cerca_nella_libreria")}
         initial={{ opacity: 0, y: -12, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -8, scale: 0.98 }}
         transition={{ type: "spring", stiffness: 380, damping: 30 }}
-        className="relative z-10 w-full max-w-lg overflow-hidden rounded-md border border-border bg-surface shadow-[var(--shadow-lg)]"
+        className="relative z-10 w-full max-w-lg overflow-hidden rounded-lg bg-surface shadow-[var(--shadow-lg),0_0_0_1px_var(--separator)]"
         onKeyDown={(e) => {
           if (e.key === "ArrowDown") {
             e.preventDefault();
@@ -99,7 +100,9 @@ function PaletteDialog() {
           }
         }}
       >
-        <div className="flex items-center gap-2.5 border-b border-border px-4 py-3">
+        {/* Il fuoco si vede sul filo sotto il campo, non su un rettangolo
+            dentro il pannello: è l'unico campo, e il pannello è già lì per lui. */}
+        <div className="flex items-center gap-2.5 px-4 py-3 text-text-faint shadow-[inset_0_-1px_0_var(--separator)] transition-shadow focus-within:shadow-[inset_0_-2px_0_var(--accent)]">
           <SearchIcon />
           <input
             ref={inputRef}
@@ -108,22 +111,22 @@ function PaletteDialog() {
               setQuery(e.target.value);
               setHighlighted(0);
             }}
-            placeholder="Titolo, saga, attore, regista, genere…"
-            aria-label="Cerca nella libreria"
-            className="flex-1 bg-transparent text-sm text-text placeholder:text-text-faint focus:outline-none"
+            placeholder={t("CommandPalette.titolo_saga_attore_regista")}
+            aria-label={t("CommandPalette.cerca_nella_libreria")}
+            className="no-focus-ring flex-1 bg-transparent text-base text-text placeholder:text-text-faint outline-none"
           />
-          <kbd className="rounded-xs border border-border-strong px-1.5 py-0.5 text-[10px] text-text-faint">esc</kbd>
+          <kbd className="rounded-xs bg-surface-2 px-1.5 py-0.5 text-xs text-text-faint">{t("CommandPalette.esc")}</kbd>
         </div>
 
-        <ul role="listbox" aria-label="Risultati" className="max-h-80 overflow-y-auto py-1.5">
+        <ul role="listbox" aria-label={t("CommandPalette.risultati")} className="max-h-80 overflow-y-auto py-1.5">
           {results.length === 0 && (
             <li className="px-4 py-6 text-center text-sm text-text-muted">
-              Nessun risultato per &ldquo;{query}&rdquo;.
+              {t("CommandPalette.nessun_risultato_per_ldquo")}{query}{t("CommandPalette.rdquo")}
             </li>
           )}
           {grouped.map(({ group, hits }) => (
             <li key={group}>
-              <p className="px-4 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-text-faint">
+              <p className="px-4 pb-1 pt-2 text-xs font-semibold text-text-faint">
                 {GROUP_LABELS[group]}
               </p>
               <ul>
@@ -153,26 +156,15 @@ function PaletteDialog() {
             </li>
           ))}
         </ul>
-      </motion.div>
+      </m.div>
     </div>,
     document.body,
   );
 }
 
+// La scorciatoia ⌘K sta in DeferredPortals: deve funzionare prima che questo
+// modulo sia mai stato scaricato.
 export function CommandPalette() {
   const isOpen = useCommandPalette((s) => s.isOpen);
-  const open = useCommandPalette((s) => s.open);
-
-  useEffect(() => {
-    function handleGlobalKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        open();
-      }
-    }
-    document.addEventListener("keydown", handleGlobalKeyDown);
-    return () => document.removeEventListener("keydown", handleGlobalKeyDown);
-  }, [open]);
-
   return <AnimatePresence>{isOpen && <PaletteDialog />}</AnimatePresence>;
 }

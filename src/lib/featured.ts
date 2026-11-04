@@ -2,6 +2,7 @@ import type { Item } from "../types";
 import type { UpcomingEntry } from "./upcoming";
 import type { ResumeEntry } from "./continueWatching";
 import { formatRuntime } from "./format";
+import { intlLocale, t } from "./i18n";
 
 /**
  * Il titolo della vetrina, e la riga che dice perché è lì.
@@ -24,25 +25,25 @@ export interface Featured {
 }
 
 function dateWords(date: string): string {
-  return new Intl.DateTimeFormat("it-IT", { day: "numeric", month: "long" }).format(
+  return new Intl.DateTimeFormat(intlLocale(), { day: "numeric", month: "long" }).format(
     new Date(`${date}T00:00:00`),
   );
 }
 
 function fromUpcoming(entry: UpcomingEntry): string {
   const when = dateWords(entry.date);
-  if (entry.type === "film") return `In uscita: ${when}`;
-  if (entry.episode === 1) return `Nuova stagione: ${when}`;
+  if (entry.type === "film") return t("featured.in_uscita", { v0: when });
+  if (entry.episode === 1) return t("featured.nuova_stagione", { v0: when });
   return entry.season != null && entry.episode != null
     ? `S${entry.season}E${entry.episode}: ${when}`
-    : `Nuovo episodio: ${when}`;
+    : t("featured.nuovo_episodio", { v0: when });
 }
 
 function fromResume(entry: ResumeEntry): string {
   if (entry.hasPlayhead && entry.remainingMin > 0) {
-    return `${entry.label} · restano ${formatRuntime(entry.remainingMin)}`;
+    return t("featured.restano", { v0: entry.label, v1: formatRuntime(entry.remainingMin) });
   }
-  if (entry.pct > 0) return `${entry.label} · ${entry.pct}% visto`;
+  if (entry.pct > 0) return t("featured.visto", { v0: entry.label, v1: entry.pct });
   return entry.label;
 }
 
@@ -83,10 +84,10 @@ export function pickFeaturedList(
   // 3. Un preferito mai visto, poi gli ultimi arrivati: in entrambi i casi la
   //    riga dice cos'è, perché non c'è nient'altro di vero da dire.
   for (const item of items.filter((i) => i.fav && i.status === "Da vedere")) {
-    push({ item, line: "Preferito, ancora da vedere", resumeSec: 0 });
+    push({ item, line: t("featured.preferito_ancora_da_vedere"), resumeSec: 0 });
   }
   for (const item of [...items].sort((a, b) => b.added.localeCompare(a.added))) {
-    push({ item, line: "Ultimo arrivato in libreria", resumeSec: 0 });
+    push({ item, line: t("featured.ultimo_arrivato_in_libreria"), resumeSec: 0 });
   }
 
   return out;

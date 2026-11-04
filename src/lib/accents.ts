@@ -2,15 +2,16 @@
  * The accent colours the app can wear.
  *
  * A free colour picker is deliberately not on offer. The design system's one
- * hard promise is that every text/background pair clears WCAG AA — 168 of them,
- * checked by script — and an arbitrary hex chosen from a wheel breaks that on
- * the first try, silently, in a way nobody notices until someone can't read a
- * button. So each accent ships as a curated set with its own dark and light
- * variants, picked to clear AA against both themes' surfaces.
+ * hard promise is that every text/background pair clears WCAG AA, checked by
+ * `npm run contrast` — which reads this list too — and an arbitrary hex chosen
+ * from a wheel breaks that on the first try, silently, in a way nobody notices
+ * until someone can't read a button. So each accent ships as a curated set
+ * with its own dark and light variants, picked to clear AA against both
+ * themes' surfaces.
  *
- * Three of the six are the Technicolor dyes the identity is built from
- * (§4 of PRODUCT.md); the other three extend the same three-strip logic rather
- * than wandering off into a generic swatch grid.
+ * Tutti e sette stanno sulla stessa carta calda: toni un po' spenti, mai i
+ * colori pieni di un'interfaccia da cruscotto. Gli id sono quelli di prima,
+ * così chi ne aveva scelto uno se lo ritrova, ricalibrato.
  */
 export interface AccentVariant {
   /** Fills: buttons, bars, the active pill. Paired with `contrast` for text on it. */
@@ -30,49 +31,55 @@ export interface Accent {
 
 export const ACCENTS: Accent[] = [
   {
-    id: "magenta",
-    name: "Magenta",
-    dark: { accent: "#ff4d9e", accentText: "#ff6fb0", accentContrast: "#24071a" },
-    light: { accent: "#d6007a", accentText: "#a80060", accentContrast: "#ffffff" },
-  },
-  {
-    id: "ciano",
-    name: "Ciano",
-    dark: { accent: "#3fd3e8", accentText: "#5fdcee", accentContrast: "#04222a" },
-    light: { accent: "#006e7d", accentText: "#005f6b", accentContrast: "#ffffff" },
-  },
-  {
-    id: "giallo",
-    name: "Giallo",
-    dark: { accent: "#ffc24d", accentText: "#ffd076", accentContrast: "#2a1c00" },
-    light: { accent: "#8a5c00", accentText: "#7a5200", accentContrast: "#ffffff" },
-  },
-  {
-    id: "verde",
-    name: "Verde",
-    dark: { accent: "#22c55e", accentText: "#4ade80", accentContrast: "#04220f" },
-    light: { accent: "#157f3c", accentText: "#116632", accentContrast: "#ffffff" },
-  },
-  {
-    id: "viola",
-    name: "Viola",
-    dark: { accent: "#b490f0", accentText: "#c4a7f4", accentContrast: "#1a0b33" },
-    light: { accent: "#6634b8", accentText: "#5a2ca3", accentContrast: "#ffffff" },
+    id: "brace",
+    name: "Brace",
+    dark: { accent: "#dc7a54", accentText: "#ec9670", accentContrast: "#1a0b05" },
+    light: { accent: "#b0502c", accentText: "#9f4624", accentContrast: "#ffffff" },
   },
   {
     id: "corallo",
     name: "Corallo",
-    dark: { accent: "#ff8a7a", accentText: "#ffa397", accentContrast: "#2c0803" },
-    light: { accent: "#b8362a", accentText: "#9c2a21", accentContrast: "#ffffff" },
+    dark: { accent: "#ec8b78", accentText: "#f2a293", accentContrast: "#2a0c06" },
+    light: { accent: "#b2442f", accentText: "#9e3b28", accentContrast: "#ffffff" },
+  },
+  {
+    id: "giallo",
+    name: "Ocra",
+    dark: { accent: "#e0b062", accentText: "#e8c07e", accentContrast: "#1f1405" },
+    light: { accent: "#865900", accentText: "#7a5100", accentContrast: "#ffffff" },
+  },
+  {
+    id: "verde",
+    name: "Salvia",
+    dark: { accent: "#93bf86", accentText: "#a6cc9a", accentContrast: "#0f1d0c" },
+    light: { accent: "#3d7536", accentText: "#36682f", accentContrast: "#ffffff" },
+  },
+  {
+    id: "ciano",
+    name: "Lago",
+    dark: { accent: "#75b4c0", accentText: "#8fc3cd", accentContrast: "#071a1e" },
+    light: { accent: "#2f6e79", accentText: "#285f69", accentContrast: "#ffffff" },
+  },
+  {
+    id: "viola",
+    name: "Glicine",
+    dark: { accent: "#ad98d9", accentText: "#bdace2", accentContrast: "#1a1030" },
+    light: { accent: "#6a4ca8", accentText: "#5d4296", accentContrast: "#ffffff" },
+  },
+  {
+    id: "magenta",
+    name: "Lampone",
+    dark: { accent: "#e183a8", accentText: "#ea9bba", accentContrast: "#2a0a17" },
+    light: { accent: "#a8335f", accentText: "#962c54", accentContrast: "#ffffff" },
   },
 ];
 
 /**
- * Il verde è il predefinito: sul nero è il colore più leggibile della
- * tavolozza, ed è quello che ogni app di visione usa per «vai». Chi ne ha
- * scelto un altro se lo tiene — la scelta salvata vince sempre sul default.
+ * La brace è il predefinito: è l'accento su cui è costruito il sistema, ed è
+ * quello del foglio di stile. Chi ne ha scelto un altro se lo tiene — la
+ * scelta salvata vince sempre sul default.
  */
-export const DEFAULT_ACCENT = "verde";
+export const DEFAULT_ACCENT = "brace";
 
 export function accentById(id: string): Accent {
   return ACCENTS.find((a) => a.id === id) ?? ACCENTS.find((a) => a.id === DEFAULT_ACCENT) ?? ACCENTS[0];

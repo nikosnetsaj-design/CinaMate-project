@@ -2,13 +2,14 @@ import type { Kind } from "../types";
 import { logError } from "./errorLog";
 import { TokenBucket } from "./rateLimit";
 import { TieredCache, TTL } from "./persistentCache";
+import { lang, tmdbLanguage, t } from "./i18n";
 
 const BASE = "https://api.themoviedb.org/3";
 const IMG_BASE = "https://image.tmdb.org/t/p";
 
 export class MissingTmdbKeyError extends Error {
   constructor() {
-    super("Nessuna chiave API TMDB configurata.");
+    super(t("tmdb.nessuna_chiave_api_tmdb"));
     this.name = "MissingTmdbKeyError";
   }
 }
@@ -32,6 +33,11 @@ export interface TmdbSearchResult {
   kind: Kind;
   /** Quanto TMDB lo vede cercato in questo momento. Serve a ordinare, non a giudicare. */
   popularity: number;
+  /**
+   * Il titolo originale, dove la ricerca lo riporta: un'esportazione di
+   * Letterboxd scrive «The Godfather», TMDB in italiano risponde «Il padrino».
+   */
+  originalTitle?: string;
 }
 
 export interface TmdbWatchProvider {
@@ -49,6 +55,11 @@ export interface TmdbDetails {
   runtime: number;
   episodes: number | null;
   seasons: number | null;
+  /**
+   * Quante puntate ha ogni stagione, dalla 1 (le speciali escluse). `null` per
+   * i film. È ciò che dice al registro degli episodi dove finisce una stagione.
+   */
+  seasonEpisodes: number[] | null;
   overview: string;
   director: string;
   cast: string[];
@@ -77,7 +88,7 @@ export interface TmdbDetails {
 /** Thrown when a request was deliberately cancelled — never worth reporting. */
 export class TmdbAbortError extends Error {
   constructor() {
-    super("Richiesta annullata");
+    super(t("tmdb.richiesta_annullata"));
     this.name = "TmdbAbortError";
   }
 }
@@ -160,7 +171,7 @@ async function tmdbGet<T>(
   if (!apiKey) throw new MissingTmdbKeyError();
   const url = new URL(`${BASE}${path}`);
   url.searchParams.set("api_key", apiKey);
-  url.searchParams.set("language", "it-IT");
+  url.searchParams.set("language", tmdbLanguage());
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
 
   /**
@@ -194,8 +205,8 @@ async function tmdbGet<T>(
       // Logged as well as thrown: much of this runs in the background linker,
       // where the throw is swallowed on purpose so one unmatchable title doesn't
       // stop the pass — and the failure would otherwise leave no trace anywhere.
-      logError("tmdb", "Connessione a TMDB non riuscita", path);
-      throw new TmdbApiError("Connessione a TMDB non riuscita. Controlla la rete e riprova.");
+      logError("tmdb", t("tmdb.connessione_a_tmdb_non"), path);
+      throw new TmdbApiError(t("tmdb.connessione_a_tmdb_non_2"));
     }
 
     if (response.ok) return (await response.json()) as T;
@@ -212,13 +223,13 @@ async function tmdbGet<T>(
     // than a fault, so it stays out of the log — filling the page with those
     // would bury the failures worth reading.
     if (response.status !== 404) logError("tmdb", `HTTP ${response.status}`, path);
-    if (response.status === 401) throw new TmdbApiError("Chiave API TMDB non valida.", 401);
-    if (response.status === 404) throw new TmdbApiError("Titolo non trovato su TMDB.", 404);
+    if (response.status === 401) throw new TmdbApiError(t("tmdb.chiave_api_tmdb_non"), 401);
+    if (response.status === 404) throw new TmdbApiError(t("tmdb.titolo_non_trovato_su"), 404);
     // Il 429 sopravvissuto ai tentativi merita di dirlo con parole sue: chi
     // legge deve capire che non c'è niente di rotto e che basta aspettare.
     if (response.status === 429)
-      throw new TmdbApiError("TMDB sta limitando le richieste. Riprova fra qualche istante.", 429);
-    throw new TmdbApiError(`Richiesta TMDB rifiutata (HTTP ${response.status}).`, response.status);
+      throw new TmdbApiError(t("tmdb.tmdb_sta_limitando_le"), 429);
+    throw new TmdbApiError(t("tmdb.richiesta_tmdb_rifiutata_http", { v0: response.status }), response.status);
   }
 }
 
@@ -288,6 +299,8 @@ interface RawMultiSearchResult {
   media_type: "movie" | "tv" | "person";
   title?: string;
   name?: string;
+  original_title?: string;
+  original_name?: string;
   release_date?: string;
   first_air_date?: string;
   overview?: string;
@@ -383,6 +396,66 @@ export async function searchTitles(
     .map((entry) => entry.r);
 }
 
+/*
+ * L'abbinamento dell'importazione: due domande più strette di `/search/multi`.
+ */
+
+function mapResult(r: RawMultiSearchResult, mediaType: "movie" | "tv"): TmdbSearchResult {
+  const genreNames = (r.genre_ids ?? []).map((id) => GENRE_NAMES[id]).filter((n): n is string => !!n);
+  const dateStr = r.release_date || r.first_air_date;
+  return {
+    tmdbId: r.id,
+    mediaType,
+    title: r.title || r.name || "",
+    year: dateStr ? Number(dateStr.slice(0, 4)) : null,
+    overview: r.overview || "",
+    posterPath: r.poster_path ?? null,
+    kind: guessKind(mediaType, genreNames, r.origin_country),
+    popularity: r.popularity ?? 0,
+    originalTitle: r.original_title || r.original_name || undefined,
+  };
+}
+
+/**
+ * Un titolo da un identificativo di un altro catalogo — IMDb (`tt0816692`) o
+ * TheTVDB — con `/find`. È la risposta esatta: un file di IMDb o di TV Time
+ * porta l'identificativo, e cercare per nome quando c'è l'id sarebbe
+ * scegliere di sbagliare.
+ */
+export async function findByExternalId(
+  id: string,
+  source: "imdb_id" | "tvdb_id",
+  apiKey: string,
+): Promise<TmdbSearchResult | null> {
+  const data = await tmdbGet<{ movie_results?: RawMultiSearchResult[]; tv_results?: RawMultiSearchResult[] }>(
+    `/find/${encodeURIComponent(id)}`,
+    apiKey,
+    { external_source: source },
+  );
+  const movie = data.movie_results?.[0];
+  if (movie) return mapResult(movie, "movie");
+  const tv = data.tv_results?.[0];
+  if (tv) return mapResult(tv, "tv");
+  return null;
+}
+
+/**
+ * La ricerca per titolo con il tipo e l'anno noti: `/search/movie?year=` o
+ * `/search/tv?first_air_date_year=`. Un «Dune» del 2021 non deve trovare il
+ * «Dune» del 1984 prima di sé.
+ */
+export async function searchByKind(
+  query: string,
+  mediaType: "movie" | "tv",
+  year: number | null,
+  apiKey: string,
+): Promise<TmdbSearchResult[]> {
+  const params: Record<string, string> = { query, include_adult: "false" };
+  if (year) params[mediaType === "movie" ? "year" : "first_air_date_year"] = String(year);
+  const data = await tmdbGet<{ results: RawMultiSearchResult[] }>(`/search/${mediaType}`, apiKey, params);
+  return data.results.map((r) => mapResult(r, mediaType)).filter((r) => r.title);
+}
+
 interface RawVideo {
   type: string;
   site: string;
@@ -430,6 +503,7 @@ interface RawDetails {
   episode_run_time?: number[];
   number_of_episodes?: number;
   number_of_seasons?: number;
+  seasons?: { season_number: number; episode_count?: number }[];
   origin_country?: string[];
   created_by?: { id?: number; name: string; profile_path?: string | null }[];
   credits?: { cast?: RawCast[]; crew?: RawCrew[] };
@@ -490,6 +564,11 @@ export interface TmdbWatchInfo {
   buy: TmdbWatchProvider[];
   /** La pagina JustWatch del titolo, quando c'è. */
   link: string | null;
+  /**
+   * La risposta non è arrivata (rete, limite di TMDB): le liste vuote qui
+   * sopra vogliono dire «non lo so», non «da nessuna parte».
+   */
+  unavailable?: boolean;
 }
 
 /** L'icona quadrata del servizio, quella che si riconosce senza leggere. */
@@ -517,15 +596,39 @@ function toProviders(raw: RawProviderEntry[] | undefined): TmdbWatchProvider[] {
  * catalogo di streaming cambia, ma non nel giro di una sessione.
  */
 const watchCache = new TieredCache<TmdbWatchInfo>("dove", TTL.metadata);
-export async function getWatchProviders(tmdbId: number, mediaType: "movie" | "tv", apiKey: string): Promise<TmdbWatchInfo> {
-  const key = `${mediaType}:${tmdbId}`;
+
+/*
+ * Il paese in cui si guarda. La disponibilità cambia da un paese all'altro, e
+ * fino a qui era fissata all'Italia: chi vive in Svizzera o in Germania vedeva
+ * servizi che lì non trova. Lo imposta lo store degli abbonamenti, all'avvio e
+ * quando lo cambi; chi non lo tocca resta sull'Italia.
+ */
+let watchRegion = "IT";
+
+export function setWatchRegion(region: string): void {
+  if (/^[A-Z]{2}$/.test(region)) watchRegion = region;
+}
+
+export async function getWatchProviders(
+  tmdbId: number,
+  mediaType: "movie" | "tv",
+  apiKey: string,
+  region: string = watchRegion,
+): Promise<TmdbWatchInfo> {
+  // Il paese nella chiave: le voci salvate prima, senza paese, erano italiane.
+  const key = region === "IT" ? `${mediaType}:${tmdbId}` : `${region}:${mediaType}:${tmdbId}`;
   const hit = await watchCache.get(key);
   if (hit) return hit;
 
-  const providers = await tmdbGet<RawProvidersResponse>(`/${mediaType}/${tmdbId}/watch/providers`, apiKey).catch(
-    () => ({ results: {} }) as RawProvidersResponse,
-  );
-  const it = providers.results?.IT;
+  let providers: RawProvidersResponse;
+  try {
+    providers = await tmdbGet<RawProvidersResponse>(`/${mediaType}/${tmdbId}/watch/providers`, apiKey);
+  } catch {
+    // Un errore non si mette in cache: prima un attimo senza rete diventava
+    // «non si guarda da nessuna parte» per ventiquattro ore.
+    return { streaming: [], free: [], rent: [], buy: [], link: null, unavailable: true };
+  }
+  const it = providers.results?.[region];
   const info: TmdbWatchInfo = {
     streaming: toProviders(it?.flatrate),
     free: toProviders([...(it?.free ?? []), ...(it?.ads ?? [])]),
@@ -545,7 +648,10 @@ export async function getWatchProviders(tmdbId: number, mediaType: "movie" | "tv
  * alcuna cache: riaprire la stessa scheda due volte la riscaricava due volte,
  * e la passata di collegamento automatico la rifaceva da capo a ogni avvio.
  */
-const detailsCache = new TieredCache<TmdbDetails>("dettagli", TTL.metadata);
+// «v2»: dal registro degli episodi in poi la scheda porta anche la divisione
+// in stagioni. Le voci salvate prima non ce l'hanno, e senza cambiare nome
+// resterebbero buone per un giorno intero dicendo «non si sa».
+const detailsCache = new TieredCache<TmdbDetails>("dettagli-v2", TTL.metadata);
 
 export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiKey: string): Promise<TmdbDetails> {
   const cacheKey = `${mediaType}:${tmdbId}`;
@@ -579,6 +685,13 @@ export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiK
     runtime: mediaType === "movie" ? details.runtime ?? 0 : details.episode_run_time?.[0] ?? 0,
     episodes: mediaType === "tv" ? details.number_of_episodes ?? null : null,
     seasons: mediaType === "tv" ? details.number_of_seasons ?? null : null,
+    seasonEpisodes:
+      mediaType === "tv" && details.seasons
+        ? details.seasons
+            .filter((s) => s.season_number >= 1)
+            .sort((a, b) => a.season_number - b.season_number)
+            .map((s) => Math.max(0, s.episode_count ?? 0))
+        : null,
     overview: details.overview || "",
     director,
     cast: (details.credits?.cast ?? []).slice(0, 5).map((c) => c.name),
@@ -625,7 +738,7 @@ export async function getDetails(tmdbId: number, mediaType: "movie" | "tv", apiK
 // promise is answering a typed sentence quickly.
 // ---------------------------------------------------------------------------
 
-export const MOVIE_GENRES: Record<number, string> = {
+const MOVIE_GENRES_IT: Record<number, string> = {
   28: "Azione",
   12: "Avventura",
   16: "Animazione",
@@ -647,7 +760,7 @@ export const MOVIE_GENRES: Record<number, string> = {
   37: "Western",
 };
 
-export const TV_GENRES: Record<number, string> = {
+const TV_GENRES_IT: Record<number, string> = {
   10759: "Action & Adventure",
   16: "Animazione",
   35: "Commedia",
@@ -665,6 +778,43 @@ export const TV_GENRES: Record<number, string> = {
   10768: "War & Politics",
   37: "Western",
 };
+
+// Gli stessi elenchi come TMDB li scrive in inglese (`en-US`).
+const MOVIE_GENRES_EN: Record<number, string> = {
+  28: "Action",
+  12: "Adventure",
+  16: "Animation",
+  35: "Comedy",
+  80: "Crime",
+  99: "Documentary",
+  18: "Drama",
+  10751: "Family",
+  14: "Fantasy",
+  36: "History",
+  27: "Horror",
+  10402: "Music",
+  9648: "Mystery",
+  10749: "Romance",
+  878: "Science Fiction",
+  10770: "TV Movie",
+  53: "Thriller",
+  10752: "War",
+  37: "Western",
+};
+
+const TV_GENRES_EN: Record<number, string> = {
+  ...TV_GENRES_IT,
+  16: "Animation",
+  35: "Comedy",
+  99: "Documentary",
+  18: "Drama",
+  10751: "Family",
+  9648: "Mystery",
+};
+
+/** I generi nella lingua dell'app: sono quelli che l'utente legge e che finiscono nei filtri. */
+export const MOVIE_GENRES: Record<number, string> = lang === "en" ? MOVIE_GENRES_EN : MOVIE_GENRES_IT;
+export const TV_GENRES: Record<number, string> = lang === "en" ? TV_GENRES_EN : TV_GENRES_IT;
 
 export interface DiscoverQuery {
   mediaType: "movie" | "tv";
@@ -860,14 +1010,18 @@ interface RawPersonHit {
   known_for?: { title?: string; name?: string }[];
 }
 
-const DEPARTMENTS: Record<string, string> = {
-  Acting: "Recitazione",
-  Directing: "Regia",
-  Writing: "Sceneggiatura",
-  Production: "Produzione",
-  Sound: "Musica e suono",
-  Camera: "Fotografia",
-};
+// In inglese i nomi di TMDB vanno già bene: la tabella traduce solo verso l'italiano.
+const DEPARTMENTS: Record<string, string> =
+  lang === "en"
+    ? { Acting: "Acting", Directing: "Directing", Writing: "Writing", Production: "Production", Sound: "Sound", Camera: "Camera" }
+    : {
+        Acting: "Recitazione",
+        Directing: "Regia",
+        Writing: "Sceneggiatura",
+        Production: "Produzione",
+        Sound: "Musica e suono",
+        Camera: "Fotografia",
+      };
 
 /** Le persone che corrispondono a un nome, per la scheda Persone della ricerca. */
 export async function searchPeople(
@@ -1063,7 +1217,7 @@ export async function getSeason(
   const episodes = (data.episodes ?? []).map((e, i) => ({
     seasonNumber: e.season_number ?? seasonNumber,
     episodeNumber: e.episode_number ?? i + 1,
-    title: e.name?.trim() || `Episodio ${e.episode_number ?? i + 1}`,
+    title: e.name?.trim() || t("tmdb.episodio", { v0: e.episode_number ?? i + 1 }),
     overview: e.overview?.trim() ?? "",
     stillPath: e.still_path ?? null,
     runtime: e.runtime && e.runtime > 0 ? e.runtime : null,
@@ -1327,14 +1481,17 @@ interface RawPerson {
   combined_credits?: { cast?: RawPersonCredit[]; crew?: RawPersonCredit[] };
 }
 
-const DEPARTMENT_LABELS: Record<string, string> = {
-  Acting: "Interpretazione",
-  Directing: "Regia",
-  Writing: "Sceneggiatura",
-  Production: "Produzione",
-  Sound: "Musiche e suono",
-  Camera: "Fotografia",
-};
+const DEPARTMENT_LABELS: Record<string, string> =
+  lang === "en"
+    ? { Acting: "Acting", Directing: "Directing", Writing: "Writing", Production: "Production", Sound: "Music and sound", Camera: "Cinematography" }
+    : {
+        Acting: "Interpretazione",
+        Directing: "Regia",
+        Writing: "Sceneggiatura",
+        Production: "Produzione",
+        Sound: "Musiche e suono",
+        Camera: "Fotografia",
+      };
 
 function toPersonCredit(raw: RawPersonCredit, role: string): TmdbPersonCredit | null {
   const mediaType = raw.media_type === "tv" ? "tv" : raw.media_type === "movie" ? "movie" : null;
@@ -1396,7 +1553,7 @@ export async function getPerson(personId: number, apiKey: string): Promise<TmdbP
 
   const directing = (raw.combined_credits?.crew ?? [])
     .filter((c) => c.job === "Director")
-    .map((c) => toPersonCredit(c, "Regia"))
+    .map((c) => toPersonCredit(c, lang === "en" ? "Director" : "Regia"))
     .filter((c): c is TmdbPersonCredit => c !== null)
     .sort(byRecency);
 
@@ -1529,26 +1686,11 @@ export interface TmdbTitleExtras {
    * — le collezioni esistono per i film e basta. Vedi `lib/franchise.ts`.
    */
   keywords: TmdbKeyword[];
-  /**
-   * Le stagioni come le elenca TMDB, con quanti episodi ha ciascuna. Arrivano
-   * nella stessa risposta della scheda, quindi la tendina delle stagioni e il
-   * conto «dove sei rimasto» non costano una richiesta in più.
-   */
-  seasons: TmdbSeasonSummary[];
 }
 
 export interface TmdbKeyword {
   id: number;
   name: string;
-}
-
-export interface TmdbSeasonSummary {
-  seasonNumber: number;
-  /** Il nome che le ha dato TMDB — «Stagione 3», ma anche «Parte 5». */
-  name: string;
-  episodeCount: number;
-  airDate: string | null;
-  posterPath: string | null;
 }
 
 interface RawImage {
@@ -1571,20 +1713,11 @@ interface RawExtras extends RawDetails {
   recommendations?: { results?: RawMultiSearchResult[] };
   // I film le chiamano `keywords`, le serie `results`: stessa cosa, due nomi.
   keywords?: { keywords?: RawKeyword[]; results?: RawKeyword[] };
-  seasons?: RawSeason[];
 }
 
 interface RawKeyword {
   id: number;
   name?: string;
-}
-
-interface RawSeason {
-  season_number?: number;
-  name?: string;
-  episode_count?: number;
-  air_date?: string | null;
-  poster_path?: string | null;
 }
 
 /**
@@ -1594,26 +1727,41 @@ interface RawSeason {
  * al catering: mostrarle tutte non è generosità, è nascondere le quattro che
  * uno cerca davvero. Le altre restano su TMDB, che è il posto giusto per loro.
  */
-const KEY_JOBS: Record<string, string> = {
-  Director: "Regia",
-  Screenplay: "Sceneggiatura",
-  Writer: "Sceneggiatura",
-  Story: "Soggetto",
-  "Original Music Composer": "Musiche",
-  "Director of Photography": "Fotografia",
-  Producer: "Produzione",
-  "Executive Producer": "Produzione esecutiva",
-};
+const KEY_JOBS: Record<string, string> =
+  lang === "en"
+    ? {
+        Director: "Director",
+        Screenplay: "Screenplay",
+        Writer: "Writer",
+        Story: "Story",
+        "Original Music Composer": "Music",
+        "Director of Photography": "Cinematography",
+        Producer: "Producer",
+        "Executive Producer": "Executive producer",
+      }
+    : {
+        Director: "Regia",
+        Screenplay: "Sceneggiatura",
+        Writer: "Sceneggiatura",
+        Story: "Soggetto",
+        "Original Music Composer": "Musiche",
+        "Director of Photography": "Fotografia",
+        Producer: "Produzione",
+        "Executive Producer": "Produzione esecutiva",
+      };
 const JOB_ORDER = Object.keys(KEY_JOBS);
 
-const VIDEO_KINDS: Record<string, string> = {
-  Trailer: "Trailer",
-  Teaser: "Teaser",
-  Clip: "Scena",
-  Featurette: "Speciale",
-  "Behind the Scenes": "Dietro le quinte",
-  Bloopers: "Papere",
-};
+const VIDEO_KINDS: Record<string, string> =
+  lang === "en"
+    ? { Trailer: "Trailer", Teaser: "Teaser", Clip: "Clip", Featurette: "Featurette", "Behind the Scenes": "Behind the scenes", Bloopers: "Bloopers" }
+    : {
+        Trailer: "Trailer",
+        Teaser: "Teaser",
+        Clip: "Scena",
+        Featurette: "Speciale",
+        "Behind the Scenes": "Dietro le quinte",
+        Bloopers: "Papere",
+      };
 
 /** L'anteprima di un video YouTube, senza chiamare YouTube. */
 export function youtubeThumb(key: string): string {
@@ -1676,7 +1824,7 @@ export function getTitleExtras(tmdbId: number, mediaType: "movie" | "tv", apiKey
     const creators: TmdbCrewCredit[] = (raw.created_by ?? []).map((c, i) => ({
       id: c.id ?? -1 - i,
       name: c.name,
-      job: "Ideata da",
+      job: t("tmdb.ideata_da"),
       profilePath: c.profile_path ?? null,
     }));
 
@@ -1734,18 +1882,6 @@ export function getTitleExtras(tmdbId: number, mediaType: "movie" | "tv", apiKey
       keywords: (raw.keywords?.keywords ?? raw.keywords?.results ?? [])
         .map((k) => ({ id: k.id, name: (k.name ?? "").trim() }))
         .filter((k) => k.name),
-      // La stagione 0 sono gli speciali, e non è una stagione: metterla in
-      // cima alla tendina vorrebbe dire aprire una serie sui suoi extra.
-      seasons: (raw.seasons ?? [])
-        .filter((s) => (s.season_number ?? 0) > 0 && (s.episode_count ?? 0) > 0)
-        .map((s) => ({
-          seasonNumber: s.season_number ?? 0,
-          name: s.name?.trim() || `Stagione ${s.season_number}`,
-          episodeCount: s.episode_count ?? 0,
-          airDate: s.air_date || null,
-          posterPath: s.poster_path ?? null,
-        }))
-        .sort((a, b) => a.seasonNumber - b.seasonNumber),
     };
   })();
 

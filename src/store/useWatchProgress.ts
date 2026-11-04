@@ -10,6 +10,7 @@ import {
   type DailySeconds,
   type PlaybackHistoryEntry,
 } from "../player/services/statsAndHistory";
+import { durable } from "../lib/durable";
 
 /**
  * The playhead, as the rest of the app sees it.
@@ -50,9 +51,15 @@ export function useWatchProgressSync() {
     const onStorage = (e: StorageEvent) => {
       if (e.key === null || e.key === HISTORY_KEY || e.key === DAILY_KEY) refresh();
     };
+    // Da un'altra scheda: su IndexedDB l'avviso arriva dal canale di
+    // lib/durable, su localStorage dall'evento `storage` di sempre.
+    const unsubscribe = durable.subscribe((key) => {
+      if (key === "playback" || key === "daily") refresh();
+    });
     window.addEventListener(PROGRESS_EVENT, refresh);
     window.addEventListener("storage", onStorage);
     return () => {
+      unsubscribe();
       window.removeEventListener(PROGRESS_EVENT, refresh);
       window.removeEventListener("storage", onStorage);
     };

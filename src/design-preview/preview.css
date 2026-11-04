@@ -1,0 +1,996 @@
+/* ------------------------------------------------------------------ */
+/* Anteprima del sistema di design — «Sala e carta»                     */
+/*                                                                      */
+/* Tutto è sotto `.ds`: questo foglio arriva solo con la pagina          */
+/* /design-preview, e le variabili ridefinite qui valgono solo per i     */
+/* suoi discendenti. Il resto dell'app non vede niente di tutto questo   */
+/* finché la proposta non viene approvata e i token non passano in       */
+/* `src/index.css`.                                                     */
+/*                                                                      */
+/* Due temi pensati ognuno per la sua luce, non uno ricavato dall'altro: */
+/* di sera la profondità viene dalla luminosità delle superfici e da un  */
+/* filo di luce sul bordo alto; di giorno da carta più chiara del fondo  */
+/* e da ombre morbide. L'accento è uno solo, caldo, e compare dove c'è   */
+/* un'azione o uno stato attivo — mai come decorazione.                 */
+/* ------------------------------------------------------------------ */
+
+.ds {
+  /* Neutri, sera: un nero caldo e non assoluto. Il nero pieno fa vibrare
+     il testo bianco e rende le locandine adesivi su un vuoto. */
+  --bg: #131211;
+  --surface: #1c1b19;
+  --surface-2: #262422;
+  --surface-hover: #302e2b;
+  --text: #f3efe7;
+  --text-muted: #b9b2a6;
+  --text-faint: #a19a8f;
+  --separator: rgba(243, 239, 231, 0.08);
+  --border: rgba(243, 239, 231, 0.1);
+  --border-strong: rgba(243, 239, 231, 0.4);
+
+  /* L'unico accento: brace. */
+  --accent: #dc7a54;
+  --accent-text: #ec9670;
+  --accent-contrast: #1a0b05;
+  --accent-soft: rgba(220, 122, 84, 0.16);
+
+  /* Semantici: dicono un esito, non decorano. */
+  --success: #93c08a;
+  --warning: #e3b462;
+  /* L'errore sta sul cremisi e non sul corallo: vicino alla brace si
+     confondeva con l'accento, e un errore non deve sembrare un invito. */
+  --danger: #f47c8b;
+  --on-semantic: #1f0e07;
+
+  /* Gli stati della libreria pescano dai colori che esistono già. */
+  --status-watching: var(--accent);
+  --status-done: var(--success);
+  --status-planned: var(--text-muted);
+  --status-hold: var(--warning);
+  --status-dropped: var(--text-faint);
+
+  /* Materiale traslucido: solo barre e controlli sopra un'immagine. */
+  --material: rgba(28, 27, 25, 0.72);
+  --material-on-media: rgba(255, 255, 255, 0.16);
+  --scrim: rgba(8, 7, 6, 0.62);
+
+  /* Elevazione, sera: ombre scure più un filo di luce sul bordo alto. */
+  --shadow-1: inset 0 1px 0 rgba(255, 248, 235, 0.04);
+  --shadow-2: 0 12px 32px -8px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 248, 235, 0.05);
+  --shadow-3: 0 32px 80px -16px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 248, 235, 0.06);
+
+  /* La scala dei voti, da freddo a caldo, nei toni della carta: per il
+     Nastro e il selettore del voto, non per ogni cifra dell'app. */
+  --vote-1: #5f7690;
+  --vote-2: #6f8499;
+  --vote-3: #8495a3;
+  --vote-4: #9ba5aa;
+  --vote-5: #b4b0a5;
+  --vote-6: #cbb18f;
+  --vote-7: #d8a37a;
+  --vote-8: #e0906a;
+  --vote-9: #e07a52;
+  --vote-10: #cf5d38;
+
+  color-scheme: dark;
+}
+
+.ds[data-theme="light"] {
+  /* Neutri, giorno: carta calda, non bianco ottico e non grigio freddo. */
+  --bg: #f6f3ee;
+  --surface: #fdfcfa;
+  --surface-2: #eeeae3;
+  --surface-hover: #e5e0d7;
+  --text: #1c1a17;
+  --text-muted: #57524a;
+  --text-faint: #645e54;
+  --separator: rgba(28, 26, 23, 0.09);
+  --border: rgba(28, 26, 23, 0.1);
+  --border-strong: rgba(28, 26, 23, 0.5);
+
+  --accent: #b0502c;
+  --accent-text: #9f4624;
+  --accent-contrast: #ffffff;
+  --accent-soft: rgba(176, 80, 44, 0.1);
+
+  --success: #3d7536;
+  --warning: #865900;
+  --danger: #b42a40;
+  --on-semantic: #ffffff;
+
+  --material: rgba(246, 243, 238, 0.78);
+  --material-on-media: rgba(255, 255, 255, 0.2);
+  --scrim: rgba(28, 26, 23, 0.38);
+
+  --shadow-1: 0 1px 2px rgba(31, 26, 20, 0.05), 0 1px 1px rgba(31, 26, 20, 0.03);
+  --shadow-2: 0 8px 24px -8px rgba(31, 26, 20, 0.14), 0 2px 6px rgba(31, 26, 20, 0.05);
+  --shadow-3: 0 24px 64px -16px rgba(31, 26, 20, 0.24), 0 4px 12px rgba(31, 26, 20, 0.06);
+
+  --vote-1: #4a6581;
+  --vote-2: #5b7489;
+  --vote-3: #6f8291;
+  --vote-4: #7c8589;
+  --vote-5: #8c8679;
+  --vote-6: #9a7c55;
+  --vote-7: #b47645;
+  --vote-8: #c26c42;
+  --vote-9: #b65532;
+  --vote-10: #a2401f;
+
+  color-scheme: light;
+}
+
+.ds {
+  /* Tipi: un serif per i titoli, un sans per leggere. Le cifre restano nel
+     sans, in colonne tabulari: il mono resta per indirizzi e codici. */
+  --font-serif: "Newsreader Variable", "Iowan Old Style", Georgia, serif;
+  --font-sans: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /* Spaziatura su base 4, con l'8 come passo principale. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* Quattro raggi e la pillola. */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 24px;
+  --radius-full: 999px;
+
+  /* Movimento: si risponde subito, ci si sposta con calma. */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-press: 100ms;
+  --dur-state: 200ms;
+  --dur-move: 280ms;
+  --dur-sheet: 350ms;
+
+  position: fixed;
+  inset: 0;
+  /* Sopra barre, fogli e primo avvio dell'app: l'anteprima è una stanza a
+     parte, e quello che c'è sotto non deve affacciarsi. */
+  z-index: 95;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.5;
+  transition: background-color var(--dur-move) var(--ease-in-out), color var(--dur-move) var(--ease-in-out);
+}
+
+html.ds-open .grain-overlay {
+  display: none;
+}
+
+.ds :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-color: var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------------------------- Tipografia ---------------------------- */
+
+.ds .ds-display,
+.ds .ds-title {
+  font-family: var(--font-serif);
+  font-optical-sizing: auto;
+  font-variation-settings: normal;
+  font-weight: 500;
+  text-wrap: balance;
+}
+.ds .ds-display {
+  font-size: clamp(2.125rem, 1.75rem + 1.6vw, 2.75rem);
+  line-height: 1.08;
+  letter-spacing: -0.018em;
+}
+.ds .ds-title {
+  font-size: 1.375rem;
+  line-height: 1.75rem;
+  letter-spacing: -0.008em;
+}
+.ds .ds-headline {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.006em;
+}
+.ds .ds-body {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+.ds .ds-subhead {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.ds .ds-footnote {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.ds .ds-num {
+  font-variant-numeric: tabular-nums;
+}
+.ds .ds-mono {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+}
+.ds .ds-muted { color: var(--text-muted); }
+.ds .ds-faint { color: var(--text-faint); }
+.ds .ds-measure { max-width: 38rem; }
+
+/* ------------------------------ Struttura ---------------------------- */
+
+.ds .ds-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 var(--space-4) var(--space-8);
+}
+@media (min-width: 768px) {
+  .ds .ds-page { padding-inline: var(--space-5); }
+}
+@media (min-width: 1200px) {
+  .ds .ds-page { padding-inline: 40px; }
+}
+
+.ds .ds-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--material);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--separator);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.ds .ds-topbar-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  height: 56px;
+  padding: 0 var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+@media (min-width: 768px) {
+  .ds .ds-topbar-inner { padding-inline: var(--space-5); }
+}
+
+.ds .ds-section {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--separator);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.ds .ds-section > header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.ds .ds-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--min, 240px)), 1fr));
+}
+
+.ds .ds-hairline {
+  height: 1px;
+  background: var(--separator);
+  border: 0;
+}
+
+/* ------------------------------ Bottoni ------------------------------ */
+
+.ds .ds-btn {
+  --h: 44px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: var(--h);
+  padding: 0 18px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.006em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-state) var(--ease-out),
+    color var(--dur-state) var(--ease-out),
+    box-shadow var(--dur-state) var(--ease-out),
+    transform var(--dur-state) var(--ease-out),
+    opacity var(--dur-state) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+.ds .ds-btn:active:not(:disabled) {
+  transform: scale(0.97);
+  transition-duration: var(--dur-press);
+}
+.ds .ds-btn:disabled,
+.ds .ds-btn[aria-disabled="true"] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.ds .ds-btn svg { flex: none; }
+.ds .ds-btn-lg { --h: 50px; padding: 0 22px; border-radius: var(--radius-md); }
+.ds .ds-btn-sm { --h: 36px; padding: 0 14px; font-size: 0.875rem; border-radius: var(--radius-sm); }
+/* Un bottone piccolo resta piccolo da vedere ma non da toccare. */
+.ds .ds-btn-sm::after {
+  content: "";
+  position: absolute;
+  inset: -4px 0;
+}
+.ds .ds-btn-block { width: 100%; }
+
+.ds .ds-btn-primary { background: var(--accent); color: var(--accent-contrast); }
+.ds .ds-btn-secondary { background: var(--surface-2); color: var(--text); }
+.ds .ds-btn-plain { background: transparent; color: var(--accent-text); padding-inline: 12px; }
+.ds .ds-btn-destructive { background: transparent; color: var(--danger); padding-inline: 12px; }
+.ds .ds-btn-media { background: #fff; color: #111; }
+.ds .ds-btn-media-soft {
+  background: var(--material-on-media);
+  color: #fff;
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
+}
+
+@media (hover: hover) {
+  .ds .ds-btn-primary:hover:not(:disabled) { background: color-mix(in oklab, var(--accent) 90%, var(--text)); }
+  .ds .ds-btn-secondary:hover:not(:disabled) { background: var(--surface-hover); }
+  .ds .ds-btn-plain:hover:not(:disabled) { background: var(--accent-soft); }
+  .ds .ds-btn-destructive:hover:not(:disabled) { background: color-mix(in srgb, var(--danger) 12%, transparent); }
+  .ds .ds-btn-media:hover { background: rgba(255, 255, 255, 0.88); }
+  .ds .ds-btn-media-soft:hover { background: rgba(255, 255, 255, 0.26); }
+}
+
+/* Gli stati forzati della tavola: la pagina mostra hover e pressione
+   senza aspettare un mouse. */
+.ds .ds-btn-primary.is-hover { background: color-mix(in oklab, var(--accent) 90%, var(--text)); }
+.ds .ds-btn-secondary.is-hover { background: var(--surface-hover); }
+.ds .ds-btn.is-pressed { transform: scale(0.97); }
+.ds .ds-btn.is-focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.ds .ds-icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  color: var(--text-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: background-color var(--dur-state) var(--ease-out), color var(--dur-state) var(--ease-out), transform var(--dur-state) var(--ease-out);
+}
+.ds .ds-icon-btn-filled { background: var(--surface-2); color: var(--text); }
+.ds .ds-icon-btn-media {
+  background: var(--material-on-media);
+  color: #fff;
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
+}
+.ds .ds-icon-btn-sm { width: 32px; height: 32px; }
+.ds .ds-icon-btn-sm::after { content: ""; position: absolute; inset: -6px; }
+.ds .ds-icon-btn:active { transform: scale(0.94); transition-duration: var(--dur-press); }
+@media (hover: hover) {
+  .ds .ds-icon-btn:hover { background: var(--surface-hover); color: var(--text); }
+  .ds .ds-icon-btn-media:hover { background: rgba(255, 255, 255, 0.26); color: #fff; }
+}
+
+.ds .ds-spin {
+  animation: ds-spin 0.9s linear infinite;
+}
+@keyframes ds-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ------------------------------- Campi ------------------------------- */
+
+.ds .ds-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.ds .ds-label {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--text);
+}
+.ds .ds-input {
+  height: 48px;
+  width: 100%;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--text);
+  /* Sedici pixel: sotto, Safari su iPhone ingrandisce la pagina al tocco. */
+  font-size: 1rem;
+  border: 0;
+  outline: none;
+  /* Il filo del campo regge 3:1 sul fondo (WCAG 1.4.11): un campo pieno
+     senza contorno, su carta chiara, non si vede dove comincia. */
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+  transition: box-shadow var(--dur-state) var(--ease-out), background-color var(--dur-state) var(--ease-out);
+}
+.ds .ds-input::placeholder { color: var(--text-faint); }
+.ds .ds-input:focus,
+.ds .ds-input.is-focus {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 3px var(--accent-soft);
+}
+.ds .ds-input[aria-invalid="true"] {
+  box-shadow: inset 0 0 0 1px var(--danger), 0 0 0 3px color-mix(in srgb, var(--danger) 14%, transparent);
+}
+.ds .ds-help { font-size: 0.875rem; line-height: 1.25rem; color: var(--text-faint); }
+.ds .ds-error {
+  display: flex;
+  gap: var(--space-2);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--danger);
+}
+.ds .ds-error svg { flex: none; margin-top: 2px; }
+
+.ds .ds-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.ds .ds-search > svg {
+  position: absolute;
+  left: 14px;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+.ds .ds-search .ds-input {
+  height: 44px;
+  border-radius: var(--radius-full);
+  padding-left: 42px;
+  padding-right: 44px;
+}
+.ds .ds-search .ds-icon-btn { position: absolute; right: 6px; }
+
+/* Interruttore */
+.ds .ds-switch {
+  position: relative;
+  width: 51px;
+  height: 31px;
+  flex: none;
+  border-radius: var(--radius-full);
+  /* Spento, il binario deve comunque staccarsi dal fondo di 3:1. */
+  background: var(--border-strong);
+  cursor: pointer;
+  transition: background-color var(--dur-state) var(--ease-out);
+}
+.ds .ds-switch[aria-checked="true"] { background: var(--accent); }
+.ds .ds-switch > span {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  border-radius: var(--radius-full);
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22), 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+  transition: transform var(--dur-move) var(--ease-out);
+}
+.ds .ds-switch[aria-checked="true"] > span { transform: translateX(20px); }
+
+/* Controllo segmentato */
+.ds .ds-segmented {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.ds .ds-segmented button {
+  position: relative;
+  min-width: 72px;
+  height: 32px;
+  padding: 0 var(--space-3);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--dur-state) var(--ease-out);
+}
+.ds .ds-segmented button[aria-checked="true"] { color: var(--text); }
+.ds .ds-segmented button > span { position: relative; z-index: 1; }
+.ds .ds-segmented .ds-seg-thumb {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-1), 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.ds:not([data-theme="light"]) .ds-segmented .ds-seg-thumb { background: var(--surface-hover); }
+
+/* Pastiglie di filtro */
+.ds .ds-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--dur-state) var(--ease-out), color var(--dur-state) var(--ease-out), transform var(--dur-state) var(--ease-out);
+}
+.ds .ds-chip::after { content: ""; position: absolute; inset: -4px 0; }
+.ds .ds-chip[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+.ds .ds-chip:active { transform: scale(0.96); transition-duration: var(--dur-press); }
+@media (hover: hover) {
+  .ds .ds-chip:not([aria-pressed="true"]):hover { background: var(--surface-hover); }
+}
+
+/* ------------------------- Stato, voto, avanzamento ------------------ */
+
+.ds .ds-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.ds .ds-status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-full);
+  background: var(--dot);
+}
+/* Da vedere e abbandonato non hanno un colore loro: il primo è un cerchio
+   vuoto (ancora da cominciare), il secondo un trattino (si è fermato). */
+.ds .ds-status[data-shape="ring"]::before { background: transparent; box-shadow: inset 0 0 0 1.5px var(--dot); }
+.ds .ds-status[data-shape="dash"]::before { height: 2px; width: 8px; }
+
+.ds .ds-vote {
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text);
+}
+.ds .ds-vote small { font-weight: 400; color: var(--text-faint); font-size: 0.75rem; }
+
+.ds .ds-progress {
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--surface-hover);
+  overflow: hidden;
+}
+.ds .ds-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
+/* ------------------------------ Locandine ---------------------------- */
+
+.ds .ds-poster {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.ds .ds-poster-art {
+  display: block;
+  position: relative;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-1);
+  transition: transform var(--dur-move) var(--ease-out), box-shadow var(--dur-move) var(--ease-out);
+}
+.ds .ds-poster-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* Un filo interno al posto del bordo: separa la locandina chiara dalla
+   carta chiara senza disegnarle una cornice intorno. */
+.ds .ds-poster-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--separator);
+  pointer-events: none;
+}
+.ds .ds-poster:active .ds-poster-art { transform: scale(0.98); transition-duration: var(--dur-press); }
+@media (hover: hover) {
+  .ds .ds-poster:hover .ds-poster-art { transform: translateY(-2px); box-shadow: var(--shadow-2); }
+}
+.ds .ds-poster-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  /* Altezza fissa: con o senza voto, le righe sotto le locandine stanno
+     sulla stessa linea. */
+  height: 20px;
+}
+.ds .ds-poster-title {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ds .ds-poster-progress {
+  display: block;
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  height: 3px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.28);
+  overflow: hidden;
+}
+.ds .ds-poster-progress > span { display: block; height: 100%; background: #fff; }
+
+.ds .ds-row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.ds .ds-shelf {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 128px;
+  gap: var(--space-4);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  padding-bottom: var(--space-1);
+  margin-inline: calc(var(--space-4) * -1);
+  padding-inline: var(--space-4);
+  scroll-padding-inline: var(--space-4);
+}
+.ds .ds-shelf::-webkit-scrollbar { display: none; }
+.ds .ds-shelf > * { scroll-snap-align: start; }
+@media (min-width: 768px) {
+  .ds .ds-shelf { grid-auto-columns: 156px; margin-inline: 0; padding-inline: 0; }
+}
+
+/* ------------------------------ Vetrina ------------------------------ */
+
+.ds .ds-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: #000;
+  color: #fff;
+  aspect-ratio: 4 / 5;
+  max-height: 640px;
+}
+@media (min-width: 768px) {
+  .ds .ds-hero { aspect-ratio: 21 / 9; }
+}
+.ds .ds-hero img { width: 100%; height: 100%; object-fit: cover; }
+.ds .ds-hero-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(10, 9, 8, 0.9) 0%, rgba(10, 9, 8, 0.45) 38%, transparent 70%),
+    linear-gradient(to right, rgba(10, 9, 8, 0.5) 0%, transparent 55%);
+}
+.ds .ds-hero-body {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+@media (min-width: 768px) {
+  .ds .ds-hero-body { padding: var(--space-7); max-width: 560px; }
+}
+.ds .ds-hero .ds-display { color: #fff; }
+.ds .ds-hero-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+/* Sul telefono i due bottoni si dividono la riga e l'icona resta in fondo:
+   tre comandi su una linea sola, mai uno che va a capo da solo. */
+@media (max-width: 479px) {
+  .ds .ds-hero-actions .ds-btn { flex: 1 1 0; min-width: 0; padding-inline: 12px; }
+}
+.ds .ds-hero-meta { font-size: 0.875rem; line-height: 1.25rem; color: rgba(255, 255, 255, 0.8); }
+.ds .ds-dots { display: flex; gap: 6px; align-items: center; }
+.ds .ds-dots span {
+  height: 6px;
+  width: 6px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.4);
+  transition: width var(--dur-move) var(--ease-out), background-color var(--dur-move) var(--ease-out);
+}
+.ds .ds-dots span[aria-current="true"] { width: 18px; background: #fff; }
+
+/* --------------------------- Elenco raggruppato ---------------------- */
+
+.ds .ds-list {
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+/* Dentro un foglio l'elenco scende di un gradino invece di salire: un
+   elenco dello stesso colore del foglio non ha più bordi da nessuna parte. */
+.ds .ds-sheet .ds-list { background: var(--surface-2); box-shadow: none; }
+.ds[data-theme="light"] .ds-sheet .ds-list { background: var(--bg); }
+.ds .ds-sheet .ds-row:hover,
+.ds .ds-sheet .ds-row:active { background: var(--surface-hover); }
+.ds .ds-list-head {
+  padding: 0 var(--space-4) var(--space-2);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.ds .ds-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--dur-state) var(--ease-out);
+}
+.ds .ds-row + .ds-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 52px;
+  height: 1px;
+  background: var(--separator);
+}
+.ds .ds-row > svg:first-child { flex: none; color: var(--text-muted); }
+.ds .ds-row:active { background: var(--surface-2); transition-duration: var(--dur-press); }
+@media (hover: hover) {
+  .ds .ds-row:hover { background: var(--surface-2); }
+}
+.ds .ds-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ds .ds-row .ds-chev { color: var(--text-faint); flex: none; }
+
+/* ----------------------------- Navigazione --------------------------- */
+
+.ds .ds-device {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  box-shadow: var(--shadow-2), 0 0 0 1px var(--separator);
+}
+.ds .ds-tabbar {
+  display: flex;
+  justify-content: space-around;
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+  background: var(--material);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-top: 1px solid var(--separator);
+}
+.ds .ds-tab {
+  display: flex;
+  flex: 1;
+  min-height: 48px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 500;
+  color: var(--text-faint);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.ds .ds-tab[aria-current="page"] { color: var(--accent-text); }
+
+.ds .ds-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-4) var(--space-3);
+  background: var(--surface);
+  height: 100%;
+}
+.ds .ds-side-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 40px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color var(--dur-state) var(--ease-out), color var(--dur-state) var(--ease-out);
+}
+.ds .ds-side-link[aria-current="page"] { background: var(--surface-2); color: var(--text); }
+@media (hover: hover) {
+  .ds .ds-side-link:not([aria-current="page"]):hover { background: var(--surface-2); color: var(--text); }
+}
+
+/* -------------------------- Foglio e avviso -------------------------- */
+
+.ds-sheet-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+@media (min-width: 640px) {
+  .ds-sheet-layer { align-items: center; padding: var(--space-5); }
+}
+.ds .ds-scrim { position: absolute; inset: 0; background: var(--scrim); }
+.ds .ds-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  max-height: 92dvh;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: var(--shadow-3);
+  padding: var(--space-2) var(--space-5) calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 640px) {
+  .ds .ds-sheet { border-radius: var(--radius-lg); padding: var(--space-5); }
+}
+.ds .ds-grabber {
+  width: 36px;
+  height: 5px;
+  margin: 0 auto var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--border-strong);
+  opacity: 0.5;
+}
+@media (min-width: 640px) {
+  .ds .ds-grabber { display: none; }
+}
+
+.ds .ds-toast-layer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--space-4);
+  pointer-events: none;
+}
+.ds .ds-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 440px;
+  width: 100%;
+  min-height: 52px;
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--material);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  backdrop-filter: saturate(180%) blur(24px);
+  box-shadow: var(--shadow-2), 0 0 0 1px var(--separator);
+}
+
+/* ------------------------------ Stati -------------------------------- */
+
+.ds .ds-skel {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-2);
+  border-radius: var(--radius-xs);
+}
+.ds[data-theme="light"] .ds-skel { background: var(--surface-hover); }
+.ds .ds-skel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--surface-hover) 70%, transparent), transparent);
+  animation: ds-sweep 1.6s var(--ease-in-out) infinite;
+}
+@keyframes ds-sweep {
+  to { transform: translateX(100%); }
+}
+
+.ds .ds-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-3);
+  padding: var(--space-7) var(--space-5);
+}
+.ds .ds-state-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+.ds .ds-state p { max-width: 34ch; }
+
+.ds .ds-swatch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.ds .ds-swatch > div:first-child {
+  height: 64px;
+  border-radius: var(--radius-sm);
+  box-shadow: inset 0 0 0 1px var(--separator);
+}
+
+.ds .ds-motion-track {
+  container-type: inline-size;
+  position: relative;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+}
+.ds .ds-motion-dot {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds .ds-skel::after { animation: none; display: none; }
+  .ds .ds-spin { animation-duration: 2.4s !important; animation-iteration-count: infinite !important; }
+}

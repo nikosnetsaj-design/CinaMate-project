@@ -6,6 +6,7 @@ import { PART_STATE_META } from "../lib/sagas";
 import { PosterArt } from "./PosterArt";
 import type { FranchiseEntry } from "../lib/franchise";
 import type { Item, Kind } from "../types";
+import { t } from "../lib/i18n";
 
 /**
  * La **collezione**: tutto quello che sta nella stessa storia, in griglia.
@@ -29,12 +30,13 @@ import type { Item, Kind } from "../types";
  * griglia come un percorso invece che come una vetrina.
  */
 
-const KIND_LABEL: Record<Kind, string> = {
-  film: "Film",
-  serie: "Serie",
-  anime: "Anime",
-  doc: "Documentario",
-};
+/** Che cosa è, in una parola, sotto la locandina. Si legge alla lingua scelta. */
+function kindLabel(kind: Kind): string {
+  if (kind === "film") return t("CollectionGrid.film");
+  if (kind === "doc") return t("CollectionGrid.documentario");
+  if (kind === "anime") return t("CollectionGrid.anime");
+  return t("CollectionGrid.serie");
+}
 
 function CollectionCard({ entry, onOpen }: { entry: FranchiseEntry; onOpen: (item: Item) => void }) {
   const openPreview = useCatalogPreview((s) => s.open);
@@ -57,7 +59,7 @@ function CollectionCard({ entry, onOpen }: { entry: FranchiseEntry; onOpen: (ite
                 posterPath: part.posterPath,
               })
         }
-        aria-label={item ? `Apri ${part.title}` : `Apri la scheda di ${part.title}`}
+        aria-label={item ? t("CollectionGrid.apri", { v0: part.title }) : t("CollectionGrid.apri_la_scheda_di", { v0: part.title })}
         aria-current={current ? "true" : undefined}
         className="relative block w-full text-left"
       >
@@ -96,7 +98,7 @@ function CollectionCard({ entry, onOpen }: { entry: FranchiseEntry; onOpen: (ite
 
           {state === "assente" && (
             <span className="absolute inset-x-0 bottom-0 bg-black/65 py-1 text-center text-[10px] font-semibold text-white">
-              Vedi scheda
+              {t("CollectionGrid.vedi_scheda")}
             </span>
           )}
 
@@ -115,12 +117,12 @@ function CollectionCard({ entry, onOpen }: { entry: FranchiseEntry; onOpen: (ite
 
       <p className="mt-1.5 line-clamp-2 text-xs font-medium leading-snug text-text">{part.title}</p>
       <p className="mt-0.5 font-mono tabular text-[10px] text-text-faint">
-        {KIND_LABEL[part.kind]}
-        {item?.seasons ? ` · ${item.seasons} st.` : ""}
+        {kindLabel(part.kind)}
+        {item?.seasons ? t("CollectionGrid.st", { v0: item.seasons }) : ""}
       </p>
       {current && (
         <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: "var(--accent-text)" }}>
-          Sei qui
+          {t("CollectionGrid.sei_qui")}
         </p>
       )}
     </li>
@@ -175,7 +177,7 @@ export function CollectionGrid({ item }: { item: Item }) {
     <section>
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="font-display text-lg font-semibold text-text">
-          {inLine ? "Anche in questa storia" : "Collezione"}{" "}
+          {inLine ? t("CollectionGrid.anche_in_questa_storia") : t("CollectionGrid.collezione")}{" "}
           <span className="text-sm font-normal text-text-faint">· {shown.length}</span>
         </h3>
         {name && !inLine && <span className="truncate text-xs text-text-faint">{name}</span>}
@@ -193,7 +195,7 @@ export function CollectionGrid({ item }: { item: Item }) {
             />
           </div>
           <span className="font-mono tabular text-[11px] text-text-faint">
-            {progress.watched}/{progress.total} visti
+            {progress.watched}/{progress.total} {t("CollectionGrid.visti")}
           </span>
         </div>
       )}
@@ -231,7 +233,7 @@ export function CollectionGrid({ item }: { item: Item }) {
           }}
         >
           <span className="min-w-0 flex-1">
-            <span className="block text-[11px] uppercase tracking-[0.16em] text-text-faint">Continua con</span>
+            <span className="block text-[11px] uppercase tracking-[0.16em] text-text-faint">{t("CollectionGrid.continua_con")}</span>
             <span className="block truncate font-display text-sm font-semibold text-text">{next.part.title}</span>
           </span>
           <span className="shrink-0" style={{ color: "var(--accent-text)" }}>

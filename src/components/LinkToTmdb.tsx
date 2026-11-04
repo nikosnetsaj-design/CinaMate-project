@@ -4,6 +4,7 @@ import { useSettings } from "../store/useSettings";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { searchTitles, getDetails, MissingTmdbKeyError, TmdbApiError } from "../lib/tmdb";
 import type { Item } from "../types";
+import { t } from "../lib/i18n";
 
 /**
  * Titles added before a TMDB key existed (or entered by hand) have no poster
@@ -27,7 +28,7 @@ export function LinkToTmdb({ item }: { item: Item }) {
       const results = await searchTitles(item.title, tmdbApiKey);
       const best = results[0];
       if (!best) {
-        setErr("Nessuna corrispondenza su TMDB. Prova a correggere il titolo.");
+        setErr(t("LinkToTmdb.nessuna_corrispondenza_su_tmdb"));
         setBusy(false);
         return;
       }
@@ -47,27 +48,27 @@ export function LinkToTmdb({ item }: { item: Item }) {
         episodes: item.episodes ?? d.episodes,
         seasons: item.seasons ?? d.seasons,
       });
-      pushToast("success", `"${d.title}" collegato a TMDB.`);
+      pushToast("success", t("LinkToTmdb.collegato_a_tmdb", { v0: d.title }));
     } catch (e) {
       if (e instanceof MissingTmdbKeyError) setErr("missing-key");
       else if (e instanceof TmdbApiError) setErr(e.message);
-      else setErr("Collegamento non riuscito. Riprova.");
+      else setErr(t("LinkToTmdb.collegamento_non_riuscito_riprova"));
     }
     setBusy(false);
   }
 
   if (err === "missing-key") {
     return (
-      <div className="mt-4 rounded-md border border-dashed border-border-strong p-4 text-center">
+      <div className="mt-4 rounded-md p-4 text-center bg-surface-2">
         <p className="text-xs text-text-muted">
-          Aggiungi una chiave TMDB gratuita per recuperare copertina, trama e dove guardarlo.
+          {t("LinkToTmdb.aggiungi_una_chiave_tmdb")}
         </p>
         <button
           type="button"
           onClick={() => openSettings()}
-          className="mt-2.5 rounded-sm border border-border-strong px-3.5 py-2 text-xs font-medium text-text hover:bg-surface-hover"
+          className="btn btn-secondary btn-sm mt-2.5"
         >
-          Apri Impostazioni
+          {t("LinkToTmdb.apri_impostazioni")}
         </button>
       </div>
     );
@@ -79,10 +80,10 @@ export function LinkToTmdb({ item }: { item: Item }) {
         type="button"
         onClick={link}
         disabled={busy}
-        className="w-full rounded-md border border-dashed px-4 py-3 text-sm font-medium disabled:opacity-60"
+        className="w-full rounded-md px-4 py-3 text-sm font-medium disabled:opacity-60 bg-surface-2"
         style={{ borderColor: "color-mix(in srgb, var(--accent) 45%, transparent)", color: "var(--accent-text)" }}
       >
-        {busy ? "Cerco su TMDB…" : "Recupera copertina e dati da TMDB"}
+        {busy ? t("LinkToTmdb.cerco_su_tmdb") : t("LinkToTmdb.recupera_copertina_e_dati")}
       </button>
       {err && <p className="mt-2 text-center text-xs text-text-muted">{err}</p>}
     </div>

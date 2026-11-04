@@ -1,4 +1,5 @@
 import type { Item } from "../types";
+import { t } from "./i18n";
 
 /**
  * La scoperta per stato d'animo.
@@ -28,10 +29,10 @@ export interface Mood {
 }
 
 export const MOODS: Mood[] = [
-  { id: "rilassante", label: "Rilassante", blurb: "Niente che chieda troppo" },
-  { id: "adrenalinico", label: "Adrenalinico", blurb: "Qualcosa che corra" },
-  { id: "ispirazionale", label: "Ispirazionale", blurb: "Che lasci qualcosa" },
-  { id: "cervellotico", label: "Cervellotico", blurb: "Da guardare con la testa accesa" },
+  { id: "rilassante", label: t("moods.rilassante"), blurb: t("moods.niente_che_chieda_troppo") },
+  { id: "adrenalinico", label: t("moods.adrenalinico"), blurb: t("moods.qualcosa_che_corra") },
+  { id: "ispirazionale", label: t("moods.ispirazionale"), blurb: t("moods.che_lasci_qualcosa") },
+  { id: "cervellotico", label: t("moods.cervellotico"), blurb: t("moods.da_guardare_con_la") },
 ];
 
 /**
@@ -91,10 +92,11 @@ const GENRE_WEIGHTS: Record<MoodId, Record<string, number>> = {
 
 /** Parole che, quando compaiono nella sinossi, spostano l'ago. */
 const OVERVIEW_HINTS: Record<MoodId, string[]> = {
-  rilassante: ["commedia", "amicizia", "estate", "famiglia", "romantic", "leggerezza"],
-  adrenalinico: ["inseguimento", "fuga", "missione", "vendetta", "sopravviv", "esplos", "combatt"],
-  ispirazionale: ["vera storia", "realmente", "riscatto", "sogno", "impresa", "coraggio", "maestro"],
-  cervellotico: ["enigma", "indagine", "mistero", "identità", "tempo", "realtà", "cospiraz", "memoria"],
+  // Parole italiane e inglesi: la trama arriva nella lingua dell'app.
+  rilassante: ["commedia", "amicizia", "estate", "famiglia", "romantic", "leggerezza", "comedy", "friendship", "summer", "family"],
+  adrenalinico: ["inseguimento", "fuga", "missione", "vendetta", "sopravviv", "esplos", "combatt", "chase", "escape", "mission", "revenge", "surviv", "explo", "fight"],
+  ispirazionale: ["vera storia", "realmente", "riscatto", "sogno", "impresa", "coraggio", "maestro", "true story", "redemption", "dream", "courage", "mentor"],
+  cervellotico: ["enigma", "indagine", "mistero", "identità", "tempo", "realtà", "cospiraz", "memoria", "puzzle", "investigat", "mystery", "identity", "reality", "conspira", "memory"],
 };
 
 /** Sopra questo punteggio un titolo entra nella selezione dell'umore. */
@@ -124,7 +126,7 @@ function score(item: Item, mood: MoodId): { score: number; reason: string } {
   total += genreWeight;
   if (genreWeight > best) {
     best = genreWeight;
-    reason = `${item.genre}, che è la serata giusta`;
+    reason = t("moods.che_e_la_serata", { v0: item.genre });
   }
 
   // La durata. Conta solo agli estremi: un film di 95 minuti è un impegno
@@ -134,14 +136,14 @@ function score(item: Item, mood: MoodId): { score: number; reason: string } {
     total += 2;
     if (2 > best) {
       best = 2;
-      reason = `Sotto le due ore: ${runtime} minuti`;
+      reason = t("moods.sotto_le_due_ore", { v0: runtime });
     }
   }
   if (mood === "cervellotico" && runtime >= 130) {
     total += 2;
     if (2 > best) {
       best = 2;
-      reason = `${runtime} minuti: si prende il suo tempo`;
+      reason = t("moods.minuti_si_prende_il", { v0: runtime });
     }
   }
   if (mood === "rilassante" && runtime >= 150) total -= 2;
@@ -159,7 +161,7 @@ function score(item: Item, mood: MoodId): { score: number; reason: string } {
     total += 2;
     if (2 > best) {
       best = 2;
-      reason = `${rating.toFixed(1)} su TMDB`;
+      reason = t("moods.su_tmdb", { v0: rating.toFixed(1) });
     }
   }
 
@@ -177,7 +179,7 @@ function score(item: Item, mood: MoodId): { score: number; reason: string } {
     }
   }
 
-  if (!reason) reason = "Somiglia a quello che cerchi stasera";
+  if (!reason) reason = t("moods.somiglia_a_quello_che");
   return { score: total, reason };
 }
 

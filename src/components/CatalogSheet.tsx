@@ -5,6 +5,8 @@ import { paletteFor } from "../lib/palette";
 import { formatRuntime } from "../lib/format";
 import { useTitleLogo } from "../lib/useTitleLogo";
 import { useAddFromCatalog } from "../lib/useAddFromCatalog";
+import { ownedFor, useQuickAdd } from "../lib/useQuickAdd";
+import { useRateSheet } from "../store/useRateSheet";
 import { backdropSrcSet, backdropUrl, getDetails, TmdbApiError, type TmdbDetails } from "../lib/tmdb";
 import { useCatalogPreview, type CatalogTarget } from "../store/useCatalogPreview";
 import { useSelectedItem } from "../store/useSelectedItem";
@@ -17,8 +19,9 @@ import { TitleFacts } from "./TitleFacts";
 import { RelatedRow } from "./RelatedRow";
 import { CollectionGrid } from "./CollectionGrid";
 import { WatchProvidersBlock } from "./WatchAndLinks";
-import { PlayIcon, PlusIcon } from "./icons";
-import type { Item } from "../types";
+import { BackIcon, CheckIcon, ChevronRightIcon, EyeIcon, PlayIcon, PlusIcon, StarIcon } from "./icons";
+import type { Item, Status } from "../types";
+import { statusLabel, t } from "../lib/i18n";
 
 /**
  * La scheda di un titolo che non hai — la stessa di quelli che hai, meno le
@@ -81,7 +84,11 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
   const openItem = useSelectedItem((s) => s.open);
   const items = useLibrary((s) => s.items);
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
+  // «Con più dettagli» apre il modulo compilato, per chi vuole scegliere
+  // piattaforma, note e il resto prima di salvare.
   const { add, adding } = useAddFromCatalog(close);
+  const { quickAdd, pending } = useQuickAdd();
+  const openRate = useRateSheet((s) => s.open);
 
   const containerRef = useFocusTrap(close);
   const titleId = `catalog-${target.tmdbId}`;
@@ -98,7 +105,7 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
         if (!cancelled) setDetails(d);
       })
       .catch((e) => {
-        if (!cancelled) setError(e instanceof TmdbApiError ? e.message : "Non è stato possibile leggere questo titolo.");
+        if (!cancelled) setError(e instanceof TmdbApiError ? e.message : t("CatalogSheet.non_e_stato_possibile"));
       });
     return () => {
       cancelled = true;
@@ -108,7 +115,17 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
   const item = previewItem(target, details);
   const logo = useTitleLogo(item);
   const [a, b] = paletteFor(item.title);
-  const owned = items.find((i) => i.tmdbId === target.tmdbId && i.tmdbMediaType === target.mediaType);
+  const owned = ownedFor(items, target);
+  const busy = pending.size > 0;
+
+  async function addAs(status: Status) {
+    const added = await quickAdd(
+      { tmdbId: target.tmdbId, mediaType: target.mediaType, kind: target.kind, title: item.title, year: item.year || null, posterPath: item.posterPath },
+      status,
+    );
+    // Visto e senza voto: la domanda che viene subito dopo.
+    if (added && status === "Visto" && added.vote == null) openRate(added.id);
+  }
   const isSeries = item.kind !== "film" && item.kind !== "doc";
 
   return createPortal(
@@ -143,7 +160,7 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
           <button
             type="button"
             onClick={() => window.open(item.trailerUrl!, "_blank", "noopener")}
-            aria-label={`Guarda il trailer di ${item.title}`}
+            aria-label={t("CatalogSheet.guarda_il_trailer_di", { v0: item.title })}
             className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/85 bg-black/35 text-white backdrop-blur-[2px] transition-transform hover:scale-105"
           >
             <PlayIcon size={26} />
@@ -158,15 +175,15 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
       <button
         type="button"
         onClick={close}
-        aria-label="Torna indietro"
-        className="tap-target fixed left-3.5 top-3.5 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-md"
+        aria-label={t("CatalogSheet.torna_indietro")}
+        className="icon-btn fixed left-3 top-3 z-20 bg-black/45 text-white backdrop-blur-md hover:bg-black/65 hover:text-white"
       >
-        ←
+        <BackIcon />
       </button>
 
       <div className="mx-auto max-w-3xl px-4 pb-28 pt-4 sm:px-6">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--accent-text)" }}>
-          {isSeries ? "Serie · non in libreria" : "Film · non in libreria"}
+        <span className="text-xs font-semibold" style={{ color: "var(--accent-text)" }}>
+          {isSeries ? t("CatalogSheet.serie_non_in_libreria") : t("CatalogSheet.film_non_in_libreria")}
         </span>
 
         <h1 id={titleId} className="mt-0.5 font-display text-2xl font-semibold leading-tight text-text">
@@ -181,7 +198,7 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
           {[
             item.year || null,
             item.certification || null,
-            isSeries && item.seasons ? `${item.seasons} stagion${item.seasons === 1 ? "e" : "i"}` : null,
+            isSeries && item.seasons ? t(item.seasons === 1 ? "CatalogSheet.stagione" : "CatalogSheet.stagioni", { v0: item.seasons }) : null,
             item.runtime ? formatRuntime(item.runtime) + (isSeries ? "/ep" : "") : null,
             item.genre || null,
           ]
@@ -190,7 +207,7 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
               <span key={String(value)} className="flex items-center gap-2">
                 {i > 0 && <span aria-hidden="true" className="text-text-faint">·</span>}
                 {value === item.certification ? (
-                  <span className="rounded-xs border border-border-strong px-1.5 py-px font-mono text-[11px]">{value}</span>
+                  <span className="rounded-xs border border-border-strong px-1.5 py-px font-mono text-xs">{value}</span>
                 ) : (
                   value
                 )}
@@ -198,50 +215,76 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
             ))}
         </p>
 
-        {/* L'unica azione che questa scheda può offrire, e l'unica che serve:
-            portarlo dentro. Il foglio si apre compilato — resta una decisione,
-            non un tocco a caso. */}
+        {/* Le uniche azioni che questa scheda può offrire, ed è quello che
+            serve: portarlo dentro, dicendo a che punto sei. Niente modulo —
+            quello che il modulo chiedeva lo sa già TMDB. */}
         {owned ? (
-          <button
-            type="button"
-            onClick={() => {
-              close();
-              openItem(owned);
-            }}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-md border py-3.5 text-sm font-semibold"
-            style={{
-              borderColor: "color-mix(in srgb, var(--accent) 45%, transparent)",
-              background: "color-mix(in srgb, var(--accent) 14%, transparent)",
-              color: "var(--accent-text)",
-            }}
-          >
-            Ce l'hai già — apri la tua scheda →
-          </button>
+          <div className="mt-4 flex items-center gap-3 rounded-lg bg-surface p-3 pl-4 shadow-[var(--shadow-sm)]">
+            <span
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+              style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+              aria-hidden="true"
+            >
+              <CheckIcon size={16} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-text">{t("CatalogSheet.nella_tua_libreria")}</p>
+              <p className="truncate text-xs text-text-muted">
+                {statusLabel(owned.status)}
+                {owned.vote != null ? ` · ${owned.vote}/10` : ""}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                close();
+                openItem(owned);
+              }}
+              className="btn btn-secondary btn-sm shrink-0"
+            >
+              {t("CatalogSheet.apri_la_scheda")}
+              <ChevronRightIcon size={16} />
+            </button>
+          </div>
         ) : (
-          <button
-            type="button"
-            disabled={adding !== null}
-            onClick={() =>
-              void add({
-                tmdbId: target.tmdbId,
-                mediaType: target.mediaType,
-                kind: target.kind,
-                title: item.title,
-                year: item.year || null,
-                posterPath: item.posterPath,
-              })
-            }
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-md py-3.5 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60"
-            style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
-          >
-            <PlusIcon size={18} />
-            {adding !== null ? "Preparo la scheda…" : "Aggiungi alla libreria"}
-          </button>
+          <div className="mt-4 flex flex-col gap-2">
+            <button type="button" disabled={busy} onClick={() => void addAs("Da vedere")} className="btn btn-primary btn-lg w-full">
+              {busy ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-current/30 border-t-current" /> : <PlusIcon size={18} />}
+              {t("CatalogSheet.aggiungi_a_da_vedere")}
+            </button>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" disabled={busy} onClick={() => void addAs("Visto")} className="btn btn-secondary">
+                <EyeIcon size={16} />
+                {t("CatalogSheet.l_ho_visto")}
+              </button>
+              <button type="button" disabled={busy} onClick={() => void addAs("In visione")} className="btn btn-secondary">
+                <PlayIcon size={14} />
+                {t("CatalogSheet.sto_guardando")}
+              </button>
+            </div>
+            <button
+              type="button"
+              disabled={busy || adding !== null}
+              onClick={() =>
+                void add({
+                  tmdbId: target.tmdbId,
+                  mediaType: target.mediaType,
+                  kind: target.kind,
+                  title: item.title,
+                  year: item.year || null,
+                  posterPath: item.posterPath,
+                })
+              }
+              className="btn btn-plain btn-sm self-center text-text-muted"
+            >
+              {adding !== null ? t("CatalogSheet.preparo_la_scheda") : t("CatalogSheet.aggiungi_con_piu_dettagli")}
+            </button>
+          </div>
         )}
 
         {!tmdbApiKey && (
           <div className="mt-3">
-            <CatalogNote what="Trama, cast e disponibilità arrivano da TMDB." />
+            <CatalogNote what={t("CatalogSheet.trama_cast_e_disponibilita")} />
           </div>
         )}
         {error && <p className="mt-3 text-sm text-text-muted">{error}</p>}
@@ -263,10 +306,10 @@ function CatalogDetail({ target }: { target: CatalogTarget }) {
         {item.tmdbRating != null && (
           <p className="mt-2.5 flex items-center gap-2 text-sm text-text-muted">
             <span className="text-base leading-none" style={{ color: "var(--accent-text)" }}>
-              ★
+              <StarIcon size={14} filled />
             </span>
             <span className="font-mono tabular font-semibold text-text">{item.tmdbRating.toFixed(1)}</span>
-            <span className="text-text-faint">/10 · media di TMDB</span>
+            <span className="text-text-faint">{t("CatalogSheet.media_di_tmdb")}</span>
           </p>
         )}
 

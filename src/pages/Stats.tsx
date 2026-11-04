@@ -1,25 +1,70 @@
-import { useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { useLibrary } from "../store/useLibrary";
 import { useSagas } from "../store/useSagas";
 import { useSelectedPerson } from "../store/useSelectedPerson";
 import { computeStats, computeYearInReview, yearsWithActivity } from "../lib/stats";
 import { computeAchievements } from "../lib/achievements";
-import { groupDiary } from "../lib/diary";
+import { groupDiary, yearAgo, type DiaryEntry } from "../lib/diary";
 import { voteColor } from "../lib/vote";
 import { PosterArt } from "../components/PosterArt";
 import { VoteBadge } from "../components/VoteBadge";
 import { EmptyState } from "../components/EmptyState";
 import { Nastro } from "../components/Nastro";
 import type { Item } from "../types";
+import { AchievementIcon } from "../components/AchievementIcon";
+import { RowHeader } from "../components/RowHeader";
+import { FigureBand } from "../components/Figures";
+import { StatusMark } from "../components/StatusChip";
+import { PalateCard } from "../components/PalateCard";
+import { scrollBehavior } from "../lib/format";
+import { CheckIcon, PeopleIcon, PlusIcon, ShareIcon } from "../components/icons";
 
-const KIND_LABELS: Record<string, string> = { film: "Film", serie: "Serie TV", anime: "Anime", doc: "Documentario" };
-const KIND_COLORS = ["var(--accent)", "var(--status-watching)", "var(--danger)", "var(--status-done)"];
+// Il disegno su canvas serve solo a chi condivide: si scarica al tocco.
+const YearShareSheet = lazy(() => import("../components/YearShareSheet"));
+import { DiaryHeatmap, DiaryNoteSheet, YearAgoCard } from "../components/DiaryExtras";
+import { intlLocale, platformLabel, t } from "../lib/i18n";
 
-function Card({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-md border border-border bg-surface-2 p-4">{children}</div>;
+const KIND_LABELS: Record<string, string> = { film: t("Stats.film"), serie: t("Stats.serie_tv"), anime: "Anime", doc: t("Stats.documentario") };
+/*
+ * I formati in una barra sola: l'accento al più frequente, poi neutri che
+ * schiariscono. Quattro colori diversi — accento, verde, rosso, blu — dicevano
+ * quattro cose diverse, e il rosso in questa app vuol dire «attenzione».
+ */
+const KIND_COLORS = [
+  "var(--accent)",
+  "color-mix(in srgb, var(--accent) 45%, var(--surface-2))",
+  "var(--text-muted)",
+  "color-mix(in srgb, var(--text-faint) 45%, var(--surface-2))",
+];
+
+/** A titled block of the tab: the heading, then whatever it holds. */
+function Section({ title, trailing, children }: { title: string; trailing?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <section className="flex flex-col gap-4">
+      <RowHeader title={title} trailing={trailing} />
+      {children}
+    </section>
+  );
 }
-function Label({ children }: { children: string }) {
-  return <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">{children}</span>;
+
+/** One surface, the content directly on it — never a card inside a card. */
+function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <div className={`rounded-lg bg-surface p-4 shadow-[var(--shadow-sm)] ${className}`}>{children}</div>;
+}
+
+/** A ranked bar: the label, the count, and how it compares with the first. */
+function RankBar({ label, n, max }: { label: string; n: number; max: number }) {
+  return (
+    <>
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="truncate text-sm text-text">{label}</span>
+        <span className="shrink-0 text-xs tabular text-text-faint">{n}</span>
+      </div>
+      <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-surface-2">
+        <div className="h-full rounded-full bg-text-muted" style={{ width: `${(n / max) * 100}%` }} />
+      </div>
+    </>
+  );
 }
 
 /** Ranked list of people, each a way into their filmography. */
@@ -29,26 +74,21 @@ function PeopleCard({ title, rows }: { title: string; rows: [string, number][] }
   const max = rows[0][1];
 
   return (
-    <Card>
-      <Label>{title}</Label>
-      {rows.slice(0, 6).map(([name, n]) => (
-        <button
-          key={name}
-          type="button"
-          onClick={() => openPerson(name)}
-          aria-label={`Apri la scheda di ${name}`}
-          className="mb-2 block w-full text-left last:mb-0"
-        >
-          <div className="mb-1 flex justify-between gap-3">
-            <span className="truncate text-xs text-text">{name}</span>
-            <span className="shrink-0 font-mono tabular text-xs text-text-faint">{n}</span>
-          </div>
-          <div className="h-1 overflow-hidden rounded-full bg-surface-hover">
-            <div className="h-full rounded-full opacity-90" style={{ width: `${(n / max) * 100}%`, background: "var(--cyan)" }} />
-          </div>
-        </button>
-      ))}
-    </Card>
+    <Section title={title}>
+      <Panel className="flex flex-col gap-1 py-2">
+        {rows.slice(0, 6).map(([name, n]) => (
+          <button
+            key={name}
+            type="button"
+            onClick={() => openPerson(name)}
+            aria-label={t("Stats.apri_la_scheda_di", { v0: name })}
+            className="-mx-2 block rounded-sm px-2 py-2 text-left transition-colors hover:bg-surface-2"
+          >
+            <RankBar label={name} n={n} max={max} />
+          </button>
+        ))}
+      </Panel>
+    </Section>
   );
 }
 
@@ -58,33 +98,46 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
   const maxVoteCount = Math.max(...stats.voteDist.map((d) => d.n), 1);
   const years = yearsWithActivity(history);
   const [year, setYear] = useState(years[0]);
-  const yir = computeYearInReview(items, history, year);
+  const yir = useMemo(() => computeYearInReview(items, history, year), [items, history, year]);
+  const [sharingYear, setSharingYear] = useState(false);
 
   return (
-    <div className="flex flex-col gap-4">
-      <Card>
-        <Label>Il nastro</Label>
-        {/* La finestra è l'anno scelto qui sotto, non "gli ultimi 365 giorni":
-            la didascalia diceva «del 2026» sopra un nastro che a febbraio era
-            per tre quarti 2025, e il riquadro accanto contava l'anno solare.
-            Due numeri diversi con la stessa etichetta. */}
-        <Nastro
-          from={`${year}-01-01`}
-          to={`${year}-12-31`}
-          height={72}
-          caption={`Un filo per ogni sessione del ${year}`}
-        />
-      </Card>
+    <div className="flex flex-col gap-10">
+      {/* Prima il palato: è la risposta alla domanda della scheda, «cosa ti
+          piace». I numeri sotto dicono quanto, questo dice cosa. */}
+      <PalateCard items={items} />
 
-      <Card>
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Il tuo anno</span>
-          {years.length > 1 && (
+      <section className="flex flex-col gap-4">
+        <RowHeader title={t("Stats.questo_o_quello")} to="/questo-o-quello" action={t("Stats.confronta")} />
+        <p className="text-sm text-text-muted">
+          {t("Stats.due_titoli_visti_alla")}
+        </p>
+      </section>
+
+      <Section title={t("Stats.il_nastro")}>
+        <Panel>
+          {/* La finestra è l'anno scelto qui sotto, non "gli ultimi 365 giorni":
+              la didascalia diceva «del 2026» sopra un nastro che a febbraio era
+              per tre quarti 2025, e il riquadro accanto contava l'anno solare.
+              Due numeri diversi con la stessa etichetta. */}
+          <Nastro
+            from={`${year}-01-01`}
+            to={`${year}-12-31`}
+            height={72}
+            caption={t("Stats.un_filo_per_ogni", { v0: year })}
+          />
+        </Panel>
+      </Section>
+
+      <Section
+        title={t("Stats.il_tuo_anno")}
+        trailing={
+          years.length > 1 && (
             <select
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
-              aria-label="Anno da mostrare"
-              className="rounded-sm border border-border-strong bg-surface px-2 py-1 font-mono tabular text-xs text-text-muted"
+              aria-label={t("Stats.anno_da_mostrare")}
+              className="field field-sm w-auto shrink-0 tabular"
             >
               {years.map((y) => (
                 <option key={y} value={y}>
@@ -92,178 +145,155 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
                 </option>
               ))}
             </select>
-          )}
-        </div>
+          )
+        }
+      >
         {yir.watchedCount === 0 ? (
-          <p className="text-sm text-text-muted">Nessuna attività registrata nel {year}.</p>
+          <p className="text-sm text-text-muted">{t("Stats.nessuna_attivita_registrata_nel")} {year}.</p>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="text-center">
-              <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--accent-text)" }}>
-                {yir.watchedCount}
-              </div>
-              <div className="text-[10px] text-text-faint">titoli completati</div>
-            </div>
-            <div className="text-center">
-              <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--status-watching)" }}>
-                {yir.hours}h
-              </div>
-              <div className="text-[10px] text-text-faint">ore guardate</div>
-            </div>
-            {yir.topGenre && (
-              <div className="text-center">
-                <div className="font-display text-lg font-bold text-text">{yir.topGenre}</div>
-                <div className="text-[10px] text-text-faint">genere top</div>
-              </div>
+          <>
+            <FigureBand
+              cols={2}
+              smCols={4}
+              figures={[
+                { value: yir.watchedCount, label: t("Stats.titoli_completati") },
+                { value: `${yir.hours} h`, label: t("Stats.ore_guardate") },
+                ...(yir.topGenre ? [{ value: yir.topGenre, label: t("Stats.genere_piu_visto") }] : []),
+                ...(yir.busiestMonth ? [{ value: yir.busiestMonth, label: t("Stats.mese_piu_attivo") }] : []),
+              ]}
+            />
+            <button type="button" className="btn btn-secondary btn-sm self-start" onClick={() => setSharingYear(true)}>
+              <ShareIcon size={15} />
+              {t("Stats.condividi_come_immagine")}
+            </button>
+            {sharingYear && (
+              <Suspense fallback={null}>
+                <YearShareSheet review={yir} onClose={() => setSharingYear(false)} />
+              </Suspense>
             )}
-            {yir.busiestMonth && (
-              <div className="text-center">
-                <div className="font-display text-lg font-bold text-text">{yir.busiestMonth}</div>
-                <div className="text-[10px] text-text-faint">mese più attivo</div>
-              </div>
-            )}
-          </div>
+          </>
         )}
-      </Card>
+      </Section>
 
-      <div className="rounded-md border border-border bg-surface-2 p-6 text-center">
-        <span className="text-xs uppercase tracking-[0.14em] text-text-faint">Tempo totale davanti allo schermo</span>
-        <div className="mt-1.5 font-mono tabular text-5xl font-semibold" style={{ color: "var(--accent-text)" }}>
+      <section>
+        <p className="text-sm text-text-muted">{t("Stats.tempo_totale_davanti_allo")}</p>
+        <p className="t-stat mt-1 text-text">
           {stats.hours}
-          <span className="text-2xl">h</span>
-        </div>
-        <p className="mt-1.5 text-sm text-text-muted">circa {stats.days} giorni pieni</p>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2.5">
-        <div className="rounded-md border border-border bg-surface-2 p-3.5 text-center">
-          <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--status-done)" }}>
-            {stats.byStatus.Visto}
-          </div>
-          <div className="mt-0.5 text-[11px] text-text-faint">visti</div>
-        </div>
-        <div className="rounded-md border border-border bg-surface-2 p-3.5 text-center">
-          <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--status-watching)" }}>
-            {stats.byStatus["In visione"]}
-          </div>
-          <div className="mt-0.5 text-[11px] text-text-faint">in corso</div>
-        </div>
-        <div className="rounded-md border border-border bg-surface-2 p-3.5 text-center">
-          <div className="font-mono tabular text-2xl font-semibold" style={{ color: "var(--accent-text)" }}>
-            {stats.byStatus["Da vedere"]}
-          </div>
-          <div className="mt-0.5 text-[11px] text-text-faint">da vedere</div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2.5">
-        <div className="rounded-md border border-border bg-surface-2 p-3.5 text-center">
-          <div className="font-mono tabular text-2xl font-semibold text-text">{stats.filmsCompleted}</div>
-          <div className="mt-0.5 text-[11px] text-text-faint">film completati</div>
-        </div>
-        <div className="rounded-md border border-border bg-surface-2 p-3.5 text-center">
-          <div className="font-mono tabular text-2xl font-semibold text-text">{stats.seriesCompleted}</div>
-          <div className="mt-0.5 text-[11px] text-text-faint">serie completate</div>
-        </div>
-        <div className="rounded-md border border-border bg-surface-2 p-3.5 text-center">
-          <div className="font-mono tabular text-2xl font-semibold text-text">{stats.episodesWatched}</div>
-          <div className="mt-0.5 text-[11px] text-text-faint">episodi visti</div>
-        </div>
-      </div>
-
-      <Card>
-        <Label>Come voti</Label>
-        <div className="flex h-20 items-end gap-1">
-          {stats.voteDist.map(({ v, n }) => (
-            <div key={v} className="flex flex-1 flex-col items-center gap-1">
-              {n > 0 && <span className="text-[9px] text-text-faint">{n}</span>}
-              <div
-                className="w-full rounded-t-xs"
-                style={{ height: `${Math.max((n / maxVoteCount) * 48, n > 0 ? 3 : 0)}px`, background: voteColor(v) }}
-              />
-              <span className="text-[9px] text-text-faint">{v}</span>
-            </div>
-          ))}
-        </div>
-        <p className="mt-3 text-center text-xs text-text-muted">
-          Media {stats.avgVote != null ? stats.avgVote.toFixed(1) : "—"} su {items.filter((i) => i.vote != null).length} titoli votati
+          <span className="ml-1 text-[0.5em] font-medium text-text-faint">h</span>
         </p>
-      </Card>
+        <p className="mt-2 text-sm text-text-muted">{t("Stats.circa")} {stats.days} {t("Stats.giorni_pieni")}</p>
+      </section>
 
-      <Card>
-        <Label>Formati</Label>
-        <div className="mb-2.5 flex h-2.5 overflow-hidden rounded-full">
-          {stats.byKind.map(([k, n], idx) => (
-            <div key={k} style={{ width: `${(n / stats.total) * 100}%`, background: KIND_COLORS[idx % KIND_COLORS.length] }} />
-          ))}
-        </div>
-        <div className="flex flex-wrap gap-3">
-          {stats.byKind.map(([k, n], idx) => (
-            <div key={k} className="flex items-center gap-1.5 text-xs text-text-muted">
-              <span className="h-2 w-2 rounded-xs" style={{ background: KIND_COLORS[idx % KIND_COLORS.length] }} />
-              {KIND_LABELS[k]} {n}
-            </div>
-          ))}
-        </div>
-      </Card>
+      {/* Sei totali, una fascia: gli stati sopra (con il loro segno, lo
+          stesso delle copertine), i completamenti sotto. */}
+      <FigureBand
+        cols={3}
+        figures={[
+          { value: stats.byStatus.Visto, label: t("Stats.visti"), mark: <StatusMark status="Visto" /> },
+          { value: stats.byStatus["In visione"], label: t("Stats.in_corso"), mark: <StatusMark status="In visione" /> },
+          { value: stats.byStatus["Da vedere"], label: t("Stats.da_vedere"), mark: <StatusMark status="Da vedere" /> },
+          { value: stats.filmsCompleted, label: t("Stats.film_completati") },
+          { value: stats.seriesCompleted, label: t("Stats.serie_completate") },
+          { value: stats.episodesWatched, label: t("Stats.episodi_visti") },
+        ]}
+      />
+
+      <Section title={t("Stats.come_voti")}>
+        <Panel>
+          <p className="text-xs text-text-muted">
+            {t("Stats.media_su")} {items.filter((i) => i.vote != null).length} {t("Stats.titoli_votati")}
+          </p>
+          <p className="t-figure text-text">{stats.avgVote != null ? stats.avgVote.toFixed(1) : "—"}</p>
+          {/* I colori dei voti sono gli stessi del selettore: qui raccontano
+              la stessa scala, quindi è l'unico posto dove li si vede. */}
+          <div className="mt-4 flex h-24 items-end gap-1">
+            {stats.voteDist.map(({ v, n }) => (
+              <div key={v} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
+                <span className="h-4 text-xs tabular text-text-faint">{n > 0 ? n : ""}</span>
+                <div
+                  className="w-full max-w-7 rounded-t-[4px]"
+                  style={{
+                    height: `${n > 0 ? Math.max((n / maxVoteCount) * 52, 3) : 2}px`,
+                    background: n > 0 ? voteColor(v) : "var(--surface-2)",
+                  }}
+                />
+                <span className="text-xs tabular text-text-faint">{v}</span>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      </Section>
+
+      <Section title={t("Stats.formati")}>
+        <Panel>
+          <div className="flex h-2.5 gap-0.5 overflow-hidden rounded-full">
+            {stats.byKind.map(([k, n], idx) => (
+              <div key={k} style={{ width: `${(n / stats.total) * 100}%`, background: KIND_COLORS[idx % KIND_COLORS.length] }} />
+            ))}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+            {stats.byKind.map(([k, n], idx) => (
+              <div key={k} className="flex items-center gap-1.5 text-sm text-text-muted">
+                <span className="h-2 w-2 rounded-full" style={{ background: KIND_COLORS[idx % KIND_COLORS.length] }} />
+                {KIND_LABELS[k]}
+                <span className="tabular text-text">{n}</span>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      </Section>
 
       {stats.byGenre.length > 0 && (
-        <Card>
-          <Label>Generi più frequenti</Label>
-          {stats.byGenre.slice(0, 6).map(([g, n]) => (
-            <div key={g} className="mb-2 last:mb-0">
-              <div className="mb-1 flex justify-between">
-                <span className="text-xs text-text">{g}</span>
-                <span className="text-xs text-text-faint">{n}</span>
+        <Section title={t("Stats.generi_piu_frequenti")}>
+          <Panel className="flex flex-col gap-1 py-2">
+            {stats.byGenre.slice(0, 6).map(([g, n]) => (
+              <div key={g} className="py-2">
+                <RankBar label={g} n={n} max={stats.byGenre[0][1]} />
               </div>
-              <div className="h-1 overflow-hidden rounded-full bg-surface-hover">
-                <div className="h-full rounded-full opacity-90" style={{ width: `${(n / stats.byGenre[0][1]) * 100}%`, background: "var(--accent)" }} />
-              </div>
-            </div>
-          ))}
-        </Card>
+            ))}
+          </Panel>
+        </Section>
       )}
 
-      <PeopleCard title="Attori più visti" rows={stats.byActor} />
-      <PeopleCard title="Registi più visti" rows={stats.byDirector} />
+      <PeopleCard title={t("Stats.attori_piu_visti")} rows={stats.byActor} />
+      <PeopleCard title={t("Stats.registi_piu_visti")} rows={stats.byDirector} />
 
-      <Card>
-        <Label>Piattaforme</Label>
+      <Section title={t("Stats.piattaforme")}>
         <div className="flex flex-wrap gap-2">
           {stats.byPlatform.map(([p, n]) => (
-            <div key={p} className="flex items-center gap-1.5 rounded-full bg-surface-hover px-2.5 py-1 text-xs">
-              <span className="text-text-muted">{p}</span>
-              <span className="font-semibold text-text">{n}</span>
+            <div key={p} className="flex h-9 items-center gap-2 rounded-full bg-surface-2 px-3.5 text-sm">
+              <span className="text-text">{platformLabel(p)}</span>
+              <span className="tabular text-text-muted">{n}</span>
             </div>
           ))}
         </div>
-      </Card>
+      </Section>
 
       {stats.top.length > 0 && (
-        <Card>
-          <Label>La tua top 5</Label>
-          {stats.top.map((item, idx) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => openItem(item)}
-              aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
-              className="mb-2.5 flex w-full items-center gap-2.5 text-left last:mb-0"
-            >
-              <span className="w-4 font-mono tabular text-base font-semibold" style={{ color: idx === 0 ? "var(--accent-text)" : "var(--text-faint)" }}>
-                {idx + 1}
-              </span>
-              <PosterArt item={item} size="sm" showTitle={false} className="w-8 shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold text-text">{item.title}</div>
-                <div className="text-[10px] text-text-faint">
-                  {item.year} · {item.genre}
-                </div>
-              </div>
-              <VoteBadge vote={item.vote} />
-            </button>
-          ))}
-        </Card>
+        <Section title={t("Stats.la_tua_top_5")}>
+          <ol className="list-group" style={{ "--row-inset": "92px" } as React.CSSProperties}>
+            {stats.top.map((item, idx) => (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  onClick={() => openItem(item)}
+                  aria-label={t("Stats.apri_dettagli_di", { v0: item.title, v1: item.year })}
+                  className="list-row"
+                >
+                  <span className="w-5 shrink-0 text-center text-sm font-medium tabular text-text-faint">{idx + 1}</span>
+                  <PosterArt item={item} size="sm" showTitle={false} className="w-8 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-text">{item.title}</div>
+                    <div className="truncate text-xs text-text-muted">
+                      {item.year} · {item.genre}
+                    </div>
+                  </div>
+                  <VoteBadge vote={item.vote} />
+                </button>
+              </li>
+            ))}
+          </ol>
+        </Section>
       )}
     </div>
   );
@@ -271,58 +301,89 @@ export function TasteTab({ items, openItem }: { items: Item[]; openItem: (item: 
 
 export function DiaryTab({ items, openItem }: { items: Item[]; openItem: (item: Item) => void }) {
   const history = useLibrary((s) => s.history);
-  const days = groupDiary(history, items);
+  const days = useMemo(() => groupDiary(history, items), [history, items]);
+  const memory = useMemo(() => yearAgo(days, new Date().toISOString().slice(0, 10)), [days]);
+  const [noting, setNoting] = useState<{ entry: DiaryEntry; date: string } | null>(null);
 
   if (days.length === 0) {
     return (
       <EmptyState
-        title="Il tuo diario è vuoto"
-        description="Segna un titolo come visto o registra un episodio per iniziare a costruire il tuo diario."
+        title={t("Stats.il_tuo_diario_e")}
+        description={t("Stats.segna_un_titolo_come")}
       />
     );
   }
 
+  // Dal quadretto al giorno: il diario è lungo, e la mappa serve a saltarci dentro.
+  function goToDay(date: string) {
+    document.getElementById(`diario-${date}`)?.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
+  }
+
   let lastMonth = "";
   return (
-    <div className="flex flex-col gap-1">
-      {days.map(({ date, entries }) => {
-        const d = new Date(`${date}T00:00:00`);
-        const monthLabel = new Intl.DateTimeFormat("it-IT", { month: "long", year: "numeric" }).format(d);
-        const showMonth = monthLabel !== lastMonth;
-        lastMonth = monthLabel;
-        const dayLabel = new Intl.DateTimeFormat("it-IT", { weekday: "short", day: "numeric" }).format(d);
-        return (
-          <div key={date}>
-            {showMonth && (
-              <p className="mb-1 mt-4 text-xs font-semibold uppercase tracking-wide text-text-faint first:mt-0">{monthLabel}</p>
-            )}
-            <div className="flex gap-3 border-b border-border py-2.5 last:border-0">
-              <span className="w-11 shrink-0 pt-1 text-center text-[11px] capitalize text-text-faint">{dayLabel}</span>
-              <div className="flex flex-1 flex-col gap-1.5">
-                {entries.map(({ item, action, count }) => (
-                  <button
-                    key={`${item.id}-${action}`}
-                    type="button"
-                    onClick={() => openItem(item)}
-                    aria-label={`Apri dettagli di ${item.title}, ${item.year}`}
-                    className="flex items-center gap-2.5 text-left"
-                  >
-                    <PosterArt item={item} size="sm" showTitle={false} className="w-8 shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-text">{item.title}</p>
-                      <p className="text-[11px] text-text-faint">
-                        {action === "watched" && "Completato"}
-                        {action === "episode" && `${count} episod${count === 1 ? "io" : "i"}`}
-                        {action === "rewatch" && "Rivisto"}
-                      </p>
-                    </div>
-                  </button>
-                ))}
+    <div className="flex flex-col gap-10">
+      {memory && <YearAgoCard memory={memory} openItem={openItem} />}
+      <DiaryHeatmap onPickDay={goToDay} />
+      <div className="flex flex-col">
+        {days.map(({ date, entries }, index) => {
+          const d = new Date(`${date}T00:00:00`);
+          const monthLabel = new Intl.DateTimeFormat(intlLocale(), { month: "long", year: "numeric" }).format(d);
+          const showMonth = monthLabel !== lastMonth;
+          lastMonth = monthLabel;
+          const weekday = new Intl.DateTimeFormat(intlLocale(), { weekday: "short" }).format(d);
+          return (
+            <div key={date} id={`diario-${date}`} className="scroll-mt-20">
+              {showMonth && (
+                <h2 className={`t-title mb-2 text-text first-letter:uppercase ${index === 0 ? "" : "mt-8"}`}>{monthLabel}</h2>
+              )}
+              {/* Il giorno come su un calendario: la cifra grande, il nome
+                  piccolo sopra. Un filo fra i giorni dello stesso mese. */}
+              <div className={`flex gap-4 py-3 ${showMonth ? "" : "shadow-[inset_0_1px_0_var(--separator)]"}`}>
+                <div className="w-10 shrink-0 pt-0.5 text-center">
+                  <p className="text-xs text-text-faint">{weekday}</p>
+                  <p className="t-figure text-text">{d.getDate()}</p>
+                </div>
+                <ul className="flex min-w-0 flex-1 flex-col gap-2">
+                  {entries.map((entry) => {
+                    const { item, action, count } = entry;
+                    const note = [entry.with && t("Stats.con", { v0: entry.with }), entry.where].filter(Boolean).join(" · ");
+                    return (
+                      <li key={`${item.id}-${action}`} className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => openItem(item)}
+                          aria-label={t("Stats.apri_dettagli_di", { v0: item.title, v1: item.year })}
+                          className="flex min-w-0 flex-1 items-center gap-3 rounded-sm text-left transition-transform duration-200 active:scale-[0.99]"
+                        >
+                          <PosterArt item={item} size="sm" showTitle={false} className="w-10 shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-text">{item.title}</p>
+                            <p className="truncate text-xs text-text-muted">
+                              {action === "watched" && t("Stats.completato")}
+                              {action === "episode" && t(count === 1 ? "Stats.episodio" : "Stats.episodi", { v0: count })}
+                              {action === "rewatch" && t("Stats.rivisto")}
+                              {note && ` · ${note}`}
+                            </p>
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setNoting({ entry, date })}
+                          aria-label={note ? t("Stats.modifica_con_chi_e", { v0: item.title }) : t("Stats.aggiungi_con_chi_e", { v0: item.title })}
+                          className="icon-btn icon-btn-sm shrink-0 text-text-faint hover:text-text"
+                        >
+                          {note ? <PeopleIcon size={15} /> : <PlusIcon size={15} />}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
+      {noting && <DiaryNoteSheet entry={noting.entry} date={noting.date} onClose={() => setNoting(null)} />}
     </div>
   );
 }
@@ -334,33 +395,42 @@ export function AchievementsTab({ items }: { items: Item[] }) {
   const earnedCount = achievements.filter((a) => a.earned).length;
 
   return (
-    <div className="flex flex-col gap-3">
-      <p className="text-sm text-text-muted">
-        {earnedCount} su {achievements.length} traguardi sbloccati
-      </p>
-      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+    <section className="flex flex-col gap-4">
+      <RowHeader title={t("Stats.traguardi")} note={t("Stats.su_sbloccati", { v0: earnedCount, v1: achievements.length })} />
+      {/* Un elenco, non quindici riquadri uguali: si scorre con l'occhio
+          come un elenco, e quelli già presi si riconoscono dall'icona accesa
+          invece che da una cornice colorata. */}
+      <ul className="list-group" style={{ "--row-inset": "64px" } as React.CSSProperties}>
         {achievements.map((a) => (
-          <div
-            key={a.id}
-            className="flex items-start gap-3 rounded-md border p-3.5"
-            style={{
-              borderColor: a.earned ? "color-mix(in srgb, var(--accent) 40%, transparent)" : "var(--border)",
-              background: a.earned ? "color-mix(in srgb, var(--accent) 8%, transparent)" : "var(--surface-2)",
-              opacity: a.earned ? 1 : 0.65,
-            }}
-          >
-            <span className="text-2xl leading-none">{a.icon}</span>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-text">{a.title}</p>
-              <p className="mt-0.5 text-xs text-text-faint">{a.description}</p>
-              <p className="mt-1 text-[11px] font-medium" style={{ color: a.earned ? "var(--accent-text)" : "var(--text-faint)" }}>
-                {a.earned ? "✓ Sbloccato" : a.progress}
-              </p>
+          <li key={a.id}>
+            <div className="list-row items-start">
+              <span
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+                style={
+                  a.earned
+                    ? { background: "color-mix(in srgb, var(--accent) 16%, transparent)", color: "var(--accent-text)" }
+                    : { background: "var(--surface-2)", color: "var(--text-faint)" }
+                }
+              >
+                <AchievementIcon id={a.id} size={18} />
+              </span>
+              <div className="min-w-0 flex-1 pt-0.5">
+                <p className="text-sm font-medium text-text">{a.title}</p>
+                <p className="mt-0.5 text-xs text-text-muted">{a.description}</p>
+              </div>
+              {a.earned ? (
+                <span className="flex shrink-0 items-center gap-1 pt-0.5 text-xs font-medium text-accent-text">
+                  <CheckIcon size={14} />
+                  {t("Stats.sbloccato")}
+                </span>
+              ) : (
+                <span className="shrink-0 pt-0.5 text-xs tabular text-text-faint">{a.progress}</span>
+              )}
             </div>
-          </div>
+          </li>
         ))}
-      </div>
-    </div>
+      </ul>
+    </section>
   );
 }
 

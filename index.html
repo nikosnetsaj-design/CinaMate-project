@@ -9,18 +9,131 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="color-scheme" content="dark light" />
-    <meta name="theme-color" content="#0a0a0b" />
+    <meta name="theme-color" content="#131211" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta name="apple-mobile-web-app-title" content="CineMate" />
     <meta name="description" content="CineMate — la tua libreria personale di film, serie, anime e documentari. Voti, progressi, note e un critico IA su misura. Solo per te, solo sul tuo dispositivo." />
     <title>CineMate — La tua collezione</title>
+    <!--
+      Il tema prima del primo pixel: lo stesso calcolo di useTheme (la scelta
+      salvata, altrimenti quella del sistema). Senza, chi usa il tema chiaro
+      vedeva un lampo scuro a ogni apertura, finché React non partiva.
+    -->
+    <script>
+      try {
+        var t = localStorage.getItem("cinemate:theme");
+        if (t !== "dark" && t !== "light") t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        if (t === "light") document.documentElement.classList.add("light");
+        // La lingua scelta nelle Impostazioni (lib/i18n): lettori di schermo e
+        // sillabazione la leggono da qui.
+        if (localStorage.getItem("cinemate:lang") === "en") document.documentElement.lang = "en";
+      } catch (e) {}
+    </script>
+    <!--
+      L'ossatura dell'avvio: si disegna appena arriva l'HTML, nei colori
+      dell'app, mentre il codice si scarica e il disco si apre. Su un telefono
+      lento sono secondi che prima erano una pagina vuota. React la toglie al
+      primo render (App.tsx).
+    -->
+    <style>
+      html { background: #131211; }
+      html.light { background: #f6f3ee; }
+      #cm-shell { position: fixed; inset: 0; z-index: 0; padding: max(16px, env(safe-area-inset-top)) 16px 0; background: #131211; color: #f3efe7; font-family: "Iowan Old Style", Georgia, serif; overflow: hidden; }
+      html.light #cm-shell { background: #f6f3ee; color: #1f1b16; }
+      #cm-shell .cm-bar { display: flex; align-items: center; gap: 10px; height: 40px; max-width: 1100px; margin: 0 auto; }
+      #cm-shell .cm-mark { width: 26px; height: 26px; border-radius: 7px; background: #dc7a54; }
+      #cm-shell .cm-word { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; }
+      #cm-shell .cm-block { max-width: 1100px; margin: 24px auto 0; border-radius: 16px; background: #1f1c19; }
+      html.light #cm-shell .cm-block { background: #ebe5dc; }
+      #cm-shell .cm-hero { aspect-ratio: 16 / 9; max-height: 52vh; }
+      #cm-shell .cm-row { display: flex; gap: 12px; max-width: 1100px; margin: 24px auto 0; }
+      #cm-shell .cm-row span { flex: 0 0 auto; width: 30%; max-width: 150px; aspect-ratio: 2 / 3; border-radius: 10px; background: #1f1c19; }
+      html.light #cm-shell .cm-row span { background: #ebe5dc; }
+    </style>
   </head>
   <body>
+    <div id="cm-shell" aria-hidden="true">
+      <div class="cm-bar"><span class="cm-mark"></span><span class="cm-word">CineMate</span></div>
+      <div class="cm-block cm-hero"></div>
+      <div class="cm-row"><span></span><span></span><span></span><span></span></div>
+    </div>
+    <!--
+      Il benvenuto del primo avvio, già disegnato. Chi apre CineMate la prima
+      volta vede questo foglio prima di qualunque altra cosa: scritto qui, con
+      le classi dell'app (il foglio di stile è già arrivato quando si dipinge),
+      appare insieme alla prima pittura invece di aspettare il codice. Il
+      componente vero (components/Onboarding.tsx) lo sostituisce senza
+      animazione, così il passaggio non si vede; i testi sono gli stessi del
+      dizionario, e un test lo controlla. Non è interattivo: i pulsanti veri
+      arrivano con React, una frazione di secondo dopo.
+    -->
+    <div id="cm-welcome" hidden aria-hidden="true" class="fixed inset-0 z-70 flex items-end justify-center sm:items-center sm:p-6">
+      <div class="absolute inset-0 backdrop-blur-sm" style="background: var(--scrim)"></div>
+      <div class="relative z-10 flex max-h-[94vh] w-full max-w-md flex-col overflow-hidden rounded-t-lg rounded-b-none bg-surface pb-[env(safe-area-inset-bottom)] shadow-[var(--shadow-lg)] sm:rounded-lg sm:rounded-b-lg sm:pb-0">
+        <div class="flex gap-1 px-6 pt-5">
+          <span class="h-1 flex-1 rounded-full" style="background: var(--accent)"></span>
+          <span class="h-1 flex-1 rounded-full" style="background: var(--surface-2)"></span>
+          <span class="h-1 flex-1 rounded-full" style="background: var(--surface-2)"></span>
+          <span class="h-1 flex-1 rounded-full" style="background: var(--surface-2)"></span>
+        </div>
+        <div class="flex min-h-0 flex-col">
+          <div class="relative h-44 overflow-hidden sm:h-52">
+            <div class="flex -rotate-6 scale-125 gap-2 px-2 pt-2">
+              <div class="aspect-2/3 w-[68px] shrink-0 rounded-sm bg-surface-2 sm:w-[84px]"></div>
+              <div class="aspect-2/3 w-[68px] shrink-0 rounded-sm bg-surface-2 sm:w-[84px]"></div>
+              <div class="aspect-2/3 w-[68px] shrink-0 rounded-sm bg-surface-2 sm:w-[84px]"></div>
+              <div class="aspect-2/3 w-[68px] shrink-0 rounded-sm bg-surface-2 sm:w-[84px]"></div>
+              <div class="aspect-2/3 w-[68px] shrink-0 rounded-sm bg-surface-2 sm:w-[84px]"></div>
+              <div class="aspect-2/3 w-[68px] shrink-0 rounded-sm bg-surface-2 sm:w-[84px]"></div>
+            </div>
+            <div class="pointer-events-none absolute inset-0" style="background: linear-gradient(to top, var(--surface) 12%, transparent 78%)"></div>
+          </div>
+          <div class="flex flex-col gap-5 p-6 pt-1">
+            <div class="flex flex-col gap-2.5">
+              <span class="flex items-center gap-2 text-text-muted">
+                <svg width="20" height="20" viewBox="0 0 26 26" fill="none"><rect width="26" height="26" rx="6" fill="var(--accent)" /><circle cx="13" cy="13" r="7.2" fill="none" stroke="var(--accent-contrast)" stroke-width="1.4" /><circle cx="13" cy="13" r="2.2" fill="var(--accent-contrast)" /></svg>
+                <span class="text-sm font-medium text-text-muted">CineMate</span>
+              </span>
+              <h2 class="t-title text-text" data-cm="title">Questa è CineMate con la libreria di qualcun altro.</h2>
+              <p class="t-body text-text-muted" data-cm="body">Tiene il diario di cosa hai visto, decide cosa guardare stasera e sa in che ordine. Resta su questo dispositivo. Rendila tua: un minuto.</p>
+            </div>
+            <div class="flex flex-col gap-1">
+              <div class="btn btn-primary btn-lg w-full" data-cm="start">Comincia</div>
+              <div class="btn btn-plain w-full text-text-muted" data-cm="skip">Guardo da solo</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Solo a chi non ha mai aperto CineMate: nessuna traccia in memoria oltre
+      // al tema e alla lingua. Chi ha già dei dati vede l'ossatura e basta.
+      (function () {
+        try {
+          if (localStorage.getItem("cinemate:onboarded:v1")) return;
+          for (var i = 0; i < localStorage.length; i++) {
+            var k = localStorage.key(i) || "";
+            if (k.indexOf("cinemate:") === 0 && k !== "cinemate:theme" && k !== "cinemate:lang") return;
+          }
+          var w = document.getElementById("cm-welcome");
+          if (document.documentElement.lang === "en") {
+            var en = {
+              title: "This is CineMate with someone else's library.",
+              body: "It keeps a diary of what you've watched, decides what to watch tonight and knows in what order. It stays on this device. Make it yours: one minute.",
+              start: "Start",
+              skip: "I'll look around myself",
+            };
+            for (var key in en) w.querySelector('[data-cm="' + key + '"]').textContent = en[key];
+          }
+          w.hidden = false;
+        } catch (e) {}
+      })();
+    </script>
     <div id="root"></div>
     <noscript>
-      <div style="padding:2rem;font-family:system-ui,sans-serif;color:#ffffff;background:#0a0a0b">
+      <div style="padding:2rem;font-family:system-ui,sans-serif;color:#f3efe7;background:#131211">
         CineMate ha bisogno di JavaScript per funzionare. Attivalo nelle impostazioni del browser e ricarica la pagina.
       </div>
     </noscript>
@@ -39,16 +152,22 @@
         function fail(detail) {
           if (shown || root.childElementCount > 0) return;
           shown = true;
+          var shell = document.getElementById("cm-shell");
+          if (shell) shell.remove();
+          // Anche il benvenuto statico: non è interattivo, e coprirebbe il
+          // pulsante che serve.
+          var welcome = document.getElementById("cm-welcome");
+          if (welcome) welcome.remove();
           root.innerHTML =
             '<div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:1.5rem;' +
-            'background:#0a0a0b;color:#ffffff;font-family:system-ui,-apple-system,sans-serif;text-align:center">' +
+            'background:#131211;color:#f3efe7;font-family:system-ui,-apple-system,sans-serif;text-align:center">' +
             '<div style="max-width:26rem">' +
             '<h1 style="font-size:1.25rem;margin:0 0 .75rem">CineMate non è riuscito ad avviarsi</h1>' +
-            '<p style="margin:0 0 1rem;color:#b6b6bd;line-height:1.5">Quasi sempre è una copia vecchia rimasta in memoria nel browser. ' +
+            '<p style="margin:0 0 1rem;color:#b9b2a6;line-height:1.5">Quasi sempre è una copia vecchia rimasta in memoria nel browser. ' +
             'Ricarica; se non basta, svuota i dati del sito e riapri.</p>' +
-            '<button id="cm-reload" style="background:#22c55e;color:#04220f;border:0;border-radius:5px;' +
+            '<button id="cm-reload" style="background:#dc7a54;color:#1a0b05;border:0;border-radius:14px;' +
             'padding:.7rem 1.4rem;font-size:.95rem;font-weight:600">Ricarica</button>' +
-            '<p style="margin:1.25rem 0 0;color:#9a9aa4;font-size:.75rem;word-break:break-word">' +
+            '<p style="margin:1.25rem 0 0;color:#a19a8f;font-size:.75rem;word-break:break-word">' +
             (detail || "") + "</p></div></div>";
           var button = document.getElementById("cm-reload");
           if (button) {

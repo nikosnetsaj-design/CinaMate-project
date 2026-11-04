@@ -7,6 +7,7 @@ import { useLinkHosts } from "../store/useLinkHosts";
 import { PlayIcon } from "./icons";
 import type { Item } from "../types";
 import { prefetchHandlers } from "../lib/prefetch";
+import { t } from "../lib/i18n";
 
 /**
  * Starts a title in the player, from wherever you happen to be looking at it —
@@ -35,14 +36,14 @@ export function WatchButton({ item, onNavigate }: { item: Item; onNavigate?: () 
           onNavigate?.();
           openSettings();
         }}
-        className="mt-4 flex w-full flex-col items-center gap-0.5 rounded-md border border-dashed border-border-strong py-3 text-sm font-semibold text-text-muted"
+        className="btn btn-secondary btn-lg mt-6 w-full flex-col gap-0.5"
       >
         <span className="flex items-center gap-2">
           <PlayIcon size={17} />
-          Guarda
+          {t("WatchButton.guarda")}
         </span>
-        <span className="text-xs font-normal text-text-faint">
-          Dimmi una volta sola dov'è il tuo server
+        <span className="text-sm font-normal text-text-muted">
+          {t("WatchButton.dimmi_una_volta_sola")}
         </span>
       </button>
     );
@@ -60,11 +61,10 @@ export function WatchButton({ item, onNavigate }: { item: Item; onNavigate?: () 
         // The player reads this and starts on the title straight away.
         navigate(`/player?titolo=${encodeURIComponent(item.id)}`);
       }}
-      className="mt-4 flex w-full items-center justify-center gap-2 rounded-md py-3 text-sm font-semibold transition-opacity hover:opacity-90"
-      style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+      className="btn btn-primary btn-lg mt-6 w-full"
     >
       <PlayIcon size={17} />
-      Guarda
+      {t("WatchButton.guarda")}
     </button>
   );
 }

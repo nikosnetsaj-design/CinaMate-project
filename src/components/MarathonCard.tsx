@@ -1,15 +1,14 @@
-import { useState } from "react";
 import { useLibrary } from "../store/useLibrary";
 import { useMarathon } from "../store/useMarathon";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useSelectedSaga } from "../store/useSelectedSaga";
 import { useSettings } from "../store/useSettings";
-import { useEditSheet } from "../store/useEditSheet";
 import { useSagaView } from "../lib/useSagaView";
-import { draftFromTmdb } from "../lib/addFromTmdb";
+import { useQuickAdd } from "../lib/useQuickAdd";
 import { findLibraryMatch, WATCH_ORDERS } from "../lib/sagas";
 import { PosterArt } from "./PosterArt";
 import { PlayIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * A marathon in an app that plays nothing is a queue with a bookmark: it tells
@@ -27,9 +26,9 @@ export function MarathonCard() {
   const pushToast = useLibrary((s) => s.pushToast);
   const openItem = useSelectedItem((s) => s.open);
   const openSaga = useSelectedSaga((s) => s.open);
-  const openNew = useEditSheet((s) => s.openNew);
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
-  const [adding, setAdding] = useState(false);
+  const { quickAdd, pending } = useQuickAdd();
+  const adding = pending.size > 0;
 
   const { view } = useSagaView(marathon?.key ?? null);
 
@@ -55,52 +54,38 @@ export function MarathonCard() {
     const isLast = run.index + 1 >= run.queue.length;
     pushToast(
       isLast ? "success" : "info",
-      isLast ? `Maratona completata: ${saga.name}.` : "Prossimo capitolo pronto.",
+      isLast ? t("MarathonCard.maratona_completata", { v0: saga.name }) : t("MarathonCard.prossimo_capitolo_pronto"),
     );
   }
 
+  // Il capitolo di turno entra in libreria con un tocco: poi la carta
+  // mostra «Dove guardarlo», come per quelli che c'erano già.
   async function addCurrent() {
-    if (!tmdbApiKey || !current) return;
-    setAdding(true);
-    try {
-      openNew(
-        await draftFromTmdb(current.tmdbId, "movie", "film", tmdbApiKey, {
-          title: current.title,
-          year: current.year,
-          posterPath: current.posterPath,
-        }),
-      );
-    } catch {
-      pushToast("error", "Non è stato possibile leggere questo titolo da TMDB.");
-    }
-    setAdding(false);
+    if (!current) return;
+    await quickAdd({ tmdbId: current.tmdbId, mediaType: "movie", kind: "film", title: current.title, year: current.year, posterPath: current.posterPath });
   }
 
   return (
     <section
-      aria-label="Maratona in corso"
-      className="rounded-md border p-3.5"
-      style={{
-        borderColor: `color-mix(in srgb, ${view.accent} 38%, transparent)`,
-        background: `color-mix(in srgb, ${view.accent} 8%, transparent)`,
-      }}
+      aria-label={t("MarathonCard.maratona_in_corso")}
+      className="rounded-lg bg-surface p-4 shadow-[var(--shadow-sm)]"
     >
       <div className="flex items-center justify-between gap-3">
         <button
           type="button"
           onClick={() => openSaga(marathon.key)}
           className="min-w-0 text-left"
-          aria-label={`Apri la saga ${view.name}`}
+          aria-label={t("MarathonCard.apri_la_saga", { v0: view.name })}
         >
-          <p className="text-[11px] uppercase tracking-[0.16em] text-text-faint">Maratona · ordine {orderLabel}</p>
-          <p className="truncate font-display text-base font-semibold text-text">{view.name}</p>
+          <p className="text-xs font-medium text-text-faint">{t("MarathonCard.maratona_ordine")} {orderLabel}</p>
+          <p className="t-title truncate text-text">{view.name}</p>
         </button>
         <button
           type="button"
           onClick={stop}
-          className="shrink-0 rounded-sm border border-border-strong px-2.5 py-1 text-[11px] text-text-muted hover:bg-surface-hover"
+          className="btn btn-secondary btn-sm shrink-0"
         >
-          Termina
+          {t("MarathonCard.termina")}
         </button>
       </div>
 
@@ -108,7 +93,7 @@ export function MarathonCard() {
         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-hover">
           <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: view.accent }} />
         </div>
-        <span className="font-mono tabular text-xs font-semibold" style={{ color: view.accent }}>
+        <span className="tabular text-xs font-semibold text-text-muted">
           {watched}/{queue.length}
         </span>
       </div>
@@ -121,11 +106,11 @@ export function MarathonCard() {
           className="w-12 shrink-0"
         />
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] text-text-faint">
-            Capitolo {marathon.index + 1} di {marathon.queue.length}
+          <p className="text-xs text-text-faint">
+            {t("MarathonCard.capitolo")} {marathon.index + 1} {t("MarathonCard.di")} {marathon.queue.length}
           </p>
-          <p className="truncate font-display text-sm font-semibold text-text">{current.title}</p>
-          <p className="font-mono tabular text-[11px] text-text-faint">{current.year ?? "in arrivo"}</p>
+          <p className="truncate text-sm font-medium text-text">{current.title}</p>
+          <p className="tabular text-xs text-text-faint">{current.year ?? t("MarathonCard.in_arrivo")}</p>
         </div>
       </div>
 
@@ -134,28 +119,27 @@ export function MarathonCard() {
           <button
             type="button"
             onClick={() => openItem(currentItem)}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-sm border border-border-strong bg-surface py-2 text-xs font-medium text-text"
+            className="btn btn-secondary btn-sm flex-1"
           >
             <PlayIcon size={13} />
-            Dove guardarlo
+            {t("MarathonCard.dove_guardarlo")}
           </button>
         ) : (
           <button
             type="button"
             onClick={addCurrent}
             disabled={adding || !tmdbApiKey}
-            className="flex-1 rounded-sm border border-border-strong bg-surface py-2 text-xs font-medium text-text disabled:opacity-60"
+            className="btn btn-secondary btn-sm flex-1 disabled:opacity-60"
           >
-            {adding ? "…" : "Aggiungi in libreria"}
+            {adding ? "…" : t("MarathonCard.aggiungi_in_libreria")}
           </button>
         )}
         <button
           type="button"
           onClick={finishAndAdvance}
-          className="flex-[1.4] rounded-sm py-2 text-xs font-semibold"
-          style={{ background: view.accent, color: "var(--accent-contrast)" }}
+          className="btn btn-primary btn-sm flex-[1.4]"
         >
-          {currentItem ? "Visto → prossimo" : "Salta al prossimo"}
+          {currentItem ? t("MarathonCard.visto_prossimo") : t("MarathonCard.salta_al_prossimo")}
         </button>
       </div>
     </section>

@@ -14,7 +14,8 @@ import { effectiveUrl, hostLabel, withProtocol } from "../lib/linkHost";
 import { clearTmdbCaches } from "../lib/tmdb";
 import { clearFranchiseCache } from "../lib/useFranchise";
 import { countdown, dayLabel } from "../lib/format";
-import { BellIcon, DotsIcon, GearIcon, GlobeIcon, LinkIcon, MoonIcon, PersonIcon, PlusIcon, PulseIcon, RefreshIcon, SunIcon } from "./icons";
+import { BellIcon, ChevronRightIcon, DotsIcon, GearIcon, GlobeIcon, LinkIcon, MoonIcon, PeopleIcon, PersonIcon, ServicesIcon, PlusIcon, PulseIcon, RefreshIcon, SunIcon } from "./icons";
+import { statusLabel, t } from "../lib/i18n";
 
 /**
  * I tre controlli in cima: i generi, le novità, il menu.
@@ -26,25 +27,61 @@ import { BellIcon, DotsIcon, GearIcon, GlobeIcon, LinkIcon, MoonIcon, PersonIcon
  * Nessuna funzione nuova: le stesse, dove si cercano.
  */
 
+/* I menu sono superfici sollevate: ombra e un filo, nessuna cornice. */
 const PANEL =
-  "absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md border border-border-strong bg-surface shadow-[var(--shadow-md)]";
-const ROUND =
-  "relative flex h-9 w-9 items-center justify-center rounded-full border border-border-strong text-text-muted transition-colors hover:text-text";
+  "absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-md bg-surface shadow-[var(--shadow-md),0_0_0_1px_var(--separator)]";
+const ROUND = "icon-btn relative";
 
 /**
  * Lo sfondo invisibile che chiude il menu al primo tocco fuori — e Esc, che è
  * il modo in cui un menu si chiude da tastiera in qualunque programma.
  */
 function Backdrop({ onClose }: { onClose: () => void }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  // Chi apre il menu passa una funzione nuova a ogni render: tenuta qui,
+  // l'effetto sotto gira una volta per apertura e non ruba il fuoco.
+  const close = useRef(onClose);
+  close.current = onClose;
+
+  /*
+   * Il menu da tastiera come in qualunque programma: all'apertura il fuoco va
+   * sulla prima voce, le frecce scorrono le voci (Inizio e Fine vanno agli
+   * estremi), Esc chiude e il fuoco torna sul pulsante che l'aveva aperto.
+   * Il menu è il fratello che segue lo sfondo, in tutti e tre i menu.
+   */
   useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
+    const menu = ref.current?.nextElementSibling as HTMLElement | null;
+    const items = () => Array.from(menu?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
+    items()[0]?.focus();
+
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        close.current();
+        return;
+      }
+      const list = items();
+      if (list.length === 0) return;
+      const at = list.indexOf(document.activeElement as HTMLElement);
+      let next = -1;
+      if (e.key === "ArrowDown") next = (at + 1) % list.length;
+      else if (e.key === "ArrowUp") next = (at - 1 + list.length) % list.length;
+      else if (e.key === "Home") next = 0;
+      else if (e.key === "End") next = list.length - 1;
+      else return;
+      e.preventDefault();
+      list[next].focus();
     }
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      if (opener?.isConnected) opener.focus();
+    };
+  }, []);
 
-  return <button type="button" aria-label="Chiudi il menu" className="fixed inset-0 z-40 cursor-default" onClick={onClose} />;
+  return (
+    <button ref={ref} type="button" tabIndex={-1} aria-label={t("menu.close")} className="fixed inset-0 z-40 cursor-default" onClick={() => close.current()} />
+  );
 }
 
 function MenuItem({
@@ -63,8 +100,9 @@ function MenuItem({
   return (
     <button
       type="button"
+      role="menuitem"
       onClick={onClick}
-      className="flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-surface-hover"
+      className="flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-surface-hover focus-visible:bg-surface-hover"
       style={danger ? { color: "var(--danger)" } : undefined}
     >
       {icon && <span className="shrink-0 text-text-faint">{icon}</span>}
@@ -72,15 +110,14 @@ function MenuItem({
         <span className="block truncate text-sm font-medium text-text" style={danger ? { color: "var(--danger)" } : undefined}>
           {label}
         </span>
-        {hint && <span className="block truncate text-[11px] text-text-faint">{hint}</span>}
+        {hint && <span className="block truncate text-xs text-text-faint">{hint}</span>}
       </span>
     </button>
   );
 }
 
 /** La forma delle pastiglie della riga di scorciatoie: bordo sottile, testo pieno. */
-const CHIP =
-  "flex shrink-0 items-center gap-1.5 rounded-full border border-border-strong bg-surface-2 px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-surface-hover";
+const CHIP = "chip";
 
 /**
  * I generi che hai davvero.
@@ -136,7 +173,7 @@ function GenreMenu() {
   return (
     <div className="relative">
       <button ref={buttonRef} type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-haspopup="menu" className={CHIP}>
-        Generi
+        {t("TopBar.generi")}
         <span aria-hidden="true" className="text-text-faint">
           ⌄
         </span>
@@ -147,7 +184,7 @@ function GenreMenu() {
           <>
             <Backdrop onClose={() => setOpen(false)} />
             <div
-              className="fixed z-50 max-h-80 w-56 overflow-y-auto rounded-md border border-border-strong bg-surface shadow-[var(--shadow-md)]"
+              className="fixed z-50 max-h-80 w-56 overflow-y-auto rounded-md bg-surface shadow-[var(--shadow-md),0_0_0_1px_var(--separator)]"
               style={{ top: at.top, left: at.left }}
               role="menu"
             >
@@ -163,7 +200,7 @@ function GenreMenu() {
                 className="flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left text-sm text-text transition-colors hover:bg-surface-hover"
               >
                 <span className="truncate">{genre}</span>
-                <span className="font-mono tabular text-[11px] text-text-faint">{count}</span>
+                <span className="font-mono tabular text-xs text-text-faint">{count}</span>
               </button>
             ))}
             </div>
@@ -207,7 +244,7 @@ export function AlertsBell() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        aria-label={soon.length ? `Novità: ${soon.length} in arrivo` : "Novità"}
+        aria-label={soon.length ? t("alerts.labelCount", { n: soon.length }) : t("alerts.label")}
         className={ROUND}
       >
         <BellIcon size={17} filled={soon.length > 0} />
@@ -224,13 +261,12 @@ export function AlertsBell() {
         <>
           <Backdrop onClose={() => setOpen(false)} />
           <div className={`${PANEL} w-72`} role="menu">
-            <p className="border-b border-border px-3.5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-text-faint">
-              In arrivo
+            <p className="px-3.5 pb-1.5 pt-3 text-xs font-medium text-text-faint">
+              {t("alerts.soon")}
             </p>
             {soon.length === 0 ? (
               <p className="px-3.5 py-3 text-xs leading-relaxed text-text-faint">
-                Niente in uscita nelle prossime settimane, fra le serie e i film che segui. Quando TMDB fissa una
-                data, compare qui.
+                {t("TopBar.niente_in_uscita_nelle")}
               </p>
             ) : (
               soon.map((entry) => (
@@ -246,12 +282,12 @@ export function AlertsBell() {
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-text">{entry.item.title}</span>
-                    <span className="block truncate text-[11px] text-text-faint">
-                      {entry.season != null && entry.episode != null ? `S${entry.season}E${entry.episode} · ` : ""}
+                    <span className="block truncate text-xs text-text-faint">
+                      {entry.season != null && entry.episode != null ? t("TopBar.s_e", { v0: entry.season, v1: entry.episode }) : ""}
                       {dayLabel(entry.date)}
                     </span>
                   </span>
-                  <span className="shrink-0 font-mono tabular text-[11px]" style={{ color: "var(--accent-text)" }}>
+                  <span className="shrink-0 font-mono tabular text-xs" style={{ color: "var(--accent-text)" }}>
                     {countdown(entry.date)}
                   </span>
                 </button>
@@ -263,10 +299,11 @@ export function AlertsBell() {
                 setOpen(false);
                 navigate("/scopri");
               }}
-              className="block w-full border-t border-border px-3.5 py-2.5 text-left text-xs font-medium"
+              className="flex w-full items-center justify-between border-t border-border px-3.5 py-2.5 text-left text-xs font-medium"
               style={{ color: "var(--accent-text)" }}
             >
-              Apri il calendario →
+              {t("TopBar.apri_il_calendario")}
+              <ChevronRightIcon size={14} />
             </button>
           </div>
         </>
@@ -303,7 +340,7 @@ export function QuickMenu() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
-        aria-label="Altro"
+        aria-label={t("nav.more")}
         className={ROUND}
       >
         <DotsIcon size={17} />
@@ -315,8 +352,8 @@ export function QuickMenu() {
           <div className={PANEL} role="menu">
             <MenuItem
               icon={<PlusIcon size={16} />}
-              label="Aggiungi titolo"
-              hint="A mano, senza passare da TMDB"
+              label={t("nav.addTitle")}
+              hint={t("menu.add.hint")}
               onClick={() => {
                 setOpen(false);
                 openAddSheet();
@@ -325,8 +362,8 @@ export function QuickMenu() {
             <div className="border-t border-border" />
             <MenuItem
               icon={<LinkIcon size={16} />}
-              label="Gestisci Link Host"
-              hint={firstHost ? hostLabel(effectiveUrl(firstHost)) : "Nessun sito configurato"}
+              label={t("menu.linkHost")}
+              hint={firstHost ? hostLabel(effectiveUrl(firstHost)) : t("menu.linkHost.none")}
               onClick={() => {
                 setOpen(false);
                 openSettings("linkhost");
@@ -334,8 +371,8 @@ export function QuickMenu() {
             />
             <MenuItem
               icon={<GlobeIcon size={16} />}
-              label="Apri Web Viewer"
-              hint={firstHost ? "Sul tuo primo sito attivo" : "Prima serve un sito nel Link Host"}
+              label={t("menu.viewer")}
+              hint={firstHost ? t("menu.viewer.hint") : t("menu.viewer.needsHost")}
               onClick={() => {
                 setOpen(false);
                 if (firstHost) openViewer(withProtocol(effectiveUrl(firstHost)));
@@ -344,20 +381,38 @@ export function QuickMenu() {
             />
             <MenuItem
               icon={<RefreshIcon size={16} />}
-              label="Aggiorna contenuti"
-              hint="Riscarica da TMDB, senza toccare la libreria"
+              label={t("menu.refresh")}
+              hint={t("menu.refresh.hint")}
               onClick={() => {
                 clearTmdbCaches();
                 clearFranchiseCache();
                 setOpen(false);
-                pushToast("success", "Contenuti aggiornati: TMDB verrà richiesto di nuovo.");
+                pushToast("success", t("menu.refresh.done"));
               }}
             />
 
             <div className="border-t border-border">
               <MenuItem
+                icon={<PeopleIcon size={16} />}
+                label={t("nav.duo")}
+                hint={t("menu.duo.hint")}
+                onClick={() => {
+                  setOpen(false);
+                  navigate("/stasera-in-due");
+                }}
+              />
+              <MenuItem
+                icon={<ServicesIcon size={16} />}
+                label={t("nav.services")}
+                hint={t("menu.services.hint")}
+                onClick={() => {
+                  setOpen(false);
+                  navigate("/abbonamenti");
+                }}
+              />
+              <MenuItem
                 icon={<PersonIcon size={16} />}
-                label="Profilo"
+                label={t("menu.profile")}
                 onClick={() => {
                   setOpen(false);
                   navigate("/tu");
@@ -365,7 +420,7 @@ export function QuickMenu() {
               />
               <MenuItem
                 icon={theme === "dark" ? <SunIcon size={16} /> : <MoonIcon size={16} />}
-                label={theme === "dark" ? "Tema chiaro" : "Tema scuro"}
+                label={theme === "dark" ? t("menu.themeLight") : t("menu.themeDark")}
                 onClick={() => {
                   toggleTheme();
                   setOpen(false);
@@ -373,7 +428,7 @@ export function QuickMenu() {
               />
               <MenuItem
                 icon={<PulseIcon size={16} />}
-                label="Diagnostica"
+                label={t("menu.diagnostics")}
                 onClick={() => {
                   setOpen(false);
                   navigate("/diagnostica");
@@ -381,7 +436,7 @@ export function QuickMenu() {
               />
               <MenuItem
                 icon={<GearIcon size={16} />}
-                label="Impostazioni"
+                label={t("nav.settings")}
                 onClick={() => {
                   setOpen(false);
                   openSettings();
@@ -414,13 +469,13 @@ export function BrowseChips() {
 
   const has = (test: (i: (typeof items)[number]) => boolean) => items.some(test);
   const shortcuts = [
-    { label: "Serie TV", to: "/libreria?tipo=serie", show: has((i) => i.kind === "serie" || i.kind === "anime") },
-    { label: "Film", to: "/libreria?tipo=film", show: has((i) => i.kind === "film") },
-    { label: "Da vedere", to: "/libreria?stato=Da+vedere", show: has((i) => i.status === "Da vedere") },
+    { label: t("TopBar.serie_tv"), to: "/libreria?tipo=serie", show: has((i) => i.kind === "serie" || i.kind === "anime") },
+    { label: t("TopBar.film"), to: "/libreria?tipo=film", show: has((i) => i.kind === "film") },
+    { label: statusLabel("Da vedere"), to: "/libreria?stato=Da+vedere", show: has((i) => i.status === "Da vedere") },
   ].filter((s) => s.show);
 
   return (
-    <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6">
+    <div className="shelf gap-2">
       {shortcuts.map((s) => (
         <button key={s.to} type="button" onClick={() => navigate(s.to)} className={CHIP}>
           {s.label}

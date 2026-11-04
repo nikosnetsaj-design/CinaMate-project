@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import type { SkipMarker, ThumbnailSprite } from '../types';
+import { t } from "../../lib/i18n";
 
 type Props = {
   currentTime: number;
@@ -71,11 +72,11 @@ export default function ProgressBar({ currentTime, duration, bufferedEnd, skipMa
         aria-describedby="pv-remaining"
         role="slider"
         tabIndex={0}
-        aria-label="Avanzamento"
+        aria-label={t("player_ProgressBar.avanzamento")}
         aria-valuemin={0}
         aria-valuemax={Math.round(duration) || 0}
         aria-valuenow={Math.round(currentTime)}
-        aria-valuetext={`${formatTime(currentTime)} di ${formatTime(duration)}`}
+        aria-valuetext={t("player_ProgressBar.di", { v0: formatTime(currentTime), v1: formatTime(duration) })}
         onMouseMove={handleMove}
         onMouseLeave={() => setHoverX(null)}
         onClick={handleClick}
@@ -95,7 +96,7 @@ export default function ProgressBar({ currentTime, duration, bufferedEnd, skipMa
       {/* Quanto manca alla fine, non quanto è passato. È la domanda che ci si
           fa davvero guardando l'orologio a metà film — "faccio in tempo?" — e
           il tempo trascorso resta comunque leggibile nell'anteprima di scorrimento. */}
-      <span id="pv-remaining" className="pv-remaining pv-mono">
+      <span id="pv-remaining" className="pv-remaining">
         {duration ? formatTime(Math.max(0, duration - currentTime)) : '--:--'}
       </span>
     </div>

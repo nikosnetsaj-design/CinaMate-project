@@ -1,4 +1,6 @@
 import type { Item } from "../types";
+import { nextEpisode } from "./episodes";
+import { t } from "./i18n";
 
 /**
  * Addresses for your own sources, written once in Settings instead of pasted
@@ -27,14 +29,14 @@ export interface TemplateField {
 }
 
 export const TEMPLATE_FIELDS: TemplateField[] = [
-  { token: "{titolo}", label: "Titolo così com'è", example: "Il Padrino" },
-  { token: "{slug}", label: "Titolo minuscolo con i trattini", example: "il-padrino" },
-  { token: "{anno}", label: "Anno di uscita", example: "1972" },
-  { token: "{tmdb}", label: "Id TMDB, quando il titolo è collegato", example: "238" },
-  { token: "{s}", label: "Stagione — sempre 1: la libreria conta gli episodi, non le stagioni", example: "1" },
-  { token: "{e}", label: "Episodio: il prossimo da vedere", example: "4" },
-  { token: "{ss}", label: "Stagione a due cifre", example: "01" },
-  { token: "{ee}", label: "Episodio a due cifre", example: "04" },
+  { token: "{titolo}", label: t("sourceTemplate.titolo_cosi_com_e"), example: t("sourceTemplate.il_padrino") },
+  { token: "{slug}", label: t("sourceTemplate.titolo_minuscolo_con_i"), example: t("sourceTemplate.il_padrino_slug") },
+  { token: "{anno}", label: t("sourceTemplate.anno_di_uscita"), example: "1972" },
+  { token: "{tmdb}", label: t("sourceTemplate.id_tmdb_quando_il"), example: "238" },
+  { token: "{s}", label: t("sourceTemplate.stagione_sempre_1_la"), example: "1" },
+  { token: "{e}", label: t("sourceTemplate.episodio_il_prossimo_da"), example: "4" },
+  { token: "{ss}", label: t("sourceTemplate.stagione_a_due_cifre"), example: "01" },
+  { token: "{ee}", label: t("sourceTemplate.episodio_a_due_cifre"), example: "04" },
 ];
 
 /** Lowercase, accents stripped, non-alphanumerics collapsed to single dashes. */
@@ -61,12 +63,13 @@ export interface EpisodePick {
 // ricava in modo onesto. È un valore dichiarato, non indovinato — ed è
 // esattamente il motivo per cui l'elenco degli episodi, che la stagione la sa,
 // può ora passarla di qui.
-const DEFAULT_SEASON = "1";
-
-function nextEpisodeOf(item: Item): string {
-  // The episode you would watch next, which is the one after those already
-  // seen — the same number the library shows as progress.
-  return String((item.seen || 0) + 1);
+// Dal registro degli episodi in poi la stagione si sa: è quella del prossimo
+// episodio da guardare (lib/episodes). Senza registro resta la 1.
+function nextEpisodeOf(item: Item): { season: string; episode: string } {
+  const next = nextEpisode(item);
+  return next
+    ? { season: String(next.season), episode: String(next.episode) }
+    : { season: "1", episode: String((item.seen || 0) + 1) };
 }
 
 function pad(value: string): string {
@@ -74,8 +77,9 @@ function pad(value: string): string {
 }
 
 export function fillTemplate(template: string, item: Item, pick: EpisodePick = {}): string {
-  const episode = pick.episode != null ? String(pick.episode) : nextEpisodeOf(item);
-  const SEASON = pick.season != null ? String(pick.season) : DEFAULT_SEASON;
+  const guess = nextEpisodeOf(item);
+  const episode = pick.episode != null ? String(pick.episode) : guess.episode;
+  const SEASON = pick.season != null ? String(pick.season) : guess.season;
   return template
     .replace(/\{titolo\}/gi, encodeURIComponent(item.title))
     .replace(/\{slug\}/gi, slugify(item.title))
@@ -234,7 +238,7 @@ export function candidatesFor(item: Item, addresses: string[], pick: EpisodePick
 }
 
 const SAMPLE: Pick<Item, "title" | "year" | "tmdbId" | "seen" | "seasons" | "kind"> = {
-  title: "Il Padrino",
+  title: t("sourceTemplate.il_padrino"),
   year: 1972,
   tmdbId: 238,
   seen: 3,

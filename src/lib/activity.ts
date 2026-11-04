@@ -1,5 +1,6 @@
 import type { HistoryEntry, Item } from "../types";
 import type { DailySeconds } from "../player/services/statsAndHistory";
+import { intlLocale, t } from "./i18n";
 
 /** One column of the activity chart. */
 export interface ActivityBucket {
@@ -13,14 +14,14 @@ export interface ActivityBucket {
 export type ActivityRange = "settimana" | "mese" | "anno";
 
 export const ACTIVITY_RANGES: { id: ActivityRange; label: string }[] = [
-  { id: "settimana", label: "Settimana" },
-  { id: "mese", label: "Mese" },
-  { id: "anno", label: "Anno" },
+  { id: "settimana", label: t("activity.settimana") },
+  { id: "mese", label: t("activity.mese") },
+  { id: "anno", label: t("activity.anno") },
 ];
 
-const WEEKDAY = new Intl.DateTimeFormat("it-IT", { weekday: "short" });
-const MONTH_SHORT = new Intl.DateTimeFormat("it-IT", { month: "short" });
-const FULL_DAY = new Intl.DateTimeFormat("it-IT", { weekday: "long", day: "numeric", month: "long" });
+const WEEKDAY = new Intl.DateTimeFormat(intlLocale(), { weekday: "short" });
+const MONTH_SHORT = new Intl.DateTimeFormat(intlLocale(), { month: "short" });
+const FULL_DAY = new Intl.DateTimeFormat(intlLocale(), { weekday: "long", day: "numeric", month: "long" });
 
 export function dayKey(date: Date): string {
   const y = date.getFullYear();
@@ -134,15 +135,15 @@ export interface Level {
  * all, and the last one should take years.
  */
 const LEVELS: { at: number; title: string }[] = [
-  { at: 0, title: "Spettatore" },
-  { at: 10, title: "Habitué" },
-  { at: 40, title: "Appassionato" },
-  { at: 100, title: "Cinefilo" },
-  { at: 250, title: "Maratoneta" },
-  { at: 500, title: "Divoratore di serie" },
-  { at: 1000, title: "Critico" },
-  { at: 2500, title: "Archivista" },
-  { at: 5000, title: "Leggenda" },
+  { at: 0, title: t("activity.spettatore") },
+  { at: 10, title: t("activity.habitue") },
+  { at: 40, title: t("activity.appassionato") },
+  { at: 100, title: t("activity.cinefilo") },
+  { at: 250, title: t("activity.maratoneta") },
+  { at: 500, title: t("activity.divoratore_di_serie") },
+  { at: 1000, title: t("activity.critico") },
+  { at: 2500, title: t("activity.archivista") },
+  { at: 5000, title: t("activity.leggenda") },
 ];
 
 export function levelFor(hours: number): Level {

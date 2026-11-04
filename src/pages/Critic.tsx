@@ -1,21 +1,22 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLibrary } from "../store/useLibrary";
 import { useSettings } from "../store/useSettings";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { useCriticDraft } from "../store/useCriticDraft";
 import { askCritic, ClaudeApiError, MissingApiKeyError } from "../lib/anthropic";
-import { voteColor } from "../lib/vote";
 import type { Item } from "../types";
+import { ArrowRightIcon, BackIcon } from "../components/icons";
+import { t } from "../lib/i18n";
 
 const PROMPTS = [
-  "Cosa guardo stasera?",
-  "Qual è il prossimo capitolo che dovrei vedere?",
-  "Consigliami qualcosa di corto",
-  "Che saga dovrei iniziare?",
-  "Anime da provare",
-  "Descrivi il mio gusto cinematografico",
-  "Cosa manca alla mia lista?",
+  t("Critic.cosa_guardo_stasera"),
+  t("Critic.qual_e_il_prossimo"),
+  t("Critic.consigliami_qualcosa_di_corto"),
+  t("Critic.che_saga_dovrei_iniziare"),
+  t("Critic.anime_da_provare"),
+  t("Critic.descrivi_il_mio_gusto"),
+  t("Critic.cosa_manca_alla_mia"),
 ];
 
 /**
@@ -26,7 +27,7 @@ function similarPrompt(items: Item[]): string | null {
   const best = items
     .filter((i) => i.vote != null && i.status === "Visto")
     .sort((a, b) => (b.vote ?? 0) - (a.vote ?? 0))[0];
-  return best ? `Voglio un film simile a "${best.title}"` : null;
+  return best ? t("Critic.voglio_un_film_simile", { v0: best.title }) : null;
 }
 
 export function Critic() {
@@ -69,17 +70,17 @@ export function Critic() {
     } catch (e) {
       if (e instanceof MissingApiKeyError) setMissingKey(true);
       else if (e instanceof ClaudeApiError) setErr(e.message);
-      else setErr("Connessione non riuscita. Riprova.");
+      else setErr(t("Critic.connessione_non_riuscita_riprova"));
     }
     setBusy(false);
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-5 px-4 py-6 sm:px-6 sm:py-10">
+    <div className="mx-auto flex max-w-2xl flex-col gap-6 px-[var(--gutter)] py-6 sm:py-10">
       <div>
-        <h1 className="font-display text-3xl font-semibold text-text">Il critico</h1>
+        <h1 className="t-display text-text">{t("page.critic")}</h1>
         <p className="mt-1 text-sm text-text-muted">
-          Conosce i tuoi {done.length} titoli visti e i voti che hai dato — usa la tua chiave API Anthropic personale.
+          {t("Critic.conosce_i_tuoi")} {done.length} {t("Critic.titoli_visti_e_i")}
         </p>
       </div>
 
@@ -89,7 +90,7 @@ export function Critic() {
             key={p}
             type="button"
             onClick={() => setQuestion(p)}
-            className="rounded-full border border-border-strong px-3 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
+            className="chip chip-wrap"
           >
             {p}
           </button>
@@ -101,39 +102,47 @@ export function Critic() {
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && ask()}
-          placeholder="Chiedi qualsiasi cosa…"
-          aria-label="Chiedi al critico"
-          className="flex-1 rounded-sm border border-border-strong bg-surface px-3 py-2.5 text-sm text-text placeholder:text-text-faint focus:border-accent"
+          placeholder={t("Critic.chiedi_qualsiasi_cosa")}
+          aria-label={t("Critic.chiedi_al_critico")}
+          className="field flex-1"
         />
         <button
           type="button"
           onClick={() => ask()}
           disabled={busy || !question.trim()}
-          className="min-w-14 rounded-sm px-4 text-lg font-bold disabled:opacity-50"
-          style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+          aria-label={t("Critic.chiedi")}
+          className="btn btn-primary min-w-12 px-3.5"
         >
-          {busy ? "…" : "→"}
+          {busy ? "…" : <ArrowRightIcon />}
         </button>
       </div>
 
+      {/* L'attesa ha la forma della risposta che arriva: righe di testo,
+          non una rotella. */}
       {busy && (
-        <div className="flex flex-col items-center gap-3 py-9 text-text-muted">
-          <div className="spinner h-6 w-6 rounded-full border-2" style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }} />
-          <span className="text-sm">Sto pensando…</span>
+        <div className="rounded-lg bg-surface p-5 shadow-[var(--shadow-sm)]" role="status">
+          <span className="sr-only">{t("Critic.sto_pensando")}</span>
+          <div aria-hidden="true" className="flex flex-col gap-2.5">
+            <div className="skeleton h-4 w-11/12 rounded-xs" />
+            <div className="skeleton h-4 w-full rounded-xs" />
+            <div className="skeleton h-4 w-4/5 rounded-xs" />
+            <div className="skeleton h-4 w-2/3 rounded-xs" />
+          </div>
+          <p className="mt-4 text-xs text-text-faint" aria-hidden="true">{t("Critic.sto_pensando")}</p>
         </div>
       )}
 
       {missingKey && !busy && (
-        <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-border-strong px-4 py-8 text-center">
+        <div className="flex flex-col items-center gap-4 rounded-lg bg-surface px-5 py-8 text-center shadow-[var(--shadow-sm)]">
           <p className="text-sm text-text-muted">
-            Per parlare con il critico serve una chiave API Anthropic personale, salvata solo su questo dispositivo.
+            {t("Critic.per_parlare_con_il")}
           </p>
           <button
             type="button"
             onClick={() => openSettingsSheet()}
-            className="rounded-sm border border-border-strong px-4 py-2 text-sm font-medium text-text hover:bg-surface-hover"
+            className="btn btn-secondary"
           >
-            Aggiungi la tua chiave nelle Impostazioni
+            {t("Critic.aggiungi_la_tua_chiave")}
           </button>
         </div>
       )}
@@ -144,37 +153,44 @@ export function Critic() {
           <button
             type="button"
             onClick={() => ask()}
-            className="rounded-sm border border-border-strong px-4 py-2 text-sm font-medium text-text hover:bg-surface-hover"
+            className="btn btn-secondary"
           >
-            Riprova
+            {t("Critic.riprova")}
           </button>
         </div>
       )}
 
       {answer && !busy && (
-        <div className="rounded-md border border-border bg-surface-2 p-5">
-          <div className="mb-3.5 h-0.5 w-6" style={{ background: "var(--accent)" }} />
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-text">{answer}</p>
+        <div className="rounded-lg bg-surface p-5 shadow-[var(--shadow-sm)]">
+          <p className="whitespace-pre-wrap text-base leading-relaxed text-text">{answer}</p>
         </div>
       )}
 
-      <div className="rounded-md border border-border bg-surface p-4">
-        <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Su cosa si basa</span>
+      <section>
+        <h2 className="mb-3 text-sm font-medium text-text-muted">{t("Critic.su_cosa_si_basa")}</h2>
         {done.length === 0 ? (
-          <p className="text-sm text-text-faint">Segna qualche titolo come "Visto" per consigli su misura.</p>
+          <p className="text-sm text-text-faint">{t("Critic.segna_qualche_titolo_come")}</p>
         ) : (
-          <div className="flex flex-wrap gap-1.5">
-            {done.slice(0, 12).map((i) => (
-              <span key={i.id} className="rounded-full bg-surface-hover px-2.5 py-1 text-xs text-text-muted">
-                {i.title} <span style={{ color: voteColor(i.vote) }}>{i.vote}</span>
-              </span>
+          // Testo, non pastiglie: le pastiglie qui sopra si toccano, questi
+          // titoli no. La stessa forma prometteva un'azione che non c'era.
+          <p className="text-sm leading-relaxed text-text-muted">
+            {done.slice(0, 12).map((i, idx) => (
+              // Il separatore sta fuori dal blocco che non va a capo, con i
+              // suoi spazi: è lì che la riga può spezzarsi.
+              <Fragment key={i.id}>
+                {idx > 0 && <span aria-hidden="true" className="text-text-faint"> · </span>}
+                <span className="whitespace-nowrap">
+                  <span className="text-text">{i.title}</span> <span className="tabular">{i.vote}</span>
+                </span>
+              </Fragment>
             ))}
-          </div>
+          </p>
         )}
-      </div>
+      </section>
 
-      <button type="button" onClick={() => navigate("/libreria")} className="text-xs text-text-faint underline-offset-2 hover:underline">
-        ← Torna alla libreria
+      <button type="button" onClick={() => navigate("/libreria")} className="btn btn-plain btn-sm -ml-3 self-start text-text-muted">
+        <BackIcon size={16} />
+        {t("Critic.torna_alla_libreria")}
       </button>
     </div>
   );

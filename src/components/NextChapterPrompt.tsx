@@ -1,16 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { useLibrary } from "../store/useLibrary";
 import { useMarathon } from "../store/useMarathon";
 import { useSagas, sagaKey } from "../store/useSagas";
 import { useSelectedItem } from "../store/useSelectedItem";
-import { useSettings } from "../store/useSettings";
-import { useEditSheet } from "../store/useEditSheet";
 import { buildEntries, nextChapterAfter, orderParts, type SagaEntry } from "../lib/sagas";
-import { draftFromTmdb } from "../lib/addFromTmdb";
+import { useQuickAdd } from "../lib/useQuickAdd";
 import { PosterArt } from "./PosterArt";
-import { PlayIcon } from "./icons";
+import { CloseIcon, PlayIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * "Continua la storia": the moment a chapter is finished, the next one in its
@@ -24,55 +23,51 @@ function Prompt({ finishedTitle, entry, onDismiss }: {
   onDismiss: () => void;
 }) {
   const openItem = useSelectedItem((s) => s.open);
-  const openNew = useEditSheet((s) => s.openNew);
-  const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
-  const pushToast = useLibrary((s) => s.pushToast);
-  const [adding, setAdding] = useState(false);
+  const { quickAdd, pending } = useQuickAdd();
+  const adding = pending.size > 0;
 
+  // Il prossimo capitolo entra in libreria con un tocco, e si apre la sua
+  // scheda: niente modulo da riempire alla fine di un film.
   async function start() {
     if (entry.item) {
       openItem(entry.item);
       onDismiss();
       return;
     }
-    if (!tmdbApiKey) return;
-    setAdding(true);
-    try {
-      openNew(
-        await draftFromTmdb(entry.part.tmdbId, "movie", "film", tmdbApiKey, {
-          title: entry.part.title,
-          year: entry.part.year,
-          posterPath: entry.part.posterPath,
-        }),
-      );
+    const added = await quickAdd({
+      tmdbId: entry.part.tmdbId,
+      mediaType: "movie",
+      kind: "film",
+      title: entry.part.title,
+      year: entry.part.year,
+      posterPath: entry.part.posterPath,
+    });
+    if (added) {
+      openItem(added);
       onDismiss();
-    } catch {
-      pushToast("error", "Non è stato possibile leggere questo titolo da TMDB.");
     }
-    setAdding(false);
   }
 
   return createPortal(
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 16 }}
       transition={{ type: "spring", stiffness: 340, damping: 30 }}
       role="status"
-      className="fixed inset-x-3 bottom-20 z-60 mx-auto max-w-md rounded-md border bg-surface p-3.5 shadow-[var(--shadow-lg)] sm:inset-x-6 md:bottom-6 md:left-auto md:right-6"
-      style={{ borderColor: "color-mix(in srgb, var(--accent) 40%, transparent)" }}
+      className="fixed inset-x-3 bottom-20 z-60 mx-auto max-w-md rounded-lg bg-surface p-4 shadow-[var(--shadow-lg),0_0_0_1px_var(--separator)] sm:inset-x-6 lg:bottom-6 lg:left-auto lg:right-6"
     >
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs text-text-faint">
-          Hai finito <span className="font-semibold text-text-muted">{finishedTitle}</span>
+        <p className="text-xs text-text-muted">
+          {t("NextChapterPrompt.hai_finito")} <span className="font-semibold text-text">{finishedTitle}</span>
         </p>
         <button
           type="button"
           onClick={onDismiss}
-          aria-label="Chiudi il suggerimento"
+          aria-label={t("NextChapterPrompt.chiudi_il_suggerimento")}
           className="-mt-1 shrink-0 px-1 text-text-faint hover:text-text"
         >
-          ✕
+          <CloseIcon size={16} />
         </button>
       </div>
 
@@ -84,11 +79,11 @@ function Prompt({ finishedTitle, entry, onDismiss }: {
           className="w-12 shrink-0"
         />
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-text-faint">
-            Capitolo {entry.number}
+          <p className="text-xs text-text-faint">
+            {t("NextChapterPrompt.capitolo")} {entry.number}
           </p>
           <p className="truncate font-display text-sm font-semibold text-text">{entry.part.title}</p>
-          <p className="font-mono tabular text-[11px] text-text-faint">{entry.part.year ?? "in arrivo"}</p>
+          <p className="font-mono tabular text-xs text-text-faint">{entry.part.year ?? t("NextChapterPrompt.in_arrivo")}</p>
         </div>
       </div>
 
@@ -96,13 +91,12 @@ function Prompt({ finishedTitle, entry, onDismiss }: {
         type="button"
         onClick={start}
         disabled={adding}
-        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-sm py-2.5 text-sm font-semibold disabled:opacity-60"
-        style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+        className="btn btn-primary mt-3 w-full"
       >
         <PlayIcon size={14} />
-        {entry.item ? "Continua con il prossimo capitolo" : "Aggiungi il prossimo capitolo"}
+        {entry.item ? t("NextChapterPrompt.continua_con_il_prossimo") : t("NextChapterPrompt.aggiungi_il_prossimo_capitolo")}
       </button>
-    </motion.div>,
+    </m.div>,
     document.body,
   );
 }

@@ -1,4 +1,5 @@
 import type { WatchStatus, LifetimeStats } from '../types';
+import { durable, type DurableKey } from '../../lib/durable';
 
 export const HISTORY_KEY = 'ppv:watch-history';
 const STATS_KEY = 'ppv:lifetime-stats';
@@ -50,7 +51,19 @@ function localDay(at = new Date()): string {
   return `${y}-${m}-${d}`;
 }
 
+/**
+ * I punti di ripresa e i minuti per giorno crescono con l'uso, quindi stanno
+ * con la libreria su IndexedDB (lib/durable); il resto di questo file — i
+ * totali e la maratona — sono pochi byte e restano in localStorage.
+ */
+const DURABLE_OF: Record<string, DurableKey> = { [HISTORY_KEY]: 'playback', [DAILY_KEY]: 'daily' };
+
 function readJson<T>(key: string, fallback: T): T {
+  const durableKey = DURABLE_OF[key];
+  if (durableKey) {
+    const stored = durable.read(durableKey);
+    return stored && !stored.corrupt && stored.value != null ? (stored.value as T) : fallback;
+  }
   try {
     const raw = localStorage.getItem(key);
     return raw ? (JSON.parse(raw) as T) : fallback;
@@ -60,14 +73,17 @@ function readJson<T>(key: string, fallback: T): T {
 }
 
 function writeJson(key: string, value: unknown) {
+  const durableKey = DURABLE_OF[key];
+  if (durableKey) {
+    // Best-effort persistence, as before: a failure here is not worth a toast.
+    durable.write(durableKey, value);
+    return;
+  }
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch {
     // storage full or unavailable — fail silently, this is best-effort persistence
   }
-  // Production apps should also debounce-sync this to a backend (e.g. POST
-  // /api/history) so progress carries across devices — see README
-  // "Cross-device sync".
 }
 
 function getHistory(): Record<string, HistoryEntry> {
@@ -91,11 +107,6 @@ export function saveProgress(contentId: string, positionSec: number, durationSec
   };
   writeJson(HISTORY_KEY, history);
   announce();
-}
-
-/** Everything known about a resume point, or null for an untouched title. */
-export function getPlaybackEntry(contentId: string): PlaybackHistoryEntry | null {
-  return getHistory()[contentId] ?? null;
 }
 
 export function getPlaybackHistory(): Record<string, PlaybackHistoryEntry> {
@@ -140,10 +151,6 @@ export function markWatched(contentId: string) {
     stats.completedContentIds.push(contentId);
     writeJson(STATS_KEY, stats);
   }
-}
-
-export function getFullHistory(): HistoryEntry[] {
-  return Object.values(getHistory()).sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
 // ---------- Lifetime + session stats ----------
@@ -222,14 +229,6 @@ export function incrementPauseCount() {
   const stats = getLifetimeStats();
   stats.totalPauseCount += 1;
   writeJson(STATS_KEY, stats);
-}
-
-export function markSeriesCompleted(seriesId: string) {
-  const stats = getLifetimeStats();
-  if (!stats.completedSeriesIds.includes(seriesId)) {
-    stats.completedSeriesIds.push(seriesId);
-    writeJson(STATS_KEY, stats);
-  }
 }
 
 export function markMarathonCompleted() {

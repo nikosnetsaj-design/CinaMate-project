@@ -3,11 +3,16 @@ import { useSettings } from "../store/useSettings";
 import { CatalogNote } from "./NeedsCatalog";
 import { useWatchSession } from "../store/useWatchSession";
 import { getWatchProviders, providerLogoUrl, type TmdbWatchInfo, type TmdbWatchProvider } from "../lib/tmdb";
+import { useServices } from "../store/useServices";
+import { countryLabel } from "../lib/palate";
+import { ErrorState } from "./ErrorState";
 import { serviceLinkFor } from "../lib/deepLinks";
 import { useLinkHosts } from "../store/useLinkHosts";
 import { useWebViewer } from "../store/useWebViewer";
 import { buildQuery, effectiveUrl, hostLabel, searchUrlsFor } from "../lib/linkHost";
 import type { Item } from "../types";
+import { ChevronRightIcon, ExternalIcon, LinkIcon, PlayIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 function linkLabel(url: string): string {
   try {
@@ -16,8 +21,6 @@ function linkLabel(url: string): string {
     return url;
   }
 }
-
-const CHIP = "rounded-full px-2.5 py-1 text-xs";
 
 /**
  * L'icona del servizio, grande abbastanza da riconoscerla senza leggerla.
@@ -40,7 +43,7 @@ function ProviderTile({ provider, title, onOpen }: { provider: TmdbWatchProvider
   );
 
   const shell =
-    "block h-14 w-14 shrink-0 overflow-hidden rounded-[14px] border border-border-strong bg-surface-2 transition-transform";
+    "block h-14 w-14 shrink-0 overflow-hidden rounded-[14px] border bg-surface-2 transition-transform";
 
   return link ? (
     <a
@@ -48,13 +51,13 @@ function ProviderTile({ provider, title, onOpen }: { provider: TmdbWatchProvider
       onClick={onOpen}
       target="_blank"
       rel="noopener noreferrer"
-      title={`Apri ${title} su ${link.service}`}
+      title={t("WatchAndLinks.apri_su", { v0: title, v1: link.service })}
       className={`${shell} hover:scale-105`}
     >
       {face}
     </a>
   ) : (
-    <span className={shell} title={`${provider.name} — cercalo dal servizio`}>
+    <span className={shell} title={t("WatchAndLinks.cercalo_dal_servizio", { v0: provider.name })}>
       {face}
     </span>
   );
@@ -75,7 +78,7 @@ function ProviderGroup({
   if (providers.length === 0) return null;
   return (
     <div>
-      <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "var(--accent-text)" }}>
+      <span className="mb-1.5 block text-xs font-medium text-text-muted">
         {label}
       </span>
       <div className="flex flex-wrap gap-2">
@@ -98,7 +101,7 @@ const EMPTY_WATCH: TmdbWatchInfo = { streaming: [], free: [], rent: [], buy: [],
  */
 export function WatchProvidersBlock({ item }: { item: Item }) {
   return (
-    <div className="mt-4 rounded-md border border-border bg-surface-2 p-4">
+    <div className="mt-4 rounded-lg bg-surface-2 p-4">
       <WatchProviders item={item} />
     </div>
   );
@@ -114,6 +117,8 @@ function WatchProviders({ item }: { item: Item }) {
   };
   const [state, setState] = useState<"idle" | "busy" | "error" | "done">("idle");
   const [watch, setWatch] = useState<TmdbWatchInfo>(EMPTY_WATCH);
+  const [attempt, setAttempt] = useState(0);
+  const region = useServices((s) => s.region);
   const link = watch.link;
 
   useEffect(() => {
@@ -124,7 +129,8 @@ function WatchProviders({ item }: { item: Item }) {
       .then((res) => {
         if (cancelled) return;
         setWatch(res);
-        setState("done");
+        // Liste vuote perché TMDB non ha risposto non vogliono dire «da nessuna parte».
+        setState(res.unavailable ? "error" : "done");
       })
       .catch(() => {
         if (!cancelled) setState("error");
@@ -132,7 +138,7 @@ function WatchProviders({ item }: { item: Item }) {
     return () => {
       cancelled = true;
     };
-  }, [item.tmdbId, item.tmdbMediaType, tmdbApiKey]);
+  }, [item.tmdbId, item.tmdbMediaType, tmdbApiKey, region, attempt]);
 
   const linked = Boolean(item.tmdbId && item.tmdbMediaType);
   const providers = [...watch.streaming, ...watch.free, ...watch.rent, ...watch.buy];
@@ -158,28 +164,28 @@ function WatchProviders({ item }: { item: Item }) {
       {/* Titolo pieno e non maiuscoletto grigio: è una domanda che si fa a voce
           alta — «dove lo guardo?» — e merita lo stesso peso di «Regia e
           troupe» o «Dati finanziari», che le stanno sotto. */}
-      <h3 className="mb-2.5 font-display text-lg font-semibold text-text">Dove guardarlo</h3>
-      {linked && !tmdbApiKey && <CatalogNote what="Dove danno un titolo lo sa TMDB." />}
+      <h2 className="mb-2.5 font-display text-lg font-semibold text-text">{t("WatchAndLinks.dove_guardarlo")}</h2>
+      {linked && !tmdbApiKey && <CatalogNote what={t("WatchAndLinks.dove_danno_un_titolo")} />}
       {linked && tmdbApiKey && state === "busy" && (
         <div className="flex items-center gap-2 text-xs text-text-faint">
           <span className="spinner h-3.5 w-3.5 rounded-full border-2" style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }} />
-          Verifico su TMDB…
+          {t("WatchAndLinks.verifico_su_tmdb")}
         </div>
       )}
       {/* «Non disponibile» sembrava dire che il film non c'è. La cosa che
           manca è la nostra informazione, non il titolo. */}
       {linked && tmdbApiKey && state === "error" && (
-        <p className="text-xs text-text-faint">Non so dove danno questo titolo.</p>
+        <ErrorState compact title={t("WatchAndLinks.non_so_dove_danno")} description={t("WatchAndLinks.tmdb_non_ha_risposto")} onRetry={() => setAttempt((n) => n + 1)} />
       )}
       {linked && tmdbApiKey && state === "done" && providers.length === 0 && (
-        <p className="text-xs text-text-faint">Non risulta disponibile in Italia al momento.</p>
+        <p className="text-xs text-text-faint">{t("WatchAndLinks.non_risulta_disponibile_in")} {countryLabel(region)} {t("WatchAndLinks.al_momento")}</p>
       )}
       {linked && tmdbApiKey && state === "done" && providers.length > 0 && (
         <div className="flex flex-col gap-3">
-          <ProviderGroup label="Streaming" providers={watch.streaming} title={item.title} onOpen={() => startWatching(item.id)} />
-          <ProviderGroup label="Gratis" providers={watch.free} title={item.title} onOpen={() => startWatching(item.id)} />
-          <ProviderGroup label="Noleggia" providers={watch.rent} title={item.title} onOpen={() => startWatching(item.id)} />
-          <ProviderGroup label="Acquista" providers={watch.buy} title={item.title} onOpen={() => startWatching(item.id)} />
+          <ProviderGroup label={t("WatchAndLinks.streaming")} providers={watch.streaming} title={item.title} onOpen={() => startWatching(item.id)} />
+          <ProviderGroup label={t("WatchAndLinks.gratis")} providers={watch.free} title={item.title} onOpen={() => startWatching(item.id)} />
+          <ProviderGroup label={t("WatchAndLinks.noleggia")} providers={watch.rent} title={item.title} onOpen={() => startWatching(item.id)} />
+          <ProviderGroup label={t("WatchAndLinks.acquista")} providers={watch.buy} title={item.title} onOpen={() => startWatching(item.id)} />
         </div>
       )}
 
@@ -189,11 +195,11 @@ function WatchProviders({ item }: { item: Item }) {
           onClick={() => startWatching(item.id)}
           target="_blank"
           rel="noopener noreferrer"
-          title={`Apri ${item.title} su ${own.service}`}
-          className={`${CHIP} mt-1.5 inline-block border border-border-strong font-medium hover:bg-surface-hover`}
-          style={{ color: "var(--accent-text)" }}
+          title={t("WatchAndLinks.apri_su", { v0: item.title, v1: own.service })}
+          className="chip mt-1.5 text-accent-text"
         >
-          Apri su {own.service} ↗
+          {t("WatchAndLinks.apri_su_2")} {own.service}
+          <ExternalIcon size={12} />
         </a>
       )}
 
@@ -204,7 +210,7 @@ function WatchProviders({ item }: { item: Item }) {
         che non c'è è peggio che spiegare quello che si fa davvero.
       */}
       {(showOwn || openable.some((p) => p.link)) && (
-        <p className="mt-1.5 text-xs text-text-faint">Si apre la ricerca del servizio, già scritta. Su telefono apre l'app, se ce l'hai.</p>
+        <p className="mt-1.5 text-xs text-text-faint">{t("WatchAndLinks.si_apre_la_ricerca")}</p>
       )}
 
       {linked && tmdbApiKey && state === "done" && providers.length > 0 && link && (
@@ -213,10 +219,11 @@ function WatchProviders({ item }: { item: Item }) {
           onClick={() => startWatching(item.id)}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-1.5 inline-block text-xs underline-offset-2 hover:underline"
+          className="mt-1.5 inline-flex items-center gap-0.5 text-xs underline-offset-2 hover:underline"
           style={{ color: "var(--accent-text)" }}
         >
-          Vedi tutte le opzioni su JustWatch →
+          {t("WatchAndLinks.vedi_tutte_le_opzioni")}
+          <ChevronRightIcon size={14} />
         </a>
       )}
     </div>
@@ -241,8 +248,8 @@ function LinkHostSearch({ item }: { item: Item }) {
 
   return (
     <div>
-      <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">
-        Cerca sui tuoi siti
+      <span className="mb-2 block text-xs font-medium text-text-faint">
+        {t("WatchAndLinks.cerca_sui_tuoi_siti")}
       </span>
       <div className="flex flex-wrap gap-1.5">
         {enabled.map((host) => {
@@ -257,18 +264,16 @@ function LinkHostSearch({ item }: { item: Item }) {
                 openViewer(url, { itemId: item.id, title: item.title });
               }}
               title={url}
-              className={`${CHIP} border border-border-strong font-medium hover:bg-surface-hover`}
-              style={{ color: "var(--accent-text)" }}
+              className="chip text-accent-text"
             >
-              {hostLabel(effectiveUrl(host))} ⧉
+              {hostLabel(effectiveUrl(host))}
             </button>
           );
         })}
       </div>
       <p className="mt-1.5 text-xs text-text-faint">
-        Si apre il Web Viewer con la ricerca già scritta:{" "}
-        <span className="font-mono">{buildQuery(item, enabled[0].recipe)}</span>. Script, pop-up e
-        cambi di pagina restano bloccati.
+        {t("WatchAndLinks.si_apre_il_web")}{" "}
+        <span className="font-mono">{buildQuery(item, enabled[0].recipe)}</span>{t("WatchAndLinks.script_pop_up_e")}
       </p>
     </div>
   );
@@ -282,7 +287,7 @@ export function WatchAndLinks({ item }: { item: Item }) {
   if (!item.tmdbId && !item.trailerUrl && !hasLinks && !hasPlatformLink && !hasLinkHosts) return null;
 
   return (
-    <div className="mt-4 flex flex-col gap-3.5 rounded-md border border-border bg-surface-2 p-4">
+    <div className="mt-4 flex flex-col gap-3.5 rounded-lg bg-surface-2 p-4">
       <WatchProviders item={item} />
       <LinkHostSearch item={item} />
       {(item.trailerUrl || hasLinks) && (
@@ -292,9 +297,10 @@ export function WatchAndLinks({ item }: { item: Item }) {
               href={item.trailerUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-full border border-border-strong px-3 py-1.5 text-xs font-medium text-text hover:bg-surface-hover"
+              className="chip gap-1.5"
             >
-              ▶ Trailer
+              <PlayIcon size={12} />
+              {t("WatchAndLinks.trailer")}
             </a>
           )}
           {item.links.map((l) => (
@@ -304,9 +310,10 @@ export function WatchAndLinks({ item }: { item: Item }) {
               onClick={() => startWatching(item.id)}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-full border border-border-strong px-3 py-1.5 text-xs font-medium text-text hover:bg-surface-hover"
+              className="chip gap-1.5"
             >
-              🔗 {linkLabel(l)}
+              <LinkIcon size={13} />
+              {linkLabel(l)}
             </a>
           ))}
         </div>

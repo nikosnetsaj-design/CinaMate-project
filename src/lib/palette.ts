@@ -1,22 +1,26 @@
 /**
- * Fallback poster art for titles with no TMDB image. Every pair is mixed from
- * the same three Technicolor dyes as the interface — magenta, cyan, yellow —
- * over the aubergine base, so a shelf of unlinked titles still reads as one
- * family instead of a bag of random jewel tones.
+ * Fallback poster art for titles with no TMDB image.
+ *
+ * Erano dodici gradienti di magenta, viola e ciano su fondo melanzana — i tre
+ * colori della vecchia identità — e su uno scaffale senza copertine facevano
+ * la cosa più accesa dello schermo, nella combinazione di colori più abusata
+ * delle interfacce di oggi. Ora sono toni di terra e d'inchiostro, spenti e
+ * scuri: brace, ocra, salvia, ardesia, vinaccia, ottone. Uno scaffale di titoli
+ * senza copertina resta una famiglia, e il titolo bianco sopra si legge sempre.
  */
 const PALETTES: [string, string][] = [
-  ["#2B1030", "#8E1F63"],
-  ["#241436", "#5B2F9E"],
-  ["#101F33", "#1F5F8E"],
-  ["#0E2A2E", "#1E7A80"],
-  ["#2E1226", "#B3247A"],
-  ["#1A1A34", "#443C9E"],
-  ["#301A12", "#A85A2A"],
-  ["#122A26", "#26806A"],
-  ["#33122A", "#96206B"],
-  ["#1C1030", "#6B2FA0"],
-  ["#0F2436", "#2A6E9E"],
-  ["#2A1436", "#7A2F8E"],
+  ["#1d1612", "#6b3a26"],
+  ["#1b1a14", "#6b5a2e"],
+  ["#141a16", "#3f5a45"],
+  ["#12171d", "#34506a"],
+  ["#1e1416", "#6a3038"],
+  ["#181616", "#4d4640"],
+  ["#1c1712", "#7a4a2a"],
+  ["#131a1b", "#2f5859"],
+  ["#1d1518", "#5a3a4a"],
+  ["#171914", "#4f5a38"],
+  ["#16161b", "#40415a"],
+  ["#1e1912", "#7d6036"],
 ];
 
 function hashOf(s: string): number {

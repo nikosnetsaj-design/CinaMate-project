@@ -1,14 +1,14 @@
-import { StrictMode } from "react";
+import { StrictMode, startTransition } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
-import "@fontsource-variable/bricolage-grotesque";
+import "@fontsource-variable/newsreader/opsz.css";
 import "@fontsource-variable/instrument-sans";
 import "@fontsource/ibm-plex-mono/400.css";
 import "@fontsource/ibm-plex-mono/500.css";
 import "@fontsource/ibm-plex-mono/600.css";
 import "./index.css";
-import App from "./App.tsx";
 import { installGlobalErrorCapture } from "./lib/errorLog";
+import { durable } from "./lib/durable";
 import { registerServiceWorker } from "./lib/serviceWorker";
 import { purgeExpired } from "./lib/persistentCache";
 
@@ -34,11 +34,48 @@ if (typeof requestIdleCallback === "function") {
   setTimeout(() => void purgeExpired(), 5_000);
 }
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    {/* Router paths must sit under the same base the assets are served from. */}
-    <BrowserRouter basename={import.meta.env.BASE_URL}>
-      <App />
-    </BrowserRouter>
-  </StrictMode>,
-);
+function isFirstRun(): boolean {
+  try {
+    if (localStorage.getItem("cinemate:onboarded:v1")) return false;
+    const library = durable.read("library");
+    return !library || library.corrupt || !Array.isArray(library.value) || library.value.length === 0;
+  } catch {
+    return false;
+  }
+}
+
+/*
+ * Prima il disco, poi l'app.
+ *
+ * La libreria, il diario e le posizioni del lettore stanno su IndexedDB, che
+ * risponde in modo asincrono; gli store dell'app invece leggono in modo
+ * sincrono quando i loro moduli vengono importati. Quindi l'app si importa
+ * *dopo* che la copia in memoria è pronta — una manciata di millisecondi — e
+ * da lì in avanti nessuno store si accorge del cambio. Il pezzo dell'app viene
+ * scaricato in parallelo (vedi il plugin in vite.config.ts): si aspetta il
+ * disco, non la rete.
+ */
+async function start() {
+  await durable.hydrate();
+  // Al primo avvio la prima cosa sullo schermo è il benvenuto: il suo pezzo
+  // parte insieme a quello dell'app invece di aspettare che l'app disegni.
+  if (isFirstRun()) void import("./components/Onboarding");
+  const { default: App } = await import("./App.tsx");
+  const root = createRoot(document.getElementById("root")!);
+  // Il primo render come transizione: React lo spezza in fette da pochi
+  // millisecondi e lascia respirare il browser fra l'una e l'altra, invece di
+  // tenere occupato il thread per tutto il tempo che serve a montare l'app.
+  // Sullo schermo c'è già l'ossatura (o il benvenuto) di index.html.
+  startTransition(() => {
+    root.render(
+      <StrictMode>
+        {/* Router paths must sit under the same base the assets are served from. */}
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
+          <App />
+        </BrowserRouter>
+      </StrictMode>,
+    );
+  });
+}
+
+void start();

@@ -1,4 +1,6 @@
 import { formatClock } from '../clock';
+import { CloseIcon } from './Icons';
+import { t } from "../../lib/i18n";
 
 type Props = {
   /** Second the player jumped to. */
@@ -23,13 +25,13 @@ export default function ResumeBar({ positionSec, onRestart, onDismiss }: Props) 
   return (
     <div className="pv-resume-bar" role="status">
       <span className="pv-resume-text">
-        Ripreso da <span className="pv-mono">{formatClock(positionSec)}</span>
+        {t("player_ResumeBar.ripreso_da")} <span className="pv-num">{formatClock(positionSec)}</span>
       </span>
       <button type="button" className="pv-resume-action" onClick={onRestart}>
-        Ricomincia da capo
+        {t("player_ResumeBar.ricomincia_da_capo")}
       </button>
-      <button type="button" className="pv-icon-btn pv-resume-close" aria-label="Chiudi" onClick={onDismiss}>
-        ✕
+      <button type="button" className="pv-icon-btn pv-resume-close" aria-label={t("player_ResumeBar.chiudi")} onClick={onDismiss}>
+        <CloseIcon />
       </button>
     </div>
   );

@@ -7,6 +7,7 @@ import { EmptyState } from "../components/EmptyState";
 import { GoalsPanel } from "../components/GoalsPanel";
 import { ProfileHeader, ProfileSummary } from "./Profile";
 import { AchievementsTab, DiaryTab, TasteTab } from "./Stats";
+import { intlLocale, t } from "../lib/i18n";
 
 /**
  * Tu — una sola pagina per una sola domanda.
@@ -35,10 +36,10 @@ import { AchievementsTab, DiaryTab, TasteTab } from "./Stats";
 type Tab = "riepilogo" | "diario" | "gusti" | "traguardi";
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "riepilogo", label: "Riepilogo" },
-  { id: "diario", label: "Diario" },
-  { id: "gusti", label: "Gusti" },
-  { id: "traguardi", label: "Traguardi" },
+  { id: "riepilogo", label: t("tabs.you.summary") },
+  { id: "diario", label: t("tabs.you.diary") },
+  { id: "gusti", label: t("tabs.you.taste") },
+  { id: "traguardi", label: t("tabs.you.goals") },
 ];
 
 export function Tu() {
@@ -49,30 +50,29 @@ export function Tu() {
   const openItem = useSelectedItem((s) => s.open);
   const [tab, setTab] = useState<Tab>("riepilogo");
 
-  const today = new Intl.DateTimeFormat("it-IT", {
+  const today = new Intl.DateTimeFormat(intlLocale(), {
     weekday: "long",
     day: "numeric",
     month: "long",
   }).format(new Date());
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6 sm:px-6 sm:py-10">
-      <div>
-        <p className="t-label text-text-faint">
-          {greeting()} · <span className="capitalize">{today}</span>
-        </p>
-      </div>
+    <div className="mx-auto flex max-w-3xl flex-col gap-6 px-[var(--gutter)] py-6 sm:py-10">
+      <p className="text-sm text-text-muted">
+        {greeting()} · {today}
+      </p>
 
       <ProfileHeader />
 
       {!ready ? null : items.length === 0 ? (
         <EmptyState
-          title="Il diario comincia col primo voto."
-          description="Aggiungi un titolo e segnalo come visto: ore, generi e traguardi si riempiono da soli."
+          title={t("Tu.il_diario_comincia_col")}
+          description={t("Tu.aggiungi_un_titolo_e")}
         />
       ) : (
         <>
-          <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-border" role="tablist" aria-label="Sezioni del profilo">
+          {/* Gli stessi segmenti di Cerca e Scopri. */}
+          <div className="shelf gap-2" role="tablist" aria-label={t("Tu.sezioni_del_profilo")}>
             {TABS.map((t) => (
               <button
                 key={t.id}
@@ -80,10 +80,7 @@ export function Tu() {
                 role="tab"
                 aria-selected={tab === t.id}
                 onClick={() => setTab(t.id)}
-                className={`-mb-px shrink-0 rounded-t-sm border-b-2 px-3.5 py-2 text-sm font-medium transition-colors ${
-                  tab === t.id ? "text-text" : "border-transparent text-text-faint hover:text-text-muted"
-                }`}
-                style={tab === t.id ? { borderColor: "var(--accent)" } : undefined}
+                className="chip"
               >
                 {t.label}
               </button>
@@ -94,7 +91,7 @@ export function Tu() {
           {tab === "diario" && <DiaryTab items={items} openItem={openItem} />}
           {tab === "gusti" && <TasteTab items={items} openItem={openItem} />}
           {tab === "traguardi" && (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-10">
               <AchievementsTab items={items} />
               <GoalsPanel items={items} />
             </div>

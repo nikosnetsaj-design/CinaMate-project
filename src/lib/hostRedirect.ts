@@ -1,5 +1,6 @@
 import { normalizeSite, withProtocol } from "./linkHost";
 import { resolveName } from "./doh";
+import { t } from "./i18n";
 
 /**
  * Seguire un host che ha cambiato indirizzo.
@@ -196,23 +197,23 @@ export async function findMirrors(address: string, signal?: AbortSignal): Promis
 }
 
 export const REDIRECT_LABEL: Record<RedirectStatus, string> = {
-  invariato: "Risponde dal suo indirizzo",
-  traslocato: "Ha traslocato",
-  "raggiungibile-ma-opaco": "Risponde, ma non si lascia leggere da qui",
-  "nome-non-risolto": "Il nome non esiste",
-  "risolve-ma-muto": "Il nome esiste, il server non risponde",
-  "non-raggiungibile": "Non risponde",
+  invariato: t("hostRedirect.risponde_dal_suo_indirizzo"),
+  traslocato: t("hostRedirect.ha_traslocato"),
+  "raggiungibile-ma-opaco": t("hostRedirect.risponde_ma_non_si"),
+  "nome-non-risolto": t("hostRedirect.il_nome_non_esiste"),
+  "risolve-ma-muto": t("hostRedirect.il_nome_esiste_il"),
+  "non-raggiungibile": t("hostRedirect.non_risponde"),
 };
 
 export const REDIRECT_HINT: Record<RedirectStatus, string> = {
-  invariato: "L'indirizzo salvato è ancora quello giusto.",
-  traslocato: "Il vecchio indirizzo rimanda altrove. Puoi accettare il nuovo o lasciare com'è.",
+  invariato: t("hostRedirect.l_indirizzo_salvato_e"),
+  traslocato: t("hostRedirect.il_vecchio_indirizzo_rimanda"),
   "raggiungibile-ma-opaco":
-    "Qualcosa a quell'indirizzo c'è, ma non manda gli header CORS: da una pagina web non si può sapere dove porta. Aprilo nel Web Viewer per vederlo con i tuoi occhi — e se anche lì resta bianco, è un sito che rifiuta di essere incorniciato: lì serve «Pagina letta», che a sua volta ha bisogno di un lettore di pagine (Impostazioni → Indirizzi delle tue sorgenti).",
+    t("hostRedirect.qualcosa_a_quell_indirizzo"),
   "nome-non-risolto":
-    "Anche un resolver pubblico dice che quel nome non esiste. Non è il tuo DNS e non è un blocco: o è scritto male, o il dominio è stato dismesso. Prova a cercarne uno alternativo.",
+    t("hostRedirect.anche_un_resolver_pubblico"),
   "risolve-ma-muto":
-    "Il nome si traduce in un indirizzo, ma da qui non risponde nessuno. Il dominio c'è; il server dietro è spento, sovraccarico, o non accetta questa connessione.",
+    t("hostRedirect.il_nome_si_traduce"),
   "non-raggiungibile":
-    "Nessuna risposta, e non sono riuscito nemmeno a chiedere a un resolver pubblico che ne fosse del nome. Di solito è la rete di questo dispositivo.",
+    t("hostRedirect.nessuna_risposta_e_non"),
 };

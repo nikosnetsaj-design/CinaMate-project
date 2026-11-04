@@ -3,6 +3,8 @@ import Hls from 'hls.js';
 import type { QualityLevel, AudioTrack, MediaContent, NetworkQuality } from '../types';
 import { getPlaybackPrefs, normaliseLang, setPlaybackPrefs } from '../services/playbackPrefs';
 import { describeFailure, type PlayerFailure } from '../services/playerErrors';
+import { getTitleTracks, rememberTitleTracks } from '../services/titleTracks';
+import { t } from "../../lib/i18n";
 
 export type VideoPlayerOptions = {
   dataSaverMode?: boolean;
@@ -138,6 +140,9 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
   // `onEnded` navigate to *that* title's next episode. Reading through a ref
   // that is refreshed on every render keeps them current.
   const optionsRef = useRef(options);
+  // Per ricordare la traccia audio sul titolo giusto quando la scegli.
+  const contentIdRef = useRef(content?.id);
+  contentIdRef.current = content?.id;
   optionsRef.current = options;
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -215,17 +220,18 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
           );
           if (hls.audioTracks?.length) {
             setAudioTracks(
-              hls.audioTracks.map((t, i) => ({
+              hls.audioTracks.map((track, i) => ({
                 id: String(i),
-                language: t.lang || 'und',
-                label: t.name || t.lang || `Traccia ${i + 1}`,
+                language: track.lang || 'und',
+                label: track.name || track.lang || t("player_useVideoPlayer.traccia", { v0: i + 1 }),
               }))
             );
 
             // The dub you always pick, picked for you. Without this, a series
             // whose tracks happen to start on the original language makes you
             // reopen the menu at the top of every single episode.
-            const wanted = normaliseLang(getPlaybackPrefs().audioLang);
+            // Prima la scelta fatta su questo titolo, poi quella generale.
+            const wanted = normaliseLang(getTitleTracks(c.id).audioLang ?? getPlaybackPrefs().audioLang);
             if (wanted) {
               const match = hls.audioTracks.findIndex((t) => normaliseLang(t.lang) === wanted);
               if (match >= 0 && match !== hls.audioTrack) hls.audioTrack = match;
@@ -284,8 +290,8 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
         if (options.startAtSec) v.currentTime = options.startAtSec;
       } else {
         setFailure({
-          message: 'Questo browser non sa riprodurre flussi adattivi.',
-          hint: 'Serve il supporto a Media Source Extensions. Aggiorna il browser, oppure aprilo in Chrome, Firefox o Safari recenti.',
+          message: t("player_useVideoPlayer.questo_browser_non_sa"),
+          hint: t("player_useVideoPlayer.serve_il_supporto_a"),
           transient: false,
         });
       }
@@ -506,7 +512,10 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
     // Remembered by language rather than by index: track 2 is a different dub
     // on every title, but "italiano" is the same answer everywhere.
     const lang = hls.audioTracks?.[id]?.lang;
-    if (lang) setPlaybackPrefs({ audioLang: normaliseLang(lang) });
+    if (lang) {
+      setPlaybackPrefs({ audioLang: normaliseLang(lang) });
+      rememberTitleTracks(contentIdRef.current, { audioLang: normaliseLang(lang) });
+    }
   }, []);
   const setDataSaver = useCallback((enabled: boolean) => {
     if (hlsRef.current) applyLevelCap(hlsRef.current, getPlaybackPrefs().maxHeight, enabled);
@@ -529,21 +538,33 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
   // fullscreen on iOS hands over to the OS player rather than blowing up our
   // own shell; that is the only fullscreen iOS offers.
   // ---------------------------------------------------------------------
-  const togglePiP = useCallback(async () => {
+  /**
+   * Torna com'è andata, invece di ingoiare tutto.
+   *
+   * Il `catch` muto era il difetto: l'immagine nell'immagine ha bisogno di un
+   * video che stia già suonando — su un elemento senza sorgente il browser
+   * rifiuta — e chi premeva vedeva un pulsante che non fa niente, senza sapere
+   * se fosse rotto lui o il telefono. Chi chiama può dirlo.
+   */
+  const togglePiP = useCallback(async (): Promise<'ok' | 'non-supportato' | 'non-ora'> => {
     const video = videoRef.current as WebkitVideoElement | null;
-    if (!video) return;
+    if (!video) return 'non-ora';
     try {
       if (document.pictureInPictureEnabled) {
         if (document.pictureInPictureElement) await document.exitPictureInPicture();
         else await video.requestPictureInPicture();
-        return;
+        return 'ok';
       }
       if (video.webkitSupportsPresentationMode?.('picture-in-picture')) {
         const next = video.webkitPresentationMode === 'picture-in-picture' ? 'inline' : 'picture-in-picture';
         video.webkitSetPresentationMode?.(next);
+        return 'ok';
       }
+      return 'non-supportato';
     } catch {
-      // Blocked (no user gesture, or the OS refused) — the button stays put.
+      // Rifiutata: quasi sempre perché non c'è ancora niente da riprodurre —
+      // `readyState` a zero — oppure perché il gesto non è stato riconosciuto.
+      return video.readyState === 0 ? 'non-ora' : 'non-supportato';
     }
   }, []);
 
@@ -613,10 +634,16 @@ export function useVideoPlayer(content: MediaContent | null, options: VideoPlaye
   }, [inPageFullscreen]);
 
   /** Whether this browser can do it at all, so the UI can hide what it can't. */
+  // Come per lo schermo intero: si guardano il documento e il *prototipo*, non
+  // un elemento vivo. `videoRef.current` al primo render è ancora `null`, e un
+  // ref non fa ridisegnare niente: il pulsante poteva mancare all'apertura e
+  // comparire dopo, senza che nulla lo spiegasse.
   const pipSupported =
     typeof document !== 'undefined' &&
-    (document.pictureInPictureEnabled ||
-      !!(videoRef.current as WebkitVideoElement | null)?.webkitSupportsPresentationMode);
+    (!!document.pictureInPictureEnabled ||
+      (typeof HTMLVideoElement !== 'undefined' &&
+        typeof (HTMLVideoElement.prototype as WebkitVideoElement).webkitSupportsPresentationMode ===
+          'function'));
   // Sempre: quando l'API vera non c'è, lo schermo pieno lo fa la scena da sé.
   // Prima si guardava `videoRef.current`, che al primo render è ancora `null` —
   // e un ref non fa ridisegnare niente, quindi su un telefono il pulsante
@@ -700,5 +727,5 @@ function labelForHeight(h: number, bitrate: number): string {
   if (h >= 720) return '720p';
   if (h >= 480) return '480p';
   if (h > 0) return `${h}p`;
-  return bitrate > 0 ? `${Math.round(bitrate / 1000)} kbps` : 'Unica';
+  return bitrate > 0 ? `${Math.round(bitrate / 1000)} kbps` : t("player_useVideoPlayer.unica");
 }

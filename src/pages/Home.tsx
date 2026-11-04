@@ -1,13 +1,12 @@
 import { Fragment, useMemo } from "react";
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useAddSheet } from "../store/useAddSheet";
 import { useHomeLayout, type HomeSectionId } from "../store/useHomeLayout";
-import { StatCard } from "../components/StatCard";
+import { FigureBand } from "../components/Figures";
 import { PosterCard } from "../components/PosterCard";
 import { EmptyState } from "../components/EmptyState";
-import { PosterGridSkeleton, StatCardSkeleton } from "../components/Skeletons";
+import { PosterGridSkeleton } from "../components/Skeletons";
 import { UpcomingRow } from "../components/UpcomingRow";
 import { CatalogStrip } from "../components/NeedsCatalog";
 import { Nastro } from "../components/Nastro";
@@ -15,6 +14,7 @@ import { MarathonCard } from "../components/MarathonCard";
 import { ContinueSagaRow } from "../components/ContinueSagaRow";
 import { ContinueWatchingRow } from "../components/ContinueWatchingRow";
 import { PosterRow } from "../components/PosterRow";
+import { RowHeader } from "../components/RowHeader";
 import { Billboard } from "../components/Billboard";
 import { BrowseChips } from "../components/TopBar";
 import { becauseYouWatched, forYou, mostWatched, recentlyAdded } from "../lib/recommend";
@@ -25,6 +25,7 @@ import { useLibrary } from "../store/useLibrary";
 import { computeStats } from "../lib/stats";
 import { useAppReady } from "../lib/useAppReady";
 import { useVisibleItems } from "../lib/useVisibleItems";
+import { t } from "../lib/i18n";
 
 export function Home() {
   const ready = useAppReady();
@@ -77,12 +78,17 @@ export function Home() {
     maratona: <MarathonCard />,
 
     statistiche: (
-      <section aria-label="Le tue statistiche" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="in libreria" value={String(stats.total)} />
-        <StatCard label="voto medio" value={stats.avgVote != null ? stats.avgVote.toFixed(1) : "—"} />
-        <StatCard label={`${stats.days} giorni`} value={`${stats.hours}h`} />
-        <StatCard label="preferiti" value={String(stats.favs)} />
-      </section>
+      <FigureBand
+        label={t("Home.le_tue_statistiche")}
+        cols={2}
+        smCols={4}
+        figures={[
+          { value: stats.total, label: t("Home.in_libreria") },
+          { value: stats.avgVote != null ? stats.avgVote.toFixed(1) : "—", label: t("Home.voto_medio") },
+          { value: `${stats.hours} h`, label: t("Home.giorni", { v0: stats.days }) },
+          { value: stats.favs, label: t("Home.preferiti") },
+        ]}
+      />
     ),
 
     // Was a vertical list of series with an episode counter. It is now driven
@@ -96,9 +102,9 @@ export function Home() {
 
     perTe: (
       <PosterRow
-        title="Per te"
+        title={t("Home.per_te")}
         entries={suggestions}
-        note="Dai voti che hai già dato: ogni titolo dice perché è qui."
+        note={t("Home.dai_voti_che_hai")}
         badges={badges}
       />
     ),
@@ -107,7 +113,7 @@ export function Home() {
     // ripetono la loro motivazione: sarebbe la stessa frase otto volte.
     perche: because ? (
       <PosterRow
-        title={`Perché hai guardato ${because.seed.title}`}
+        title={t("Home.perche_hai_guardato", { v0: because.seed.title })}
         entries={because.entries}
         badges={badges}
       />
@@ -115,29 +121,19 @@ export function Home() {
 
     preferiti:
       favs.length > 0 ? (
-        <PosterRow title="I tuoi preferiti" entries={favs.map((item) => ({ item }))} count={favs.length} badges={badges} />
+        <PosterRow title={t("Home.i_tuoi_preferiti")} entries={favs.map((item) => ({ item }))} count={favs.length} badges={badges} />
       ) : null,
 
-    piuVisti: <PosterRow title="Più visti" entries={watchedMost} badges={badges} />,
+    piuVisti: <PosterRow title={t("Home.piu_visti")} entries={watchedMost} badges={badges} />,
 
     ultimiAggiunti: (
-      <PosterRow title="Ultimi aggiunti" entries={latest.map((item) => ({ item }))} moreHref="/libreria" badges={badges} />
+      <PosterRow title={t("Home.ultimi_aggiunti")} entries={latest.map((item) => ({ item }))} moreHref="/libreria" badges={badges} />
     ),
 
     watchlist:
       planned.length > 0 ? (
-        <section className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <h2 className="section-mark font-display text-xl font-semibold text-text">
-              Watchlist{" "}
-              <span className="text-sm font-normal text-text-faint">
-                · {items.filter((i) => i.status === "Da vedere").length}
-              </span>
-            </h2>
-            <Link to="/libreria" className="text-sm font-medium text-accent-text">
-              tutti
-            </Link>
-          </div>
+        <section className="flex flex-col gap-4">
+          <RowHeader title={t("Home.da_vedere")} count={items.filter((i) => i.status === "Da vedere").length} to="/libreria" />
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {planned.map((item) => (
               <PosterCard key={item.id} item={item} onOpen={openItem} badge={badges[item.id]} />
@@ -164,33 +160,32 @@ export function Home() {
      * principale travestita da didascalia — ed è sceso dentro la vetrina,
      * accanto a Riproduci.
      */
-    <div className="mx-auto flex max-w-6xl flex-col gap-9 px-4 py-6 sm:px-6 sm:py-10">
+    <div className="mx-auto flex max-w-6xl flex-col gap-10 px-[var(--gutter)] py-6 sm:gap-12 sm:py-10">
+      {/* Il titolo della pagina per chi la legge con un lettore di schermo:
+          a vista lo dice la barra, e la pagina comincia dalla vetrina. */}
+      <h1 className="sr-only">{t("nav.home")}</h1>
       {/* L'unico invito che parte da solo, e si può chiudere per sempre. */}
       <CatalogStrip />
 
       {!ready ? (
         <>
-          <section aria-label="Le tue statistiche" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <StatCardSkeleton key={i} />
-            ))}
-          </section>
+          {/* La forma della Home che arriva: la vetrina, poi una riga. */}
+          <div aria-hidden="true" className="skeleton aspect-4/5 max-h-[68vh] w-full rounded-lg sm:aspect-video lg:aspect-[21/9]" />
           <PosterGridSkeleton count={4} />
         </>
       ) : items.length === 0 ? (
         /* Chi arriva qui ha attraversato o saltato il primo avvio: la scatola
            vuota non è più il primo schermo dell'app, è una scelta fatta. */
         <EmptyState
-          title="Lo scaffale è tuo da riempire."
-          description="Cerca un film o una serie che hai visto: copertina, trama, cast e durata arrivano da soli."
+          title={t("Home.lo_scaffale_e_tuo")}
+          description={t("Home.cerca_un_film_o")}
           action={
             <button
               type="button"
               onClick={() => openAddSheet()}
-              className="rounded-sm px-4 py-2 text-sm font-medium"
-              style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+              className="btn btn-primary"
             >
-              Aggiungi il primo titolo
+              {t("Home.aggiungi_il_primo_titolo")}
             </button>
           }
         />

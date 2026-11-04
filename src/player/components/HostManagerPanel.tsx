@@ -10,62 +10,69 @@ import type {
   HostSpeedSample,
 } from '../types';
 import { getHostHistory } from '../services/hostStore';
+import { StarIcon } from '../../components/icons';
+import { t } from "../../lib/i18n";
 
 type Props = {
   hostMonitor: ReturnType<typeof useHostMonitor>;
 };
 
 const INTERVAL_OPTIONS: { value: MonitorIntervalMs; label: string }[] = [
-  { value: 60_000, label: 'Ogni 1 minuto' },
-  { value: 300_000, label: 'Ogni 5 minuti' },
-  { value: 600_000, label: 'Ogni 10 minuti' },
-  { value: 1_800_000, label: 'Ogni 30 minuti' },
-  { value: 3_600_000, label: 'Ogni 1 ora' },
+  { value: 60_000, label: t("player_HostManagerPanel.ogni_1_minuto") },
+  { value: 300_000, label: t("player_HostManagerPanel.ogni_5_minuti") },
+  { value: 600_000, label: t("player_HostManagerPanel.ogni_10_minuti") },
+  { value: 1_800_000, label: t("player_HostManagerPanel.ogni_30_minuti") },
+  { value: 3_600_000, label: t("player_HostManagerPanel.ogni_1_ora") },
 ];
 
 const TIMEOUT_OPTIONS = [3000, 5000, 8000, 15000];
 
 const ROLE_LABEL: Record<StreamHost['role'], string> = {
-  primary: '⭐ Principale',
-  secondary: '⭐ Secondario',
-  backup: '⭐ Backup',
+  primary: t("player_HostManagerPanel.principale"),
+  secondary: t("player_HostManagerPanel.secondario"),
+  backup: 'Backup',
 };
 
-const STATUS_DOT: Record<HostStatus, string> = { online: '🟢', slow: '🟠', offline: '🔴', unknown: '⚪' };
-const STATUS_LABEL: Record<HostStatus, string> = { online: 'Online', slow: 'Lento', offline: 'Offline', unknown: 'Sconosciuto' };
+/* Lo stato di un host in un punto colorato, non in un'emoji: le emoji tonde
+   cambiano colore e misura da un telefono all'altro, e «sconosciuto» era un
+   cerchio bianco che sul fondo scuro sembrava una luce accesa. */
+function StatusDot({ status }: { status: HostStatus }) {
+  return <span className={`pv-dot pv-dot--${status}`} aria-hidden="true" />;
+}
+const STATUS_LABEL: Record<HostStatus, string> = { online: 'Online', slow: t("player_HostManagerPanel.lento"), offline: 'Offline', unknown: t("player_HostManagerPanel.sconosciuto") };
 const REASON_LABEL: Record<HostSwitchReason, string> = {
   offline: 'host offline',
-  high_ping: 'ping troppo alto',
+  high_ping: t("player_HostManagerPanel.ping_troppo_alto"),
   timeout: 'timeout',
-  http_error: 'errore HTTP',
-  manual: 'cambio manuale',
-  recovered_to_primary: 'ritorno al principale',
-  auto_ranked: 'priorità automatica',
-  load_balanced: 'bilanciamento del carico',
+  http_error: t("player_HostManagerPanel.errore_http"),
+  manual: t("player_HostManagerPanel.cambio_manuale"),
+  recovered_to_primary: t("player_HostManagerPanel.ritorno_al_principale"),
+  auto_ranked: t("player_HostManagerPanel.priorita_automatica"),
+  load_balanced: t("player_HostManagerPanel.bilanciamento_del_carico"),
 };
 
 const MODE_OPTIONS: { value: HostSelectionMode; label: string; hint: string }[] = [
   {
     value: 'priority',
-    label: 'Priorità manuale',
-    hint: 'Usa il primo host disponibile nell’ordine che hai dato tu, e torna al principale appena si riprende.',
+    label: t("player_HostManagerPanel.priorita_manuale"),
+    hint: t("player_HostManagerPanel.usa_il_primo_host"),
   },
   {
     value: 'auto',
-    label: 'Priorità automatica',
-    hint: 'Sceglie da sé l’host col punteggio più alto: affidabilità 50%, velocità 30%, ping 20%.',
+    label: t("player_HostManagerPanel.priorita_automatica_2"),
+    hint: t("player_HostManagerPanel.sceglie_da_se_l"),
   },
   {
     value: 'balanced',
-    label: 'Bilanciamento del carico',
-    hint: 'Distribuisce le sessioni fra gli host sani, con più peso a quelli che vanno meglio. Cambia solo fra un titolo e l’altro, mai a metà film.',
+    label: t("player_HostManagerPanel.bilanciamento_del_carico_2"),
+    hint: t("player_HostManagerPanel.distribuisce_le_sessioni_fra"),
   },
 ];
 
 const SPEED_NOTE: Record<NonNullable<HostSpeedSample['note']>, string> = {
-  sample_too_small: 'campione troppo piccolo per misurare la banda',
-  unreachable: 'host non raggiungibile',
-  no_body: 'risposta senza corpo da misurare',
+  sample_too_small: t("player_HostManagerPanel.campione_troppo_piccolo_per"),
+  unreachable: t("player_HostManagerPanel.host_non_raggiungibile"),
+  no_body: t("player_HostManagerPanel.risposta_senza_corpo_da"),
 };
 
 function formatBytes(bytes: number): string {
@@ -80,7 +87,7 @@ function speedVerdict(mbps: number): string {
   if (mbps >= 8) return '1080p';
   if (mbps >= 5) return '720p';
   if (mbps >= 2) return '480p';
-  return 'sotto i 480p';
+  return t("player_HostManagerPanel.sotto_i_480p");
 }
 
 function pingToStars(pingMs: number | null): number {
@@ -103,10 +110,10 @@ function timeAgo(ts: number | null | undefined): string {
   if (!ts) return '—';
   const diffSec = Math.max(0, Math.round((Date.now() - ts) / 1000));
   if (diffSec < 5) return 'adesso';
-  if (diffSec < 60) return `${diffSec} secondi fa`;
-  if (diffSec < 3600) return `${Math.round(diffSec / 60)} minuti fa`;
-  if (diffSec < 86400) return `${Math.round(diffSec / 3600)} ore fa`;
-  return `${Math.round(diffSec / 86400)} giorni fa`;
+  if (diffSec < 60) return t("player_HostManagerPanel.secondi_fa", { v0: diffSec });
+  if (diffSec < 3600) return t("player_HostManagerPanel.minuti_fa", { v0: Math.round(diffSec / 60) });
+  if (diffSec < 86400) return t("player_HostManagerPanel.ore_fa", { v0: Math.round(diffSec / 3600) });
+  return t("player_HostManagerPanel.giorni_fa", { v0: Math.round(diffSec / 86400) });
 }
 
 function formatUptimeDuration(ms: number | null): string {
@@ -194,49 +201,52 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
   return (
     <div className="pv-panel pv-hostmanager">
       <div className="pv-panel-header">
-        <h3>Gestione Host</h3>
+        <h3>{t("player_HostManagerPanel.gestione_host")}</h3>
       </div>
 
       {activeHost && (
         <div className="pv-host-active-card">
-          <span className="pv-host-active-label">Host Attivo</span>
+          <span className="pv-host-active-label">{t("player_HostManagerPanel.host_attivo")}</span>
           <div className="pv-host-active-name">
-            {STATUS_DOT[activeResult?.status ?? 'unknown']} {activeHost.name}
+            <StatusDot status={activeResult?.status ?? "unknown"} /> {activeHost.name}
           </div>
           <div className="pv-host-active-metrics">
-            <span>Ping: {activeResult?.pingMs ?? '—'} ms</span>
-            <span>Uptime: {(activeStats?.uptimePercent ?? 0).toFixed(2)}%</span>
+            <span>{t("player_HostManagerPanel.ping")} {activeResult?.pingMs ?? '—'} {t("player_HostManagerPanel.ms")}</span>
+            <span>{t("player_HostManagerPanel.uptime")} {(activeStats?.uptimePercent ?? 0).toFixed(2)}%</span>
           </div>
           <div className="pv-host-active-metrics">
-            <span>Tempo online: {formatUptimeDuration(activeStats?.currentUptimeMs ?? null)}</span>
-            <span>Ultimo controllo: {timeAgo(activeResult?.checkedAt)}</span>
+            <span>{t("player_HostManagerPanel.tempo_online")} {formatUptimeDuration(activeStats?.currentUptimeMs ?? null)}</span>
+            <span>{t("player_HostManagerPanel.ultimo_controllo")} {timeAgo(activeResult?.checkedAt)}</span>
           </div>
           <div className="pv-host-active-metrics">
             <span>
-              Velocità:{' '}
+              {t("player_HostManagerPanel.velocita")}{' '}
               {activeStats?.avgSpeedMbps != null
-                ? `${activeStats.avgSpeedMbps.toFixed(1)} Mbps`
-                : 'non misurata'}
+                ? t("player_HostManagerPanel.mbps", { v0: activeStats.avgSpeedMbps.toFixed(1) })
+                : t("player_HostManagerPanel.non_misurata")}
             </span>
-            <span>Punteggio: {activeStats ? `${activeStats.score}/100` : '—'}</span>
+            <span>{t("player_HostManagerPanel.punteggio")} {activeStats ? `${activeStats.score}/100` : '—'}</span>
           </div>
-          <div className="pv-host-stars" aria-label={`Velocità: ${activeStars} su 5`}>
-            {'★'.repeat(activeStars)}
-            <span className="pv-host-stars-dim">{'★'.repeat(5 - activeStars)}</span>
+          <div className="pv-host-stars" aria-label={t("player_HostManagerPanel.velocita_su_5", { v0: activeStars })}>
+            {Array.from({ length: 5 }, (_, i) => (
+              <span key={i} className={i < activeStars ? undefined : 'pv-host-stars-dim'}>
+                <StarIcon size={12} filled />
+              </span>
+            ))}
           </div>
-          <div className={`pv-host-status-chip pv-host-status-chip--${activeResult?.status ?? 'unknown'}`}>
-            {STATUS_DOT[activeResult?.status ?? 'unknown']} {STATUS_LABEL[activeResult?.status ?? 'unknown']}
+          <div className={`pv-host-status-chip pv-host-status-chip--${activeResult?.status ?? "unknown"}`}>
+            <StatusDot status={activeResult?.status ?? "unknown"} /> {STATUS_LABEL[activeResult?.status ?? "unknown"]}
           </div>
         </div>
       )}
 
-      <div className="pv-host-modes" role="group" aria-label="Come scegliere l’host">
+      <div className="pv-host-modes" role="group" aria-label={t("player_HostManagerPanel.come_scegliere_l_host")}>
         {MODE_OPTIONS.map(mode => (
           <button
             key={mode.value}
             type="button"
             aria-pressed={selectionMode === mode.value}
-            className={`pv-host-mode ${selectionMode === mode.value ? 'active' : ''}`}
+            className={`pv-host-mode ${selectionMode === mode.value ? "active" : ''}`}
             onClick={() => setSelectionMode(mode.value)}
           >
             {mode.label}
@@ -249,31 +259,31 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
 
       <div className="pv-host-toolbar">
         <button onClick={() => testAll(true)} disabled={isTesting}>
-          {isTesting ? 'Test in corso…' : 'Testa tutti (parallelo)'}
+          {isTesting ? t("player_HostManagerPanel.test_in_corso") : t("player_HostManagerPanel.testa_tutti_parallelo")}
         </button>
-        <button onClick={() => testAll(false)} disabled={isTesting}>Testa in sequenza</button>
+        <button onClick={() => testAll(false)} disabled={isTesting}>{t("player_HostManagerPanel.testa_in_sequenza")}</button>
         <button onClick={runAllSpeedTests} disabled={speedTestingId !== null || hosts.length === 0}>
-          {speedTestingId === '*' ? 'Misuro la velocità…' : 'Test velocità'}
+          {speedTestingId === '*' ? t("player_HostManagerPanel.misuro_la_velocita") : t("player_HostManagerPanel.test_velocita")}
         </button>
         <label className="pv-host-setting">
-          Timeout
+          {t("player_HostManagerPanel.timeout")}
           <select value={timeoutMs} onChange={e => setTimeoutMs(Number(e.target.value))}>
             {TIMEOUT_OPTIONS.map(t => <option key={t} value={t}>{t / 1000}s</option>)}
           </select>
         </label>
         <label className="pv-host-setting">
-          Controllo
+          {t("player_HostManagerPanel.controllo")}
           <select value={monitorIntervalMs} onChange={e => setMonitorIntervalMs(Number(e.target.value) as MonitorIntervalMs)}>
             {INTERVAL_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </label>
         <label className="pv-host-setting">
-          Soglia ping lento
+          {t("player_HostManagerPanel.soglia_ping_lento")}
           <select value={pingThresholdMs} onChange={e => setPingThresholdMs(Number(e.target.value))}>
-            <option value={150}>150 ms</option>
-            <option value={300}>300 ms</option>
-            <option value={500}>500 ms</option>
-            <option value={1000}>1000 ms</option>
+            <option value={150}>{t("player_HostManagerPanel.150_ms")}</option>
+            <option value={300}>{t("player_HostManagerPanel.300_ms")}</option>
+            <option value={500}>{t("player_HostManagerPanel.500_ms")}</option>
+            <option value={1000}>{t("player_HostManagerPanel.1000_ms")}</option>
           </select>
         </label>
       </div>
@@ -281,11 +291,7 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
       <div className="pv-host-list">
         {orderedHosts.length === 0 && (
           <p className="pv-empty">
-            Nessun host configurato. Un host che aggiungi qui è anche un indirizzo dove cercare i
-            titoli: come le caselle in Impostazioni, viene provato quando premi Guarda, e vale anche
-            il solo indirizzo del server. In più, se lo stesso contenuto è servito da più origini
-            identiche (lo stesso percorso su ogni mirror), la riproduzione passa all'host successivo
-            quando il primo non risponde.
+            {t("player_HostManagerPanel.nessun_host_configurato_un")}
           </p>
         )}
         {orderedHosts.map(host => {
@@ -306,56 +312,56 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
               onDrop={() => handleDrop(host.id)}
               onDragEnd={() => setDragId(null)}
             >
-              <div className="pv-host-drag-handle" title="Trascina per riordinare la priorità" aria-hidden>⠿⠿</div>
+              <div className="pv-host-drag-handle" title={t("player_HostManagerPanel.trascina_per_riordinare_la")} aria-hidden>⠿⠿</div>
 
               <div className="pv-host-row-main">
                 {isEditing && editDraft ? (
                   <div className="pv-host-edit-form">
-                    <input value={editDraft.name} onChange={e => setEditDraft({ ...editDraft, name: e.target.value })} placeholder="Nome host" />
+                    <input value={editDraft.name} onChange={e => setEditDraft({ ...editDraft, name: e.target.value })} placeholder={t("player_HostManagerPanel.nome_host")} />
                     <input value={editDraft.url} onChange={e => setEditDraft({ ...editDraft, url: e.target.value })} placeholder="https://..." />
                     <select value={editDraft.role} onChange={e => setEditDraft({ ...editDraft, role: e.target.value as StreamHost['role'] })}>
-                      <option value="primary">Principale</option>
-                      <option value="secondary">Secondario</option>
-                      <option value="backup">Backup</option>
+                      <option value="primary">{t("player_HostManagerPanel.principale")}</option>
+                      <option value="secondary">{t("player_HostManagerPanel.secondario")}</option>
+                      <option value="backup">{t("player_HostManagerPanel.backup")}</option>
                     </select>
                     <input
                       value={editDraft.speedTestPath}
                       onChange={e => setEditDraft({ ...editDraft, speedTestPath: e.target.value })}
-                      placeholder="Percorso per il test velocità (facoltativo)"
-                      aria-label="Percorso per il test velocità"
+                      placeholder={t("player_HostManagerPanel.percorso_per_il_test")}
+                      aria-label={t("player_HostManagerPanel.percorso_per_il_test_2")}
                     />
                     <div className="pv-host-edit-actions">
-                      <button onClick={() => saveEdit(host.id)}>Salva</button>
-                      <button className="pv-btn-secondary" onClick={() => setEditingId(null)}>Annulla</button>
+                      <button onClick={() => saveEdit(host.id)}>{t("player_HostManagerPanel.salva")}</button>
+                      <button className="pv-btn-secondary" onClick={() => setEditingId(null)}>{t("player_HostManagerPanel.annulla")}</button>
                     </div>
                   </div>
                 ) : (
                   <>
                     <div className="pv-host-row-title">
-                      <span>{STATUS_DOT[result?.status ?? 'unknown']}</span>
+                      <StatusDot status={result?.status ?? "unknown"} />
                       <span className="pv-host-row-name">{host.name}</span>
                       <span className="pv-host-role-badge">{ROLE_LABEL[host.role]}</span>
-                      {isActive && <span className="pv-badge pv-badge-active">Attivo</span>}
+                      {isActive && <span className="pv-badge pv-badge-active">{t("player_HostManagerPanel.attivo")}</span>}
                     </div>
 
                     <div className="pv-host-ping-bar">
-                      <div className={`pv-host-ping-fill pv-host-ping-fill--${result?.status ?? 'unknown'}`} style={{ width: `${pingBarPercent(result?.pingMs ?? null)}%` }} />
-                      <span className="pv-host-ping-label">{result?.pingMs ?? '—'} ms</span>
+                      <div className={`pv-host-ping-fill pv-host-ping-fill--${result?.status ?? "unknown"}`} style={{ width: `${pingBarPercent(result?.pingMs ?? null)}%` }} />
+                      <span className="pv-host-ping-label">{result?.pingMs ?? '—'} {t("player_HostManagerPanel.ms")}</span>
                     </div>
 
                     <div className="pv-host-row-meta">
-                      <span>Risposta: {result?.responseTimeMs ?? '—'} ms</span>
-                      <span>Ultimo controllo: {timeAgo(result?.checkedAt)}</span>
-                      <span>Tempo online: {formatUptimeDuration(hostStats?.currentUptimeMs ?? null)}</span>
-                      <span>SSL: {result?.sslOk === true ? 'valido' : result?.sslOk === false ? 'non verificabile' : '—'}</span>
-                      <span>API: {result?.apiVersion ?? '—'}</span>
-                      <span>Affidabilità 30gg: {hostStats ? `${hostStats.reliability30d}%` : '—'}</span>
-                      <span>Punteggio: {hostStats ? `${hostStats.score}/100` : '—'}</span>
+                      <span>{t("player_HostManagerPanel.risposta")} {result?.responseTimeMs ?? '—'} {t("player_HostManagerPanel.ms")}</span>
+                      <span>{t("player_HostManagerPanel.ultimo_controllo")} {timeAgo(result?.checkedAt)}</span>
+                      <span>{t("player_HostManagerPanel.tempo_online")} {formatUptimeDuration(hostStats?.currentUptimeMs ?? null)}</span>
+                      <span>{t("player_HostManagerPanel.ssl")} {result?.sslOk === true ? t("player_HostManagerPanel.valido") : result?.sslOk === false ? t("player_HostManagerPanel.non_verificabile") : '—'}</span>
+                      <span>{t("player_HostManagerPanel.api")} {result?.apiVersion ?? '—'}</span>
+                      <span>{t("player_HostManagerPanel.affidabilita_30gg")} {hostStats ? `${hostStats.reliability30d}%` : '—'}</span>
+                      <span>{t("player_HostManagerPanel.punteggio")} {hostStats ? `${hostStats.score}/100` : '—'}</span>
                       <span>
-                        Velocità:{' '}
+                        {t("player_HostManagerPanel.velocita")}{' '}
                         {hostStats?.avgSpeedMbps != null
-                          ? `${hostStats.avgSpeedMbps.toFixed(1)} Mbps · ${speedVerdict(hostStats.avgSpeedMbps)}`
-                          : 'non misurata'}
+                          ? t("player_HostManagerPanel.mbps_2", { v0: hostStats.avgSpeedMbps.toFixed(1), v1: speedVerdict(hostStats.avgSpeedMbps) })
+                          : t("player_HostManagerPanel.non_misurata")}
                       </span>
                     </div>
                     <div className="pv-host-row-url">{host.url}</div>
@@ -365,12 +371,11 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
                         behind it, which only whoever runs the server can supply. */}
                     {speedSample && speedSample.mbps === null && speedSample.note && (
                       <p className="pv-host-speed-note">
-                        Test velocità: {SPEED_NOTE[speedSample.note]}
+                        {t("player_HostManagerPanel.test_velocita_2")} {SPEED_NOTE[speedSample.note]}
                         {speedSample.note === 'sample_too_small' && (
                           <>
-                            {' '}({formatBytes(speedSample.sampleBytes)} scaricati). Indica in
-                            «Modifica» un percorso con un file grande — un segmento{' '}
-                            <span className="pv-mono">.ts</span> va benissimo.
+                            {' '}({formatBytes(speedSample.sampleBytes)} {t("player_HostManagerPanel.scaricati_indica_in_modifica")}{' '}
+                            <span className="pv-mono">{t("player_HostManagerPanel.ts")}</span> {t("player_HostManagerPanel.va_benissimo")}
                           </>
                         )}
                       </p>
@@ -380,12 +385,12 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
                       <div className="pv-host-test-history">
                         {getHostHistory(host.id, 5).map((r, i) => (
                           <div key={i} className="pv-host-test-history-row">
-                            <span>{STATUS_DOT[r.status]}</span>
+                            <StatusDot status={r.status} />
                             <span>{timeAgo(r.checkedAt)}</span>
-                            <span>{r.pingMs ?? '—'} ms</span>
+                            <span>{r.pingMs ?? '—'} {t("player_HostManagerPanel.ms")}</span>
                           </div>
                         ))}
-                        {getHostHistory(host.id, 5).length === 0 && <span className="pv-empty">Nessun test ancora.</span>}
+                        {getHostHistory(host.id, 5).length === 0 && <span className="pv-empty">{t("player_HostManagerPanel.nessun_test_ancora")}</span>}
                       </div>
                     )}
                   </>
@@ -394,18 +399,18 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
 
               {!isEditing && (
                 <div className="pv-host-row-actions">
-                  <button className="pv-btn-tiny" onClick={() => testHost(host.id)} disabled={isTesting}>Test</button>
+                  <button className="pv-btn-tiny" onClick={() => testHost(host.id)} disabled={isTesting}>{t("player_HostManagerPanel.test")}</button>
                   <button
                     className="pv-btn-tiny"
                     onClick={() => runSpeedTest(host.id)}
                     disabled={speedTestingId !== null}
                   >
-                    {speedTestingId === host.id ? 'Misuro…' : 'Velocità'}
+                    {speedTestingId === host.id ? t("player_HostManagerPanel.misuro") : t("player_HostManagerPanel.velocita_2")}
                   </button>
-                  {!isActive && <button className="pv-btn-tiny" onClick={() => switchManually(host.id)}>Usa</button>}
-                  <button className="pv-btn-tiny" onClick={() => setHistoryOpenId(historyOpen ? null : host.id)}>Cronologia</button>
-                  <button className="pv-btn-tiny" onClick={() => startEdit(host)}>Modifica</button>
-                  <button className="pv-btn-tiny pv-host-remove" onClick={() => removeHost(host.id)}>Rimuovi</button>
+                  {!isActive && <button className="pv-btn-tiny" onClick={() => switchManually(host.id)}>{t("player_HostManagerPanel.usa")}</button>}
+                  <button className="pv-btn-tiny" onClick={() => setHistoryOpenId(historyOpen ? null : host.id)}>{t("player_HostManagerPanel.cronologia")}</button>
+                  <button className="pv-btn-tiny" onClick={() => startEdit(host)}>{t("player_HostManagerPanel.modifica")}</button>
+                  <button className="pv-btn-tiny pv-host-remove" onClick={() => removeHost(host.id)}>{t("player_HostManagerPanel.rimuovi")}</button>
                 </div>
               )}
             </div>
@@ -415,36 +420,34 @@ export default function HostManagerPanel({ hostMonitor }: Props) {
 
       {showAddForm ? (
         <form className="pv-host-add-form" onSubmit={handleAddSubmit}>
-          <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nome host" required />
+          <input value={newName} onChange={e => setNewName(e.target.value)} placeholder={t("player_HostManagerPanel.nome_host")} required />
           <input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder="https://cdn.esempio.com" required />
           <select value={newRole} onChange={e => setNewRole(e.target.value as StreamHost['role'])}>
-            <option value="primary">Principale</option>
-            <option value="secondary">Secondario</option>
-            <option value="backup">Backup</option>
+            <option value="primary">{t("player_HostManagerPanel.principale")}</option>
+            <option value="secondary">{t("player_HostManagerPanel.secondario")}</option>
+            <option value="backup">{t("player_HostManagerPanel.backup")}</option>
           </select>
           <input
             value={newSpeedPath}
             onChange={e => setNewSpeedPath(e.target.value)}
-            placeholder="Percorso per il test velocità (facoltativo)"
-            aria-label="Percorso per il test velocità"
+            placeholder={t("player_HostManagerPanel.percorso_per_il_test")}
+            aria-label={t("player_HostManagerPanel.percorso_per_il_test_2")}
           />
           <p className="pv-empty">
-            Il test velocità scarica da questo percorso per misurare la banda. Senza, prova la
-            radice del server: se quello che risponde è una paginetta di poche righe, il test lo
-            dice invece di spacciare la latenza per banda.
+            {t("player_HostManagerPanel.il_test_velocita_scarica")}
           </p>
           <div className="pv-host-edit-actions">
-            <button type="submit">Aggiungi</button>
-            <button type="button" className="pv-btn-secondary" onClick={() => setShowAddForm(false)}>Annulla</button>
+            <button type="submit">{t("player_HostManagerPanel.aggiungi")}</button>
+            <button type="button" className="pv-btn-secondary" onClick={() => setShowAddForm(false)}>{t("player_HostManagerPanel.annulla")}</button>
           </div>
         </form>
       ) : (
-        <button className="pv-host-add-toggle" onClick={() => setShowAddForm(true)}>+ Aggiungi host</button>
+        <button className="pv-host-add-toggle" onClick={() => setShowAddForm(true)}>{t("player_HostManagerPanel.aggiungi_host")}</button>
       )}
 
       <div className="pv-host-history-log">
-        <h4>Cronologia cambi host</h4>
-        {switchLog.length === 0 && <p className="pv-empty">Nessun cambio host registrato.</p>}
+        <h4>{t("player_HostManagerPanel.cronologia_cambi_host")}</h4>
+        {switchLog.length === 0 && <p className="pv-empty">{t("player_HostManagerPanel.nessun_cambio_host_registrato")}</p>}
         {switchLog.map(ev => (
           <div key={ev.id} className="pv-host-history-row">
             <span>{new Date(ev.at).toLocaleString('it-IT')}</span>

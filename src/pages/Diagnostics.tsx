@@ -3,24 +3,26 @@ import { useLibrary } from "../store/useLibrary";
 import { useSettings } from "../store/useSettings";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { usePlayerSources } from "../store/usePlayerSources";
-import { StatCard } from "../components/StatCard";
+import { FigureBand } from "../components/Figures";
 import { EmptyState } from "../components/EmptyState";
 import { clearErrorLog, getErrorLog, subscribeErrorLog, type LoggedError, type ErrorScope } from "../lib/errorLog";
 import { runSelfTests, type TestResult, type TestStatus } from "../lib/selfTest";
 import { getHosts, computeHostStats, getSwitchLog } from "../player/services/hostStore";
+import { CONFIRM_AFTER_DAYS, CONFIRM_AFTER_LAUNCHES, durable, type Backend, type StorageStatus } from "../lib/durable";
+import { intlLocale, t } from "../lib/i18n";
 
 const STATUS_COLOUR: Record<TestStatus, string> = {
-  pass: "var(--status-done)",
-  warn: "var(--yellow)",
+  pass: "var(--success)",
+  warn: "var(--warning)",
   fail: "var(--danger)",
   skip: "var(--text-faint)",
 };
 
 const STATUS_LABEL: Record<TestStatus, string> = {
   pass: "OK",
-  warn: "Attenzione",
-  fail: "Errore",
-  skip: "Non attivo",
+  warn: t("Diagnostics.attenzione"),
+  fail: t("Diagnostics.errore"),
+  skip: t("Diagnostics.non_attivo"),
 };
 
 const SCOPE_LABEL: Record<ErrorScope, string> = {
@@ -28,19 +30,19 @@ const SCOPE_LABEL: Record<ErrorScope, string> = {
   tmdb: "TMDB",
   claude: "Claude",
   player: "Player",
-  storage: "Memoria",
-  rete: "Rete",
+  storage: t("Diagnostics.memoria"),
+  rete: t("Diagnostics.rete"),
 };
 
 function when(ts: number): string {
-  return new Date(ts).toLocaleString("it-IT", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  return new Date(ts).toLocaleString(intlLocale(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
 function Section({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="font-display text-xl font-semibold text-text">{title}</h2>
+        <h2 className="t-title text-text">{title}</h2>
         {action}
       </div>
       {children}
@@ -50,7 +52,7 @@ function Section({ title, children, action }: { title: string; children: React.R
 
 function TestRow({ result }: { result: TestResult }) {
   return (
-    <div className="flex items-start gap-3 rounded-md border border-border bg-surface-2 p-3.5">
+    <li className="list-row items-start">
       <span
         aria-hidden
         className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
@@ -58,49 +60,145 @@ function TestRow({ result }: { result: TestResult }) {
       />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-text">{result.label}</p>
-        <p className="mt-0.5 text-xs leading-relaxed text-text-faint">{result.detail}</p>
+        <p className="mt-0.5 text-xs text-text-muted">{result.detail}</p>
       </div>
       <span className="shrink-0 text-xs font-medium" style={{ color: STATUS_COLOUR[result.status] }}>
         {STATUS_LABEL[result.status]}
       </span>
-    </div>
+    </li>
   );
 }
 
 function HostSummary() {
   const hosts = getHosts();
   const switches = getSwitchLog(5);
-  if (hosts.length === 0) return <p className="text-sm text-text-faint">Nessun host configurato.</p>;
+  if (hosts.length === 0) return <p className="text-sm text-text-muted">{t("Diagnostics.nessun_host_configurato")}</p>;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
+      <ul className="list-group" style={{ "--row-inset": "16px" } as React.CSSProperties}>
       {[...hosts]
         .sort((a, b) => a.priority - b.priority)
         .map((host) => {
           const stats = computeHostStats(host.id);
           return (
-            <div key={host.id} className="flex items-center justify-between gap-3 rounded-md border border-border bg-surface-2 px-3.5 py-2.5">
+            <li key={host.id} className="list-row justify-between">
               <div className="min-w-0">
-                <p className="truncate text-sm text-text">{host.name}</p>
-                <p className="truncate font-mono text-[11px] text-text-faint">{host.url}</p>
+                <p className="truncate text-sm font-medium text-text">{host.name}</p>
+                <p className="truncate font-mono text-xs text-text-muted">{host.url}</p>
               </div>
               <div className="shrink-0 text-right">
-                <p className="font-mono tabular text-sm" style={{ color: "var(--accent-text)" }}>
-                  {stats.score}/100
-                </p>
-                <p className="font-mono text-[11px] text-text-faint">
-                  {stats.reliability30d}% · {stats.avgPingMs ?? "—"}ms
+                <p className="tabular text-sm font-semibold text-text">{stats.score}/100</p>
+                <p className="tabular text-xs text-text-muted">
+                  {stats.reliability30d}% · {stats.avgPingMs ?? "—"} {t("Diagnostics.ms")}
                 </p>
               </div>
-            </div>
+            </li>
           );
         })}
+      </ul>
       {switches.length > 0 && (
-        <p className="text-xs text-text-faint">
-          Ultimo cambio host: {when(switches[0].at)} ({switches.length} negli ultimi giorni).
+        <p className="text-xs text-text-muted">
+          {t("Diagnostics.ultimo_cambio_host")} {when(switches[0].at)} ({switches.length} {t("Diagnostics.negli_ultimi_giorni")}
         </p>
       )}
     </div>
+  );
+}
+
+const BACKEND_LABEL: Record<Backend, string> = {
+  idb: "IndexedDB",
+  local: "localStorage",
+  unavailable: t("Diagnostics.non_raggiungibile"),
+};
+
+const DAY_MS = 86_400_000;
+
+/**
+ * Dove stanno i dati, e la copia di sicurezza della migrazione.
+ *
+ * La copia di prima del passaggio a IndexedDB resta finché la migrazione non è
+ * confermata da sola (cinque avvii senza errori e una settimana). Qui si vede a
+ * che punto è, e si può tornare indietro — dicendo prima cosa si perde.
+ */
+function StorageSection() {
+  const [status, setStatus] = useState<StorageStatus>(() => durable.status());
+  const [confirming, setConfirming] = useState<"restore" | null>(null);
+  const [busy, setBusy] = useState(false);
+  const meta = status.meta;
+  const daysLeft = meta?.migratedAt
+    ? Math.max(0, Math.ceil(CONFIRM_AFTER_DAYS - (Date.now() - Date.parse(meta.migratedAt)) / DAY_MS))
+    : 0;
+  const launchesLeft = meta ? Math.max(0, CONFIRM_AFTER_LAUNCHES - meta.launches) : 0;
+
+  async function restore() {
+    setBusy(true);
+    const ok = await durable.restoreBackup();
+    setBusy(false);
+    setConfirming(null);
+    // Gli store hanno letto i dati all'avvio: ricaricare è il modo pulito di
+    // ripartire da quelli ripristinati.
+    if (ok) location.reload();
+  }
+
+  async function confirmNow() {
+    setBusy(true);
+    await durable.confirmNow();
+    setStatus(durable.status());
+    setBusy(false);
+  }
+
+  return (
+    <Section title={t("Diagnostics.archivio")}>
+      <ul className="list-group" style={{ "--row-inset": "16px" } as React.CSSProperties}>
+        <li className="list-row justify-between">
+          <span className="text-sm text-text">{t("Diagnostics.dove_stanno_libreria_e")}</span>
+          <span className="text-sm font-medium text-text">{BACKEND_LABEL[status.backend]}</span>
+        </li>
+        {meta?.migratedAt && (
+          <li className="list-row justify-between">
+            <span className="text-sm text-text">{t("Diagnostics.spostati_da_localstorage")}</span>
+            <span className="tabular text-sm text-text-muted">{when(Date.parse(meta.migratedAt))}</span>
+          </li>
+        )}
+        {status.backups.length > 0 && (
+          <li className="list-row flex-col items-stretch gap-1">
+            <span className="text-sm text-text">{t("Diagnostics.copia_di_prima_della")}</span>
+            <span className="text-xs text-text-muted">
+              {t("Diagnostics.si_cancella_da_sola")} {launchesLeft} {launchesLeft === 1 ? t("Diagnostics.avvio") : t("Diagnostics.avvii")}
+              {daysLeft > 0 ? t("Diagnostics.e_almeno", { v0: daysLeft, v1: daysLeft === 1 ? t("Diagnostics.giorno") : t("Diagnostics.giorni") }) : ""}{t("Diagnostics.se_tutto_va_bene")}
+            </span>
+          </li>
+        )}
+      </ul>
+      {status.reason && <p className="text-sm text-text-muted">{status.reason}</p>}
+
+      {status.backups.length > 0 &&
+        (confirming === "restore" ? (
+          <div role="alert" aria-labelledby="restore-confirm" className="rounded-md bg-surface p-4 shadow-[var(--shadow-sm)]">
+            <p id="restore-confirm" className="text-sm text-text">
+              {t("Diagnostics.torno_ai_dati_com")}
+            </p>
+            <div className="mt-3 flex justify-end gap-2">
+              <button type="button" onClick={() => setConfirming(null)} className="btn btn-secondary btn-sm">
+                {t("Diagnostics.annulla")}
+              </button>
+              <button type="button" disabled={busy} onClick={() => void restore()} className="btn btn-danger-fill btn-sm">
+                {t("Diagnostics.ripristina_la_copia")}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => setConfirming("restore")} className="btn btn-secondary btn-sm">
+              {t("Diagnostics.ripristina_la_copia")}
+            </button>
+            <button type="button" disabled={busy} onClick={() => void confirmNow()} className="btn btn-plain btn-sm">
+              {t("Diagnostics.va_tutto_bene_eliminala")}
+            </button>
+          </div>
+        ))}
+    </Section>
   );
 }
 
@@ -130,111 +228,114 @@ export function Diagnostics() {
   const withSources = Object.values(sources).filter((s) => s.manifestUrl || s.subtitles.length || s.markers.length).length;
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-6 sm:px-6 sm:py-10">
+    <div className="mx-auto flex max-w-3xl flex-col gap-10 px-[var(--gutter)] py-6 sm:py-10">
       <div>
-        <h1 className="font-display text-3xl font-semibold text-text">Diagnostica</h1>
+        <h1 className="t-display text-text">{t("page.diagnostics")}</h1>
         <p className="mt-1 text-sm text-text-muted">
-          Cosa c'è sul dispositivo e cosa sta funzionando. Nessuno di questi dati esce di qui:
-          non c'è nessun server a cui mandarli.
+          {t("Diagnostics.cosa_c_e_sul")}
         </p>
       </div>
 
-      <section aria-label="Riepilogo" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="titoli" value={String(items.length)} />
-        <StatCard label="voci di diario" value={String(history.length)} />
-        <StatCard label="con sorgente" value={String(withSources)} />
-        <StatCard label="errori registrati" value={String(errors.length)} />
-      </section>
+      <FigureBand
+        label={t("Diagnostics.riepilogo")}
+        cols={2}
+        smCols={4}
+        figures={[
+          { value: items.length, label: t("Diagnostics.titoli") },
+          { value: history.length, label: t("Diagnostics.voci_di_diario") },
+          { value: withSources, label: t("Diagnostics.con_sorgente") },
+          { value: errors.length, label: t("Diagnostics.errori_registrati") },
+        ]}
+      />
 
       <Section
-        title="Test automatici"
+        title={t("Diagnostics.test_automatici")}
         action={
           <button
             type="button"
             onClick={run}
             disabled={running}
-            className="shrink-0 rounded-sm px-3.5 py-2 text-sm font-semibold disabled:opacity-50"
-            style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+            className="btn btn-primary shrink-0"
           >
-            {running ? "Eseguo…" : tests ? "Riesegui" : "Esegui i test"}
+            {running ? t("Diagnostics.eseguo") : tests ? t("Diagnostics.riesegui") : t("Diagnostics.esegui_i_test")}
           </button>
         }
       >
         {tests === null ? (
-          <p className="text-sm text-text-faint">
-            Controlla memoria, chiavi API, host e notifiche. Alcuni test fanno una richiesta di rete
-            vera, quindi partono solo quando li chiedi tu.
+          <p className="text-sm text-text-muted">
+            {t("Diagnostics.controlla_memoria_chiavi_api")}
           </p>
         ) : (
           <>
             <p className="text-sm text-text-muted">
               {failures > 0
-                ? `${failures} ${failures === 1 ? "problema" : "problemi"} da sistemare.`
+                ? t("Diagnostics.da_sistemare", { v0: failures, v1: failures === 1 ? t("Diagnostics.problema") : t("Diagnostics.problemi") })
                 : warnings > 0
-                  ? `Tutto funziona, con ${warnings} ${warnings === 1 ? "avviso" : "avvisi"}.`
-                  : "Tutto a posto."}
+                  ? t("Diagnostics.tutto_funziona_con", { v0: warnings, v1: warnings === 1 ? t("Diagnostics.avviso") : t("Diagnostics.avvisi") })
+                  : t("Diagnostics.tutto_a_posto")}
             </p>
-            <div className="flex flex-col gap-2">
+            <ul className="list-group" style={{ "--row-inset": "36px" } as React.CSSProperties}>
               {tests.map((t) => (
                 <TestRow key={t.id} result={t} />
               ))}
-            </div>
+            </ul>
           </>
         )}
       </Section>
 
-      <Section title="Host">
+      <Section title={t("Diagnostics.host")}>
         <HostSummary />
       </Section>
 
       <Section
-        title="Log errori"
+        title={t("Diagnostics.log_errori")}
         action={
           errors.length > 0 ? (
             <button
               type="button"
               onClick={clearErrorLog}
-              className="shrink-0 rounded-sm border border-border-strong px-3 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
+              className="btn btn-secondary btn-sm shrink-0"
             >
-              Svuota
+              {t("Diagnostics.svuota")}
             </button>
           ) : undefined
         }
       >
         {errors.length === 0 ? (
           <EmptyState
-            title="Nessun errore registrato"
-            description="Quando qualcosa va storto — una chiamata a TMDB rifiutata, un host che non risponde — finisce qui invece di sparire con il messaggio a schermo."
+            title={t("Diagnostics.nessun_errore_registrato")}
+            description={t("Diagnostics.quando_qualcosa_va_storto")}
           />
         ) : (
-          <ul className="flex flex-col gap-1.5">
+          <ul className="list-group" style={{ "--row-inset": "16px" } as React.CSSProperties}>
             {[...errors].reverse().map((error: LoggedError) => (
-              <li key={error.id} className="rounded-md border border-border bg-surface-2 px-3.5 py-2.5">
+              <li key={error.id} className="list-row flex-col items-stretch gap-0">
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="text-xs font-medium" style={{ color: "var(--danger)" }}>
                     {SCOPE_LABEL[error.scope]}
                   </span>
-                  <span className="shrink-0 font-mono text-[11px] text-text-faint">{when(error.at)}</span>
+                  <span className="shrink-0 tabular text-xs text-text-muted">{when(error.at)}</span>
                 </div>
                 <p className="mt-1 break-words text-sm text-text">{error.message}</p>
-                {error.source && <p className="mt-0.5 break-all font-mono text-[11px] text-text-faint">{error.source}</p>}
+                {error.source && <p className="mt-0.5 break-all font-mono text-xs text-text-muted">{error.source}</p>}
               </li>
             ))}
           </ul>
         )}
       </Section>
 
-      <Section title="Backup">
+      <StorageSection />
+
+      <Section title={t("Diagnostics.backup")}>
         <p className="text-sm text-text-muted">
-          Esporta e importa vivono in Impostazioni, dove stanno accanto al resto dei dati locali.
-          Il file comprende libreria, diario, saghe, obiettivi, sorgenti del player e host.
+          {t("Diagnostics.esporta_e_importa_vivono")}
         </p>
         <button
           type="button"
-          onClick={() => openSettings()}
-          className="self-start rounded-sm border border-border-strong px-3.5 py-2.5 text-sm text-text hover:bg-surface-hover"
+          onClick={() => openSettings("dati")}
+          className="btn btn-secondary self-start"
         >
-          Apri Impostazioni
+          {t("Diagnostics.apri_dati_e_backup")}
         </button>
       </Section>
     </div>

@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
+import { ErrorState } from "./ErrorState";
 import { useNavigate } from "react-router-dom";
 import { useSettings } from "../store/useSettings";
 import { useSettingsSheet } from "../store/useSettingsSheet";
 import { useLibrary } from "../store/useLibrary";
 import { usePlayerSources } from "../store/usePlayerSources";
-import { getSeason, stillUrl, type TmdbEpisode, type TmdbSeasonSummary } from "../lib/tmdb";
-import { useTitleExtras } from "../lib/useTitleExtras";
+import { getSeason, stillUrl, type TmdbEpisode } from "../lib/tmdb";
 import { countdown, daysBetweenToday } from "../lib/format";
 import { prefetchHandlers } from "../lib/prefetch";
-import { PlayIcon, CheckIcon } from "./icons";
+import { CheckIcon, PlayIcon, StarIcon } from "./icons";
+import { isWatched, nextEpisode } from "../lib/episodes";
+import { useLongPress } from "../lib/useLongPress";
 import type { Item } from "../types";
+import { t } from "../lib/i18n";
 
 /**
  * Gli episodi di una stagione, con la puntata come unità invece che come
@@ -27,43 +30,32 @@ import type { Item } from "../types";
  * fissa a 1.
  */
 
-/** Riferimento stabile: senza, ogni render rifarebbe i conti sulle stagioni. */
-const NO_SEASONS: TmdbSeasonSummary[] = [];
-
 function EpisodeRow({
   episode,
   watched,
-  next,
   onPlay,
+  onToggle,
   onMarkUpTo,
 }: {
   episode: TmdbEpisode;
   watched: boolean;
-  /** La puntata a cui sei arrivato: quella che il tocco su «Riprendi» apre. */
-  next: boolean;
   onPlay: (episode: TmdbEpisode) => void;
+  onToggle: (episode: TmdbEpisode) => void;
   onMarkUpTo: (episode: TmdbEpisode) => void;
 }) {
   const still = stillUrl(episode.stillPath);
+  // Tocco: questa puntata. Pressione lunga (o Maiuscolo + clic): anche tutte
+  // quelle prima — la stessa grammatica della griglia delle stagioni.
+  const press = useLongPress(
+    () => onToggle(episode),
+    () => onMarkUpTo(episode),
+  );
   // Una puntata non ancora andata in onda non si riproduce: il pulsante
   // manderebbe il player a cercare un file che non esiste da nessuna parte.
   const unreleased = episode.airDate != null && daysBetweenToday(episode.airDate) > 0;
 
   return (
-    <li
-      className="flex items-center gap-3 rounded-md border bg-surface-2 p-2 transition-colors hover:bg-surface-hover"
-      // La riga dove sei rimasto si riconosce senza leggerla: in una stagione
-      // da ventiquattro puntate scorrere fino al segno di spunta più in basso
-      // è un lavoro che il colore fa meglio.
-      style={
-        next
-          ? {
-              borderColor: "color-mix(in srgb, var(--accent) 45%, transparent)",
-              background: "color-mix(in srgb, var(--accent) 8%, transparent)",
-            }
-          : { borderColor: "var(--border)" }
-      }
-    >
+    <li className="flex items-center gap-3 rounded-lg bg-surface-2 p-2 transition-colors hover:bg-surface-hover">
       <div className="relative aspect-video w-28 shrink-0 overflow-hidden rounded-sm bg-surface sm:w-36">
         {still ? (
           <img
@@ -85,7 +77,7 @@ function EpisodeRow({
         {watched && (
           <span
             className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded-full"
-            style={{ background: "var(--status-done)", color: "var(--accent-contrast)" }}
+            style={{ background: "var(--text)", color: "var(--bg)" }}
           >
             <CheckIcon size={12} />
           </span>
@@ -96,26 +88,21 @@ function EpisodeRow({
         <p className="text-sm font-semibold text-text">
           {episode.episodeNumber}. {episode.title}
         </p>
-        {next && (
-          <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: "var(--accent-text)" }}>
-            Sei arrivato qui
-          </p>
-        )}
 
         {episode.overview && (
           <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-text-muted">{episode.overview}</p>
         )}
 
-        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[11px] text-text-faint">
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-xs text-text-faint">
           {episode.rating != null && (
             <span className="flex items-center gap-1">
-              <span style={{ color: "var(--yellow)" }}>★</span>
+              <span className="flex" style={{ color: "var(--yellow)" }}><StarIcon size={11} filled /></span>
               <span className="font-semibold text-text">{episode.rating.toFixed(1)}</span>
             </span>
           )}
-          {episode.runtime && <span>{episode.runtime} min</span>}
+          {episode.runtime && <span>{episode.runtime} {t("EpisodeList.min")}</span>}
           {unreleased && episode.airDate && (
-            <span style={{ color: "var(--accent-text)" }}>esce {countdown(episode.airDate)}</span>
+            <span style={{ color: "var(--accent-text)" }}>{t("EpisodeList.esce")} {countdown(episode.airDate)}</span>
           )}
         </p>
       </div>
@@ -130,33 +117,24 @@ function EpisodeRow({
             type="button"
             onClick={() => onPlay(episode)}
             {...prefetchHandlers("/player")}
-            aria-label={`Riproduci episodio ${episode.episodeNumber}, ${episode.title}`}
-            title="Riproduci"
-            className="flex h-10 w-12 items-center justify-center rounded-sm border transition-transform hover:scale-105"
-            style={{
-              borderColor: "color-mix(in srgb, var(--accent) 45%, transparent)",
-              background: "color-mix(in srgb, var(--accent) 18%, transparent)",
-              color: "var(--accent-text)",
-            }}
+            aria-label={t("EpisodeList.riproduci_episodio", { v0: episode.episodeNumber, v1: episode.title })}
+            title={t("EpisodeList.riproduci")}
+            className="icon-btn icon-btn-filled text-accent-text hover:text-accent-text"
           >
             <PlayIcon size={16} />
           </button>
         )}
         <button
           type="button"
-          onClick={() => onMarkUpTo(episode)}
+          {...press}
           aria-pressed={watched}
-          aria-label={
-            watched
-              ? `Segna la serie come vista fino all'episodio ${episode.episodeNumber - 1}`
-              : `Segna la serie come vista fino all'episodio ${episode.episodeNumber}`
-          }
-          title="Segna visto fino a qui"
-          className="flex h-8 w-8 items-center justify-center rounded-full border transition-colors"
+          aria-label={t("EpisodeList.episodio_tieni_premuto_per", { v0: episode.episodeNumber, v1: watched ? ", visto" : "" })}
+          title={t("EpisodeList.tocca_per_segnarlo_tieni")}
+          className="icon-btn icon-btn-sm"
           style={
             watched
-              ? { borderColor: "var(--accent)", background: "var(--accent)", color: "var(--accent-contrast)" }
-              : { borderColor: "var(--border-strong)", color: "var(--text-faint)" }
+              ? { background: "var(--text)", color: "var(--bg)" }
+              : { background: "var(--surface)", color: "var(--text-muted)" }
           }
         >
           <CheckIcon size={15} />
@@ -169,65 +147,21 @@ function EpisodeRow({
 export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () => void }) {
   const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
   const openSettings = useSettingsSheet((s) => s.open);
-  const setEpisodesSeen = useLibrary((s) => s.setEpisodesSeen);
+  const toggleEpisode = useLibrary((s) => s.toggleEpisode);
+  const markEpisodesUpTo = useLibrary((s) => s.markEpisodesUpTo);
   const patchSource = usePlayerSources((s) => s.patch);
   const navigate = useNavigate();
-  // Le stagioni arrivano dentro la richiesta che la scheda fa comunque: nomi
-  // veri, numeri veri e quante puntate ha ciascuna, senza una chiamata in più.
-  const { extras } = useTitleExtras(item);
-  const summaries = extras?.seasons ?? NO_SEASONS;
 
   const seasons = useMemo(
-    () =>
-      summaries.length
-        ? summaries.map((s) => s.seasonNumber)
-        : // Senza l'elenco di TMDB resta il conteggio della libreria, che dà
-          // 1…N e sbaglia solo dove TMDB numera in modo suo.
-          Array.from({ length: Math.max(1, item.seasons || 1) }, (_, i) => i + 1),
-    [summaries, item.seasons],
+    () => Array.from({ length: Math.max(1, item.seasonEpisodes?.length || item.seasons || 1) }, (_, i) => i + 1),
+    [item.seasons, item.seasonEpisodes],
   );
-
-  /** Quante puntate stanno prima di ogni stagione: il conto unico della libreria. */
-  const offsets = useMemo(() => {
-    const map = new Map<number, number>();
-    let total = 0;
-    for (const s of summaries) {
-      map.set(s.seasonNumber, total);
-      total += s.episodeCount;
-    }
-    return map;
-  }, [summaries]);
-
-  const seen = item.seen || 0;
-
-  /**
-   * La stagione in cui sei rimasto.
-   *
-   * Prima si apriva sempre la prima, il che per una serie a metà del quarto
-   * anno vuol dire aprire l'elenco nel punto sbagliato ogni singola volta. Con
-   * l'elenco delle stagioni la puntata dopo l'ultima vista si trova senza
-   * scaricare niente: è una somma.
-   */
-  const resumeSeason = useMemo(() => {
-    if (!summaries.length) return seasons[0];
-    let total = 0;
-    for (const s of summaries) {
-      total += s.episodeCount;
-      if (seen < total) return s.seasonNumber;
-    }
-    // Serie finita: l'ultima stagione è comunque il posto giusto in cui essere.
-    return summaries[summaries.length - 1].seasonNumber;
-  }, [summaries, seasons, seen]);
-
-  /** `null` finché non scegli tu: così l'elenco segue «dove sei rimasto». */
-  const [chosen, setChosen] = useState<number | null>(null);
-  const season = chosen ?? resumeSeason;
-
+  // Si apre sulla stagione del prossimo episodio: è quella che si cerca.
+  const [season, setSeason] = useState(() => nextEpisode(item)?.season ?? seasons[0]);
   const [seasonMenu, setSeasonMenu] = useState(false);
   const [episodes, setEpisodes] = useState<TmdbEpisode[] | null>(null);
   const [failed, setFailed] = useState(false);
-  /** Quanti episodi stanno prima di questa stagione, per il contatore della libreria. */
-  const [offset, setOffset] = useState(0);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!tmdbApiKey || item.tmdbId == null) return;
@@ -235,25 +169,13 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
     setEpisodes(null);
     setFailed(false);
 
-    const known = offsets.get(season);
-
+    // Una stagione sola: il registro degli episodi sa già stagione per
+    // stagione cosa hai visto, quindi le precedenti non servono più a
+    // tradurre «fino a S3E4» in un totale.
     const load = async () => {
       const current = await getSeason(item.tmdbId!, season, tmdbApiKey);
       if (cancelled) return;
-      if (known != null) {
-        setEpisodes(current);
-        setOffset(known);
-        return;
-      }
-      // Senza l'elenco delle stagioni il conto si fa come si è sempre fatto:
-      // leggendo quelle precedenti. Sono richieste in cache e poche, ma vale la
-      // pena dirlo — non stiamo scaricando l'intera serie.
-      const previous = await Promise.all(
-        seasons.filter((s) => s < season).map((s) => getSeason(item.tmdbId!, s, tmdbApiKey)),
-      );
-      if (cancelled) return;
       setEpisodes(current);
-      setOffset(previous.reduce((sum, list) => sum + list.length, 0));
     };
 
     void load().catch(() => {
@@ -262,19 +184,19 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
     return () => {
       cancelled = true;
     };
-  }, [item.tmdbId, tmdbApiKey, season, seasons, offsets]);
+  }, [item.tmdbId, tmdbApiKey, season, attempt]);
 
   if (item.kind === "film" || item.kind === "doc") return null;
 
   if (!tmdbApiKey || item.tmdbId == null) {
     return (
-      <div className="rounded-md border border-dashed border-border-strong p-4 text-xs leading-relaxed text-text-faint">
+      <div className="flex flex-col items-start gap-2 rounded-md bg-surface-2 p-4 text-sm text-text-muted">
         {tmdbApiKey
-          ? "Questo titolo non è collegato a TMDB, quindi non so quali episodi abbia. Collegalo dalla scheda e l'elenco compare da solo."
-          : "Gli episodi arrivano da TMDB: serve la tua chiave."}
+          ? t("EpisodeList.questo_titolo_non_e")
+          : t("EpisodeList.titoli_trame_e_miniature")}
         {!tmdbApiKey && (
-          <button type="button" onClick={() => openSettings()} className="ml-1.5 underline underline-offset-2">
-            Aggiungila in Impostazioni
+          <button type="button" onClick={() => openSettings("chiavi")} className="btn btn-plain btn-sm -ml-3">
+            {t("EpisodeList.aggiungi_la_chiave")}
           </button>
         )}
       </div>
@@ -290,18 +212,10 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
     navigate(`/player?titolo=${encodeURIComponent(item.id)}`);
   };
 
-  const markUpTo = (episode: TmdbEpisode) => {
-    const upTo = offset + episode.episodeNumber;
-    // Ripremere sull'ultimo episodio segnato lo *toglie*: senza, l'unico modo
-    // per correggere un tocco sbagliato sarebbe la slitta del contatore.
-    setEpisodesSeen(item.id, (item.seen || 0) === upTo ? upTo - 1 : upTo);
-  };
-
-  /** La puntata dopo l'ultima vista, quando cade nella stagione mostrata. */
-  const nextEpisode =
-    season === resumeSeason ? episodes?.find((e) => e.episodeNumber === seen + 1 - offset) ?? null : null;
-  const nextIsOut = nextEpisode != null && !(nextEpisode.airDate != null && daysBetweenToday(nextEpisode.airDate) > 0);
-  const label = (n: number) => summaries.find((s) => s.seasonNumber === n)?.name || `Stagione ${n}`;
+  const toggle = (episode: TmdbEpisode) =>
+    toggleEpisode(item.id, { season: episode.seasonNumber, episode: episode.episodeNumber });
+  const markUpTo = (episode: TmdbEpisode) =>
+    markEpisodesUpTo(item.id, { season: episode.seasonNumber, episode: episode.episodeNumber });
 
   return (
     <div className="flex flex-col gap-3">
@@ -315,9 +229,9 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
             onClick={() => setSeasonMenu((v) => !v)}
             aria-expanded={seasonMenu}
             aria-haspopup="listbox"
-            className="flex items-center gap-2 rounded-sm border border-border-strong bg-surface-2 px-3.5 py-2 text-sm font-medium text-text"
+            className="btn btn-secondary"
           >
-            {label(season)}
+            {t("EpisodeList.stagione")} {season}
             <span aria-hidden="true" className="text-text-faint">
               ⌄
             </span>
@@ -327,83 +241,47 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
             <>
               <button
                 type="button"
-                aria-label="Chiudi l'elenco delle stagioni"
+                aria-label={t("EpisodeList.chiudi_l_elenco_delle")}
                 className="fixed inset-0 z-30 cursor-default"
                 onClick={() => setSeasonMenu(false)}
               />
               <ul
                 role="listbox"
-                aria-label="Stagioni"
-                className="absolute left-0 top-full z-40 mt-1 max-h-64 min-w-56 overflow-y-auto rounded-md border border-border-strong bg-surface py-1 shadow-[var(--shadow-md)]"
+                aria-label={t("EpisodeList.stagioni")}
+                className="absolute left-0 top-full z-40 mt-1 max-h-64 min-w-44 overflow-y-auto rounded-md bg-surface py-1 shadow-[var(--shadow-md),0_0_0_1px_var(--separator)]"
               >
-                {seasons.map((s) => {
-                  const count = summaries.find((sum) => sum.seasonNumber === s)?.episodeCount ?? null;
-                  return (
-                    <li key={s}>
-                      <button
-                        type="button"
-                        role="option"
-                        aria-selected={s === season}
-                        onClick={() => {
-                          setChosen(s);
-                          setSeasonMenu(false);
-                        }}
-                        className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-sm text-text hover:bg-surface-hover"
-                      >
-                        <span className="w-4 shrink-0" style={{ color: "var(--accent-text)" }}>
-                          {s === season ? "✓" : ""}
-                        </span>
-                        <span className="min-w-0 flex-1 truncate">{label(s)}</span>
-                        {count != null && (
-                          <span className="shrink-0 font-mono tabular text-[11px] text-text-faint">{count} ep</span>
-                        )}
-                      </button>
-                    </li>
-                  );
-                })}
+                {seasons.map((s) => (
+                  <li key={s}>
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={s === season}
+                      onClick={() => {
+                        setSeason(s);
+                        setSeasonMenu(false);
+                      }}
+                      className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-sm text-text hover:bg-surface-hover"
+                    >
+                      <span className="w-4 shrink-0" style={{ color: "var(--accent-text)" }}>
+                        {s === season ? <CheckIcon size={14} /> : null}
+                      </span>
+                      {t("EpisodeList.stagione")} {s}
+                    </button>
+                  </li>
+                ))}
               </ul>
             </>
           )}
         </div>
       )}
 
-      {/* «Riprendi»: la puntata dopo l'ultima vista, in cima e con il nome.
-          L'elenco la marca comunque, ma in una stagione da ventiquattro righe
-          quel segno sta sotto la piega — e la domanda con cui si apre questa
-          scheda è quasi sempre «dove ero rimasto». */}
-      {nextEpisode && nextIsOut && (
-        <button
-          type="button"
-          onClick={() => playEpisode(nextEpisode)}
-          {...prefetchHandlers("/player")}
-          aria-label={`Riprendi da stagione ${nextEpisode.seasonNumber} episodio ${nextEpisode.episodeNumber}, ${nextEpisode.title}`}
-          className="flex items-center gap-3 rounded-md border py-2.5 pl-3 pr-3.5 text-left"
-          style={{
-            borderColor: "color-mix(in srgb, var(--accent) 40%, transparent)",
-            background: "color-mix(in srgb, var(--accent) 10%, transparent)",
-          }}
-        >
-          <span
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-            style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
-          >
-            <PlayIcon size={16} />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-[11px] uppercase tracking-[0.16em] text-text-faint">
-              {seen === 0 ? "Comincia da" : "Riprendi da"}
-            </span>
-            <span className="block truncate text-sm font-semibold text-text">
-              S{nextEpisode.seasonNumber}E{nextEpisode.episodeNumber} · {nextEpisode.title}
-            </span>
-          </span>
-        </button>
-      )}
-
       {failed ? (
-        <p className="text-xs text-text-faint">
-          Non sono riuscito a leggere questa stagione da TMDB. Riprova più tardi.
-        </p>
+        <ErrorState
+          compact
+          title={t("EpisodeList.questa_stagione_non_e")}
+          description={t("EpisodeList.tmdb_non_ha_risposto")}
+          onRetry={() => setAttempt((n) => n + 1)}
+        />
       ) : episodes === null ? (
         <div className="flex flex-col gap-2">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -411,16 +289,16 @@ export function EpisodeList({ item, onNavigate }: { item: Item; onNavigate?: () 
           ))}
         </div>
       ) : episodes.length === 0 ? (
-        <p className="text-xs text-text-faint">TMDB non elenca episodi per questa stagione.</p>
+        <p className="text-xs text-text-faint">{t("EpisodeList.tmdb_non_elenca_episodi")}</p>
       ) : (
         <ul className="flex flex-col gap-1">
           {episodes.map((episode) => (
             <EpisodeRow
               key={`${episode.seasonNumber}-${episode.episodeNumber}`}
               episode={episode}
-              watched={seen >= offset + episode.episodeNumber}
-              next={episode.episodeNumber === seen + 1 - offset}
+              watched={isWatched(item, { season: episode.seasonNumber, episode: episode.episodeNumber })}
               onPlay={playEpisode}
+              onToggle={toggle}
               onMarkUpTo={markUpTo}
             />
           ))}

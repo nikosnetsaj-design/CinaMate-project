@@ -2,85 +2,124 @@ import { useState } from "react";
 import { useSettings } from "../store/useSettings";
 import { useLibrary } from "../store/useLibrary";
 import { spoilerFreeRecap, translateOverview, ClaudeApiError } from "../lib/anthropic";
-import { getOverviewInEnglish } from "../lib/tmdb";
+import { getOverviewInEnglish, getSeason } from "../lib/tmdb";
+import { episodeLabel, isEpisodic, lastWatched } from "../lib/episodes";
+import {
+  cachedRecap,
+  RECAP_DETAILS,
+  recapKey,
+  savedDetail,
+  saveDetail,
+  storeRecap,
+  type EpisodeSynopsis,
+  type RecapDetail,
+} from "../lib/recap";
 import type { Item } from "../types";
+import { t } from "../lib/i18n";
 
 function Panel({ children }: { children: React.ReactNode }) {
-  return <div className="mt-4 rounded-md border border-border bg-surface-2 p-4">{children}</div>;
+  return <div className="mt-4 rounded-lg bg-surface-2 p-4">{children}</div>;
 }
 
 function Label({ children }: { children: string }) {
   return (
-    <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">{children}</span>
+    <span className="mb-1.5 block text-xs font-medium text-text-faint">{children}</span>
   );
 }
 
 /**
- * "Dove eravamo" for a series you left part-way through.
+ * «Nelle puntate precedenti», per una serie lasciata a metà.
  *
- * Only offered where it answers a real question: a series, started, not
- * finished. On a film it would be a plot summary of something you already
- * watched, and on episode zero it would be an advert.
+ * Solo dove risponde a una domanda vera: una serie iniziata e non finita. Su
+ * un film sarebbe la trama di qualcosa che hai già visto, e a zero episodi
+ * sarebbe una pubblicità.
  *
- * Never fetched automatically. This costs the user's own API credit, and a
- * recap that appears unasked on every detail sheet spends it on the many
- * occasions nobody wanted one.
+ * Il confine è l'ultimo episodio del registro, detto per nome — stagione,
+ * numero, titolo — e le sinossi di TMDB arrivano al modello solo fino a lì.
+ * Mai chiesto da solo: costa credito dell'utente. Una volta chiesto resta in
+ * memoria per quel confine e quel livello, e riaprire la scheda non lo ripaga.
  */
 export function SpoilerFreeRecap({ item }: { item: Item }) {
   const apiKey = useSettings((s) => s.apiKey);
   const model = useSettings((s) => s.model);
-  const [recap, setRecap] = useState<string | null>(null);
+  const tmdbApiKey = useSettings((s) => s.tmdbApiKey);
+  const [detail, setDetail] = useState<RecapDetail>(savedDetail);
+  const [fresh, setFresh] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const relevant =
-    item.kind !== "film" && (item.seen || 0) > 0 && (!item.episodes || (item.seen || 0) < item.episodes);
+  const last = lastWatched(item);
+  const relevant = isEpisodic(item) && last && (!item.episodes || item.seen < item.episodes);
   if (!relevant || !apiKey) return null;
+
+  const key = recapKey(item.id, last, detail);
+  const recap = fresh[key] ?? cachedRecap(key);
 
   const load = async () => {
     setBusy(true);
     setError(null);
     try {
-      setRecap(await spoilerFreeRecap(item.title, item.seen || 0, item.episodes, apiKey, model));
+      // Le sinossi della stagione del confine, fino al confine: aiutano, ma
+      // se TMDB non risponde il riassunto si fa lo stesso.
+      let synopses: EpisodeSynopsis[] = [];
+      if (tmdbApiKey && item.tmdbId && item.tmdbMediaType === "tv") {
+        try {
+          const season = await getSeason(item.tmdbId, last.season, tmdbApiKey);
+          synopses = season.map((e) => ({ season: e.seasonNumber, episode: e.episodeNumber, title: e.title, overview: e.overview }));
+        } catch {
+          synopses = [];
+        }
+      }
+      const lastTitle = synopses.find((s) => s.season === last.season && s.episode === last.episode)?.title ?? null;
+      const text = await spoilerFreeRecap(
+        { title: item.title, year: item.year || null, last, lastTitle, watchedCount: item.seen, synopses, detail },
+        apiKey,
+        model,
+      );
+      storeRecap(key, text);
+      setFresh((f) => ({ ...f, [key]: text }));
     } catch (e) {
-      setError(e instanceof ClaudeApiError ? e.message : "Riassunto non riuscito.");
+      setError(e instanceof ClaudeApiError ? e.message : t("AiItemExtras.riassunto_non_riuscito"));
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <Panel>
-      <Label>Dove eravamo</Label>
-      {recap ? (
-        <p className="whitespace-pre-wrap text-sm leading-relaxed text-text">{recap}</p>
-      ) : (
-        <>
-          <p className="text-xs leading-relaxed text-text-faint">
-            Un riassunto fino all'episodio {item.seen}, senza anticipare niente di quello che viene
-            dopo.
-          </p>
+    <section className="rounded-lg bg-surface p-4 shadow-[var(--shadow-sm)]" aria-label={t("AiItemExtras.nelle_puntate_precedenti")}>
+      <Label>{t("AiItemExtras.nelle_puntate_precedenti")}</Label>
+      <p className="text-xs leading-relaxed text-text-muted">
+        {t("AiItemExtras.fino_alla_fine_di")} {episodeLabel(last)}{t("AiItemExtras.l_ultimo_che_hai")}
+      </p>
+      <div className="segmented segmented-full mt-3" role="radiogroup" aria-label={t("AiItemExtras.quanto_dettaglio")}>
+        {RECAP_DETAILS.map((d) => (
           <button
+            key={d.id}
             type="button"
-            onClick={load}
-            disabled={busy}
-            className="mt-2.5 w-full rounded-sm border py-2.5 text-sm font-semibold disabled:opacity-50"
-            style={{
-              borderColor: "color-mix(in srgb, var(--cyan) 35%, transparent)",
-              background: "color-mix(in srgb, var(--cyan) 12%, transparent)",
-              color: "var(--cyan)",
+            role="radio"
+            aria-checked={detail === d.id}
+            onClick={() => {
+              setDetail(d.id);
+              saveDetail(d.id);
             }}
           >
-            {busy ? "Sto ricostruendo…" : "Ricordami dove eravamo"}
+            {d.label}
           </button>
-        </>
+        ))}
+      </div>
+      {recap ? (
+        <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-text">{recap}</p>
+      ) : (
+        <button type="button" onClick={load} disabled={busy} className="btn btn-secondary mt-3 w-full">
+          {busy ? t("AiItemExtras.sto_ricostruendo") : t("AiItemExtras.ricordami_dove_eravamo")}
+        </button>
       )}
       {error && (
         <p role="alert" className="mt-2 text-xs" style={{ color: "var(--danger)" }}>
           {error}
         </p>
       )}
-    </Panel>
+    </section>
   );
 }
 
@@ -108,12 +147,12 @@ export function TranslateOverview({ item }: { item: Item }) {
     try {
       const english = await getOverviewInEnglish(item.tmdbId!, item.tmdbMediaType!, tmdbApiKey);
       if (!english) {
-        setError("Su TMDB non c'è nessuna sinossi, nemmeno in inglese.");
+        setError(t("AiItemExtras.su_tmdb_non_c"));
         return;
       }
       updateItem(item.id, { overview: await translateOverview(item.title, english, apiKey, model) });
     } catch (e) {
-      setError(e instanceof ClaudeApiError ? e.message : "Traduzione non riuscita.");
+      setError(e instanceof ClaudeApiError ? e.message : t("AiItemExtras.traduzione_non_riuscita"));
     } finally {
       setBusy(false);
     }
@@ -121,18 +160,17 @@ export function TranslateOverview({ item }: { item: Item }) {
 
   return (
     <Panel>
-      <Label>Sinossi mancante</Label>
+      <Label>{t("AiItemExtras.sinossi_mancante")}</Label>
       <p className="text-xs leading-relaxed text-text-faint">
-        TMDB non ha la trama in italiano per questo titolo. Posso prendere quella inglese e
-        tradurla: resta salvata, quindi si fa una volta sola.
+        {t("AiItemExtras.tmdb_non_ha_la")}
       </p>
       <button
         type="button"
         onClick={run}
         disabled={busy}
-        className="mt-2.5 w-full rounded-sm border border-border-strong py-2.5 text-sm font-medium text-text disabled:opacity-50"
+        className="btn btn-secondary mt-2.5 w-full disabled:opacity-50"
       >
-        {busy ? "Traduco…" : "Traduci la sinossi"}
+        {busy ? t("AiItemExtras.traduco") : t("AiItemExtras.traduci_la_sinossi")}
       </button>
       {error && (
         <p role="alert" className="mt-2 text-xs" style={{ color: "var(--danger)" }}>

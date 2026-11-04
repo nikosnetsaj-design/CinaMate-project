@@ -15,8 +15,12 @@ import { continueWatching, lastSeenDates } from "../lib/continueWatching";
 import { forYou } from "../lib/recommend";
 import { prefetchHandlers } from "../lib/prefetch";
 import { PosterArt } from "../components/PosterArt";
-import { PlayIcon, SearchIcon } from "../components/icons";
+import { CloseIcon, PlayIcon, SearchIcon } from "../components/icons";
+import { CatalogCard } from "../components/CatalogCard";
+import { useCatalogActions } from "../lib/useQuickAdd";
 import type { Item } from "../types";
+import { ErrorState } from "../components/ErrorState";
+import { t } from "../lib/i18n";
 
 /**
  * Cerca: una casella, due schede, e — quando la casella è vuota — qualcosa da
@@ -49,15 +53,15 @@ function SuggestionRow({ item, reason }: { item: Item; reason?: string }) {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-medium text-text">{item.title}</span>
-          {reason && <span className="block truncate text-[11px] text-text-faint">{reason}</span>}
+          {reason && <span className="block truncate text-xs text-text-faint">{reason}</span>}
         </span>
       </button>
       <button
         type="button"
         {...prefetchHandlers("/player")}
         onClick={() => navigate(`/player?titolo=${encodeURIComponent(item.id)}`)}
-        aria-label={`Riproduci ${item.title}`}
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border-strong text-text transition-colors hover:bg-surface-hover"
+        aria-label={t("Search.riproduci", { v0: item.title })}
+        className="icon-btn icon-btn-filled shrink-0"
       >
         <PlayIcon size={18} />
       </button>
@@ -80,20 +84,20 @@ function PersonResults({ query }: { query: string }) {
     return () => controller.abort();
   }, [query, tmdbApiKey]);
 
-  if (!query) return <p className="text-sm text-text-faint">Scrivi il nome di un attore o di un regista.</p>;
+  if (!query) return <p className="text-sm text-text-faint">{t("Search.scrivi_il_nome_di")}</p>;
   if (people === null) {
     return (
-      <div className="grid grid-cols-3 gap-4 sm:grid-cols-5">
+      <div className="grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-5 lg:grid-cols-7">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="skeleton aspect-square rounded-full" aria-hidden="true" />
         ))}
       </div>
     );
   }
-  if (people.length === 0) return <p className="text-sm text-text-faint">Nessuna persona con questo nome.</p>;
+  if (people.length === 0) return <p className="text-sm text-text-faint">{t("Search.nessuna_persona_con_questo")}</p>;
 
   return (
-    <div className="grid grid-cols-3 gap-4 sm:grid-cols-5">
+    <div className="grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-5 lg:grid-cols-7">
       {people.map((person) => (
         <button key={person.id} type="button" onClick={() => openPerson(person.name)} className="text-center">
           <span className="block aspect-square overflow-hidden rounded-full bg-surface-2">
@@ -111,9 +115,9 @@ function PersonResults({ query }: { query: string }) {
               </span>
             )}
           </span>
-          <span className="mt-1.5 block line-clamp-2 text-xs font-medium text-text">{person.name}</span>
+          <span className="mt-2 block line-clamp-2 text-sm font-medium text-text">{person.name}</span>
           {person.knownFor.length > 0 && (
-            <span className="mt-0.5 block line-clamp-2 text-[11px] leading-snug text-text-faint">
+            <span className="mt-0.5 block line-clamp-2 text-xs leading-snug text-text-faint">
               {person.knownFor.join(" · ")}
             </span>
           )}
@@ -140,6 +144,8 @@ function TitleResults({ query }: { query: string }) {
   const openItem = useSelectedItem((s) => s.open);
   const openPreview = useCatalogPreview((s) => s.open);
   const [remote, setRemote] = useState<TmdbSearchResult[] | null>(null);
+  const [remoteFailed, setRemoteFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [corrected, setCorrected] = useState<string | null>(null);
 
   const mine = useMemo(() => (query ? items.filter((i) => matchesQuery(i, query)) : []), [items, query]);
@@ -152,6 +158,7 @@ function TitleResults({ query }: { query: string }) {
     }
     const controller = new AbortController();
     setRemote(null);
+    setRemoteFailed(false);
     setCorrected(null);
     // Mezzo secondo di attesa: la ricerca parte mentre scrivi, e senza questa
     // pausa ogni lettera sarebbe una richiesta buttata via dalla successiva.
@@ -161,13 +168,18 @@ function TitleResults({ query }: { query: string }) {
           setRemote(r.results);
           setCorrected(r.corrected ? r.usedTerm : null);
         })
-        .catch(() => setRemote([]));
+        .catch(() => {
+          // Una ricerca che non è arrivata non è una ricerca senza risultati.
+          if (controller.signal.aborted) return;
+          setRemote([]);
+          setRemoteFailed(true);
+        });
     }, 450);
     return () => {
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [query, tmdbApiKey]);
+  }, [query, tmdbApiKey, attempt]);
 
   /**
    * Un tocco apre la scheda, non il modulo di aggiunta.
@@ -192,7 +204,7 @@ function TitleResults({ query }: { query: string }) {
     });
   }
 
-  const ownedIds = new Set(items.map((i) => i.tmdbId).filter((id): id is number => id != null));
+  const actions = useCatalogActions();
 
   return (
     <div className="flex flex-col gap-6">
@@ -213,14 +225,14 @@ function TitleResults({ query }: { query: string }) {
         {query.length < MIN_REMOTE_QUERY
           ? ""
           : remote === null
-            ? "Cerco…"
-            : `${mine.length + remote.length} risultat${mine.length + remote.length === 1 ? "o" : "i"} per ${query}`}
+            ? t("Search.cerco")
+            : t(mine.length + remote.length === 1 ? "Search.risultato_per" : "Search.risultati_per", { v0: mine.length + remote.length, v1: query })}
       </p>
 
       {mine.length > 0 && (
         <section>
-          <h2 className="mb-2.5 text-xs font-medium uppercase tracking-wide text-text-faint">
-            Nella tua libreria · {mine.length}
+          <h2 className="mb-2.5 text-xs font-medium text-text-faint">
+            {t("Search.nella_tua_libreria")} {mine.length}
           </h2>
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
             {mine.map((item) => (
@@ -235,22 +247,21 @@ function TitleResults({ query }: { query: string }) {
 
       {suggestion && (
         <p className="text-sm text-text-muted">
-          Nessun titolo tuo per «{query}». Forse cercavi <strong className="text-text">{suggestion}</strong>?
+          {t("Search.nessun_titolo_tuo_per")}{query}{t("Search.forse_cercavi")} <strong className="text-text">{suggestion}</strong>?
         </p>
       )}
 
       {tmdbApiKey ? (
         <section>
-          <h2 className="mb-2.5 text-xs font-medium uppercase tracking-wide text-text-faint">Su TMDB</h2>
+          <h2 className="mb-2.5 text-xs font-medium text-text-faint">{t("Search.su_tmdb")}</h2>
           {corrected && (
             <p className="mb-2 text-xs text-text-faint">
-              Niente per «{query}»: questi sono i risultati per «{corrected}».
+              {t("Search.niente_per")}{query}{t("Search.questi_sono_i_risultati")}{corrected}».
             </p>
           )}
           {query.length < MIN_REMOTE_QUERY ? (
             <p className="text-sm text-text-faint">
-              Scrivi almeno {MIN_REMOTE_QUERY} lettere: con due, TMDB risponde con tutto quello che le contiene da
-              qualche parte — e non è quasi mai il titolo che cerchi.
+              {t("Search.scrivi_almeno")} {MIN_REMOTE_QUERY} {t("Search.lettere_con_due_tmdb")}
             </p>
           ) : remote === null ? (
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
@@ -258,48 +269,28 @@ function TitleResults({ query }: { query: string }) {
                 <div key={i} className="skeleton aspect-2/3 rounded-sm" aria-hidden="true" />
               ))}
             </div>
+          ) : remoteFailed ? (
+            <ErrorState compact title={t("Search.la_ricerca_su_tmdb")} description={t("Search.i_titoli_della_tua")} onRetry={() => setAttempt((n) => n + 1)} />
           ) : remote.length === 0 ? (
-            <p className="text-sm text-text-faint">Nessun risultato.</p>
+            <p className="text-sm text-text-faint">{t("Search.nessun_risultato")}</p>
           ) : (
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
-              {remote.map((result) => {
-                const owned = ownedIds.has(result.tmdbId);
-                return (
-                  <button
-                    key={result.tmdbId}
-                    type="button"
-                    onClick={() => openResult(result)}
-                    aria-label={owned ? `${result.title} — già in libreria, apri la scheda` : `Apri la scheda di ${result.title}`}
-                    className="text-left"
-                  >
-                    <div className="relative">
-                      <PosterArt
-                        item={{ title: result.title, kind: result.kind, posterPath: result.posterPath }}
-                        size="sm"
-                        showTitle={!result.posterPath}
-                      />
-                      {owned && (
-                        <span
-                          className="absolute right-1 top-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
-                          style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
-                        >
-                          ✓
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-1.5 line-clamp-2 text-xs font-medium text-text">{result.title}</p>
-                    <p className="font-mono tabular text-[10px] text-text-faint">
-                      {result.year ?? ""}
-                    </p>
-                  </button>
-                );
-              })}
+              {remote.map((result) => (
+                <CatalogCard
+                  key={`${result.mediaType}-${result.tmdbId}`}
+                  title={result}
+                  owned={actions.owned(result)}
+                  pending={actions.isPending(result)}
+                  onOpen={() => openResult(result)}
+                  onQuickAdd={() => actions.quickAdd(result)}
+                />
+              ))}
             </div>
           )}
         </section>
       ) : (
         <p className="text-sm text-text-faint">
-          Con la chiave TMDB questa ricerca copre anche i titoli che non hai ancora.
+          {t("Search.con_la_chiave_tmdb")}
         </p>
       )}
     </div>
@@ -323,18 +314,18 @@ export function Search() {
     const seen = new Set(resuming.map((r) => r.item.id));
     const picks = forYou(items, 6).filter((s) => !seen.has(s.item.id));
     return [
-      ...resuming.map((r) => ({ item: r.item, reason: `${r.label} · ${r.pct}% visto` })),
+      ...resuming.map((r) => ({ item: r.item, reason: t("Search.visto", { v0: r.label, v1: r.pct }) })),
       ...picks.map((s) => ({ item: s.item, reason: s.reason })),
     ].slice(0, 8);
   }, [items, progress, history]);
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-6 sm:px-6 sm:py-10">
-      <h1 className="font-display text-3xl font-semibold text-text">Cerca</h1>
+    <div className="mx-auto flex max-w-6xl flex-col gap-5 px-[var(--gutter)] py-6 sm:py-10">
+      <h1 className="t-display text-text">{t("page.search")}</h1>
 
       {/* La casella resta appesa in alto mentre la griglia scorre: su un
           telefono, correggere una parola non deve costare una risalita. */}
-      <div className="sticky top-14 z-20 -mx-4 bg-bg px-4 py-2 md:top-0 sm:-mx-6 sm:px-6">
+      <div className="sticky top-14 z-20 -mx-[var(--gutter)] bg-bg/85 px-[var(--gutter)] py-2 backdrop-blur-xl backdrop-saturate-150 lg:top-0">
         {/*
           Una `label` e non un `div`: prima il bersaglio era la sola riga di
           testo, così un tocco sulla lente o sul bordo della pillola non apriva
@@ -349,14 +340,14 @@ export function Search() {
           somiglia a niente e sembra un errore di disegno. `focus-within`
           sposta l'evidenza sul contenitore, che è la forma che si tocca.
         */}
-        <label className="focus-shell flex cursor-text items-center gap-2.5 rounded-full border border-border-strong bg-surface-2 px-4 py-2.5 transition-colors">
+        <label className="search-pill flex h-11 cursor-text items-center gap-2.5 rounded-full bg-surface-2 pl-4 pr-1.5 text-text-faint">
           <SearchIcon size={18} />
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Cerca serie, film e persone…"
-            aria-label="Cerca"
+            placeholder={t("Search.cerca_serie_film_e")}
+            aria-label={t("Search.cerca")}
             // `search` porta il tasto «cerca» sulla tastiera del telefono al
             // posto di «invio», e spegne le maiuscole automatiche: nessun
             // titolo si scrive meglio con la prima lettera imposta.
@@ -373,7 +364,7 @@ export function Search() {
              * niente finché non lo tocchi. Meglio nessuna promessa.
              */
             autoFocus={typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches}
-            className="no-focus-ring min-w-0 flex-1 bg-transparent text-sm text-text outline-none placeholder:text-text-faint [&::-webkit-search-cancel-button]:hidden"
+            className="no-focus-ring min-w-0 flex-1 bg-transparent text-base text-text outline-none placeholder:text-text-faint"
           />
           {query && (
             <button
@@ -382,18 +373,18 @@ export function Search() {
                 setQuery("");
                 inputRef.current?.focus();
               }}
-              aria-label="Cancella la ricerca"
-              className="text-text-faint hover:text-text"
+              aria-label={t("Search.cancella_la_ricerca")}
+              className="icon-btn icon-btn-sm"
             >
-              ✕
+              <CloseIcon size={16} />
             </button>
           )}
         </label>
 
-        <div className="mt-2 flex gap-2" role="tablist" aria-label="Cosa cercare">
+        <div className="mt-3 flex gap-2" role="tablist" aria-label={t("Search.cosa_cercare")}>
           {([
-            { id: "titoli", label: "Film & TV" },
-            { id: "persone", label: "Persone" },
+            { id: "titoli", label: t("tabs.search.titles") },
+            { id: "persone", label: t("tabs.search.people") },
           ] as const).map((t) => (
             <button
               key={t.id}
@@ -401,10 +392,7 @@ export function Search() {
               role="tab"
               aria-selected={tab === t.id}
               onClick={() => setTab(t.id)}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                tab === t.id ? "" : "border border-border-strong text-text-muted hover:bg-surface-hover"
-              }`}
-              style={tab === t.id ? { background: "var(--accent)", color: "var(--accent-contrast)" } : undefined}
+              className="chip"
             >
               {t.label}
             </button>
@@ -415,7 +403,7 @@ export function Search() {
       {!query && tab === "titoli" ? (
         suggestions.length > 0 ? (
           <section>
-            <h2 className="mb-3 font-display text-xl font-semibold text-text">Da riprendere e da provare</h2>
+            <h2 className="t-title mb-4 text-text">{t("Search.da_riprendere_e_da")}</h2>
             <ul className="flex flex-col gap-3">
               {suggestions.map(({ item, reason }) => (
                 <SuggestionRow key={item.id} item={item} reason={reason} />
@@ -423,13 +411,16 @@ export function Search() {
             </ul>
           </section>
         ) : (
-          <p className="text-sm text-text-faint">
-            Scrivi un titolo. {!tmdbApiKey && (
-              <button type="button" onClick={() => openSettings()} className="underline underline-offset-2">
-                Con la chiave TMDB cerchi anche fuori dalla tua libreria.
+          <div className="flex flex-col items-start gap-1">
+            <p className="text-sm text-text-faint">{t("Search.scrivi_un_titolo")}</p>
+            {/* Un pulsante vero, alto 44 px, e non un collegamento nel testo:
+                sul telefono si tocca col pollice. */}
+            {!tmdbApiKey && (
+              <button type="button" onClick={() => openSettings("chiavi")} className="btn btn-plain btn-sm -ml-3 min-h-11 text-left">
+                {t("Search.con_la_chiave_tmdb_2")}
               </button>
             )}
-          </p>
+          </div>
         )
       ) : tab === "titoli" ? (
         <TitleResults query={query.trim()} />

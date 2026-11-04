@@ -1,6 +1,7 @@
-import type { HistoryEntry, Item } from "../types";
+import type { HistoryEntry, Item, WatchedEpisode } from "../types";
 import type { SagaOrders, WatchOrder } from "./sagas";
 import { isRecord } from "./localStore";
+import { t } from "./i18n";
 
 /**
  * Everything a saga knows that cannot be derived again from TMDB: the viewing
@@ -64,9 +65,30 @@ export interface Backup {
    * not here — it is recomputed from the diary, which the file already carries.
    */
   goals?: unknown;
+  /**
+   * Le liste personali e le liste intelligenti. Nel file per la regola di
+   * sempre: le hai fatte tu, niente le ricostruisce. Validate dallo store che
+   * le riceve.
+   */
+  lists?: unknown;
+  /**
+   * I confronti di «Questo o quello»: punteggi, ultime coppie, voti tenuti.
+   * Campo facoltativo nello stesso schema 6 — chi legge con una versione che
+   * non lo conosce lo ignora, e nient'altro cambia.
+   */
+  duels?: unknown;
 }
 
-const CURRENT_VERSION = 5;
+/**
+ * La versione dello schema scritta nel file.
+ *
+ * 6 — i titoli a puntate portano `watched`, il registro degli episodi
+ *     (`{ season, episode, date }`), e `seasonEpisodes`. `seen` resta scritto
+ *     per chi legge il file con una versione precedente. Un file dalla 5 in giù
+ *     non ha il registro: all'importazione la libreria lo ricostruisce dal
+ *     contatore e dal diario, come fa al primo avvio.
+ */
+export const CURRENT_VERSION = 6;
 
 export function buildBackup(
   items: Item[],
@@ -74,6 +96,8 @@ export function buildBackup(
   sagas?: SagaBackup,
   player?: PlayerBackup,
   goals?: unknown,
+  lists?: unknown,
+  duels?: unknown,
 ): string {
   return JSON.stringify(
     {
@@ -85,6 +109,8 @@ export function buildBackup(
       sagas,
       player,
       goals,
+      lists,
+      duels,
     },
     null,
     2,
@@ -151,6 +177,30 @@ export class BackupParseError extends Error {
   }
 }
 
+function isWatchedEntry(value: unknown): value is WatchedEpisode {
+  if (!value || typeof value !== "object") return false;
+  const w = value as WatchedEpisode;
+  return (
+    Number.isInteger(w.season) && w.season >= 1 && Number.isInteger(w.episode) && w.episode >= 1 && typeof w.date === "string"
+  );
+}
+
+/**
+ * Il registro degli episodi di un file scritto a mano o da un'altra app può
+ * essere sporco. Le voci che non sono episodi si tolgono; un registro che non
+ * è un elenco si toglie del tutto, e la libreria lo ricostruisce dal contatore.
+ */
+function sanitizeRegistry(item: Item): Item {
+  const raw = (item as { watched?: unknown }).watched;
+  if (raw === undefined) return item;
+  if (!Array.isArray(raw)) {
+    const { watched: _drop, ...rest } = item;
+    return rest as Item;
+  }
+  const watched = raw.filter(isWatchedEntry);
+  return { ...item, watched, seen: watched.length };
+}
+
 /**
  * Accepts both the current `{ items, history }` envelope and the bare array
  * written by earlier versions, so an older export never becomes unusable.
@@ -160,12 +210,12 @@ export function parseBackup(raw: string): Backup {
   try {
     parsed = JSON.parse(raw);
   } catch {
-    throw new BackupParseError("Il file non è un JSON valido.");
+    throw new BackupParseError(t("backup.il_file_non_e"));
   }
 
   if (Array.isArray(parsed)) {
     const items = parsed.filter(looksLikeItem);
-    if (items.length === 0) throw new BackupParseError("Nessun titolo valido trovato nel file.");
+    if (items.length === 0) throw new BackupParseError(t("backup.nessun_titolo_valido_trovato"));
     return { items, history: [] };
   }
 
@@ -176,9 +226,11 @@ export function parseBackup(raw: string): Backup {
       sagas?: unknown;
       player?: unknown;
       goals?: unknown;
+      lists?: unknown;
+      duels?: unknown;
     };
-    const items = record.items.filter(looksLikeItem);
-    if (items.length === 0) throw new BackupParseError("Nessun titolo valido trovato nel file.");
+    const items = record.items.filter(looksLikeItem).map(sanitizeRegistry);
+    if (items.length === 0) throw new BackupParseError(t("backup.nessun_titolo_valido_trovato"));
     const history = Array.isArray(record.history) ? record.history.filter(looksLikeHistoryEntry) : [];
     // Drop history pointing at titles the backup doesn't contain.
     const ids = new Set(items.map((i) => i.id));
@@ -189,8 +241,10 @@ export function parseBackup(raw: string): Backup {
       player: parsePlayerBackup(record.player),
       // Validated by the store that receives it, like the player sections.
       goals: record.goals,
+      lists: record.lists,
+      duels: record.duels,
     };
   }
 
-  throw new BackupParseError("Il file non sembra un backup di CineMate.");
+  throw new BackupParseError(t("backup.il_file_non_sembra"));
 }

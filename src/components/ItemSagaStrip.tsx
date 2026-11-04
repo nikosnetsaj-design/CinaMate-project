@@ -3,8 +3,9 @@ import { useSagas, sagaKey } from "../store/useSagas";
 import { useSelectedSaga } from "../store/useSelectedSaga";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { buildEntries, orderParts, sagaProgress } from "../lib/sagas";
-import { StackIcon } from "./icons";
+import { ChevronRightIcon, StackIcon } from "./icons";
 import type { Item } from "../types";
+import { t } from "../lib/i18n";
 
 /**
  * The saga a title belongs to, seen from inside the title: where this chapter
@@ -35,8 +36,8 @@ export function ItemSagaStrip({ item }: { item: Item }) {
         closeItem();
         openSaga(key);
       }}
-      aria-label={`Apri la saga ${saga.name}`}
-      className="mt-4 flex w-full items-center gap-3 rounded-md border border-border bg-surface-2 p-3.5 text-left transition-colors hover:bg-surface-hover"
+      aria-label={t("ItemSagaStrip.apri_la_saga", { v0: saga.name })}
+      className="mt-4 flex w-full items-center gap-3 rounded-lg bg-surface-2 p-3.5 text-left transition-colors hover:bg-surface-hover"
     >
       <span
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
@@ -45,20 +46,20 @@ export function ItemSagaStrip({ item }: { item: Item }) {
         <StackIcon size={17} />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] uppercase tracking-[0.16em] text-text-faint">
-          {here ? `Capitolo ${here.number} di ${progress.total}` : "Fa parte della saga"}
+        <p className="text-xs text-text-faint">
+          {here ? t("ItemSagaStrip.capitolo_di", { v0: here.number, v1: progress.total }) : t("ItemSagaStrip.fa_parte_della_saga")}
         </p>
         <p className="truncate font-display text-sm font-semibold text-text">{saga.name}</p>
         <div className="mt-1.5 flex items-center gap-2">
           <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-surface-hover">
             <div className="h-full rounded-full" style={{ width: `${progress.pct}%`, background: "var(--accent)" }} />
           </div>
-          <span className="font-mono tabular text-[11px] text-text-faint">
+          <span className="font-mono tabular text-xs text-text-faint">
             {progress.watched}/{progress.total}
           </span>
         </div>
       </div>
-      <span className="shrink-0 text-text-faint">→</span>
+      <span className="shrink-0 text-text-faint"><ChevronRightIcon /></span>
     </button>
   );
 }

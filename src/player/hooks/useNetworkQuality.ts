@@ -18,7 +18,9 @@ export function useNetworkQuality(): { quality: NetworkQuality; reportStall: () 
   const stallTimestampsRef = useRef<number[]>([]);
 
   useEffect(() => {
-    const conn = (navigator as any).connection;
+    const conn = (navigator as Navigator & {
+      connection?: { effectiveType?: string } & Pick<EventTarget, 'addEventListener' | 'removeEventListener'>;
+    }).connection;
     if (!conn) return;
     const applyFromConnection = () => {
       if (!navigator.onLine) {

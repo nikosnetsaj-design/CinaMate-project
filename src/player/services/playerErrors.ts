@@ -1,5 +1,6 @@
 import Hls from 'hls.js';
 import type { ErrorData } from 'hls.js';
+import { t } from "../../lib/i18n";
 
 export interface PlayerFailure {
   /** One line saying what went wrong. */
@@ -31,29 +32,29 @@ export function describeFailure(data: ErrorData): PlayerFailure {
   if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
     if (status === 404 || status === 410) {
       return {
-        message: 'Il server risponde, ma il file non c’è (404).',
-        hint: 'L’indirizzo arriva fin lì ma il nome del file non corrisponde. Controlla il modello in Impostazioni, o incolla l’indirizzo esatto nel pannello Sorgenti.',
+        message: t("player_playerErrors.il_server_risponde_ma"),
+        hint: t("player_playerErrors.l_indirizzo_arriva_fin"),
         transient: false,
       };
     }
     if (status === 401 || status === 403) {
       return {
-        message: 'Il server rifiuta la richiesta (accesso negato).',
-        hint: 'Serve un’autenticazione che il player non può fare da solo. Usa un indirizzo già autorizzato, oppure scarica il titolo e riproducilo offline.',
+        message: t("player_playerErrors.il_server_rifiuta_la"),
+        hint: t("player_playerErrors.serve_un_autenticazione_che"),
         transient: false,
       };
     }
     if (status >= 500) {
       return {
-        message: `Il server ha un problema suo (${status}).`,
-        hint: 'Non dipende da te. Se hai più host configurati il player proverà gli altri; altrimenti riprova fra poco.',
+        message: t("player_playerErrors.il_server_ha_un", { v0: status }),
+        hint: t("player_playerErrors.non_dipende_da_te"),
         transient: true,
       };
     }
     if (!navigator.onLine) {
       return {
-        message: 'Sei offline.',
-        hint: 'Riparte da solo appena torna la connessione. I titoli scaricati si guardano anche adesso, dal pannello Download.',
+        message: t("player_playerErrors.sei_offline"),
+        hint: t("player_playerErrors.riparte_da_solo_appena"),
         transient: true,
       };
     }
@@ -62,14 +63,14 @@ export function describeFailure(data: ErrorData): PlayerFailure {
     // simply doesn't send Access-Control-Allow-Origin.
     if (status === 0) {
       return {
-        message: 'Il server non risponde, o rifiuta le richieste da questa pagina.',
-        hint: 'Di solito è CORS: il server deve inviare Access-Control-Allow-Origin. Verifica anche che l’indirizzo sia raggiungibile e in https, e prova gli altri host dal pannello Host.',
+        message: t("player_playerErrors.il_server_non_risponde"),
+        hint: t("player_playerErrors.di_solito_e_cors"),
         transient: true,
       };
     }
     return {
-      message: 'Errore di rete durante il caricamento.',
-      hint: url ? `Ultima richiesta fallita: ${short(url)}` : '',
+      message: t("player_playerErrors.errore_di_rete_durante"),
+      hint: url ? t("player_playerErrors.ultima_richiesta_fallita", { v0: short(url) }) : '',
       transient: true,
     };
   }
@@ -82,22 +83,22 @@ export function describeFailure(data: ErrorData): PlayerFailure {
   // prevent.
   if (data.details === Hls.ErrorDetails.MANIFEST_PARSING_ERROR) {
     return {
-      message: 'L’indirizzo risponde, ma non con una playlist HLS.',
-      hint: 'Quello che arriva non è un file .m3u8 valido — spesso è una pagina di errore, o un login, servito con il nome giusto. Apri l’indirizzo nel browser per vedere cosa risponde davvero.',
+      message: t("player_playerErrors.l_indirizzo_risponde_ma"),
+      hint: t("player_playerErrors.quello_che_arriva_non"),
       transient: false,
     };
   }
   if (data.details === Hls.ErrorDetails.MANIFEST_INCOMPATIBLE_CODECS_ERROR) {
     return {
-      message: 'La playlist dichiara codec che questo browser non apre.',
-      hint: 'Di solito è HEVC/H.265 o AC-3. Prova un altro browser, oppure ricodifica la sorgente in H.264 + AAC.',
+      message: t("player_playerErrors.la_playlist_dichiara_codec"),
+      hint: t("player_playerErrors.di_solito_e_hevc"),
       transient: false,
     };
   }
   if (data.details === Hls.ErrorDetails.LEVEL_EMPTY_ERROR) {
     return {
-      message: 'La playlist non contiene nessun segmento.',
-      hint: 'Il manifest è valido ma vuoto: se lo stai generando tu, probabilmente è stato letto mentre veniva scritto.',
+      message: t("player_playerErrors.la_playlist_non_contiene"),
+      hint: t("player_playerErrors.il_manifest_e_valido"),
       transient: true,
     };
   }
@@ -105,29 +106,29 @@ export function describeFailure(data: ErrorData): PlayerFailure {
   if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
     if (data.details === Hls.ErrorDetails.BUFFER_INCOMPATIBLE_CODECS_ERROR) {
       return {
-        message: 'Questo browser non sa decodificare la traccia.',
-        hint: 'Il flusso usa un codec non supportato qui — spesso HEVC/H.265 o AC-3. Prova con un altro browser, o ricodifica la sorgente in H.264 + AAC.',
+        message: t("player_playerErrors.questo_browser_non_sa"),
+        hint: t("player_playerErrors.il_flusso_usa_un"),
         transient: false,
       };
     }
     return {
-      message: 'Flusso danneggiato durante la decodifica.',
-      hint: 'Il player prova a ricucirlo da solo. Se continua, il file o un suo segmento è corrotto.',
+      message: t("player_playerErrors.flusso_danneggiato_durante_la"),
+      hint: t("player_playerErrors.il_player_prova_a"),
       transient: true,
     };
   }
 
   if (data.type === Hls.ErrorTypes.MUX_ERROR) {
     return {
-      message: 'I segmenti non sono nel formato atteso.',
-      hint: 'La playlist punta a file che non sono quelli che dichiara. Rigenera il manifest, oppure indica direttamente il file video nel pannello Sorgenti.',
+      message: t("player_playerErrors.i_segmenti_non_sono"),
+      hint: t("player_playerErrors.la_playlist_punta_a"),
       transient: false,
     };
   }
 
   return {
-    message: 'Riproduzione interrotta da un errore.',
-    hint: data.details ? `Dettaglio tecnico: ${data.details}` : '',
+    message: t("player_playerErrors.riproduzione_interrotta_da_un"),
+    hint: data.details ? t("player_playerErrors.dettaglio_tecnico", { v0: data.details }) : '',
     transient: true,
   };
 }

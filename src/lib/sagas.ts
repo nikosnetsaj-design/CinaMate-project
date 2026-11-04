@@ -1,5 +1,6 @@
 import type { Item } from "../types";
 import type { TmdbSagaPart } from "./tmdb";
+import { statusLabel, t } from "./i18n";
 
 /**
  * A saga can be walked in three different ways and they genuinely disagree:
@@ -10,9 +11,9 @@ import type { TmdbSagaPart } from "./tmdb";
 export type WatchOrder = "uscita" | "cronologico" | "consigliato";
 
 export const WATCH_ORDERS: { id: WatchOrder; label: string; hint: string }[] = [
-  { id: "uscita", label: "Uscita", hint: "Nell'ordine in cui sono arrivati in sala" },
-  { id: "cronologico", label: "Cronologico", hint: "Nell'ordine in cui accade la storia" },
-  { id: "consigliato", label: "Consigliato", hint: "L'ordine che rende meglio alla prima visione" },
+  { id: "uscita", label: t("sagas.uscita"), hint: t("sagas.nell_ordine_in_cui") },
+  { id: "cronologico", label: t("sagas.cronologico"), hint: t("sagas.nell_ordine_in_cui_2") },
+  { id: "consigliato", label: t("sagas.consigliato"), hint: t("sagas.l_ordine_che_rende") },
 ];
 
 export interface SagaOrders {
@@ -122,8 +123,8 @@ export function nextChapterAfter(entries: SagaEntry[], finishedTmdbId: number | 
 }
 
 export const PART_STATE_META: Record<PartState, { icon: string; label: string; color: string }> = {
-  visto: { icon: "✓", label: "Visto", color: "var(--status-done)" },
-  "in-visione": { icon: "▶", label: "In visione", color: "var(--status-watching)" },
-  "in-libreria": { icon: "◷", label: "In libreria", color: "var(--status-planned)" },
-  assente: { icon: "+", label: "Non in libreria", color: "var(--text-faint)" },
+  visto: { icon: "✓", label: statusLabel("Visto"), color: "var(--status-done)" },
+  "in-visione": { icon: "▶", label: statusLabel("In visione"), color: "var(--status-watching)" },
+  "in-libreria": { icon: "◷", label: t("sagas.in_libreria"), color: "var(--status-planned)" },
+  assente: { icon: "+", label: t("sagas.non_in_libreria"), color: "var(--text-faint)" },
 };

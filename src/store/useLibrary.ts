@@ -1,8 +1,30 @@
 import { create } from "zustand";
-import type { HistoryEntry, Item, Status, ToastKind, ToastMessage } from "../types";
+import type { HistoryEntry, Item, Status, ToastAction, ToastKind, ToastMessage, WatchedEpisode } from "../types";
+import { durable } from "../lib/durable";
+import { applyImport, type Accepted, type ImportOutcome } from "../lib/importApply";
+import {
+  isEpisodic,
+  isWatched,
+  lastWatched,
+  migrateWatched,
+  nextEpisode,
+  remapProvisional,
+  resizeWatched,
+  seasonLayout,
+  upTo,
+  watchedList,
+  withEpisode,
+  withoutEpisode,
+  type EpisodeRef,
+} from "../lib/episodes";
+import { t } from "../lib/i18n";
 
-const STORAGE_KEY = "cinemate:v2";
-const HISTORY_KEY = "cinemate:history:v1";
+/*
+ * La libreria e il diario stanno su IndexedDB (lib/durable), con una copia in
+ * memoria caricata prima che l'app parta: le letture qui sotto restano
+ * sincrone come quando stavano in localStorage, e da lì arrivano ancora se
+ * IndexedDB non c'è.
+ */
 
 function isItemArray(value: unknown): value is Item[] {
   return (
@@ -14,32 +36,20 @@ function isItemArray(value: unknown): value is Item[] {
   );
 }
 
-function loadItems(): { data: Item[]; corrupted: boolean } {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    // A new library starts genuinely empty — no demo titles to delete first.
-    if (raw === null) return { data: [], corrupted: false };
-    const parsed: unknown = JSON.parse(raw);
-    if (!isItemArray(parsed)) throw new Error("malformed cinemate library");
-    return { data: parsed, corrupted: false };
-  } catch {
-    return { data: [], corrupted: true };
-  }
+function loadItems(): { data: Item[]; corrupted: boolean; absent: boolean } {
+  const stored = durable.read("library");
+  // A new library starts genuinely empty — no demo titles to delete first.
+  if (stored === undefined) return { data: [], corrupted: false, absent: true };
+  if (stored.corrupt || !isItemArray(stored.value)) return { data: [], corrupted: true, absent: false };
+  return { data: stored.value, corrupted: false, absent: false };
 }
 
 function saveItems(items: Item[]): boolean {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    return true;
-  } catch {
-    return false;
-  }
+  return durable.write("library", items);
 }
 
 const initial = loadItems();
-if (localStorage.getItem(STORAGE_KEY) === null && !initial.corrupted) {
-  saveItems(initial.data);
-}
+if (initial.absent) saveItems(initial.data);
 
 function isHistoryArray(value: unknown): value is HistoryEntry[] {
   return (
@@ -48,29 +58,43 @@ function isHistoryArray(value: unknown): value is HistoryEntry[] {
   );
 }
 
-function loadHistory(): HistoryEntry[] {
-  try {
-    const raw = localStorage.getItem(HISTORY_KEY);
-    if (raw === null) return [];
-    const parsed: unknown = JSON.parse(raw);
-    if (!isHistoryArray(parsed)) throw new Error("malformed cinemate history");
-    return parsed;
-  } catch {
-    return [];
-  }
+function loadHistory(): { data: HistoryEntry[]; absent: boolean } {
+  const stored = durable.read("history");
+  if (stored === undefined) return { data: [], absent: true };
+  if (stored.corrupt || !isHistoryArray(stored.value)) return { data: [], absent: false };
+  return { data: stored.value, absent: false };
 }
 
 function saveHistory(history: HistoryEntry[]): void {
-  try {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-  } catch {
-    // Non-critical derived data — skip silently on quota errors rather than
-    // surfacing another toast on top of the main library's own storageError.
-  }
+  // Non-critical derived data — a failure is not surfaced on its own, on top of
+  // the main library's storageError.
+  durable.write("history", history);
 }
 
-const initialHistory = loadHistory();
-if (localStorage.getItem(HISTORY_KEY) === null) saveHistory(initialHistory);
+const loadedHistory = loadHistory();
+const initialHistory = loadedHistory.data;
+if (loadedHistory.absent) saveHistory(initialHistory);
+
+/**
+ * Dal contatore al registro, per i titoli scritti prima che esistesse.
+ *
+ * Gira al caricamento e su ogni importazione, e solo sui titoli a puntate che
+ * non hanno ancora `watched`: una seconda passata non trova niente da fare.
+ * Le date vengono dal diario (lib/episodes).
+ */
+export function migrateEpisodes(items: Item[], history: HistoryEntry[]): { items: Item[]; changed: boolean } {
+  let changed = false;
+  const next = items.map((item) => {
+    if (!isEpisodic(item) || item.watched !== undefined) return item;
+    changed = true;
+    const watched = migrateWatched(item, history);
+    return { ...item, watched, seen: watched.length };
+  });
+  return { items: next, changed };
+}
+
+const migratedInitial = initial.corrupted ? { items: initial.data, changed: false } : migrateEpisodes(initial.data, initialHistory);
+if (migratedInitial.changed) saveItems(migratedInitial.items);
 
 function makeHistoryEntry(
   item: Pick<Item, "id" | "title" | "kind">,
@@ -108,9 +132,19 @@ interface LibraryState {
   history: HistoryEntry[];
   toasts: ToastMessage[];
   storageError: boolean;
+  /**
+   * The data lives in a database that this launch could not open. Distinct
+   * from `storageError`: nothing is corrupt and nothing must be reset — the
+   * remedy is to reload, not to start over.
+   */
+  storageUnavailable: boolean;
   justCompleted: JustCompleted | null;
 
-  addItem: (data: Omit<Item, "id" | "added">) => void;
+  /**
+   * Aggiunge e restituisce il titolo creato. `silent` toglie l'avviso
+   * generico, per chi ne mostra uno suo (con «Annulla»).
+   */
+  addItem: (data: Omit<Item, "id" | "added">, options?: { silent?: boolean }) => Item;
   /** Un blocco di titoli come una sola azione: una scrittura, un messaggio. */
   addItems: (list: Omit<Item, "id" | "added">[]) => void;
   updateItem: (id: string, patch: Partial<Item>) => void;
@@ -120,13 +154,23 @@ interface LibraryState {
   incrementEpisode: (id: string) => void;
   decrementEpisode: (id: string) => void;
   setEpisodesSeen: (id: string, seen: number) => void;
+  /** Tocco su un episodio: visto, o di nuovo da vedere. */
+  toggleEpisode: (id: string, ref: EpisodeRef) => void;
+  /** Pressione lunga: tutti gli episodi fino a questo, compreso. */
+  markEpisodesUpTo: (id: string, ref: EpisodeRef) => void;
+  /** Il lettore ha finito questa puntata: si segna, senza toggle. */
+  markEpisodeWatched: (id: string, ref: EpisodeRef) => void;
   setRewatch: (id: string, rewatch: number) => void;
 
-  pushToast: (kind: ToastKind, text: string) => void;
+  pushToast: (kind: ToastKind, text: string, action?: ToastAction) => void;
   dismissToast: (id: string) => void;
   clearJustCompleted: () => void;
 
   importData: (items: Item[], history: HistoryEntry[]) => void;
+  /** I titoli scelti dall'importazione da un'altra app: aggiunti o completati, mai doppi. */
+  importEntries: (accepted: Accepted[]) => Omit<ImportOutcome, "items" | "history">;
+  /** Con chi e dove, sulle voci del diario indicate. Un campo vuoto si toglie. */
+  annotateHistory: (ids: string[], note: { with: string; where: string }) => void;
   clearAll: () => void;
   resetCorruptedData: () => void;
 }
@@ -145,7 +189,7 @@ function persistOrToast(
   const ok = saveItems(next);
   set({ items: next, storageError: !ok });
   if (!ok) {
-    get().pushToast("error", "Impossibile salvare: memoria del browser piena o non disponibile.");
+    get().pushToast("error", t("useLibrary.impossibile_salvare_memoria_del"));
   } else if (successText) {
     get().pushToast("success", successText);
   }
@@ -158,17 +202,75 @@ function logHistory(get: () => LibraryState, set: (partial: Partial<LibraryState
   set({ history: next });
 }
 
+/**
+ * Un titolo con il registro nuovo: `seen` derivato, e lo stato che segue —
+ * «Visto» quando l'ultimo episodio è segnato, di nuovo «In visione» quando se
+ * ne toglie uno a una serie che era finita.
+ */
+function withWatched(item: Item, watched: WatchedEpisode[], grew: boolean): { item: Item; becameWatched: boolean } {
+  const seen = watched.length;
+  let status = item.status;
+  if (item.episodes && seen >= item.episodes) status = "Visto";
+  // Segnare un episodio vuol dire che la stai guardando, anche se era in
+  // pausa; toglierne uno riapre solo una serie che risultava finita.
+  else if (grew) status = "In visione";
+  else if (item.status === "Visto") status = "In visione";
+  return { item: { ...item, watched, seen, status }, becameWatched: status === "Visto" && item.status !== "Visto" };
+}
+
+/** I titoli a puntate nuovi entrano con il registro già scritto. */
+function withInitialRegistry(item: Item): Item {
+  if (!isEpisodic(item) || item.watched !== undefined) return item;
+  const watched = migrateWatched(item, []);
+  return { ...item, watched, seen: watched.length };
+}
+
+/**
+ * Scrive un nuovo registro per un titolo, con le voci del diario per gli
+ * episodi aggiunti. Le voci tolte non cancellano il diario: «l'ho segnato per
+ * sbaglio» si corregge sul registro, il diario resta la storia di cosa è
+ * successo.
+ */
+function commitWatched(
+  get: () => LibraryState,
+  set: (partial: Partial<LibraryState>) => void,
+  id: string,
+  compute: (item: Item) => WatchedEpisode[],
+) {
+  const prev = get().items.find((i) => i.id === id);
+  if (!prev || !isEpisodic(prev)) return;
+  const before = watchedList(prev);
+  const after = compute(prev);
+  const { item, becameWatched } = withWatched(prev, after, after.length > before.length);
+  persistOrToast(get, set, get().items.map((i) => (i.id === id ? item : i)));
+
+  const added = after.filter((w) => !before.some((b) => b.season === w.season && b.episode === w.episode));
+  if (added.length > 0) {
+    const entry = makeHistoryEntry(prev, today(), "episode", added.length);
+    if (added.length === 1) {
+      entry.season = added[0].season;
+      entry.episode = added[0].episode;
+    }
+    const entries = [entry];
+    if (becameWatched) entries.push(makeHistoryEntry(prev, today(), "watched"));
+    logHistory(get, set, entries);
+  }
+  if (becameWatched) set({ justCompleted: { itemId: id, at: Date.now() } });
+}
+
 export const useLibrary = create<LibraryState>((set, get) => ({
-  items: initial.data,
+  items: migratedInitial.items,
   history: initialHistory,
   toasts: [],
   storageError: initial.corrupted,
+  storageUnavailable: durable.status().backend === "unavailable",
   justCompleted: null,
 
-  addItem: (data) => {
-    const item: Item = { ...data, id: newId(), added: today() };
-    persistOrToast(get, set, [item, ...get().items], `"${item.title}" aggiunto alla libreria.`);
+  addItem: (data, options) => {
+    const item: Item = withInitialRegistry({ ...data, id: newId(), added: today() });
+    persistOrToast(get, set, [item, ...get().items], options?.silent ? undefined : t("useLibrary.aggiunto_alla_libreria", { v0: item.title }));
     if (item.status === "Visto") logHistory(get, set, [makeHistoryEntry(item, item.added, "watched")]);
+    return item;
   },
 
   /**
@@ -182,14 +284,14 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   addItems: (list) => {
     if (list.length === 0) return;
     const added = today();
-    const items: Item[] = list.map((data) => ({ ...data, id: newId(), added }));
+    const items: Item[] = list.map((data) => withInitialRegistry({ ...data, id: newId(), added }));
     persistOrToast(
       get,
       set,
       [...items, ...get().items],
       list.length === 1
-        ? `"${items[0].title}" aggiunto alla libreria.`
-        : `${items.length} titoli aggiunti alla libreria.`,
+        ? t("useLibrary.aggiunto_alla_libreria", { v0: items[0].title })
+        : t("useLibrary.titoli_aggiunti_alla_libreria", { v0: items.length }),
     );
     logHistory(
       get,
@@ -200,7 +302,30 @@ export const useLibrary = create<LibraryState>((set, get) => ({
 
   updateItem: (id, patch) => {
     const prev = get().items.find((i) => i.id === id);
-    const next = get().items.map((i) => (i.id === id ? { ...i, ...patch } : i));
+    const next = get().items.map((i) => {
+      if (i.id !== id) return i;
+      let merged: Item = { ...i, ...patch };
+      if (isEpisodic(merged)) {
+        // Chi parla ancora in totali — la casella «Ep. visti» del modulo —
+        // scrive `seen`: il registro si allunga o si accorcia di conseguenza.
+        if ("seen" in patch && !("watched" in patch) && patch.seen !== watchedList(i).length) {
+          merged.watched = resizeWatched(merged, patch.seen ?? 0, today());
+        }
+        // La divisione in stagioni è arrivata: gli episodi provvisori vanno
+        // al loro posto.
+        const layout = seasonLayout(merged);
+        if (layout && merged.watched?.some((w) => w.provisional)) {
+          merged.watched = remapProvisional(merged.watched, layout);
+        }
+        if (merged.watched) merged = { ...merged, seen: merged.watched.length };
+        // Il numero di puntate arriva dopo il registro — un titolo importato,
+        // o collegato più tardi — e le hai già segnate tutte: è finita.
+        if ("episodes" in patch && merged.status === "In visione" && merged.episodes && merged.seen >= merged.episodes) {
+          merged = { ...merged, status: "Visto" };
+        }
+      }
+      return merged;
+    });
     persistOrToast(get, set, next);
     // Editing the status to "Visto" completes a title just as surely as the
     // chip in the detail sheet does, so it has to reach the diary too.
@@ -213,7 +338,7 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   removeItem: (id) => {
     const item = get().items.find((i) => i.id === id);
     const next = get().items.filter((i) => i.id !== id);
-    persistOrToast(get, set, next, item ? `"${item.title}" rimosso dalla libreria.` : undefined);
+    persistOrToast(get, set, next, item ? t("useLibrary.rimosso_dalla_libreria", { v0: item.title }) : undefined);
     if (get().justCompleted?.itemId === id) set({ justCompleted: null });
     // Drop the item's history too, so deleted titles stop counting towards
     // achievements and the log doesn't grow with unreachable entries.
@@ -240,44 +365,42 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   },
 
   incrementEpisode: (id) => {
-    const prev = get().items.find((i) => i.id === id);
-    let becameWatched = false;
-    const next = get().items.map((i) => {
-      if (i.id !== id || !i.episodes) return i;
-      const seen = Math.min(i.episodes, (i.seen || 0) + 1);
-      const status: Status = seen === i.episodes ? "Visto" : "In visione";
-      if (status === "Visto" && i.status !== "Visto") becameWatched = true;
-      return { ...i, seen, status };
+    commitWatched(get, set, id, (item) => {
+      const ref = nextEpisode(item);
+      return ref ? withEpisode(watchedList(item), ref, today()) : watchedList(item);
     });
-    persistOrToast(get, set, next);
-    if (prev && prev.episodes) {
-      const entries = [makeHistoryEntry(prev, today(), "episode")];
-      if (becameWatched) entries.push(makeHistoryEntry(prev, today(), "watched"));
-      logHistory(get, set, entries);
-    }
-    if (becameWatched) set({ justCompleted: { itemId: id, at: Date.now() } });
   },
 
   decrementEpisode: (id) => {
-    const next = get().items.map((i) => {
-      if (i.id !== id) return i;
-      const seen = Math.max(0, (i.seen || 0) - 1);
-      const status: Status = i.status === "Visto" && seen < (i.episodes ?? 0) ? "In visione" : i.status;
-      return { ...i, seen, status };
+    commitWatched(get, set, id, (item) => {
+      const last = lastWatched(item);
+      return last ? withoutEpisode(watchedList(item), last) : watchedList(item);
     });
-    persistOrToast(get, set, next);
   },
 
   setEpisodesSeen: (id, seen) => {
-    const prev = get().items.find((i) => i.id === id);
-    const next = get().items.map((i) => (i.id === id && i.episodes ? { ...i, seen: Math.max(0, Math.min(i.episodes, seen)) } : i));
-    persistOrToast(get, set, next);
-    if (!prev?.episodes) return;
     // The slider is a primary way to record progress, so a jump forward has to
     // reach the diary as well — logged as one entry covering the whole delta.
-    const clamped = Math.max(0, Math.min(prev.episodes, seen));
-    const delta = clamped - (prev.seen || 0);
-    if (delta > 0) logHistory(get, set, [makeHistoryEntry(prev, today(), "episode", delta)]);
+    commitWatched(get, set, id, (item) => {
+      const capped = item.episodes ? Math.min(item.episodes, seen) : seen;
+      return resizeWatched(item, capped, today());
+    });
+  },
+
+  toggleEpisode: (id, ref) => {
+    commitWatched(get, set, id, (item) =>
+      isWatched(item, ref) ? withoutEpisode(watchedList(item), ref) : withEpisode(watchedList(item), ref, today()),
+    );
+  },
+
+  markEpisodesUpTo: (id, ref) => {
+    commitWatched(get, set, id, (item) =>
+      upTo(item, ref).reduce((list, r) => withEpisode(list, r, today()), watchedList(item)),
+    );
+  },
+
+  markEpisodeWatched: (id, ref) => {
+    commitWatched(get, set, id, (item) => withEpisode(watchedList(item), ref, today()));
   },
 
   setRewatch: (id, rewatch) => {
@@ -288,38 +411,82 @@ export const useLibrary = create<LibraryState>((set, get) => ({
     if (prev && clamped > prev.rewatch) logHistory(get, set, [makeHistoryEntry(prev, today(), "rewatch")]);
   },
 
-  pushToast: (kind, text) => {
+  pushToast: (kind, text, action) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    set({ toasts: [...get().toasts, { id, kind, text }] });
-    setTimeout(() => get().dismissToast(id), 4200);
+    set({ toasts: [...get().toasts, { id, kind, text, action }] });
+    // Un avviso con un'azione resta un po' di più: va letto *e* deciso.
+    setTimeout(() => get().dismissToast(id), action ? 6500 : 4200);
   },
   dismissToast: (id) => {
     set({ toasts: get().toasts.filter((t) => t.id !== id) });
   },
   clearJustCompleted: () => set({ justCompleted: null }),
 
-  importData: (items, history) => {
+  importData: (rawItems, history) => {
+    // Un file scritto prima del registro degli episodi passa dalla stessa
+    // migrazione del caricamento, con il diario che porta con sé.
+    const items = migrateEpisodes(rawItems, history).items;
     const okItems = saveItems(items);
     saveHistory(history);
     set({ items, history, storageError: !okItems });
     if (!okItems) {
-      get().pushToast("error", "Impossibile salvare: memoria del browser piena o non disponibile.");
+      get().pushToast("error", t("useLibrary.impossibile_salvare_memoria_del"));
     } else {
-      get().pushToast("success", `Libreria importata: ${items.length} titoli.`);
+      get().pushToast("success", t("useLibrary.libreria_importata_titoli", { v0: items.length }));
     }
+  },
+
+  importEntries: (accepted) => {
+    const { items, history, ...counts } = applyImport(get().items, get().history, accepted, { today: today(), newId });
+    if (counts.added + counts.updated === 0) return counts;
+    persistOrToast(get, set, items);
+    saveHistory(history);
+    set({ history });
+    return counts;
+  },
+
+  annotateHistory: (ids, note) => {
+    const targets = new Set(ids);
+    const clean = { with: note.with.trim().slice(0, 80), where: note.where.trim().slice(0, 80) };
+    const next = get().history.map((h) => {
+      if (!targets.has(h.id)) return h;
+      const { with: _w, where: _p, ...rest } = h;
+      return { ...rest, ...(clean.with ? { with: clean.with } : {}), ...(clean.where ? { where: clean.where } : {}) };
+    });
+    saveHistory(next);
+    set({ history: next });
   },
 
   clearAll: () => {
     saveItems([]);
     saveHistory([]);
     set({ items: [], history: [], storageError: false, justCompleted: null });
-    get().pushToast("info", "Libreria svuotata.");
+    get().pushToast("info", t("useLibrary.libreria_svuotata"));
   },
 
   resetCorruptedData: () => {
     saveItems([]);
     saveHistory([]);
     set({ items: [], history: [], storageError: false, justCompleted: null });
-    get().pushToast("info", "Dati locali ripristinati.");
+    get().pushToast("info", t("useLibrary.dati_locali_ripristinati"));
   },
 }));
+
+/*
+ * Una scrittura su disco che fallisce dopo — IndexedDB risponde in modo
+ * asincrono — arriva qui, con lo stesso avviso di una scrittura sincrona
+ * rifiutata. E una scrittura fatta in un'altra scheda aggiorna questa: prima,
+ * con due schede aperte, l'ultima a salvare cancellava le aggiunte dell'altra.
+ */
+durable.onError(() => {
+  useLibrary.setState({ storageError: true });
+  useLibrary.getState().pushToast("error", t("useLibrary.impossibile_salvare_memoria_del"));
+});
+durable.subscribe((key) => {
+  if (key === "library") {
+    const next = loadItems();
+    if (!next.corrupted) useLibrary.setState({ items: next.data });
+  } else if (key === "history") {
+    useLibrary.setState({ history: loadHistory().data });
+  }
+});

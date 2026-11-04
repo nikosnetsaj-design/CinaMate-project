@@ -36,6 +36,7 @@ import ResumeBar from './ResumeBar';
 import ShortcutsHelp from './ShortcutsHelp';
 import type { Recommendation } from '../services/recommendationService';
 import { PlayIcon, PauseIcon, ExpandIcon, UnlockIcon } from './Icons';
+import { t } from "../../lib/i18n";
 
 type Props = {
   content: MediaContent;
@@ -229,7 +230,7 @@ export default function VideoPlayer({
     next: nextContentId ? goToNext : null,
   });
 
-  const subtitles = useSubtitles(content.subtitleTracks, player.currentTime);
+  const subtitles = useSubtitles(content.subtitleTracks, player.currentTime, content.id);
   const cast = useCast(player.videoRef, content.manifestUrl, content.title);
   usePlayerStats(player.isPlaying);
 
@@ -287,15 +288,42 @@ export default function VideoPlayer({
     if (idleTimer.current) window.clearTimeout(idleTimer.current);
     idleTimer.current = window.setTimeout(() => setControlsVisible(false), 3000);
   }, []);
+  /**
+   * Da bloccato i comandi se ne vanno da soli anche a video fermo.
+   *
+   * La regola «spariscono solo mentre il film va» è giusta per la fascia dei
+   * comandi — su una scena in pausa servono ancora, e nasconderli mentre stai
+   * per premere qualcosa è solo dispettoso. Ma il lucchetto no: quello *è* la
+   * richiesta di non vedere più niente, e restava piantato in mezzo allo
+   * schermo finché non partiva la riproduzione — che è esattamente la
+   * situazione in cui lo si preme, per pulire lo schermo prima. Adesso se ne va
+   * come al cinema e torna al tocco successivo, come fanno tutti.
+   */
   const handleActivity = useCallback(() => {
     setControlsVisible(true);
-    if (player.isPlaying) scheduleHide();
-  }, [player.isPlaying, scheduleHide]);
+    if (player.isPlaying || locked) scheduleHide();
+  }, [player.isPlaying, locked, scheduleHide]);
   useEffect(() => {
     handleActivity();
     return () => { if (idleTimer.current) window.clearTimeout(idleTimer.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [player.isPlaying]);
+  }, [player.isPlaying, locked]);
+
+  /**
+   * La ricevuta di un comando che non ha potuto agire, per pochi secondi.
+   *
+   * Vive qui e non in un toast di CineMate perché il player è un modulo a sé:
+   * un messaggio sul film deve stare sul film, anche a schermo pieno, dove un
+   * toast dell'app non si vedrebbe affatto.
+   */
+  const [notice, setNotice] = useState<string | null>(null);
+  const noticeTimer = useRef<number | undefined>(undefined);
+  const showNotice = useCallback((message: string) => {
+    setNotice(message);
+    if (noticeTimer.current) window.clearTimeout(noticeTimer.current);
+    noticeTimer.current = window.setTimeout(() => setNotice(null), 4000);
+  }, []);
+  useEffect(() => () => { if (noticeTimer.current) window.clearTimeout(noticeTimer.current); }, []);
 
   const handleSkip = () => extras.activeMarker && handleUserSeek(extras.activeMarker.endSec);
   const resumedBadge = resumeSec > 2 && player.currentTime < resumeSec + 3;
@@ -361,7 +389,7 @@ export default function VideoPlayer({
       // focusable div tells a screen reader nothing about what it just landed on.
       tabIndex={0}
       role="region"
-      aria-label={`Player video — ${content.title}`}
+      aria-label={t("player_VideoPlayer.player_video", { v0: content.title })}
       className={`pv-shell ${isMini ? 'pv-shell--mini' : ''} ${player.inPageFullscreen ? 'pv-shell--fullpage' : ''} ${controlsVisible ? '' : 'pv-controls-hidden'}`}
       style={{ '--pv-picture-brightness': gestures.brightness } as CSSProperties}
       onMouseMove={handleActivity}
@@ -416,11 +444,11 @@ export default function VideoPlayer({
           <button
             type="button"
             className="pv-lock-btn"
-            aria-label="Sblocca i comandi"
+            aria-label={t("player_VideoPlayer.sblocca_i_comandi")}
             onClick={() => setLocked(false)}
           >
             <UnlockIcon />
-            <span>Comandi bloccati</span>
+            <span>{t("player_VideoPlayer.comandi_bloccati")}</span>
           </button>
         </div>
       )}
@@ -485,6 +513,11 @@ export default function VideoPlayer({
             <SkipButton marker={extras.activeMarker} onSkip={handleSkip} />
           )}
           {extras.autoSkipped && <AutoSkipNote type={extras.autoSkipped} />}
+          {notice && (
+            <div className="pv-autoskip-note" role="status">
+              {notice}
+            </div>
+          )}
 
           {!askedForPoint && resumeSec > 30 && !resumeDismissed && player.currentTime < resumeSec + 12 && (
             <ResumeBar
@@ -539,6 +572,7 @@ export default function VideoPlayer({
             onNext={nextContentId ? goToNext : null}
             onToggleMini={() => setIsMini(true)}
             onToggleFullscreen={() => player.toggleFullscreen(containerRef.current)}
+            onNotice={showNotice}
           />
 
           {episodesOpen && playlist && (
@@ -597,11 +631,11 @@ export default function VideoPlayer({
 
       {isMini && (
         <div className="pv-mini-controls">
-          <button className="pv-icon-btn" aria-label={player.isPlaying ? 'Pausa' : 'Play'} onClick={player.togglePlay}>
+          <button className="pv-icon-btn" aria-label={player.isPlaying ? t("player_VideoPlayer.pausa") : t("player_VideoPlayer.play")} onClick={player.togglePlay}>
             {player.isPlaying ? <PauseIcon /> : <PlayIcon />}
           </button>
           <span className="pv-mini-title">{content.title}</span>
-          <button className="pv-icon-btn" aria-label="Esci dal mini player" onClick={() => setIsMini(false)}><ExpandIcon /></button>
+          <button className="pv-icon-btn" aria-label={t("player_VideoPlayer.esci_dal_mini_player")} onClick={() => setIsMini(false)}><ExpandIcon /></button>
         </div>
       )}
     </div>

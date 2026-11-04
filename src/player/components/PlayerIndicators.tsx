@@ -1,4 +1,5 @@
 import type { QualityLevel, NetworkQuality } from '../types';
+import { t } from "../../lib/i18n";
 
 type Props = {
   quality?: QualityLevel;
@@ -17,7 +18,9 @@ type Props = {
   sleepAtEnd?: boolean;
 };
 
-const NETWORK_DOT: Record<NetworkQuality, string> = { excellent: '🟢', good: '🟢', poor: '🟠', offline: '🔴' };
+/* La qualità della rete come il punto di stato degli host: stesso disegno,
+   stessi colori di esito. */
+const NETWORK_DOT: Record<NetworkQuality, string> = { excellent: 'online', good: 'online', poor: 'slow', offline: 'offline' };
 const NETWORK_LABEL: Record<NetworkQuality, string> = { excellent: 'Ottima', good: 'Buona', poor: 'Debole', offline: 'Assente' };
 
 export default function PlayerIndicators({
@@ -30,22 +33,22 @@ export default function PlayerIndicators({
   const showNetworkBadge = networkQuality === 'poor' || networkQuality === 'offline';
   return (
     <div className="pv-indicators">
-      {quality && <span className="pv-badge">{quality.label}{isAuto ? ' · Auto' : ''}</span>}
+      {quality && <span className="pv-badge">{quality.label}{isAuto ? t("player_PlayerIndicators.auto") : ''}</span>}
       {audioLabel && <span className="pv-badge">{audioLabel}</span>}
-      {subtitleLabel && <span className="pv-badge">CC {subtitleLabel}</span>}
+      {subtitleLabel && <span className="pv-badge">{t("player_PlayerIndicators.cc")} {subtitleLabel}</span>}
       {sourceLabel && <span className="pv-badge pv-badge-active">{sourceLabel}</span>}
-      {isDownloaded && !sourceLabel && <span className="pv-badge">Offline</span>}
-      {resumed && <span className="pv-badge pv-badge-muted">Ripresa</span>}
+      {isDownloaded && !sourceLabel && <span className="pv-badge">{t("player_PlayerIndicators.offline")}</span>}
+      {resumed && <span className="pv-badge pv-badge-muted">{t("player_PlayerIndicators.ripresa")}</span>}
       {/* An armed sleep timer has to be visible: playback that stops by itself
           with nothing on screen to explain it looks exactly like a failure. */}
-      {sleepAtEnd && <span className="pv-badge pv-badge-active">Stop a fine episodio</span>}
+      {sleepAtEnd && <span className="pv-badge pv-badge-active">{t("player_PlayerIndicators.stop_a_fine_episodio")}</span>}
       {!sleepAtEnd && sleepMinutes != null && (
-        <span className="pv-badge pv-badge-active">Stop fra {sleepMinutes} min</span>
+        <span className="pv-badge pv-badge-active">{t("player_PlayerIndicators.stop_fra")} {sleepMinutes} {t("player_PlayerIndicators.min")}</span>
       )}
-      {castDeviceName && <span className="pv-badge pv-badge-active">In riproduzione su {castDeviceName}</span>}
-      {hostName && <span className="pv-badge pv-badge-warn">Host: {hostName}</span>}
+      {castDeviceName && <span className="pv-badge pv-badge-active">{t("player_PlayerIndicators.in_riproduzione_su")} {castDeviceName}</span>}
+      {hostName && <span className="pv-badge pv-badge-warn">{t("player_PlayerIndicators.host")} {hostName}</span>}
       {showNetworkBadge && networkQuality && (
-        <span className="pv-badge pv-badge-warn">{NETWORK_DOT[networkQuality]} Rete {NETWORK_LABEL[networkQuality]}</span>
+        <span className="pv-badge pv-badge-warn"><span className={`pv-dot pv-dot--${NETWORK_DOT[networkQuality]}`} aria-hidden="true" /> {t("player_PlayerIndicators.rete")} {NETWORK_LABEL[networkQuality]}</span>
       )}
     </div>
   );

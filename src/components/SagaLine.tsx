@@ -7,6 +7,8 @@ import { useCatalogPreview } from "../store/useCatalogPreview";
 import { posterUrl } from "../lib/tmdb";
 import { paletteFor } from "../lib/palette";
 import type { Item } from "../types";
+import { CheckIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * Prequel e sequel come una linea da percorrere, non come un elenco.
@@ -57,7 +59,7 @@ function Chapter({ entry, current, onOpen }: { entry: SagaEntry; current: boolea
                 posterPath: part.posterPath,
               })
         }
-        aria-label={item ? `Apri ${part.title}` : `Apri la scheda di ${part.title}`}
+        aria-label={item ? t("SagaLine.apri", { v0: part.title }) : t("SagaLine.apri_la_scheda_di", { v0: part.title })}
         aria-current={current ? "true" : undefined}
         className="relative block w-full"
       >
@@ -82,30 +84,30 @@ function Chapter({ entry, current, onOpen }: { entry: SagaEntry; current: boolea
             />
           )}
           {part.year != null && (
-            <span className="absolute right-1 top-1 rounded-full bg-black/65 px-1.5 py-0.5 font-mono tabular text-[10px] text-white backdrop-blur-sm">
+            <span className="absolute right-1 top-1 rounded-full bg-black/65 px-1.5 py-0.5 font-mono tabular text-xs text-white backdrop-blur-sm">
               {part.year}
             </span>
           )}
           {state === "visto" && (
             <span
-              className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold"
+              className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold"
               style={{ background: "var(--status-done)", color: "var(--accent-contrast)" }}
             >
-              ✓
+              <CheckIcon size={12} />
             </span>
           )}
           {state === "assente" && (
-            <span className="absolute inset-x-0 bottom-0 bg-black/60 py-1 text-[10px] font-semibold text-white">
-              Vedi scheda
+            <span className="absolute inset-x-0 bottom-0 bg-black/60 py-1 text-xs font-semibold text-white">
+              {t("SagaLine.vedi_scheda")}
             </span>
           )}
         </span>
       </button>
 
-      <p className="mt-1.5 line-clamp-2 text-[11px] font-medium leading-snug text-text">{part.title}</p>
+      <p className="mt-1.5 line-clamp-2 text-xs font-medium leading-snug text-text">{part.title}</p>
       {current && (
-        <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: "var(--accent-text)" }}>
-          Sei qui
+        <p className="mt-0.5 text-xs font-bold" style={{ color: "var(--accent-text)" }}>
+          {t("SagaLine.sei_qui")}
         </p>
       )}
     </div>
@@ -133,9 +135,9 @@ export function SagaLine({ item }: { item: Item }) {
 
   return (
     <section className="mt-1">
-      <h3 className="font-display text-lg font-semibold text-text">
-        Prequel &amp; Sequel <span className="text-sm font-normal text-text-faint">· {entries.length}</span>
-      </h3>
+      <h2 className="font-display text-lg font-semibold text-text">
+        {t("SagaLine.prequel_amp_sequel")} <span className="text-sm font-normal text-text-faint">· {entries.length}</span>
+      </h2>
 
       <div className="relative mt-3">
         {/* La linea del tempo passa dietro le locandine, all'altezza del loro

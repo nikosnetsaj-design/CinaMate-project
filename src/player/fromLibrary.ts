@@ -8,6 +8,7 @@ import type { TmdbSaga } from "../lib/tmdb";
 import { EMPTY_SOURCE } from "../store/usePlayerSources";
 import type { PlayerSource } from "../store/usePlayerSources";
 import type { ContentRating, MediaContent, SagaEntry, SubtitleTrack, SkipMarker } from "./types";
+import { t } from "../lib/i18n";
 
 /**
  * Bridge between CineMate's library and the player's content model.
@@ -51,10 +52,6 @@ export function streamUrlOf(item: Item, lookup: SourceLookup): string | null {
   const configured = lookup(item.id).manifestUrl?.trim();
   if (configured) return configured;
   return item.links.find(isHlsUrl) ?? null;
-}
-
-export function hasStream(item: Item, lookup: SourceLookup): boolean {
-  return streamUrlOf(item, lookup) !== null;
 }
 
 // A runtime of 0 (the default for a title added by hand without one) would
@@ -101,7 +98,7 @@ function ratingOf(item: Item): ContentRating | undefined {
   const age = minimumAge(item);
   return {
     certification: certification.toUpperCase(),
-    ageLabel: age === null ? undefined : age === 0 ? "Per tutti" : `Dai ${age} anni`,
+    ageLabel: age === null ? undefined : age === 0 ? t("player_fromLibrary.per_tutti") : t("player_fromLibrary.dai_anni", { v0: age }),
     descriptors: (item.contentWarnings ?? "")
       .split(",")
       .map((w) => w.trim())

@@ -4,12 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { useFocusTrap } from "../lib/useFocusTrap";
 import { similarInLibrary } from "../lib/recommend";
 import { paletteFor } from "../lib/palette";
-import { formatRuntime } from "../lib/format";
+import { formatRuntime, scrollBehavior } from "../lib/format";
 import { STATUSES } from "../lib/status";
-import { voteColor } from "../lib/vote";
 import { backdropSrcSet, backdropUrl } from "../lib/tmdb";
 import { PosterArt } from "./PosterArt";
-import { StatusChip } from "./StatusChip";
+import { StatusMark } from "./StatusChip";
 import { WatchAndLinks } from "./WatchAndLinks";
 import { WatchButton } from "./WatchButton";
 import { LinkToTmdb } from "./LinkToTmdb";
@@ -21,17 +20,25 @@ import { RelatedRow } from "./RelatedRow";
 import { CollectionGrid } from "./CollectionGrid";
 import { ShareSheet } from "./ShareSheet";
 import { EpisodeList } from "./EpisodeList";
+import { EpisodeGrid } from "./EpisodeGrid";
+import { episodeLabel, nextEpisode } from "../lib/episodes";
 import { DownloadButton } from "./DownloadButton";
 import { SpoilerFreeRecap, TranslateOverview } from "./AiItemExtras";
-import { HeartIcon, InfoIcon, PlayIcon, StackIcon } from "./icons";
+import { BackIcon, EyeIcon, HeartIcon, InfoIcon, ListIcon, MinusIcon, PlayIcon, PlusIcon, ShareIcon, SparkleIcon, StackIcon, StarIcon } from "./icons";
+import { ListPickerSheet } from "./ListPickerSheet";
+import { TrailerPlayer } from "./TrailerPlayer";
+import { youtubeKey } from "../lib/youtube";
+import { useLists } from "../store/useLists";
 import { useSelectedItem } from "../store/useSelectedItem";
 import { useLibrary } from "../store/useLibrary";
 import { useEditSheet } from "../store/useEditSheet";
+import { useRateSheet } from "../store/useRateSheet";
 import { useAddSheet } from "../store/useAddSheet";
 import { useCriticDraft } from "../store/useCriticDraft";
 import { useTitleLogo } from "../lib/useTitleLogo";
 import { useFranchise } from "../lib/useFranchise";
 import type { Item, Status } from "../types";
+import { platformLabel, statusLabel, t } from "../lib/i18n";
 
 /**
  * Un'azione tonda della riga sotto ai pulsanti: icona grande, parola sotto.
@@ -56,15 +63,15 @@ function RoundAction({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className="flex min-w-14 flex-col items-center gap-1.5 text-[11px] font-medium"
-      style={{ color: active ? "var(--accent-text)" : "var(--text-muted)" }}
+      className="group flex min-w-16 flex-col items-center gap-1.5 text-xs font-medium text-text-muted"
     >
+      {/* Un cerchio pieno e neutro per tutte e cinque: quando un'azione è
+          accesa lo dice l'icona, nel colore dell'accento. Prima erano cinque
+          anelli, e i tre accesi avevano anche il fondo colorato — la riga più
+          colorata della scheda, sotto il titolo. */}
       <span
-        className="flex h-11 w-11 items-center justify-center rounded-full border transition-colors"
-        style={{
-          borderColor: active ? "var(--accent)" : "var(--border-strong)",
-          background: active ? "color-mix(in srgb, var(--accent) 16%, transparent)" : "transparent",
-        }}
+        className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-2 transition-[transform,background-color] duration-200 group-hover:bg-surface-hover group-active:scale-95"
+        style={{ color: active ? "var(--accent-text)" : "var(--text)" }}
       >
         {children}
       </span>
@@ -83,10 +90,10 @@ function ItemDetail({ item }: { item: Item }) {
   const toggleFav = useLibrary((s) => s.toggleFav);
   const incrementEpisode = useLibrary((s) => s.incrementEpisode);
   const decrementEpisode = useLibrary((s) => s.decrementEpisode);
-  const setEpisodesSeen = useLibrary((s) => s.setEpisodesSeen);
   const setRewatch = useLibrary((s) => s.setRewatch);
   const removeItem = useLibrary((s) => s.removeItem);
   const openEdit = useEditSheet((s) => s.openEdit);
+  const openRate = useRateSheet((s) => s.open);
   const openAddSheet = useAddSheet((s) => s.open);
   const setCriticQuestion = useCriticDraft((s) => s.setQuestion);
   const navigate = useNavigate();
@@ -97,9 +104,15 @@ function ItemDetail({ item }: { item: Item }) {
   const logo = useTitleLogo(item);
   const shelfMates = useMemo(() => similarInLibrary(item, items), [item, items]);
   const [sharing, setSharing] = useState(false);
+  const [pickingList, setPickingList] = useState(false);
+  const [trailerOpen, setTrailerOpen] = useState(false);
+  const trailerKey = youtubeKey(item.trailerUrl);
+  const inLists = useLists((s) => s.lists.some((l) => l.kind === "manual" && l.itemIds.includes(item.id)));
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [a, b] = paletteFor(item.title);
   const isSeries = item.kind !== "film" && item.kind !== "doc";
   const [tab, setTab] = useState<Tab>(isSeries ? "episodi" : "dettagli");
+  const nextUp = nextEpisode(item);
   const pct = isSeries && item.episodes ? Math.round(((item.seen || 0) / item.episodes) * 100) : null;
   const watchedMinutes = item.kind === "film" ? (item.status === "Visto" ? item.runtime : 0) : (item.seen || 0) * item.runtime;
 
@@ -114,10 +127,10 @@ function ItemDetail({ item }: { item: Item }) {
   const hasCollection = franchise.loading ? item.collectionId != null : franchise.entries.length > 1;
 
   const TABS: { id: Tab; label: string }[] = [
-    ...(isSeries ? [{ id: "episodi" as const, label: "Episodi" }] : []),
-    ...(hasCollection ? [{ id: "collezione" as const, label: "Collezione" }] : []),
-    { id: "dettagli", label: "Dettagli" },
-    { id: "simili", label: "Simili" },
+    ...(isSeries ? [{ id: "episodi" as const, label: t("ItemDetailSheet.episodi_2") }] : []),
+    ...(hasCollection ? [{ id: "collezione" as const, label: t("ItemDetailSheet.collezione") }] : []),
+    { id: "dettagli", label: t("ItemDetailSheet.dettagli") },
+    { id: "simili", label: t("ItemDetailSheet.simili") },
   ];
   // La scheda scelta può sparire sotto i piedi — una collezione che si rivela
   // vuota — e senza questo resterebbe un pannello vuoto senza nessuna linguetta
@@ -142,14 +155,6 @@ function ItemDetail({ item }: { item: Item }) {
             className="absolute inset-0 h-full w-full object-cover"
           />
         )}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-30 mix-blend-overlay"
-          style={{
-            backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E\")",
-          }}
-        />
         <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 35%, var(--bg) 100%)" }} />
 
         <button
@@ -158,44 +163,65 @@ function ItemDetail({ item }: { item: Item }) {
             close();
             navigate(`/player?titolo=${encodeURIComponent(item.id)}`);
           }}
-          aria-label={`Riproduci ${item.title}`}
-          className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/85 bg-black/35 text-white backdrop-blur-[2px] transition-transform hover:scale-105"
+          aria-label={t("ItemDetailSheet.riproduci", { v0: item.title })}
+          className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md transition-transform duration-200 hover:scale-105 active:scale-95"
         >
-          <PlayIcon size={26} />
+          <PlayIcon size={28} />
         </button>
 
-        <div className="absolute bottom-3.5 left-4 flex items-end gap-3.5 sm:left-6">
-          <PosterArt item={item} size="lg" showTitle={false} priority className="w-20 shrink-0 shadow-[var(--shadow-lg)] sm:w-24" />
-          {item.vote != null && (
-            <div className="pb-1">
-              <span className="font-mono tabular text-4xl font-semibold leading-none" style={{ color: voteColor(item.vote) }}>
-                {item.vote}
-              </span>
-              <span className="text-sm text-white/60">/10</span>
-            </div>
-          )}
+        {/* Locandina, voto e trailer allineati alla colonna del testo, non ai
+            bordi dello schermo: su un tablet in orizzontale o sul computer la
+            locandina stava appoggiata al margine sinistro e il titolo a
+            centinaia di pixel di distanza. */}
+        <div className="absolute inset-x-0 bottom-3.5">
+          <div className="mx-auto flex max-w-3xl items-end gap-3.5 px-4 sm:px-6">
+            <PosterArt item={item} size="lg" showTitle={false} priority className="w-20 shrink-0 shadow-[var(--shadow-lg)] sm:w-24" />
+            {item.vote != null && (
+              <button
+                type="button"
+                onClick={() => openRate(item.id)}
+                aria-label={t("ItemDetailSheet.cambia_il_voto", { v0: item.vote })}
+                className="pb-1 text-left transition-transform active:scale-95"
+              >
+                <span className="tabular text-4xl font-semibold leading-none text-white">{item.vote}</span>
+                <span className="text-sm text-white/70">/10</span>
+              </button>
+            )}
+            {/* Il trailer sta sull'immagine, dove lo cerca l'occhio, e si apre
+                qui dentro invece che su YouTube: uscire per novanta secondi
+                voleva dire perdere la scheda. Così la fila delle azioni resta
+                di cinque. */}
+            {trailerKey && (
+              <button
+                type="button"
+                onClick={() => setTrailerOpen(true)}
+                className="btn btn-sm mb-0.5 ml-auto bg-black/45 text-white backdrop-blur-md hover:bg-black/65"
+              >
+                <PlayIcon size={14} />
+                {t("ItemDetailSheet.trailer")}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
       <button
         type="button"
         onClick={close}
-        aria-label="Torna indietro"
-        className="tap-target fixed left-3.5 top-3.5 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-md"
+        aria-label={t("ItemDetailSheet.torna_indietro")}
+        className="icon-btn fixed left-3 top-3 z-20 bg-black/45 text-white backdrop-blur-md hover:bg-black/65 hover:text-white"
       >
-        ←
+        <BackIcon />
       </button>
 
       <div className="mx-auto max-w-3xl px-4 pb-28 pt-4 sm:px-6">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--accent-text)" }}>
-          {item.platform}
-        </span>
+        <span className="text-sm font-medium text-text-muted">{platformLabel(item.platform)}</span>
         <div className="mt-0.5 flex items-start justify-between gap-3">
           {/* Il logo disegnato quando TMDB ce l'ha, il titolo scritto quando
               non c'è. L'`h1` resta in entrambi i casi: l'immagine porta il
               testo nell'`alt`, così l'intestazione della pagina esiste anche
               per chi non la vede. */}
-          <h1 id={titleId} className="font-display text-2xl font-semibold leading-tight text-text">
+          <h1 id={titleId} className="t-display text-text">
             {logo ? (
               <img src={logo} alt={item.title} className="max-h-16 w-auto max-w-[min(100%,20rem)] object-contain" />
             ) : (
@@ -207,11 +233,11 @@ function ItemDetail({ item }: { item: Item }) {
         {/* La riga dei dati: anno, classificazione, quanto dura. Testo nudo
             separato da punti invece di sei pastiglie — sono fatti, non filtri,
             e incasellarli li faceva sembrare cliccabili. */}
-        <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-text-muted">
+        <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm tabular text-text-muted">
           {[
             item.year || null,
             item.certification || null,
-            isSeries && item.seasons ? `${item.seasons} stagion${item.seasons === 1 ? "e" : "i"}` : null,
+            isSeries && item.seasons ? t(item.seasons === 1 ? "ItemDetailSheet.stagione" : "ItemDetailSheet.stagioni", { v0: item.seasons }) : null,
             item.runtime ? formatRuntime(item.runtime) + (isSeries ? "/ep" : "") : null,
             item.genre || null,
             item.quality || null,
@@ -221,7 +247,7 @@ function ItemDetail({ item }: { item: Item }) {
               <span key={String(value)} className="flex items-center gap-2">
                 {i > 0 && <span aria-hidden="true" className="text-text-faint">·</span>}
                 {value === item.certification || value === item.quality ? (
-                  <span className="rounded-xs border border-border-strong px-1.5 py-px font-mono text-[11px]">{value}</span>
+                  <span className="rounded-xs bg-surface-2 px-1.5 py-px text-xs font-medium text-text">{value}</span>
                 ) : (
                   value
                 )}
@@ -238,44 +264,47 @@ function ItemDetail({ item }: { item: Item }) {
             "La mia lista" non c'è: in CineMate la lista *è* lo stato, che ha
             la sua riga di pastiglie in Dettagli, e un interruttore a due valori
             avrebbe dovuto inventare uno stato "non in lista" che non esiste. */}
-        <div className="mt-4 flex flex-wrap justify-around gap-2 border-y border-border py-3">
-          {item.trailerUrl && (
-            <RoundAction label="Trailer" onClick={() => window.open(item.trailerUrl!, "_blank", "noopener")}>
-              <PlayIcon size={17} />
-            </RoundAction>
-          )}
-          <RoundAction label="Preferito" active={item.fav} onClick={() => toggleFav(item.id)}>
+        <div className="mt-6 flex flex-wrap justify-around gap-2">
+          <RoundAction label={t("ItemDetailSheet.preferito")} active={item.fav} onClick={() => toggleFav(item.id)}>
             <HeartIcon size={17} filled={item.fav} />
           </RoundAction>
-          <RoundAction label="Voto" active={item.vote != null} onClick={() => openEdit(item)}>
-            <span className="text-base leading-none">★</span>
+          <RoundAction label={t("ItemDetailSheet.voto")} active={item.vote != null} onClick={() => openRate(item.id)}>
+            <StarIcon size={17} filled={item.vote != null} />
           </RoundAction>
           <RoundAction
-            label="Guardato"
+            label={t("ItemDetailSheet.guardato")}
             active={item.status === "Visto"}
             // Coppia onesta: "l'ho visto" e "voglio vederlo" sono i due stati
             // fra cui questo pulsante può spostarti senza inventare nulla.
-            onClick={() => setStatus(item.id, item.status === "Visto" ? "Da vedere" : "Visto")}
+            onClick={() => {
+              const watched = item.status !== "Visto";
+              setStatus(item.id, watched ? "Visto" : "Da vedere");
+              // Appena visto e senza voto: la domanda giusta arriva da sola.
+              if (watched && item.vote == null) openRate(item.id);
+            }}
           >
-            <span className="text-base leading-none">👁</span>
+            <EyeIcon size={17} />
           </RoundAction>
-          <RoundAction label="Condividi" onClick={() => setSharing(true)}>
-            <span className="text-base leading-none">↗</span>
+          <RoundAction label={t("ItemDetailSheet.liste")} active={inLists} onClick={() => setPickingList(true)}>
+            <ListIcon size={17} />
+          </RoundAction>
+          <RoundAction label={t("ItemDetailSheet.condividi")} onClick={() => setSharing(true)}>
+            <ShareIcon size={17} />
           </RoundAction>
         </div>
 
-        {item.overview && <p className="mt-4 text-sm leading-relaxed text-text-muted">{item.overview}</p>}
+        {item.overview && <p className="mt-6 text-base leading-relaxed text-text-muted">{item.overview}</p>}
 
         {/* Il voto di TMDB sta qui e non accanto al tuo, in cima: sono due
             giudizi diversi e affiancarli suggerirebbe un confronto che non
             interessa a nessuno. Qui è un dato del titolo fra gli altri. */}
         {item.tmdbRating != null && (
           <p className="mt-2.5 flex items-center gap-2 text-sm text-text-muted">
-            <span className="text-base leading-none" style={{ color: "var(--accent-text)" }}>
-              ★
+            <span className="flex text-text-faint">
+              <StarIcon size={14} filled />
             </span>
-            <span className="font-mono tabular font-semibold text-text">{item.tmdbRating.toFixed(1)}</span>
-            <span className="text-text-faint">/10 · media di TMDB</span>
+            <span className="tabular font-semibold text-text">{item.tmdbRating.toFixed(1)}</span>
+            <span className="text-text-faint">{t("CatalogSheet.media_di_tmdb")}</span>
           </p>
         )}
 
@@ -303,12 +332,12 @@ function ItemDetail({ item }: { item: Item }) {
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-[11px] uppercase tracking-[0.16em] text-text-faint">
-                Fa parte di una collezione
+                {t("ItemDetailSheet.fa_parte_di_una")}
               </span>
               <span className="block truncate font-display text-sm font-semibold text-text">
                 {franchise.name ||
                   (item.collectionName ?? "") ||
-                  `${franchise.progress.total} titoli nella stessa storia`}
+                  t("ItemDetailSheet.titoli_nella_stessa_storia", { v0: franchise.progress.total })}
               </span>
             </span>
             {franchise.progress.total > 0 && (
@@ -333,19 +362,21 @@ function ItemDetail({ item }: { item: Item }) {
             setTab("dettagli");
             // Sul frame successivo: se la scheda cambia, il blocco dei dati
             // non è ancora nel documento e lo scorrimento non troverebbe nulla.
-            requestAnimationFrame(() => tabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+            requestAnimationFrame(() => tabsRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: "start" }));
           }}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-border-strong py-3 text-sm font-medium text-text transition-colors hover:bg-surface-hover"
+          className="chip mt-4 w-full"
         >
           <InfoIcon size={17} />
-          Maggiori informazioni
+          {t("ItemDetailSheet.maggiori_informazioni")}
         </button>
 
+        {/* Gli stessi segmenti di Tu, Cerca e Scopri: un modo solo, in tutta
+            l'app, di dire in quale parte di una cosa ti trovi. */}
         <div
           ref={tabsRef}
-          className="mt-5 flex gap-1 border-b border-border scroll-mt-4"
+          className="no-scrollbar mt-6 flex scroll-mt-4 gap-2 overflow-x-auto"
           role="tablist"
-          aria-label="Sezioni del titolo"
+          aria-label={t("ItemDetailSheet.sezioni_del_titolo")}
         >
           {TABS.map((t) => (
             <button
@@ -354,62 +385,56 @@ function ItemDetail({ item }: { item: Item }) {
               role="tab"
               aria-selected={active === t.id}
               onClick={() => setTab(t.id)}
-              className={`-mb-px rounded-t-sm border-b-2 px-3.5 py-2 text-sm font-medium transition-colors ${
-                active === t.id ? "text-text" : "border-transparent text-text-faint hover:text-text-muted"
-              }`}
-              style={active === t.id ? { borderColor: "var(--accent)" } : undefined}
+              className="chip"
             >
               {t.label}
             </button>
           ))}
         </div>
 
-        <div className="mt-4">
+        <div className="mt-5">
           {active === "episodi" && (
             <div className="flex flex-col gap-4">
+              {/* Prima delle puntate: è la domanda di chi sta per riprendere. */}
+              <SpoilerFreeRecap item={item} />
               <EpisodeList item={item} onNavigate={close} />
 
               {item.episodes ? (
-                <div className="rounded-md border border-border bg-surface-2 p-4">
+                <div className="rounded-lg bg-surface p-4 shadow-[var(--shadow-sm)]">
                   <div className="flex items-baseline justify-between">
-                    <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Avanzamento</span>
-                    <span className="font-mono tabular text-sm font-semibold" style={{ color: "var(--status-watching)" }}>
-                      {pct}%
-                    </span>
+                    <span className="text-sm font-medium text-text">{t("ItemDetailSheet.avanzamento")}</span>
+                    <span className="tabular text-sm font-semibold text-text-muted">{pct}%</span>
                   </div>
                   <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-hover">
-                    <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: "var(--status-watching)" }} />
+                    <div className="h-full rounded-full transition-[width] duration-300" style={{ width: `${pct}%`, background: "var(--accent)" }} />
                   </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={item.episodes}
-                    value={item.seen || 0}
-                    onChange={(e) => setEpisodesSeen(item.id, Number(e.target.value))}
-                    aria-label="Episodi visti"
-                    className="mt-3 w-full accent-[var(--status-watching)]"
-                  />
-                  <div className="mt-1.5 flex justify-between text-[11px] text-text-faint">
+                  <div className="mt-1.5 flex justify-between text-xs tabular text-text-muted">
                     <span>
-                      {item.seen || 0} di {item.episodes} episodi
+                      {item.seen || 0} {t("ItemDetailSheet.di")} {item.episodes} {t("ItemDetailSheet.episodi")}
                     </span>
-                    <span>{formatRuntime(watchedMinutes)} guardate</span>
+                    <span>{formatRuntime(watchedMinutes)} {t("ItemDetailSheet.guardate")}</span>
                   </div>
-                  <div className="mt-3 flex gap-2">
+                  <div className="mt-4">
+                    <EpisodeGrid item={item} />
+                  </div>
+                  <div className="mt-4 flex gap-2">
                     <button
                       type="button"
                       onClick={() => decrementEpisode(item.id)}
-                      className="flex-1 rounded-sm border border-border-strong bg-surface py-2 text-xs text-text-muted"
+                      disabled={(item.seen || 0) === 0}
+                      aria-label={t("ItemDetailSheet.togli_l_ultimo_episodio")}
+                      className="btn btn-secondary btn-sm flex-1 disabled:opacity-40"
                     >
-                      − 1 ep
+                      <MinusIcon size={16} />
+                      {t("ItemDetailSheet.togli")}
                     </button>
                     <button
                       type="button"
                       onClick={() => incrementEpisode(item.id)}
-                      className="flex-[2] rounded-sm border py-2 text-xs font-semibold"
-                      style={{ borderColor: "color-mix(in srgb, var(--status-watching) 45%, transparent)", background: "color-mix(in srgb, var(--status-watching) 16%, transparent)", color: "var(--status-watching)" }}
+                      disabled={!nextUp}
+                      className="btn btn-primary btn-sm flex-[2] disabled:opacity-40"
                     >
-                      Segna episodio visto
+                      {nextUp ? t("ItemDetailSheet.segna", { v0: episodeLabel(nextUp) }) : t("ItemDetailSheet.tutto_visto")}
                     </button>
                   </div>
                 </div>
@@ -420,65 +445,71 @@ function ItemDetail({ item }: { item: Item }) {
           {active === "dettagli" && (
             <div className="flex flex-col">
               <div>
-                <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">Stato</span>
+                <span className="mb-2 block text-sm font-medium text-text">{t("ItemDetailSheet.stato")}</span>
                 <div className="flex flex-wrap gap-2">
                   {STATUSES.map((s: Status) => (
                     <button
                       key={s}
                       type="button"
-                      onClick={() => setStatus(item.id, s)}
+                      onClick={() => {
+                        setStatus(item.id, s);
+                        if (s === "Visto" && item.status !== "Visto" && item.vote == null) openRate(item.id);
+                      }}
                       aria-pressed={item.status === s}
-                      className={`rounded-full transition-opacity ${item.status === s ? "opacity-100" : "opacity-45 hover:opacity-75"}`}
+                      className="chip"
                     >
-                      <StatusChip status={s} />
+                      <StatusMark status={s} />
+                      {statusLabel(s)}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div className="mt-4 flex gap-3">
-                <div className="flex-1 rounded-md border border-border bg-surface-2 p-3.5">
-                  <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-text-faint">Rivisto</span>
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono tabular text-xl font-semibold" style={{ color: "var(--accent-text)" }}>
-                      {item.rewatch || 0}×
+                <div className="flex flex-1 items-center justify-between gap-3 rounded-lg bg-surface-2 p-3 pl-4">
+                  <div>
+                    <span className="block text-sm font-medium text-text">{t("ItemDetailSheet.rivisto")}</span>
+                    <span className="tabular text-sm text-text-muted">
+                      {item.rewatch || 0} {(item.rewatch || 0) === 1 ? t("ItemDetailSheet.volta") : t("ItemDetailSheet.volte")}
                     </span>
-                    <div className="flex gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => setRewatch(item.id, (item.rewatch || 0) - 1)}
-                        className="tap-target h-8 w-8 rounded-sm border border-border-strong text-text-muted"
-                      >
-                        −
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setRewatch(item.id, (item.rewatch || 0) + 1)}
-                        className="tap-target h-8 w-8 rounded-sm border text-sm"
-                        style={{ borderColor: "color-mix(in srgb, var(--accent) 40%, transparent)", background: "color-mix(in srgb, var(--accent) 16%, transparent)", color: "var(--accent-text)" }}
-                      >
-                        +
-                      </button>
-                    </div>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setRewatch(item.id, (item.rewatch || 0) - 1)}
+                      aria-label={t("ItemDetailSheet.una_volta_in_meno")}
+                      disabled={(item.rewatch || 0) === 0}
+                      className="icon-btn bg-surface-hover disabled:opacity-40"
+                    >
+                      <MinusIcon />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRewatch(item.id, (item.rewatch || 0) + 1)}
+                      aria-label={t("ItemDetailSheet.una_volta_in_piu")}
+                      className="icon-btn bg-surface-hover"
+                    >
+                      <PlusIcon />
+                    </button>
                   </div>
                 </div>
                 {item.vote == null && (
                   <button
                     type="button"
-                    onClick={() => openEdit(item)}
-                    className="flex-1 rounded-md border border-dashed border-border-strong text-xs text-text-muted"
+                    onClick={() => openRate(item.id)}
+                    className="btn btn-secondary btn-sm flex-1"
                   >
-                    ★ Dai un voto
+                    <StarIcon size={14} />
+                    {t("ItemDetailSheet.dai_un_voto")}
                   </button>
                 )}
               </div>
 
-              <SpoilerFreeRecap item={item} />
               <TranslateOverview item={item} />
 
               {item.notes && (
-                <div className="mt-4 rounded-md border border-border bg-surface-2 p-4">
-                  <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-text-faint">Le tue note</span>
+                <div className="mt-4 rounded-lg bg-surface p-4 shadow-[var(--shadow-sm)]">
+                  <span className="mb-1.5 block text-sm font-medium text-text-muted">{t("ItemDetailSheet.le_tue_note")}</span>
                   <p className="text-sm italic leading-relaxed text-text">{item.notes}</p>
                 </div>
               )}
@@ -492,28 +523,45 @@ function ItemDetail({ item }: { item: Item }) {
 
               <LinkToTmdb item={item} />
 
-              <div className="mt-4 flex gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => openEdit(item)}
-                  className="flex-1 rounded-md border border-border-strong bg-surface-hover py-2.5 text-sm text-text"
+              {/* L'eliminazione si conferma qui dentro, con le parole che dicono
+                  cosa si perde. Era il dialogo grigio del browser: l'unico punto
+                  dell'app che sembrasse una pagina web. */}
+              {confirmingDelete ? (
+                <div
+                  role="alert"
+                  aria-labelledby={`${titleId}-delete`}
+                  className="mt-6 rounded-lg p-4"
+                  style={{ background: "color-mix(in srgb, var(--danger) 10%, var(--surface))" }}
                 >
-                  Modifica
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (window.confirm(`Eliminare "${item.title}"?`)) {
-                      removeItem(item.id);
-                      close();
-                    }
-                  }}
-                  className="flex-1 rounded-md border py-2.5 text-sm"
-                  style={{ borderColor: "color-mix(in srgb, var(--danger) 35%, transparent)", background: "color-mix(in srgb, var(--danger) 10%, transparent)", color: "var(--danger)" }}
-                >
-                  Elimina
-                </button>
-              </div>
+                  <p id={`${titleId}-delete`} className="text-sm text-text">
+                    {t("ItemDetailSheet.tolgo")}{item.title}{t("ItemDetailSheet.dalla_libreria_voto_note")}
+                  </p>
+                  <div className="mt-3 flex gap-2">
+                    <button type="button" onClick={() => setConfirmingDelete(false)} className="btn btn-secondary flex-1">
+                      {t("ItemDetailSheet.annulla")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        removeItem(item.id);
+                        close();
+                      }}
+                      className="btn btn-danger-fill flex-1"
+                    >
+                      {t("ItemDetailSheet.elimina")}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-6 flex gap-2">
+                  <button type="button" onClick={() => openEdit(item)} className="btn btn-secondary flex-1">
+                    {t("ItemDetailSheet.modifica")}
+                  </button>
+                  <button type="button" onClick={() => setConfirmingDelete(true)} className="btn btn-danger flex-1">
+                    {t("ItemDetailSheet.elimina")}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -544,21 +592,21 @@ function ItemDetail({ item }: { item: Item }) {
                   aggiunta. */}
               {shelfMates.length > 0 && (
                 <div>
-                  <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">
-                    {isSeries ? "Serie simili sul tuo scaffale" : "Film simili sul tuo scaffale"}
+                  <span className="mb-2 block text-sm font-medium text-text">
+                    {isSeries ? t("ItemDetailSheet.serie_simili_sul_tuo") : t("ItemDetailSheet.film_simili_sul_tuo")}
                   </span>
-                  <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1">
+                  <div className="shelf gap-3">
                     {shelfMates.map(({ item: other, reason }) => (
                       <button
                         key={other.id}
                         type="button"
                         onClick={() => open(other)}
-                        aria-label={`Apri dettagli di ${other.title}, ${other.year}`}
-                        className="w-24 shrink-0 text-left"
+                        aria-label={t("ItemDetailSheet.apri_dettagli_di", { v0: other.title, v1: other.year })}
+                        className="w-28 text-left"
                       >
-                        <PosterArt item={other} size="sm" className="w-24" />
-                        <p className="mt-1.5 line-clamp-2 text-xs font-medium text-text">{other.title}</p>
-                        <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-text-faint">{reason}</p>
+                        <PosterArt item={other} size="sm" className="w-full" />
+                        <p className="mt-2 line-clamp-2 text-sm font-medium leading-snug text-text">{other.title}</p>
+                        <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-text-faint">{reason}</p>
                       </button>
                     ))}
                   </div>
@@ -571,9 +619,7 @@ function ItemDetail({ item }: { item: Item }) {
                   titoli invece di tre. */}
               {item.similar.length > 0 && item.tmdbId == null && (
                 <div>
-                  <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-text-faint">
-                    Se ti è piaciuto — da aggiungere
-                  </span>
+                  <span className="mb-2 block text-sm font-medium text-text">{t("ItemDetailSheet.se_ti_e_piaciuto")}</span>
                   <div className="flex flex-wrap gap-1.5">
                     {item.similar.map((s) => (
                       <button
@@ -583,9 +629,10 @@ function ItemDetail({ item }: { item: Item }) {
                           close();
                           openAddSheet(s);
                         }}
-                        className="rounded-full border border-border-strong px-3 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
+                        className="chip"
                       >
-                        {s} <span style={{ color: "var(--accent-text)" }}>＋</span>
+                        {s}
+                        <PlusIcon size={14} />
                       </button>
                     ))}
                   </div>
@@ -595,14 +642,14 @@ function ItemDetail({ item }: { item: Item }) {
               <button
                 type="button"
                 onClick={() => {
-                  setCriticQuestion(`Parlami di "${item.title}" e consigliami cosa guardare dopo`);
+                  setCriticQuestion(t("ItemDetailSheet.parlami_di_e_consigliami", { v0: item.title }));
                   close();
                   navigate("/critico");
                 }}
-                className="w-full rounded-md border py-3 text-sm font-semibold"
-                style={{ borderColor: "color-mix(in srgb, var(--cyan) 35%, transparent)", background: "color-mix(in srgb, var(--cyan) 12%, transparent)", color: "var(--cyan)" }}
+                className="btn btn-secondary w-full"
               >
-                Chiedi al critico IA
+                <SparkleIcon size={18} />
+                {t("ItemDetailSheet.chiedi_al_critico")}
               </button>
             </div>
           )}
@@ -610,6 +657,10 @@ function ItemDetail({ item }: { item: Item }) {
       </div>
 
       {sharing && <ShareSheet target={{ kind: "item", item }} onClose={() => setSharing(false)} />}
+      {pickingList && <ListPickerSheet item={item} onClose={() => setPickingList(false)} />}
+      {trailerOpen && trailerKey && (
+        <TrailerPlayer videoKey={trailerKey} title={t("ItemDetailSheet.trailer_2", { v0: item.title })} onClose={() => setTrailerOpen(false)} />
+      )}
     </div>,
     document.body,
   );

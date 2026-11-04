@@ -5,6 +5,8 @@ import { useSagas } from "../store/useSagas";
 import { usePlayerSources } from "../store/usePlayerSources";
 import { usePlayerPrefs } from "../store/usePlayerPrefs";
 import { EmptyState } from "../components/EmptyState";
+import { ErrorIcon } from "../components/icons";
+import { useSettingsSheet } from "../store/useSettingsSheet";
 import VideoPlayer from "../player/components/VideoPlayer";
 import DownloadManagerUI from "../player/components/DownloadManagerUI";
 import WatchPartyPanel from "../player/components/WatchPartyPanel";
@@ -21,6 +23,8 @@ import { recommendFromLibrary } from "../player/recommendFromLibrary";
 import { resolvePlayable } from "../player/resolveSource";
 import type { SearchOutcome } from "../player/searchOnLinkHost";
 import { outcomeMessage } from "../player/searchOnLinkHost";
+import { defaultPosition } from "../lib/linkHost";
+import { isEpisodic, nextEpisode } from "../lib/episodes";
 import { useSourceAddresses } from "../player/sourceAddresses";
 import { useLinkHosts } from "../store/useLinkHosts";
 import { useWebViewer } from "../store/useWebViewer";
@@ -39,6 +43,7 @@ import { REACTION_VOTE, reactionOf } from "../lib/reactions";
 import { resumeLabel } from "../lib/continueWatching";
 import { momentShareUrl, shareOrCopy } from "../lib/share";
 import { voteWord } from "../lib/vote";
+import { t } from "../lib/i18n";
 
 const IDENTITY_KEY = "cinemate:player-identity";
 
@@ -50,7 +55,7 @@ const IDENTITY_KEY = "cinemate:player-identity";
 const TEST_STREAM: MediaContent = {
   id: "cinemate-test-stream",
   type: "movie",
-  title: "Stream di test",
+  title: t("Player.stream_di_test"),
   posterUrl: "",
   backdropUrl: "",
   durationSec: 0,
@@ -63,8 +68,8 @@ const TEST_STREAM: MediaContent = {
 type Panel = "sources" | "sites" | "downloads" | "party" | "hosts" | null;
 
 const TABS: { id: Exclude<Panel, null>; label: string }[] = [
-  { id: "sources", label: "Sorgenti" },
-  { id: "sites", label: "Siti" },
+  { id: "sources", label: t("Player.sorgenti") },
+  { id: "sites", label: t("Player.siti") },
   { id: "downloads", label: "Download" },
   { id: "party", label: "Watch Party" },
   { id: "hosts", label: "Host" },
@@ -99,6 +104,7 @@ function useStableId(): string {
 }
 
 export function Player() {
+  const openSettings = useSettingsSheet((s) => s.open);
   const items = useVisibleItems();
   const sources = usePlayerSources((s) => s.sources);
   const patchSource = usePlayerSources((s) => s.patch);
@@ -249,7 +255,7 @@ export function Player() {
     () => (prefs.watchPartyRelayUrl.trim() ? new WebSocketTransport(prefs.watchPartyRelayUrl.trim()) : undefined),
     [prefs.watchPartyRelayUrl],
   );
-  const watchParty = useWatchParty(userId, prefs.displayName || "Tu", transport);
+  const watchParty = useWatchParty(userId, prefs.displayName && prefs.displayName !== "Tu" ? prefs.displayName : t("Player.tu"), transport);
   const hostMonitor = useHostMonitor();
 
   // A marathon in CineMate is a *saga* run with a bookmark (PRODUCT.md §3.4),
@@ -343,13 +349,33 @@ export function Player() {
   // history entry, the achievements and the "continua la storia" prompt all
   // fire exactly as they do from the library. Only ever an upgrade to "Visto" —
   // never a downgrade, and never a second entry for something already watched.
+  //
+  // For a series the event is narrower: one episode ended, not the show. It
+  // used to mark the whole series «Visto» at the end of its first episode.
+  // Now the episode that was playing — the one chosen in the Episodes panel,
+  // or else the next in the registry — goes into the registry, and a chosen
+  // episode moves on to the following one so the next play continues.
   const setStatus = useLibrary((s) => s.setStatus);
+  const markEpisodeWatched = useLibrary((s) => s.markEpisodeWatched);
   const markWatchedInLibrary = useCallback(
     (contentId: string) => {
       const item = useLibrary.getState().items.find((i) => i.id === contentId);
-      if (item && item.status !== "Visto") setStatus(contentId, "Visto");
+      if (!item) return;
+      if (isEpisodic(item)) {
+        const source = lookup(contentId);
+        const fallback = defaultPosition(item);
+        const played = { season: source.searchSeason ?? fallback.season, episode: source.searchEpisode ?? fallback.episode };
+        markEpisodeWatched(contentId, played);
+        if (source.searchSeason !== undefined || source.searchEpisode !== undefined) {
+          const updated = useLibrary.getState().items.find((i) => i.id === contentId);
+          const next = updated ? nextEpisode(updated) : null;
+          patchSource(contentId, next ? { searchSeason: next.season, searchEpisode: next.episode } : { searchSeason: undefined, searchEpisode: undefined });
+        }
+        return;
+      }
+      if (item.status !== "Visto") setStatus(contentId, "Visto");
     },
-    [setStatus],
+    [setStatus, markEpisodeWatched, lookup, patchSource],
   );
 
   const hasOwnSources = catalog.length > 0;
@@ -376,7 +402,7 @@ export function Player() {
       if (!selectedItem) return;
       const vote = REACTION_VOTE[reaction];
       updateItem(selectedItem.id, { vote });
-      pushToast("success", `Voto salvato: ${voteWord(vote).toLowerCase()} (${vote}/10)`);
+      pushToast("success", t("Player.voto_salvato_10", { v0: voteWord(vote).toLowerCase(), v1: vote }));
     },
     [selectedItem, updateItem, pushToast],
   );
@@ -400,7 +426,7 @@ export function Player() {
   );
   const chosen = selectedItem ? lookup(selectedItem.id) : EMPTY_SOURCE;
   const [panelSeason, setPanelSeason] = useState<number | null>(null);
-  const season = panelSeason ?? chosen.searchSeason ?? 1;
+  const season = panelSeason ?? chosen.searchSeason ?? (selectedItem ? defaultPosition(selectedItem).season : 1);
   const [seasonEpisodes, setSeasonEpisodes] = useState<SeriesEpisode[] | null>(null);
 
   useEffect(() => {
@@ -469,7 +495,7 @@ export function Player() {
       if (!selectedItem) return "failed" as const;
       return shareOrCopy({
         title: selectedItem.title,
-        text: `Un momento di ${selectedItem.title}`,
+        text: t("Player.un_momento_di", { v0: selectedItem.title }),
         url: momentShareUrl(selectedItem.id, startSec, lengthSec),
       });
     },
@@ -477,48 +503,44 @@ export function Player() {
   );
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-4 px-4 py-6 sm:px-6 sm:py-10">
+    <div className="mx-auto flex max-w-4xl flex-col gap-6 px-[var(--gutter)] py-6 sm:py-10">
       <header className="flex flex-col gap-1.5">
-        <h1 className="font-display text-3xl font-semibold text-text">Player</h1>
+        <h1 className="t-display text-text">{t("Player.player")}</h1>
         <p className="text-sm text-text-muted">
-          Riproduce le sorgenti HLS che indichi tu. Scrivi l'indirizzo del tuo server una volta
-          sola in Impostazioni, oppure incollane uno per il singolo titolo.
+          {t("Player.riproduce_le_sorgenti_hls")}
         </p>
       </header>
 
       {!hasOwnSources && (
         <EmptyState
-          title="Nessuna sorgente sul tuo scaffale"
-          description="Scrivi l'indirizzo del tuo server una volta sola in Impostazioni → Indirizzi delle tue sorgenti — basta l'indirizzo nudo, tipo https://mio-server.com, il file lo cerca lui — e ogni titolo avrà il suo pulsante Guarda. Vale anche per gli host del pannello qui sotto. Intanto c'è lo stream di test, per vedere come si comporta il player."
+          title={t("Player.nessuna_sorgente_sul_tuo")}
+          description={t("Player.scrivi_una_volta_sola")}
+          action={
+            <button type="button" onClick={() => openSettings("sorgenti")} className="btn btn-secondary">
+              {t("Player.scrivi_l_indirizzo")}
+            </button>
+          }
         />
       )}
 
       {/* What the player is doing about the address, so a title that won't
           start says why instead of sitting on a black rectangle. */}
       {resolving && (
-        <p className="flex items-center gap-2 text-xs text-text-faint">
-          <span
-            className="spinner h-3 w-3 rounded-full border-2"
-            style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }}
-          />
-          Cerco «{baseContent.title}» sui tuoi indirizzi
-          {linkHosts.some((h) => h.enabled) ? " e sui siti che hai indicato" : ""}…
+        <p role="status" className="text-sm text-text-muted">
+          {t("Player.cerco")}{baseContent.title}{t("Player.sui_tuoi_indirizzi")}
+          {linkHosts.some((h) => h.enabled) ? t("Player.e_sui_siti_che") : ""}…
         </p>
       )}
       {!resolving && resolvedUrl === null && (
-        <div
-          role="alert"
-          className="rounded-sm border px-3 py-2 text-xs leading-relaxed"
-          style={{
-            borderColor: "color-mix(in srgb, var(--danger) 45%, transparent)",
-            color: "var(--danger)",
-          }}
-        >
+        <div role="alert" className="rounded-md bg-surface px-4 py-3 text-sm text-text-muted shadow-[var(--shadow-sm)]">
+          {/* Il rosso sta sul titoletto e sull'icona: il paragrafo che spiega
+              cosa fare si legge nel tono del testo, non come un allarme. */}
+          <p className="mb-1 flex items-center gap-2 font-medium" style={{ color: "var(--danger)" }}>
+            <ErrorIcon size={16} />
+            {t("Player.non_trovato")}
+          </p>
           <p>
-            «{baseContent.title}» non si trova su nessuno dei tuoi indirizzi: ho provato i nomi
-            soliti e ho letto le cartelle che li pubblicano. Controlla gli indirizzi in Impostazioni
-            e gli host qui sotto, che il server sia raggiungibile e che permetta le richieste da
-            questa pagina (CORS). Se sai già dove sta il file, incollalo nel pannello Sorgenti.
+            «{baseContent.title}{t("Player.non_si_trova_su")}
           </p>
           {/* Come è andata la ricerca sui siti, quando ce n'era uno da
               interrogare: senza questa riga «non trovato» copre due situazioni
@@ -526,7 +548,7 @@ export function Player() {
               lasciato leggere la risposta — e solo la seconda si risolve
               aprendo il Web Viewer. */}
           {siteOutcome && siteOutcome.kind !== "niente-host" && (
-            <p className="mt-1.5 border-t border-current/25 pt-1.5">
+            <p className="mt-3 pt-3 shadow-[inset_0_1px_0_var(--separator)]">
               {outcomeMessage(siteOutcome)}
               {(siteOutcome.kind === "solo-pagina" ||
                 siteOutcome.kind === "bloccato" ||
@@ -539,9 +561,9 @@ export function Player() {
                       targetItem ? { itemId: targetItem.id, title: targetItem.title } : undefined,
                     )
                   }
-                  className="ml-1.5 underline underline-offset-2"
+                  className="ml-1.5 font-medium text-accent-text underline-offset-2 hover:underline"
                 >
-                  Apri nel Web Viewer
+                  {t("Player.apri_nel_web_viewer")}
                 </button>
               )}
             </p>
@@ -564,7 +586,7 @@ export function Player() {
           isPrimaryHostActive={!activeHost || activeHost.role === "primary"}
           resolveRecommendations={resolveRecommendations}
           onPlayerReady={onPlayerReady}
-          sourceLabel={isOffline ? "Dai download" : null}
+          sourceLabel={isOffline ? t("Player.dai_download") : null}
           onCompleted={markWatchedInLibrary}
           label={label}
           reaction={reactionOf(selectedItem?.vote)}
@@ -603,7 +625,7 @@ export function Player() {
             </button>
           ))}
           <span className="pv-stat-chip">
-            Ore totali: {(lifetime.totalWatchedSec / 3600).toFixed(1)}h
+            {t("Player.ore_totali")} {(lifetime.totalWatchedSec / 3600).toFixed(1)}h
           </span>
         </div>
 
@@ -620,8 +642,7 @@ export function Player() {
           ) : (
             <div className="pv-panel">
               <p className="pv-empty">
-                Lo stream di test non è un titolo della libreria, quindi non ha sorgenti da
-                configurare. Aggiungi un titolo e torna qui.
+                {t("Player.lo_stream_di_test")}
               </p>
             </div>
           )
@@ -641,18 +662,18 @@ export function Player() {
             <WatchPartyPanel watchParty={watchParty} />
             <div className="pv-panel">
               <div className="pv-panel-header">
-                <h3>Impostazioni</h3>
+                <h3>{t("Player.impostazioni")}</h3>
               </div>
               <label className="pv-field">
-                <span>Il tuo nome nella stanza</span>
+                <span>{t("Player.il_tuo_nome_nella")}</span>
                 <input
                   value={prefs.displayName}
                   onChange={(e) => prefs.set({ displayName: e.target.value })}
-                  placeholder="Tu"
+                  placeholder={t("Player.tu")}
                 />
               </label>
               <label className="pv-field">
-                <span>Relay per guardare assieme da dispositivi diversi</span>
+                <span>{t("Player.relay_per_guardare_assieme")}</span>
                 <input
                   value={prefs.watchPartyRelayUrl}
                   onChange={(e) => prefs.set({ watchPartyRelayUrl: e.target.value })}
@@ -661,8 +682,8 @@ export function Player() {
               </label>
               <p className="pv-empty">
                 {prefs.watchPartyRelayUrl.trim()
-                  ? "La stanza passa dal relay: funziona fra dispositivi diversi."
-                  : "Senza relay la stanza vive dentro questo browser: sincronizza solo fra schede aperte qui."}
+                  ? t("Player.la_stanza_passa_dal")
+                  : t("Player.senza_relay_la_stanza")}
               </p>
               <label className="pv-toggle">
                 <input
@@ -670,7 +691,7 @@ export function Player() {
                   checked={prefs.dataSaver}
                   onChange={(e) => prefs.set({ dataSaver: e.target.checked })}
                 />
-                Risparmio dati (limita la qualità automatica)
+                {t("Player.risparmio_dati_limita_la")}
               </label>
             </div>
           </>

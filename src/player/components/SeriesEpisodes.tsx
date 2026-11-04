@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { PlayIcon } from './Icons';
+import { CheckIcon, PlayIcon } from './Icons';
+import { t } from "../../lib/i18n";
 
 /**
  * Le puntate della serie che stai guardando, dentro il lettore.
@@ -52,11 +53,11 @@ export default function SeriesEpisodes({
       {seasons.length > 1 && (
         <div className="pv-series-season">
           <button type="button" className="pv-season-btn" aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
-            Stagione {season}
+            {t("player_SeriesEpisodes.stagione")} {season}
             <span aria-hidden="true">⌄</span>
           </button>
           {menu && (
-            <ul className="pv-season-menu" role="listbox" aria-label="Stagioni">
+            <ul className="pv-season-menu" role="listbox" aria-label={t("player_SeriesEpisodes.stagioni")}>
               {seasons.map((s) => (
                 <li key={s}>
                   <button
@@ -68,7 +69,8 @@ export default function SeriesEpisodes({
                       setMenu(false);
                     }}
                   >
-                    {s === season ? '✓ ' : ''}Stagione {s}
+                    {s === season && <CheckIcon />}
+                    {t("player_SeriesEpisodes.stagione")} {s}
                   </button>
                 </li>
               ))}
@@ -78,9 +80,9 @@ export default function SeriesEpisodes({
       )}
 
       {episodes === null ? (
-        <p className="pv-dim">Sto leggendo la stagione…</p>
+        <p className="pv-dim">{t("player_SeriesEpisodes.sto_leggendo_la_stagione")}</p>
       ) : episodes.length === 0 ? (
-        <p className="pv-dim">Per questa stagione non risultano puntate.</p>
+        <p className="pv-dim">{t("player_SeriesEpisodes.per_questa_stagione_non")}</p>
       ) : (
         <ul className="pv-series-list">
           {episodes.map((episode) => {
@@ -89,7 +91,7 @@ export default function SeriesEpisodes({
               <li key={episode.number}>
                 <button
                   type="button"
-                  className={`pv-series-card ${now ? 'active' : ''}`}
+                  className={`pv-series-card ${now ? "active" : ''}`}
                   aria-current={now}
                   onClick={() => onPlay(episode)}
                 >
@@ -106,7 +108,7 @@ export default function SeriesEpisodes({
                     {episode.runtime ? <span className="pv-dim">{episode.runtime}m</span> : null}
                   </span>
                   {episode.overview && <span className="pv-series-plot">{episode.overview}</span>}
-                  {now && <span className="pv-episode-flag">In riproduzione</span>}
+                  {now && <span className="pv-episode-flag">{t("player_SeriesEpisodes.in_riproduzione")}</span>}
                 </button>
               </li>
             );

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { motion } from "framer-motion";
+import { useFocusTrap } from "../lib/useFocusTrap";
+import { m } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useWebViewer } from "../store/useWebViewer";
 import { usePlayerSources } from "../store/usePlayerSources";
@@ -9,6 +10,8 @@ import { withProtocol } from "../lib/linkHost";
 import { hasPageReader, readableDocument } from "../lib/pageReader";
 import { bestStreamConfirmed, readPage, titleLinksIn } from "../lib/streamExtract";
 import type { FetchFailure, FoundLink } from "../lib/streamExtract";
+import { BackIcon, CloseIcon, ExternalIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * Il **Web Viewer**: una finestra su una pagina, con tutto quello che una
@@ -56,21 +59,21 @@ type ViewMode = "sito" | "letta";
 const LEVELS: { id: BlockLevel; label: string; hint: string }[] = [
   {
     id: "rigido",
-    label: "Rigido",
-    hint: "Nessuno script, nessun modulo, nessun cookie di sessione. I collegamenti funzionano, il resto no. È il livello in cui quei siti diventano leggibili.",
+    label: t("WebViewer.rigido"),
+    hint: t("WebViewer.nessuno_script_nessun_modulo"),
   },
   {
     id: "normale",
-    label: "Normale",
-    hint: "Come sopra, ma i moduli si possono inviare e il sito si ricorda di te fra una pagina e l'altra. Serve quando la ricerca del sito è un modulo invece che un indirizzo.",
+    label: t("WebViewer.normale"),
+    hint: t("WebViewer.come_sopra_ma_i"),
   },
   {
     id: "minimo",
-    label: "Minimo",
+    label: t("WebViewer.minimo"),
     // La riga sui pop-up la scrive la nota sotto i livelli, che vale per tutti
     // e tre: ripeterla qui la faceva comparire due volte di fila, con due
     // parole diverse per la stessa cosa.
-    hint: "Gli script girano. È il livello in cui un player che si carica da JavaScript parte davvero — e anche quello in cui torna tutto il resto.",
+    hint: t("WebViewer.gli_script_girano_e"),
   },
 ];
 
@@ -103,9 +106,10 @@ function sandboxFor(level: BlockLevel, url: string): string {
   return (sameOrigin ? tokens.filter((t) => t !== "allow-same-origin") : tokens).join(" ");
 }
 
-const CHIP = "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors";
-const CHIP_ON = "border-accent text-text";
-const CHIP_OFF = "border-border-strong text-text-muted hover:bg-surface-hover";
+// Le pastiglie del sistema: la scelta si inverte da sé con `aria-pressed`.
+const CHIP = "chip";
+const CHIP_ON = "";
+const CHIP_OFF = "";
 
 export function WebViewer() {
   const url = useWebViewer((s) => s.url);
@@ -159,13 +163,8 @@ function ViewerFrame({
 
   useEffect(() => setDraft(current), [current]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  // Copre tutto: il fuoco resta dentro, Esc chiude (solo lui, se è in cima).
+  const trapRef = useFocusTrap(onClose);
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
@@ -203,15 +202,15 @@ function ViewerFrame({
    * e «non c'è niente da leggere», che il lettore non cambierebbe.
    */
   function explain(reason: FetchFailure): string {
-    if (reason === "non-e-una-pagina") return "Quell'indirizzo non serve una pagina: è già un file.";
+    if (reason === "non-e-una-pagina") return t("WebViewer.quell_indirizzo_non_serve");
     if (reason === "non-raggiungibile") {
       return hasPageReader()
-        ? "Nessuna risposta da quell'indirizzo, né da qui né attraverso il lettore di pagine."
-        : "Nessuna risposta da quell'indirizzo.";
+        ? t("WebViewer.nessuna_risposta_da_quell")
+        : t("WebViewer.nessuna_risposta_da_quell_2");
     }
     return hasPageReader()
-      ? "Il sito non lascia che questa pagina ne legga il sorgente (CORS), e il lettore che hai configurato non ce l'ha fatta: controlla in Impostazioni che il suo indirizzo risponda e che rimandi indietro la pagina."
-      : "Il sito risponde ma non lascia che questa pagina ne legga il sorgente (CORS) — è una decisione sua, e da un browser non si aggira. Serve qualcosa che browser non sia: in Impostazioni → Indirizzi delle tue sorgenti c'è «Lettore di pagine», l'indirizzo di un servizio tuo che scarica la pagina al posto del browser. Con quello, questo pulsante e «Pagina letta» funzionano.";
+      ? t("WebViewer.il_sito_non_lascia")
+      : t("WebViewer.il_sito_risponde_ma");
   }
 
   /** Il sorgente della pagina: quello già letto, o una lettura nuova. */
@@ -258,7 +257,7 @@ function ViewerFrame({
     setBusy(null);
     if (!stream) {
       setNotice(
-        "Nel sorgente della pagina non c'è nessun indirizzo di flusso, e nemmeno un indirizzo senza estensione che si sia rivelato una playlist. Quasi sempre vuol dire che il player lo chiede dopo, da JavaScript: quello che è stato caricato dopo non sta nel sorgente e da qui non si vede.",
+        t("WebViewer.nel_sorgente_della_pagina"),
       );
       return;
     }
@@ -268,7 +267,7 @@ function ViewerFrame({
   function useForTitle() {
     if (!found || !context) return;
     patchSource(context.itemId, { manifestUrl: found });
-    pushToast("success", `Flusso collegato a «${context.title}».`);
+    pushToast("success", t("WebViewer.flusso_collegato_a", { v0: context.title }));
     onClose();
     navigate(`/player?titolo=${encodeURIComponent(context.itemId)}`);
   }
@@ -277,28 +276,28 @@ function ViewerFrame({
     if (!found) return;
     try {
       await navigator.clipboard.writeText(found);
-      pushToast("success", "Indirizzo copiato.");
+      pushToast("success", t("WebViewer.indirizzo_copiato"));
     } catch {
-      pushToast("error", "Il browser non ha concesso gli appunti.");
+      pushToast("error", t("WebViewer.il_browser_non_ha"));
     }
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-80 flex flex-col bg-surface">
-      <motion.div
+    <div ref={trapRef} role="dialog" aria-modal="true" aria-label={t("WebViewer.web_viewer")} className="fixed inset-0 z-80 flex flex-col bg-surface">
+      <m.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col gap-2.5 border-b border-border bg-surface-2 p-3"
+        className="flex flex-col gap-2.5 bg-surface p-3 shadow-[inset_0_-1px_0_var(--separator)]"
       >
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={back}
             disabled={history.length < 2}
-            aria-label="Indietro"
-            className="rounded-sm border border-border-strong px-2.5 py-1.5 text-xs text-text-muted disabled:opacity-40"
+            aria-label={t("WebViewer.indietro")}
+            className="icon-btn icon-btn-filled icon-btn-sm shrink-0 disabled:opacity-40"
           >
-            ←
+            <BackIcon size={16} />
           </button>
           <form
             className="flex flex-1 gap-2"
@@ -314,33 +313,32 @@ function ViewerFrame({
               autoComplete="off"
               autoCapitalize="off"
               spellCheck={false}
-              aria-label="Indirizzo"
-              className="min-w-0 flex-1 rounded-sm border border-border-strong bg-surface px-3 py-1.5 font-mono text-xs text-text focus:border-accent"
+              aria-label={t("WebViewer.indirizzo")}
+              className="field field-sm min-w-0 flex-1 font-mono"
             />
             <button
               type="submit"
-              className="rounded-sm px-3 py-1.5 text-xs font-semibold"
-              style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+              className="btn btn-primary btn-sm"
             >
-              Vai
+              {t("WebViewer.vai")}
             </button>
           </form>
           <a
             href={current}
             target="_blank"
             rel="noopener noreferrer nofollow"
-            title="Apri in una scheda del browser"
-            className="rounded-sm border border-border-strong px-2.5 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
+            title={t("WebViewer.apri_in_una_scheda")}
+            className="btn btn-secondary btn-sm"
           >
-            ↗
+            <ExternalIcon size={16} />
           </a>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Chiudi il Web Viewer"
-            className="rounded-sm border border-border-strong px-2.5 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
+            aria-label={t("WebViewer.chiudi_il_web_viewer")}
+            className="btn btn-secondary btn-sm"
           >
-            ✕
+            <CloseIcon size={16} />
           </button>
         </div>
 
@@ -348,25 +346,25 @@ function ViewerFrame({
             un sito che rifiuta di essere incorniciato non ha nessun livello di
             blocco che lo salvi — quindi sta per prima. */}
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Mostra</span>
+          <span className="text-xs font-medium text-text-faint">{t("WebViewer.mostra")}</span>
           <button
             type="button"
             onClick={() => setMode("sito")}
             aria-pressed={mode === "sito"}
-            title="Il sito dentro un riquadro, con i permessi scelti qui sotto."
+            title={t("WebViewer.il_sito_dentro_un")}
             className={`${CHIP} ${mode === "sito" ? CHIP_ON : CHIP_OFF}`}
           >
-            Il sito
+            {t("WebViewer.il_sito")}
           </button>
           <button
             type="button"
             onClick={showRead}
             aria-pressed={mode === "letta"}
             disabled={busy === "lettura"}
-            title="La pagina letta e ridisegnata qui: funziona anche con i siti che rifiutano di essere incorniciati."
+            title={t("WebViewer.la_pagina_letta_e")}
             className={`${CHIP} ${mode === "letta" ? CHIP_ON : CHIP_OFF} disabled:opacity-50`}
           >
-            {busy === "lettura" ? "Leggo…" : "Pagina letta"}
+            {busy === "lettura" ? t("WebViewer.leggo") : t("WebViewer.pagina_letta")}
           </button>
           <button
             type="button"
@@ -374,12 +372,12 @@ function ViewerFrame({
             disabled={busy !== null}
             className={`${CHIP} ${CHIP_OFF} disabled:opacity-50`}
           >
-            {busy === "flusso" ? "Cerco il flusso…" : "Estrai il flusso"}
+            {busy === "flusso" ? t("WebViewer.cerco_il_flusso") : t("WebViewer.estrai_il_flusso")}
           </button>
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-wide text-text-faint">Blocco</span>
+          <span className="text-xs font-medium text-text-faint">{t("WebViewer.blocco")}</span>
           {LEVELS.map((l) => (
             <button
               key={l.id}
@@ -393,7 +391,7 @@ function ViewerFrame({
               disabled={mode === "letta"}
               title={
                 mode === "letta"
-                  ? "Il livello di blocco vale per il sito dentro il riquadro. La pagina letta gira sempre a permessi zero."
+                  ? t("WebViewer.il_livello_di_blocco")
                   : l.hint
               }
               className={`${CHIP} ${level === l.id ? CHIP_ON : CHIP_OFF} disabled:opacity-40`}
@@ -406,19 +404,16 @@ function ViewerFrame({
         <p className="text-xs leading-relaxed text-text-faint">
           {mode === "letta" ? (
             <>
-              La pagina è stata letta e ridisegnata qui: nessuno script, e i collegamenti dentro
-              sono spenti — premerne uno riporterebbe il riquadro sul sito, cioè contro il divieto
-              di prima.{" "}
+              {t("WebViewer.la_pagina_e_stata")}{" "}
               <span className="text-text-muted">
-                Per spostarti usa la barra dell'indirizzo, o i collegamenti qui sotto quando ce ne
-                sono.
+                {t("WebViewer.per_spostarti_usa_la")}
               </span>
             </>
           ) : (
             <>
               {LEVELS.find((l) => l.id === level)?.hint}{" "}
               <span className="text-text-muted">
-                Pop-up, finestre di sistema e cambi di pagina restano bloccati a ogni livello.
+                {t("WebViewer.pop_up_finestre_di")}
               </span>
             </>
           )}
@@ -428,9 +423,9 @@ function ViewerFrame({
             pagina di risultati alla scheda, senza dover leggere l'elenco a
             occhio e senza clic dentro al riquadro. */}
         {links.length > 0 && (
-          <div className="flex flex-col gap-1.5 rounded-sm border border-border-strong bg-surface p-2.5">
+          <div className="flex flex-col gap-2 rounded-md bg-surface-2 p-3">
             <span className="text-xs font-medium text-text-muted">
-              Collegamenti che sembrano «{context?.title}»
+              {t("WebViewer.collegamenti_che_sembrano")}{context?.title}»
             </span>
             <div className="flex flex-wrap gap-1.5">
               {links.map((l) => (
@@ -439,7 +434,7 @@ function ViewerFrame({
                   type="button"
                   onClick={() => go(l.url)}
                   title={l.url}
-                  className={`${CHIP} ${CHIP_OFF} max-w-full truncate`}
+                  className={`${CHIP} ${CHIP_OFF} max-w-full truncate bg-surface`}
                 >
                   {l.label || l.url}
                 </button>
@@ -449,24 +444,23 @@ function ViewerFrame({
         )}
 
         {found && (
-          <div className="flex flex-wrap items-center gap-2 rounded-sm border border-border-strong bg-surface p-2.5">
-            <span className="min-w-0 flex-1 break-all font-mono text-[11px] text-text-muted">{found}</span>
+          <div className="flex flex-wrap items-center gap-2 rounded-md bg-surface-2 p-3">
+            <span className="min-w-0 flex-1 break-all font-mono text-xs text-text-muted">{found}</span>
             {context && (
               <button
                 type="button"
                 onClick={useForTitle}
-                className="rounded-sm px-3 py-1.5 text-xs font-semibold"
-                style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+                className="btn btn-primary btn-sm"
               >
-                Usa per «{context.title}»
+                {t("WebViewer.usa_per")}{context.title}»
               </button>
             )}
             <button
               type="button"
               onClick={copyFound}
-              className="rounded-sm border border-border-strong px-3 py-1.5 text-xs text-text-muted hover:bg-surface-hover"
+              className="btn btn-secondary btn-sm"
             >
-              Copia
+              {t("WebViewer.copia")}
             </button>
           </div>
         )}
@@ -475,7 +469,7 @@ function ViewerFrame({
             {notice}
           </p>
         )}
-      </motion.div>
+      </m.div>
 
       <div className="relative flex-1 bg-black">
         {mode === "letta" ? (
@@ -488,12 +482,12 @@ function ViewerFrame({
               sandbox=""
               referrerPolicy="no-referrer"
               allow=""
-              title="Pagina letta"
+              title={t("WebViewer.pagina_letta")}
               className="h-full w-full border-0 bg-white"
             />
           ) : (
             <p className="p-6 text-center text-xs leading-relaxed text-text-faint">
-              {busy === "lettura" ? "Leggo la pagina…" : "La pagina non è stata letta."}
+              {busy === "lettura" ? t("WebViewer.leggo_la_pagina") : t("WebViewer.la_pagina_non_e")}
             </p>
           )
         ) : (
@@ -505,28 +499,21 @@ function ViewerFrame({
             // Nessuna funzionalità del dispositivo: né fotocamera, né microfono,
             // né posizione, né riproduzione automatica.
             allow=""
-            title="Web Viewer"
+            title={t("WebViewer.web_viewer")}
             className="h-full w-full border-0 bg-white"
           />
         )}
       </div>
 
-      <p className="border-t border-border bg-surface-2 px-3 py-2 text-[11px] leading-relaxed text-text-faint">
+      <p className="bg-surface px-3 py-2 text-xs leading-relaxed text-text-muted shadow-[inset_0_1px_0_var(--separator)]">
         {mode === "letta" ? (
           <>
-            Quello che vedi è il sorgente della pagina ridisegnato qui, non il sito dentro un
-            riquadro: immagini e stili arrivano dal sito, ma quello che il sito avrebbe caricato con
-            JavaScript non c'è — e spesso il player è proprio lì. Se manca qualcosa, prova{" "}
-            <span className="text-text-muted">Il sito</span>, o ↗ per aprirlo in una scheda.
+            {t("WebViewer.quello_che_vedi_e")}{" "}
+            <span className="text-text-muted">{t("WebViewer.il_sito")}</span>{t("WebViewer.o_per_aprirlo_in")}
           </>
         ) : (
           <>
-            Se il riquadro resta bianco, quel sito rifiuta di essere incorniciato
-            (<span className="font-mono">X-Frame-Options</span>) e non c'è modo di convincerlo:
-            prova <span className="text-text-muted">Pagina letta</span>, che non lo incornicia, o ↗
-            per aprirlo in una scheda. La barra qui sopra dice dove l'ho mandato io, non dove sei
-            arrivato cliccando dentro: un riquadro di un altro dominio non lascia leggere il proprio
-            indirizzo.
+            {t("WebViewer.se_il_riquadro_resta")}<span className="font-mono">{t("WebViewer.x_frame_options")}</span>{t("WebViewer.e_non_c_e")} <span className="text-text-muted">{t("WebViewer.pagina_letta")}</span>{t("WebViewer.che_non_lo_incornicia")}
           </>
         )}
       </p>

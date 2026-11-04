@@ -9,6 +9,8 @@ import { resolvePlayable, hasAnySource } from "../player/resolveSource";
 import { startDownload } from "../player/services/downloadService";
 import type { DownloadQuality } from "../player/types";
 import type { Item } from "../types";
+import { DownloadIcon } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * «Scarica» dalla scheda del titolo, senza passare dal player.
@@ -53,21 +55,21 @@ export function DownloadButton({ item }: { item: Item }) {
         position: { season: source.searchSeason, episode: source.searchEpisode },
       });
       if (!resolved.source) {
-        pushToast("error", `Non trovo una sorgente per «${item.title}»: controlla gli indirizzi in Impostazioni.`);
+        pushToast("error", t("DownloadButton.non_trovo_una_sorgente", { v0: item.title }));
         return;
       }
       const [content] = buildPlayerCatalog([item], lookup, null, addresses);
       if (!content) {
-        pushToast("error", "Questo titolo non ha una sorgente da scaricare.");
+        pushToast("error", t("DownloadButton.questo_titolo_non_ha"));
         return;
       }
       await startDownload({ ...content, manifestUrl: resolved.source.url }, quality);
-      pushToast("success", `«${item.title}» in scaricamento. L'avanzamento è nel player, pannello Download.`);
+      pushToast("success", t("DownloadButton.in_scaricamento_l_avanzamento", { v0: item.title }));
     } catch {
       // Il messaggio del servizio non è leggibile (è un errore di rete o di
       // playlist): quello che conta è che il download non è partito e dove
       // andare a vedere.
-      pushToast("error", "Il download non è partito. La sorgente potrebbe non permettere le richieste da questa pagina.");
+      pushToast("error", t("DownloadButton.il_download_non_e"));
     } finally {
       setBusy(false);
     }
@@ -78,9 +80,10 @@ export function DownloadButton({ item }: { item: Item }) {
       <button
         type="button"
         onClick={() => openSettings()}
-        className="mt-2.5 w-full rounded-md border border-dashed border-border-strong py-2.5 text-sm font-medium text-text-muted"
+        className="btn btn-secondary btn-sm mt-2.5 w-full font-medium text-text-muted"
       >
-        ↓ Scarica — prima dimmi dov'è il tuo server
+        <DownloadIcon />
+        {t("DownloadButton.scarica_prima_dimmi_dov")}
       </button>
     );
   }
@@ -92,19 +95,20 @@ export function DownloadButton({ item }: { item: Item }) {
         onClick={() => setPicking((v) => !v)}
         disabled={busy}
         aria-expanded={picking}
-        className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-md border border-border-strong bg-surface-hover py-2.5 text-sm font-semibold text-text disabled:opacity-60"
+        className="btn btn-secondary mt-2.5 w-full disabled:opacity-60"
       >
-        ↓ {busy ? "Preparo il download…" : "Scarica"}
+        <DownloadIcon />
+        {busy ? t("DownloadButton.preparo_il_download") : t("DownloadButton.scarica")}
       </button>
 
       {picking && (
-        <div className="absolute inset-x-0 top-full z-10 mt-1 overflow-hidden rounded-md border border-border-strong bg-surface shadow-[var(--shadow-md)]">
+        <div className="absolute inset-x-0 top-full z-10 mt-1 overflow-hidden rounded-md bg-surface shadow-[var(--shadow-md),0_0_0_1px_var(--separator)]">
           {QUALITIES.map((q) => (
             <button
               key={q.id}
               type="button"
               onClick={() => void download(q.id)}
-              className="block w-full border-b border-border px-3.5 py-2.5 text-left text-sm text-text last:border-b-0 hover:bg-surface-hover"
+              className="block min-h-11 w-full px-4 py-2.5 text-left text-sm text-text hover:bg-surface-hover [&+&]:shadow-[inset_0_1px_0_var(--separator)]"
             >
               {q.label}
             </button>

@@ -6,11 +6,12 @@ import type { Recommendation } from '../services/recommendationService';
 import type { GestureFeedback } from '../hooks/usePlayerGestures';
 import { AUTOPLAY_COUNTDOWN_SEC } from '../hooks/usePlaybackExtras';
 import { ErrorIcon } from './Icons';
+import { t } from "../../lib/i18n";
 
 const MARKER_LABELS: Record<SkipMarker['type'], string> = {
-  intro: "Salta l'intro",
-  recap: 'Salta il riepilogo',
-  credits: 'Salta i titoli di coda',
+  intro: t("player_Overlays.salta_l_intro"),
+  recap: t("player_Overlays.salta_il_riepilogo"),
+  credits: t("player_Overlays.salta_i_titoli_di"),
 };
 
 export function SkipButton({ marker, onSkip }: { marker: SkipMarker; onSkip: () => void }) {
@@ -41,14 +42,14 @@ export function PostPlayOverlay({
       <div className="pv-postplay-next">
         {posterUrl && <img className="pv-postplay-poster" src={posterUrl} alt="" />}
         <div>
-          <span className="pv-dim">Il prossimo</span>
+          <span className="pv-dim">{t("player_Overlays.il_prossimo")}</span>
           <h4>{title}</h4>
         </div>
       </div>
 
       <div className="pv-postplay-actions">
         <button type="button" className="pv-btn-secondary" onClick={onCancel}>
-          Guarda i titoli di coda
+          {t("player_Overlays.guarda_i_titoli_di")}
         </button>
         <button type="button" className="pv-postplay-play" onClick={onPlayNow}>
           {/* Il riempimento *è* il conto alla rovescia: un numero che scende
@@ -58,8 +59,8 @@ export function PostPlayOverlay({
             <svg viewBox="0 0 24 24" width={18} height={18} aria-hidden="true">
               <polygon points="6,4 20,12 6,20" fill="currentColor" />
             </svg>
-            Prossimo episodio
-            <span className="pv-mono">{seconds}</span>
+            {t("player_Overlays.prossimo_episodio")}
+            <span className="pv-num">{seconds}</span>
           </span>
         </button>
       </div>
@@ -68,9 +69,9 @@ export function PostPlayOverlay({
 }
 
 const GESTURE_LABELS: Record<GestureFeedback['kind'], string> = {
-  seek: 'Avanzamento',
+  seek: t("player_Overlays.avanzamento"),
   volume: 'Volume',
-  brightness: 'Luminosità',
+  brightness: t("player_Overlays.luminosita"),
 };
 
 /**
@@ -86,7 +87,7 @@ export function GestureOverlay({ feedback }: { feedback: GestureFeedback | null 
   return (
     <div className="pv-gesture" role="status" aria-live="polite">
       <span className="pv-gesture-kind">{GESTURE_LABELS[feedback.kind]}</span>
-      <strong className="pv-gesture-value pv-mono">{feedback.label}</strong>
+      <strong className="pv-gesture-value pv-num">{feedback.label}</strong>
       {pct !== null && (
         <div className="pv-gesture-track">
           <div className="pv-gesture-fill" style={{ width: `${Math.min(100, pct)}%` }} />
@@ -115,14 +116,14 @@ export function ErrorOverlay({
       <ErrorIcon />
       <p>{failure.message}</p>
       {failure.hint && <p className="pv-error-hint">{failure.hint}</p>}
-      {failure.transient && <button onClick={onRetry}>Riprova</button>}
+      {failure.transient && <button onClick={onRetry}>{t("player_Overlays.riprova")}</button>}
     </div>
   );
 }
 
 /** Receipt for a marker the player jumped on its own. */
 export function AutoSkipNote({ type }: { type: SkipMarker['type'] }) {
-  const what = type === 'intro' ? 'Intro saltata' : type === 'recap' ? 'Recap saltato' : 'Crediti saltati';
+  const what = type === 'intro' ? t("player_Overlays.intro_saltata") : type === 'recap' ? t("player_Overlays.recap_saltato") : t("player_Overlays.crediti_saltati");
   return (
     <div className="pv-autoskip-note" role="status">
       {what}
@@ -185,7 +186,7 @@ export function EndScreenRecommendations({
   if (!recs.length) return null;
   return (
     <div className="pv-recommendations">
-      <h4>Continua a guardare</h4>
+      <h4>{t("player_Overlays.continua_a_guardare")}</h4>
       <div className="pv-recommendations-grid">
         {recs.map(r => (
           <button

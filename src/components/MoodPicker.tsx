@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import { PosterRow } from "./PosterRow";
+import { RowHeader } from "./RowHeader";
 import { useVisibleItems } from "../lib/useVisibleItems";
 import { MOODS, itemsForMood, moodCounts, type MoodId } from "../lib/moods";
+import { t } from "../lib/i18n";
 
 /**
  * «Che serata è?» — la scoperta per stato d'animo.
@@ -32,18 +34,13 @@ export function MoodPicker() {
   const current = MOODS.find((m) => m.id === active);
 
   return (
-    <section className="flex flex-col gap-3">
-      <div className="flex flex-col gap-1">
-        <h2 className="section-mark font-display text-xl font-semibold text-text">Che serata è?</h2>
-        <p className="text-xs text-text-faint">
-          {current ? current.blurb : "Scegli l'aria che tira, non il genere"}
-        </p>
-      </div>
+    <section className="flex flex-col gap-4">
+      <RowHeader title={t("MoodPicker.che_serata_e")} note={current ? current.blurb : t("MoodPicker.scegli_l_aria_che")} />
 
       <div
-        className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6"
+        className="shelf gap-2"
         role="group"
-        aria-label="Scegli lo stato d'animo"
+        aria-label={t("MoodPicker.scegli_lo_stato_d")}
       >
         {available.map((mood) => {
           const on = mood.id === active;
@@ -55,15 +52,10 @@ export function MoodPicker() {
               // indipendenti, non le linguette di un pannello.
               aria-pressed={on}
               onClick={() => setActive(on ? null : mood.id)}
-              className={[
-                "tap-target flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
-                on
-                  ? "border-accent bg-accent text-accent-contrast"
-                  : "border-border-strong bg-surface-2 text-text hover:bg-surface-hover",
-              ].join(" ")}
+              className="chip"
             >
               {mood.label}
-              <span className={on ? "text-accent-contrast/70" : "text-text-faint"}>{counts[mood.id]}</span>
+              <span className="tabular opacity-60">{counts[mood.id]}</span>
             </button>
           );
         })}

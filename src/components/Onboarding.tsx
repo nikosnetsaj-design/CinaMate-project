@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { useLibrary } from "../store/useLibrary";
 import { useSettings } from "../store/useSettings";
 import { useOnboarding } from "../store/useOnboarding";
@@ -8,7 +8,8 @@ import { useFocusTrap } from "../lib/useFocusTrap";
 import { TASTE_PICKS, seedDraft, type SeedPick } from "../lib/seedShelf";
 import { searchTitles } from "../lib/tmdb";
 import { PosterArt } from "./PosterArt";
-import { CheckIcon, ReelMark } from "./icons";
+import { CheckIcon, ExternalIcon, ReelMark } from "./icons";
+import { t } from "../lib/i18n";
 
 /**
  * Il primo minuto.
@@ -29,7 +30,7 @@ import { CheckIcon, ReelMark } from "./icons";
  */
 
 const CARD =
-  "relative z-10 flex w-full flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-[var(--shadow-lg)]";
+  "relative z-10 flex w-full flex-col overflow-hidden rounded-t-lg bg-surface pb-[env(safe-area-inset-bottom)] shadow-[var(--shadow-lg)] sm:rounded-lg sm:pb-0";
 
 /** L'azione piena: una sola per schermata, sempre nello stesso posto. */
 function Primary({
@@ -46,8 +47,7 @@ function Primary({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="w-full rounded-sm px-4 py-3 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-40"
-      style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+      className="btn btn-primary btn-lg w-full"
     >
       {children}
     </button>
@@ -60,7 +60,7 @@ function Quiet({ children, onClick }: { children: React.ReactNode; onClick: () =
     <button
       type="button"
       onClick={onClick}
-      className="w-full rounded-sm px-4 py-2.5 text-sm font-medium text-text-muted transition-colors hover:text-text"
+      className="btn btn-plain w-full text-text-muted hover:text-text"
     >
       {children}
     </button>
@@ -104,17 +104,16 @@ function Welcome({ onNext, onSkip }: { onNext: () => void; onSkip: () => void })
         <div className="flex flex-col gap-2.5">
           <span className="flex items-center gap-2 text-text-muted">
             <ReelMark size={20} />
-            <span className="t-label text-text-faint">CineMate</span>
+            <span className="text-sm font-medium text-text-muted">{t("Onboarding.cinemate")}</span>
           </span>
-          <h2 className="t-title text-text">Questa è CineMate con la libreria di qualcun altro.</h2>
+          <h2 className="t-title text-text">{t("Onboarding.questa_e_cinemate_con")}</h2>
           <p className="t-body text-text-muted">
-            Tiene il diario di cosa hai visto, decide cosa guardare stasera e sa in che ordine.
-            Resta su questo dispositivo. Rendila tua: un minuto.
+            {t("Onboarding.tiene_il_diario_di")}
           </p>
         </div>
         <div className="flex flex-col gap-1">
-          <Primary onClick={onNext}>Comincia</Primary>
-          <Quiet onClick={onSkip}>Guardo da solo</Quiet>
+          <Primary onClick={onNext}>{t("Onboarding.comincia")}</Primary>
+          <Quiet onClick={onSkip}>{t("Onboarding.guardo_da_solo")}</Quiet>
         </div>
       </div>
     </>
@@ -142,9 +141,9 @@ function Taste({ onNext, onSkip }: { onNext: (picked: SeedPick[]) => void; onSki
   return (
     <>
       <div className="flex flex-col gap-1.5 p-6 pb-4">
-        <h2 className="t-title text-text">Tocca quelli che hai già visto.</h2>
+        <h2 className="t-title text-text">{t("Onboarding.tocca_quelli_che_hai")}</h2>
         <p className="t-body text-text-muted">
-          Bastano tre. Da qui capisco cosa proporti — e il tuo scaffale comincia da questi.
+          {t("Onboarding.bastano_tre_da_qui")}
         </p>
       </div>
 
@@ -162,21 +161,15 @@ function Taste({ onNext, onSkip }: { onNext: (picked: SeedPick[]) => void; onSki
                   style={{ transform: on ? "scale(0.94)" : undefined }}
                 >
                   <PosterArt item={{ title: pick.title, kind: pick.kind }} size="sm" />
+                  {/* Scelto come in Foto: la copertina si fa un poco più piccola,
+                      un velo la abbassa, il segno di spunta sta nell'angolo.
+                      Niente cornice e niente lavaggio d'accento sull'immagine. */}
                   {on && (
                     <>
+                      <span aria-hidden="true" className="absolute inset-0 rounded-sm bg-black/30" />
                       <span
                         aria-hidden="true"
-                        className="absolute inset-0 rounded-sm"
-                        style={{ background: "color-mix(in srgb, var(--accent) 34%, transparent)" }}
-                      />
-                      <span
-                        aria-hidden="true"
-                        className="absolute inset-0 rounded-sm border-2"
-                        style={{ borderColor: "var(--accent)" }}
-                      />
-                      <span
-                        aria-hidden="true"
-                        className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full"
+                        className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full shadow-[0_0_0_2px_#fff]"
                         style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
                       >
                         <CheckIcon size={14} />
@@ -190,21 +183,21 @@ function Taste({ onNext, onSkip }: { onNext: (picked: SeedPick[]) => void; onSki
         </ul>
       </div>
 
-      <div className="flex flex-col gap-1 border-t border-border p-6 pt-4">
+      <div className="flex flex-col gap-1 p-6 pt-4 shadow-[inset_0_1px_0_var(--separator)]">
         {/* Il conteggio è un fatto, non un rimprovero: dice quanto manca e
             sparisce quando non manca più niente. */}
-        <p aria-live="polite" className="mb-1 text-center t-caption text-text-faint">
+        <p aria-live="polite" className="mb-2 text-center t-caption text-text-muted">
           {enough
-            ? `${chosen.size} scelt${chosen.size === 1 ? "o" : "i"} — vanno bene`
-            : `Ancora ${MIN_PICKS - chosen.size} per continuare`}
+            ? t(chosen.size === 1 ? "Onboarding.scelto_vanno_bene" : "Onboarding.scelti_vanno_bene", { v0: chosen.size })
+            : t("Onboarding.ancora_per_continuare", { v0: MIN_PICKS - chosen.size })}
         </p>
         <Primary
           disabled={!enough}
           onClick={() => onNext(TASTE_PICKS.filter((p) => chosen.has(p.title)))}
         >
-          Continua
+          {t("Onboarding.continua")}
         </Primary>
-        <Quiet onClick={onSkip}>Riempio da solo</Quiet>
+        <Quiet onClick={onSkip}>{t("Onboarding.riempio_da_solo")}</Quiet>
       </div>
     </>
   );
@@ -254,11 +247,9 @@ function Catalogue({ onDone, onSkip }: { onDone: () => void; onSkip: () => void 
   return (
     <div className="flex flex-col gap-5 p-6">
       <div className="flex flex-col gap-2.5">
-        <h2 className="t-title text-text">Il catalogo.</h2>
+        <h2 className="t-title text-text">{t("Onboarding.il_catalogo")}</h2>
         <p className="t-body text-text-muted">
-          Copertine, trame, cast e date d'uscita arrivano da <strong className="text-text">TMDB</strong>,
-          un archivio aperto e gratuito. Serve una chiave tua: è gratis, ci vogliono due minuti,
-          e resta su questo dispositivo.
+          {t("Onboarding.copertine_trame_cast_e")} <strong className="text-text">{t("Onboarding.tmdb")}</strong>{t("Onboarding.un_archivio_aperto_e")}
         </p>
       </div>
 
@@ -266,14 +257,15 @@ function Catalogue({ onDone, onSkip }: { onDone: () => void; onSkip: () => void 
         href="https://www.themoviedb.org/settings/api"
         target="_blank"
         rel="noreferrer"
-        className="rounded-sm border border-border-strong px-4 py-2.5 text-center text-sm font-medium text-text transition-colors hover:bg-surface-hover"
+        className="btn btn-secondary"
       >
-        Apri TMDB per prenderla ↗
+        {t("Onboarding.apri_tmdb_per_prenderla")}
+        <ExternalIcon />
       </a>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="onb-key" className="t-label text-text-faint">
-          Incolla qui la chiave
+        <label htmlFor="onb-key" className="text-sm font-medium text-text-muted">
+          {t("Onboarding.incolla_qui_la_chiave")}
         </label>
         <input
           id="onb-key"
@@ -281,17 +273,20 @@ function Catalogue({ onDone, onSkip }: { onDone: () => void; onSkip: () => void 
           onChange={(e) => setKey(e.target.value)}
           spellCheck={false}
           autoComplete="off"
-          placeholder="es. 8f2c…"
-          className="w-full rounded-sm border border-border-strong bg-surface-2 px-3 py-2.5 font-mono text-sm text-text placeholder:text-text-faint focus:border-accent"
+          placeholder={t("Onboarding.es_8f2c")}
+          className="field w-full font-mono"
         />
         <p aria-live="polite" className="min-h-[1.25rem] t-caption">
-          {state === "checking" && <span className="text-text-faint">Controllo…</span>}
+          {state === "checking" && <span className="text-text-muted">{t("Onboarding.controllo")}</span>}
           {state === "good" && (
-            <span style={{ color: "var(--accent-text)" }}>Funziona. Il catalogo è acceso.</span>
+            <span className="inline-flex items-center gap-1.5" style={{ color: "var(--success)" }}>
+              <CheckIcon size={16} />
+              {t("Onboarding.funziona_il_catalogo_e")}
+            </span>
           )}
           {state === "bad" && (
             <span style={{ color: "var(--danger)" }}>
-              TMDB non l'ha accettata. Controlla di aver copiato la chiave per intero.
+              {t("Onboarding.tmdb_non_l_ha")}
             </span>
           )}
         </p>
@@ -299,9 +294,9 @@ function Catalogue({ onDone, onSkip }: { onDone: () => void; onSkip: () => void 
 
       <div className="flex flex-col gap-1">
         <Primary disabled={state !== "good"} onClick={onDone}>
-          {state === "good" ? "Fatto" : "Continua"}
+          {state === "good" ? t("Onboarding.fatto") : t("Onboarding.continua")}
         </Primary>
-        <Quiet onClick={onSkip}>Lo faccio dopo</Quiet>
+        <Quiet onClick={onSkip}>{t("Onboarding.lo_faccio_dopo")}</Quiet>
       </div>
     </div>
   );
@@ -320,17 +315,17 @@ function Done({ added, onClose }: { added: number; onClose: () => void }) {
         <CheckIcon size={22} />
       </span>
       <div className="flex flex-col gap-2">
-        <h2 className="t-title text-text">Il tuo scaffale.</h2>
+        <h2 className="t-title text-text">{t("Onboarding.il_tuo_scaffale")}</h2>
         <p className="t-body text-text-muted">
           {added > 0
-            ? `${added} titol${added === 1 ? "o" : "i"} in libreria.`
-            : "La libreria è ancora vuota, e va bene così."}{" "}
+            ? t(added === 1 ? "Onboarding.titolo_in_libreria" : "Onboarding.titoli_in_libreria", { v0: added })
+            : t("Onboarding.la_libreria_e_ancora")}{" "}
           {tmdbApiKey
-            ? "Copertine e trame stanno arrivando da sole: da qui in poi basta cercare."
-            : "Senza la chiave del catalogo restano le copertine disegnate: puoi accenderlo quando vuoi dalle Impostazioni."}
+            ? t("Onboarding.copertine_e_trame_stanno")
+            : t("Onboarding.senza_la_chiave_del")}
         </p>
       </div>
-      <Primary onClick={onClose}>Entra</Primary>
+      <Primary onClick={onClose}>{t("Onboarding.entra")}</Primary>
     </div>
   );
 }
@@ -372,12 +367,28 @@ export function Onboarding() {
 function OnboardingFlow() {
   const finish = useOnboarding((s) => s.finish);
   const addItems = useLibrary((s) => s.addItems);
+  // Il benvenuto disegnato da index.html, se c'era: questo foglio prende il
+  // suo posto nello stesso fotogramma e senza entrata animata, così chi lo
+  // stava già leggendo non vede niente muoversi.
+  const [fromShell] = useState(() => {
+    const shell = document.getElementById("cm-welcome");
+    return shell !== null && !shell.hidden;
+  });
+  useLayoutEffect(() => {
+    document.getElementById("cm-welcome")?.remove();
+  }, []);
 
   const [step, setStep] = useState<Step>("welcome");
   const [added, setAdded] = useState(0);
   const containerRef = useFocusTrap(finish);
 
+  // Il passo che esce resta a schermo per la sua dissolvenza, e un doppio
+  // tocco veloce su «Continua» arrivava due volte: titoli in libreria doppi.
+  const kept = useRef(false);
+
   function keep(picked: SeedPick[]) {
+    if (kept.current) return;
+    kept.current = true;
     // In blocco: tre titoli sono una scelta sola, e vanno confermati una volta.
     addItems(picked.map(seedDraft));
     setAdded(picked.length);
@@ -386,18 +397,19 @@ function OnboardingFlow() {
 
   return createPortal(
     <div className="fixed inset-0 z-70 flex items-end justify-center sm:items-center sm:p-6">
-      <motion.div
+      <m.div
         aria-hidden="true"
-        initial={{ opacity: 0 }}
+        initial={fromShell ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+        className="absolute inset-0 backdrop-blur-sm"
+        style={{ background: "var(--scrim)" }}
       />
-      <motion.div
+      <m.div
         ref={containerRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Primo avvio"
-        initial={{ opacity: 0, y: 18 }}
+        aria-label={t("Onboarding.primo_avvio")}
+        initial={fromShell ? false : { opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
         className={`${CARD} max-h-[94vh] max-w-md rounded-b-none sm:rounded-b-lg`}
@@ -411,15 +423,15 @@ function OnboardingFlow() {
             return (
               <span
                 key={s}
-                className="h-0.5 flex-1 rounded-full transition-colors"
-                style={{ background: i <= at ? "var(--accent)" : "var(--border)" }}
+                className="h-1 flex-1 rounded-full transition-colors duration-300"
+                style={{ background: i <= at ? "var(--accent)" : "var(--surface-2)" }}
               />
             );
           })}
         </div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
+        <AnimatePresence mode="wait" initial={!fromShell}>
+          <m.div
             key={step}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -433,9 +445,9 @@ function OnboardingFlow() {
               <Catalogue onDone={() => setStep("done")} onSkip={() => setStep("done")} />
             )}
             {step === "done" && <Done added={added} onClose={finish} />}
-          </motion.div>
+          </m.div>
         </AnimatePresence>
-      </motion.div>
+      </m.div>
     </div>,
     document.body,
   );

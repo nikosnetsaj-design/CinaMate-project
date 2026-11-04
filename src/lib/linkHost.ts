@@ -1,5 +1,7 @@
 import type { Item } from "../types";
+import { nextEpisode } from "./episodes";
 import { slugify } from "./sourceTemplate";
+import { t } from "./i18n";
 
 /**
  * Il **Link Host**: l'indirizzo di un *sito* su cui cercare, invece
@@ -22,10 +24,10 @@ import { slugify } from "./sourceTemplate";
 export type QueryRecipe = "titolo" | "titolo-anno" | "titolo-episodio" | "completo";
 
 export const QUERY_RECIPES: { id: QueryRecipe; label: string; hint: string }[] = [
-  { id: "titolo", label: "Solo il titolo", hint: "Il Padrino" },
-  { id: "titolo-anno", label: "Titolo e anno", hint: "Il Padrino 1972" },
-  { id: "titolo-episodio", label: "Titolo ed episodio", hint: "Breaking Bad S01E04" },
-  { id: "completo", label: "Tutto", hint: "Breaking Bad 2008 S01E04" },
+  { id: "titolo", label: t("linkHost.solo_il_titolo"), hint: t("linkHost.il_padrino") },
+  { id: "titolo-anno", label: t("linkHost.titolo_e_anno"), hint: t("linkHost.il_padrino_1972") },
+  { id: "titolo-episodio", label: t("linkHost.titolo_ed_episodio"), hint: "Breaking Bad S01E04" },
+  { id: "completo", label: t("linkHost.tutto"), hint: "Breaking Bad 2008 S01E04" },
 ];
 
 /**
@@ -41,9 +43,9 @@ export const QUERY_RECIPES: { id: QueryRecipe; label: string; hint: string }[] =
 export type LayoutFamily = "entrambi" | "ricerca" | "percorso";
 
 export const LAYOUT_FAMILIES: { id: LayoutFamily; label: string; hint: string }[] = [
-  { id: "entrambi", label: "Provali entrambi", hint: "Prima la ricerca del sito, poi i percorsi diretti." },
-  { id: "ricerca", label: "Solo la ricerca", hint: "/?s=… , /search?q=… — il sito ha una casella di ricerca." },
-  { id: "percorso", label: "Solo i percorsi", hint: "/film/titolo-anno/ , /serie/titolo/stagione-2/episodio-5/ — la scheda ha un indirizzo prevedibile." },
+  { id: "entrambi", label: t("linkHost.provali_entrambi"), hint: t("linkHost.prima_la_ricerca_del") },
+  { id: "ricerca", label: t("linkHost.solo_la_ricerca"), hint: t("linkHost.s_search_q_il") },
+  { id: "percorso", label: t("linkHost.solo_i_percorsi"), hint: t("linkHost.film_titolo_anno_serie") },
 ];
 
 export interface LinkHost {
@@ -95,7 +97,9 @@ export interface EpisodePosition {
 }
 
 export function defaultPosition(item: Item): EpisodePosition {
-  return { season: 1, episode: (item.seen || 0) + 1 };
+  // Il prossimo episodio del registro: stagione vera, non più sempre la 1.
+  // Una serie finita ricomincia da capo, che è ciò che si chiede rivedendola.
+  return nextEpisode(item) ?? { season: 1, episode: 1 };
 }
 
 function positionFor(item: Item, override?: Partial<EpisodePosition>): EpisodePosition {
@@ -114,12 +118,6 @@ function pad(n: number): string {
 export function episodeTag(item: Item, position?: Partial<EpisodePosition>): string {
   const { season, episode } = positionFor(item, position);
   return `S${pad(season)}E${pad(episode)}`;
-}
-
-/** `2x05`, l'altra notazione diffusa. */
-export function episodeTagX(item: Item, position?: Partial<EpisodePosition>): string {
-  const { season, episode } = positionFor(item, position);
-  return `${season}x${pad(episode)}`;
 }
 
 /**
@@ -162,19 +160,19 @@ export interface TokenDoc {
 }
 
 export const LINK_HOST_TOKENS: TokenDoc[] = [
-  { token: "{query}", label: "I metadati concatenati, codificati", example: "Il%20Padrino%201972" },
-  { token: "{query+}", label: "Gli stessi, con i più al posto degli spazi", example: "Il+Padrino+1972" },
-  { token: "{query-}", label: "Gli stessi, come segmento di percorso", example: "il-padrino-1972" },
-  { token: "{titolo}", label: "Solo il titolo, codificato", example: "Il%20Padrino" },
-  { token: "{slug}", label: "Solo il titolo, coi trattini", example: "il-padrino" },
-  { token: "{anno}", label: "Anno di uscita", example: "1972" },
-  { token: "{tmdb}", label: "Id TMDB, quando il titolo è collegato", example: "238" },
-  { token: "{s}", label: "Stagione — 1, o quella scritta nel pannello Siti", example: "2" },
-  { token: "{e}", label: "Episodio: il prossimo da vedere, o quello scritto", example: "5" },
-  { token: "{ss}", label: "Stagione a due cifre", example: "02" },
-  { token: "{ee}", label: "Episodio a due cifre", example: "05" },
-  { token: "{sxe}", label: "L'altra notazione diffusa", example: "2x05" },
-  { token: "{sNeN}", label: "La notazione compatta", example: "S02E05" },
+  { token: "{query}", label: t("linkHost.i_metadati_concatenati_codificati"), example: t("linkHost.il_20padrino_201972") },
+  { token: "{query+}", label: t("linkHost.gli_stessi_con_i"), example: t("linkHost.il_padrino_1972_2") },
+  { token: "{query-}", label: t("linkHost.gli_stessi_come_segmento"), example: t("linkHost.il_padrino_1972_3") },
+  { token: "{titolo}", label: t("linkHost.solo_il_titolo_codificato"), example: t("linkHost.il_20padrino") },
+  { token: "{slug}", label: t("linkHost.solo_il_titolo_coi"), example: t("linkHost.il_padrino_2") },
+  { token: "{anno}", label: t("linkHost.anno_di_uscita"), example: "1972" },
+  { token: "{tmdb}", label: t("linkHost.id_tmdb_quando_il"), example: "238" },
+  { token: "{s}", label: t("linkHost.stagione_1_o_quella"), example: "2" },
+  { token: "{e}", label: t("linkHost.episodio_il_prossimo_da"), example: "5" },
+  { token: "{ss}", label: t("linkHost.stagione_a_due_cifre"), example: "02" },
+  { token: "{ee}", label: t("linkHost.episodio_a_due_cifre"), example: "05" },
+  { token: "{sxe}", label: t("linkHost.l_altra_notazione_diffusa"), example: "2x05" },
+  { token: "{sNeN}", label: t("linkHost.la_notazione_compatta"), example: "S02E05" },
 ];
 
 /** Riempie un modello di ricerca con i metadati del titolo. */
@@ -370,7 +368,7 @@ export function hostLabel(address: string): string {
 }
 
 const SAMPLE: Pick<Item, "title" | "year" | "tmdbId" | "seen" | "kind"> = {
-  title: "Il Padrino",
+  title: t("linkHost.il_padrino"),
   year: 1972,
   tmdbId: 238,
   seen: 3,

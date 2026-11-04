@@ -1,6 +1,7 @@
 import type { Item } from "../types";
 import type { UpcomingEntry } from "./upcoming";
 import { countdown, daysBetweenToday } from "./format";
+import { t } from "./i18n";
 
 /**
  * La pastiglia su una copertina: due parole che dicono perché quel titolo
@@ -31,12 +32,12 @@ function fromUpcoming(entry: UpcomingEntry): PosterBadge | null {
   if (days < 0 || days > HORIZON_DAYS) return null;
   const detail = countdown(entry.date);
 
-  if (entry.type === "film") return { label: "In arrivo", detail };
+  if (entry.type === "film") return { label: t("homeBadges.in_arrivo"), detail };
   // Primo episodio di una stagione: è l'inizio di qualcosa, non la puntata di
   // giovedì. TMDB numera gli episodi dentro la stagione, quindi `episode === 1`
   // è esattamente la differenza fra le due cose.
-  if (entry.episode === 1) return { label: "Nuova stagione", detail };
-  return { label: "Nuovo episodio", detail };
+  if (entry.episode === 1) return { label: t("homeBadges.nuova_stagione"), detail };
+  return { label: t("homeBadges.nuovo_episodio"), detail };
 }
 
 export function badgeFor(item: Item, upcoming?: UpcomingEntry): PosterBadge | null {
@@ -45,6 +46,6 @@ export function badgeFor(item: Item, upcoming?: UpcomingEntry): PosterBadge | nu
     if (badge) return badge;
   }
   const age = -daysBetweenToday(item.added);
-  if (age >= 0 && age <= RECENT_DAYS) return { label: "Aggiunto di recente" };
+  if (age >= 0 && age <= RECENT_DAYS) return { label: t("homeBadges.aggiunto_di_recente") };
   return null;
 }
